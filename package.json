@@ -24,6 +24,7 @@
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.1",
     "@expo-google-fonts/keania-one": "^0.4.0",
+    "@expo/metro-runtime": "~5.0.4",
     "@expo/vector-icons": "^14.0.0",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/netinfo": "11.4.1",
@@ -66,8 +67,7 @@
     "react-native-web": "^0.20.0",
     "sharp": "^0.34.3",
     "zod": "^3.22.4",
-    "zustand": "^4.5.2",
-    "@expo/metro-runtime": "~5.0.4"
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
@@ -80,6 +80,7 @@
     "@typescript-eslint/parser": "^7.0.0",
     "babel-jest": "^29.7.0",
     "babel-plugin-module-resolver": "^5.0.2",
+    "eas-cli": "^16.17.4",
     "eslint": "^8.57.0",
     "eslint-config-expo": "~9.2.0",
     "eslint-config-prettier": "^9.1.0",
