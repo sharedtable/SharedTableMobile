@@ -31,7 +31,7 @@ const singlesDinners = [
   { id: '4', date: 'Tuesday, August 12', time: '7:00 PM' },
 ];
 
-export const HomeScreen: React.FC<HomeScreenProps> = () => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
   const [selectedEvent, setSelectedEvent] = useState<string>('1');
   const [activeTab, setActiveTab] = useState<TabName>('home');
 
@@ -45,10 +45,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = () => {
   };
 
   const handleTabPress = (tab: TabName) => {
-    setActiveTab(tab);
-    // Handle navigation to different tabs
-    if (tab !== 'home') {
+    if (tab === 'dashboard') {
+      onNavigate?.('dashboard');
+    } else if (tab === 'profile') {
+      onNavigate?.('profile');
+    } else if (tab !== 'home') {
+      setActiveTab(tab);
       console.log('Navigate to:', tab);
+    } else {
+      setActiveTab(tab);
     }
   };
 
@@ -130,10 +135,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = () => {
 
           {/* Footer Links */}
           <View style={styles.footerLinks}>
-            <Pressable style={styles.footerLink}>
+            <Pressable 
+              style={styles.footerLink}
+              onPress={() => onNavigate?.('how-it-works')}
+            >
               <Text style={styles.footerLinkText}>How it works</Text>
             </Pressable>
-            <Pressable style={styles.footerLink}>
+            <Pressable 
+              style={styles.footerLink}
+              onPress={() => onNavigate?.('faqs')}
+            >
               <Text style={styles.footerLinkText}>FAQs</Text>
             </Pressable>
           </View>

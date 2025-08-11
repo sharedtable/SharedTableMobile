@@ -21,13 +21,20 @@ import { OnboardingInterestsScreen } from '@/screens/onboarding/OnboardingIntere
 import { OnboardingPersonalityScreen } from '@/screens/onboarding/OnboardingPersonalityScreen';
 import { OnboardingPhotoScreen } from '@/screens/onboarding/OnboardingPhotoScreen';
 import { HomeScreen } from '@/screens/home/HomeScreen';
+import { HowItWorksScreen } from '@/screens/info/HowItWorksScreen';
+import { FAQsScreen } from '@/screens/info/FAQsScreen';
+import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
+import { ProfileScreen } from '@/screens/profile/ProfileScreen';
+import { SettingsScreen } from '@/screens/settings/SettingsScreen';
+import { FilterScreen } from '@/screens/filter/FilterScreen';
+import { ReviewScreen } from '@/screens/review/ReviewScreen';
 
 // Hide the native splash screen immediately
 SplashScreen.hideAsync();
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const [currentScreen, setCurrentScreen] = useState<'welcome' | 'confirmation' | 'onboarding-name' | 'onboarding-birthday' | 'onboarding-gender' | 'onboarding-dependents' | 'onboarding-work' | 'onboarding-ethnicity' | 'onboarding-relationship' | 'onboarding-lifestyle' | 'onboarding-personality' | 'onboarding-photo' | 'onboarding-complete' | 'onboarding-photos' | 'onboarding-dietary' | 'onboarding-interests' | 'onboarding-location' | 'onboarding-preferences' | 'onboarding-profile' | 'home'>('welcome');
+  const [currentScreen, setCurrentScreen] = useState<'welcome' | 'confirmation' | 'onboarding-name' | 'onboarding-birthday' | 'onboarding-gender' | 'onboarding-dependents' | 'onboarding-work' | 'onboarding-ethnicity' | 'onboarding-relationship' | 'onboarding-lifestyle' | 'onboarding-personality' | 'onboarding-photo' | 'onboarding-complete' | 'onboarding-photos' | 'onboarding-dietary' | 'onboarding-interests' | 'onboarding-location' | 'onboarding-preferences' | 'onboarding-profile' | 'home' | 'how-it-works' | 'faqs' | 'dashboard' | 'profile' | 'settings' | 'filter' | 'review'>('welcome');
   const [userEmail, setUserEmail] = useState<string>('');
   const [userData, setUserData] = useState<any>({});
   const [isNewUser, setIsNewUser] = useState<boolean>(true); // This would be determined by backend
@@ -68,6 +75,8 @@ export default function App() {
 
   // Handle navigation with email data
   const handleNavigate = (screen: string, data?: any) => {
+    console.log('Navigating to:', screen, 'from:', currentScreen);
+    
     if (data?.email) {
       setUserEmail(data.email);
       setUserData(prevData => ({ ...prevData, email: data.email }));
@@ -201,6 +210,20 @@ export default function App() {
         );
       case 'home':
         return <HomeScreen onNavigate={handleNavigate} />;
+      case 'how-it-works':
+        return <HowItWorksScreen onNavigate={handleNavigate} />;
+      case 'faqs':
+        return <FAQsScreen onNavigate={handleNavigate} />;
+      case 'dashboard':
+        return <DashboardScreen onNavigate={handleNavigate} />;
+      case 'profile':
+        return <ProfileScreen onNavigate={handleNavigate} />;
+      case 'settings':
+        return <SettingsScreen onNavigate={handleNavigate} />;
+      case 'filter':
+        return <FilterScreen onNavigate={handleNavigate} />;
+      case 'review':
+        return <ReviewScreen onNavigate={handleNavigate} />;
       case 'welcome':
       default:
         return <WelcomeScreen onNavigate={handleNavigate} />;

@@ -227,3 +227,6 @@ export const theme = {
 } as const;
 
 export type Theme = typeof theme;
+
+// Re-export designTokens
+export { designTokens } from './designTokens';

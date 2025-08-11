@@ -1,0 +1,251 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  StatusBar,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { theme } from '@/theme';
+import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
+import { Icon } from '@/components/base/Icon';
+import { TopBar } from '@/components/navigation/TopBar';
+import { TierProgressCard } from '@/components/dashboard/TierProgressCard';
+import { StatsCard } from '@/components/dashboard/StatsCard';
+import { GourmandProgressCard } from '@/components/dashboard/GourmandProgressCard';
+import { StreakTrackerCard } from '@/components/dashboard/StreakTrackerCard';
+import { LeaderboardView } from '@/components/dashboard/LeaderboardView';
+import { MyQuestView } from '@/components/dashboard/MyQuestView';
+import { LoyaltyShopView } from '@/components/dashboard/LoyaltyShopView';
+import { BottomTabBar, TabName } from '@/components/navigation/BottomTabBar';
+
+interface DashboardScreenProps {
+  onNavigate?: (screen: string, data?: any) => void;
+}
+
+type DashboardTab = 'overview' | 'leaderboard' | 'quest' | 'loyalty';
+
+export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) => {
+  const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
+  const [activeNavTab, setActiveNavTab] = useState<TabName>('dashboard');
+
+  const handleTabPress = (tab: TabName) => {
+    if (tab === 'home') {
+      onNavigate?.('home');
+    } else if (tab === 'profile') {
+      onNavigate?.('profile');
+    } else {
+      setActiveNavTab(tab);
+    }
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <>
+            {/* Welcome Section */}
+            <View style={styles.welcomeSection}>
+              <Text style={styles.welcomeTitle}>Welcome back, John!</Text>
+              <Text style={styles.welcomeSubtitle}>Track your food journey, unlock rewards.</Text>
+            </View>
+
+            {/* Tier Progress */}
+            <TierProgressCard
+              tier={4}
+              level="Gourmand Level"
+              dinnersAttended={45}
+              percentComplete={20}
+            />
+
+            {/* Stats Cards */}
+            <View style={styles.statsRow}>
+              <StatsCard
+                icon="star"
+                iconColor="#FFB800"
+                value="900"
+                label="Total Points"
+                trend="+20%"
+              />
+              <View style={{ width: scaleWidth(12) }} />
+              <StatsCard
+                icon="trophy"
+                iconColor="#4A90E2"
+                value="# 5"
+                label="Monthly Special"
+                trend="+5%"
+              />
+            </View>
+
+            {/* Gourmand Progress */}
+            <GourmandProgressCard
+              currentProgress={25}
+              totalProgress={50}
+              currentBenefit="10% point bonus • Restaurant discounts"
+              nextBenefit="dddafeed"
+              pointsBonus={25}
+              pointsToNext={24}
+            />
+
+            {/* Streak Tracker */}
+            <StreakTrackerCard
+              weeksCount={6}
+              weeklyPoints={{
+                description: "Maintain your streak to earn 50 bonus points per week",
+                points: 200,
+              }}
+              nextReward={{
+                description: "Mystery reward unlocks every 3 weeks! Keep your streak to find out what's waiting for you",
+              }}
+            />
+          </>
+        );
+      case 'leaderboard':
+        return <LeaderboardView />;
+      case 'quest':
+        return <MyQuestView />;
+      case 'loyalty':
+        return <LoyaltyShopView />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      {/* Top Bar */}
+      <TopBar
+        title="Dashboard"
+        showNotification
+        onNotification={() => console.log('Notifications')}
+      />
+
+      {/* Tab Navigation */}
+      <View style={styles.tabContainer}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabScrollContent}
+        >
+          <Pressable
+            style={[styles.tab, activeTab === 'overview' && styles.activeTab]}
+            onPress={() => setActiveTab('overview')}
+          >
+            <Text style={[styles.tabText, activeTab === 'overview' && styles.activeTabText]}>
+              Overview
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.tab, activeTab === 'leaderboard' && styles.activeTab]}
+            onPress={() => setActiveTab('leaderboard')}
+          >
+            <Text style={[styles.tabText, activeTab === 'leaderboard' && styles.activeTabText]}>
+              Leaderboard
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.tab, activeTab === 'quest' && styles.activeTab]}
+            onPress={() => setActiveTab('quest')}
+          >
+            <Text style={[styles.tabText, activeTab === 'quest' && styles.activeTabText]}>
+              My Quest
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.tab, activeTab === 'loyalty' && styles.activeTab]}
+            onPress={() => setActiveTab('loyalty')}
+          >
+            <Text style={[styles.tabText, activeTab === 'loyalty' && styles.activeTabText]}>
+              Loyalty Shop
+            </Text>
+          </Pressable>
+        </ScrollView>
+      </View>
+
+      {/* Content */}
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {renderTabContent()}
+        <View style={{ height: scaleHeight(100) }} />
+      </ScrollView>
+
+      {/* Bottom Tab Bar */}
+      <BottomTabBar activeTab={activeNavTab} onTabPress={handleTabPress} />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F9F9F9',
+  },
+  tabContainer: {
+    backgroundColor: theme.colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  tabScrollContent: {
+    paddingHorizontal: scaleWidth(24),
+  },
+  tab: {
+    paddingVertical: scaleHeight(12),
+    marginRight: scaleWidth(24),
+  },
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: theme.colors.primary.main,
+  },
+  tabText: {
+    fontSize: scaleFont(14),
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+  },
+  activeTabText: {
+    color: theme.colors.primary.main,
+    fontWeight: '600' as any,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: scaleWidth(16),
+    paddingTop: scaleHeight(20),
+  },
+  welcomeSection: {
+    marginBottom: scaleHeight(24),
+  },
+  welcomeTitle: {
+    fontSize: scaleFont(24),
+    fontWeight: '700' as any,
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.bold,
+    marginBottom: scaleHeight(4),
+  },
+  welcomeSubtitle: {
+    fontSize: scaleFont(14),
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    marginBottom: scaleHeight(16),
+  },
+  placeholderContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: scaleHeight(400),
+  },
+  placeholderText: {
+    fontSize: scaleFont(16),
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+  },
+});

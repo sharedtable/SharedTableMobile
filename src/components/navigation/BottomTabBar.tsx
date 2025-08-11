@@ -5,7 +5,7 @@ import { Icon } from '@/components/base/Icon';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
-export type TabName = 'home' | 'events' | 'bookings' | 'profile';
+export type TabName = 'home' | 'events' | 'dashboard' | 'profile';
 
 interface BottomTabBarProps {
   activeTab: TabName;
@@ -21,7 +21,7 @@ interface TabItem {
 const tabs: TabItem[] = [
   { name: 'home', label: 'Home', icon: 'home' },
   { name: 'events', label: 'Events', icon: 'calendar' },
-  { name: 'bookings', label: 'Bookings', icon: 'check-circle' },
+  { name: 'dashboard', label: 'Dashboard', icon: 'bar-chart-2' },
   { name: 'profile', label: 'Profile', icon: 'user' },
 ];
 

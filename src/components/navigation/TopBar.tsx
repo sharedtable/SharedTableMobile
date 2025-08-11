@@ -12,6 +12,7 @@ import * as Haptics from 'expo-haptics';
 import { Icon } from '@/components/base/Icon';
 import { Logo } from '@/components/base/Logo';
 import { theme, designTokens } from '@/theme';
+import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface TopBarProps {
   title?: string;
@@ -20,11 +21,13 @@ interface TopBarProps {
   showMenu?: boolean;
   showSearch?: boolean;
   showNotification?: boolean;
+  showSettings?: boolean;
   notificationCount?: number;
   onBack?: () => void;
   onMenu?: () => void;
   onSearch?: () => void;
   onNotification?: () => void;
+  onSettings?: () => void;
   rightAction?: React.ReactNode;
   transparent?: boolean;
   variant?: 'light' | 'dark' | 'transparent';
@@ -37,11 +40,13 @@ export const TopBar = memo<TopBarProps>(({
   showMenu = false,
   showSearch = false,
   showNotification = false,
+  showSettings = false,
   notificationCount = 0,
   onBack,
   onMenu,
   onSearch,
   onNotification,
+  onSettings,
   rightAction,
   transparent = false,
   variant = 'light',
@@ -188,6 +193,20 @@ export const TopBar = memo<TopBarProps>(({
               </Pressable>
             )}
 
+            {showSettings && onSettings && (
+              <Pressable
+                onPress={() => handlePress(onSettings)}
+                style={({ pressed }) => [
+                  styles.iconButton,
+                  pressed && styles.iconPressed,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Settings"
+              >
+                <Icon name="settings" size={24} color={colors.icon} />
+              </Pressable>
+            )}
+
             {rightAction}
           </View>
         </View>
@@ -201,7 +220,8 @@ TopBar.displayName = 'TopBar';
 const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.colors.white,
-    zIndex: designTokens.zIndex.sticky,
+    elevation: 4, // For Android
+    borderBottomWidth: 0,
   },
   transparent: {
     position: 'absolute',
@@ -223,7 +243,7 @@ const styles = StyleSheet.create({
     }),
   },
   content: {
-    height: designTokens.layout.headerHeight,
+    height: scaleHeight(56),
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: theme.spacing.md,
@@ -246,9 +266,10 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
   },
   title: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
+    fontSize: scaleFont(24),
+    fontWeight: '700' as any,
     fontFamily: theme.typography.fontFamily.heading,
+    color: theme.colors.text.primary,
   },
   iconButton: {
     width: 40,

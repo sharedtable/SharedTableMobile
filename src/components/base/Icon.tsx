@@ -40,6 +40,7 @@ export type IconName =
   
   // Actions
   | 'add'
+  | 'plus'
   | 'edit'
   | 'save'
   | 'share'
@@ -71,6 +72,9 @@ export type IconName =
   | 'map'
   | 'clock'
   | 'calendar'
+  
+  // Charts & Analytics
+  | 'bar-chart-2'
   
   // Food & Dining (custom)
   | 'restaurant'
@@ -132,6 +136,7 @@ const iconMap: Record<IconName, { library: string; name: string }> = {
   
   // Actions
   'add': { library: 'Feather', name: 'plus' },
+  'plus': { library: 'Feather', name: 'plus' },
   'edit': { library: 'Feather', name: 'edit-2' },
   'save': { library: 'Feather', name: 'save' },
   'share': { library: 'Feather', name: 'share-2' },
@@ -162,6 +167,9 @@ const iconMap: Record<IconName, { library: string; name: string }> = {
   'map-pin': { library: 'Feather', name: 'map-pin' },
   'map': { library: 'Feather', name: 'map' },
   'clock': { library: 'Feather', name: 'clock' },
+  
+  // Charts & Analytics
+  'bar-chart-2': { library: 'Feather', name: 'bar-chart-2' },
   
   // Food & Dining (fallback to other libraries)
   'restaurant': { library: 'Ionicons', name: 'restaurant' },
