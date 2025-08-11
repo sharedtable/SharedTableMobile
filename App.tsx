@@ -9,7 +9,7 @@ import { useFonts as useKeaniaFonts, KeaniaOne_400Regular } from '@expo-google-f
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ConfirmationCodeScreen } from '@/screens/auth/ConfirmationCodeScreen';
@@ -112,7 +112,7 @@ export default function App() {
     // Navigation debug logging - remove in production
 
     if (data?.email) {
-      setUserEmail(data.email);
+      setUserEmail(data.email as string);
       setUserData((prevData) => ({ ...prevData, email: data.email }));
     }
 
@@ -236,49 +236,33 @@ export default function App() {
       case 'onboarding-complete':
         // Final onboarding complete screen
         return (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-            <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>
-              Welcome to SharedTable!
-            </Text>
-            <Text style={{ fontSize: 16, textAlign: 'center', marginBottom: 40 }}>
+          <View style={styles.completeContainer}>
+            <Text style={styles.completeTitle}>Welcome to SharedTable!</Text>
+            <Text style={styles.completeSubtitle}>
               Your profile is complete. Let's find you some amazing dining experiences!
             </Text>
-            <Pressable
-              onPress={() => handleNavigate('home')}
-              style={{
-                padding: 15,
-                backgroundColor: '#E24849',
-                borderRadius: 8,
-                paddingHorizontal: 40,
-              }}
-            >
-              <Text style={{ color: 'white', fontSize: 18, fontWeight: '600' }}>Get Started</Text>
+            <Pressable onPress={() => handleNavigate('home')} style={styles.completeButton}>
+              <Text style={styles.completeButtonText}>Get Started</Text>
             </Pressable>
           </View>
         );
       case 'onboarding-photos':
         // Placeholder for photos upload screen
         return (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <View style={styles.centerContainer}>
             <Text>Photos Upload (Coming Soon)</Text>
-            <Pressable
-              onPress={() => handleNavigate('home')}
-              style={{ marginTop: 20, padding: 10, backgroundColor: '#C17B5C', borderRadius: 8 }}
-            >
-              <Text style={{ color: 'white' }}>Complete Onboarding</Text>
+            <Pressable onPress={() => handleNavigate('home')} style={styles.skipButton}>
+              <Text style={styles.skipButtonText}>Complete Onboarding</Text>
             </Pressable>
           </View>
         );
       case 'onboarding-dietary':
         // Placeholder for dietary preferences screen
         return (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <View style={styles.centerContainer}>
             <Text>Dietary Preferences (Coming Soon)</Text>
-            <Pressable
-              onPress={() => handleNavigate('home')}
-              style={{ marginTop: 20, padding: 10, backgroundColor: '#C17B5C', borderRadius: 8 }}
-            >
-              <Text style={{ color: 'white' }}>Skip to Home</Text>
+            <Pressable onPress={() => handleNavigate('home')} style={styles.skipButton}>
+              <Text style={styles.skipButtonText}>Skip to Home</Text>
             </Pressable>
           </View>
         );
@@ -350,3 +334,47 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  centerContainer: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  completeButton: {
+    backgroundColor: '#E24849',
+    borderRadius: 8,
+    padding: 15,
+    paddingHorizontal: 40,
+  },
+  completeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  completeContainer: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+  },
+  completeSubtitle: {
+    fontSize: 16,
+    marginBottom: 40,
+    textAlign: 'center',
+  },
+  completeTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  skipButton: {
+    backgroundColor: '#C17B5C',
+    borderRadius: 8,
+    marginTop: 20,
+    padding: 10,
+  },
+  skipButtonText: {
+    color: '#FFFFFF',
+  },
+});

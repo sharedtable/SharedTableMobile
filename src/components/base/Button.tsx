@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 
 import { theme } from '@/theme';
-// import { /* designTokens } from '@/theme/designTokens';
+import { designTokens } from '@/theme/designTokens';
 import { createShadow } from '@/theme/styleUtils';
 
 type ButtonVariant = 'primary' | 'secondary' | 'text' | 'danger';
@@ -63,13 +63,13 @@ export const Button = memo<ButtonProps>(
 
     const getButtonStyle = useCallback(
       (pressed: boolean): ViewStyle[] => {
-        const baseStyle: ViewStyle[] = [
+        const baseStyle: (ViewStyle | false | undefined)[] = [
           styles.base,
-          variant === 'text' ? styles.textVariant : styles[variant],
-          styles[size],
+          variant === 'text' ? styles.textVariant : (styles as any)[variant],
+          (styles as any)[size],
           fullWidth && styles.fullWidth,
           isDisabled && styles.disabled,
-          isDisabled && styles[`${variant}Disabled`],
+          isDisabled && (styles as any)[`${variant}Disabled`],
           pressed && styles.pressed,
           style,
         ];
@@ -80,13 +80,14 @@ export const Button = memo<ButtonProps>(
     );
 
     const getTextStyle = useCallback((): TextStyle[] => {
-      return [
+      const textStyles: (TextStyle | false | undefined)[] = [
         styles.text,
-        styles[`${variant}Text`],
-        styles[`${size}Text`],
+        (styles as any)[`${variant}Text`],
+        (styles as any)[`${size}Text`],
         isDisabled && styles.disabledText,
         textStyle,
-      ].filter(Boolean) as TextStyle[];
+      ];
+      return textStyles.filter(Boolean) as TextStyle[];
     }, [variant, size, isDisabled, textStyle]);
 
     return (

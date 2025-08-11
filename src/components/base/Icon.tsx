@@ -213,7 +213,7 @@ export const Icon = memo<IconProps>(
 
     const iconElement = (() => {
       const baseProps = {
-        name: iconConfig.name,
+        name: iconConfig.name as any,
         size,
         color,
         style,
