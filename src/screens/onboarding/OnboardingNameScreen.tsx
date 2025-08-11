@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { View, Alert, StyleSheet } from 'react-native';
-import { scaleHeight } from '@/utils/responsive';
+
 import {
   OnboardingLayout,
   OnboardingTitle,
   OnboardingInput,
   OnboardingButton,
 } from '@/components/onboarding';
+import { scaleHeight } from '@/utils/responsive';
 
 interface OnboardingNameScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
@@ -64,11 +65,7 @@ export const OnboardingNameScreen: React.FC<OnboardingNameScreenProps> = ({
         <View style={styles.spacer} />
 
         <View style={styles.bottomContainer}>
-          <OnboardingButton
-            onPress={handleNext}
-            label="Next"
-            disabled={!name}
-          />
+          <OnboardingButton onPress={handleNext} label="Next" disabled={!name} />
         </View>
       </View>
     </OnboardingLayout>
@@ -76,13 +73,13 @@ export const OnboardingNameScreen: React.FC<OnboardingNameScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
+  bottomContainer: {
+    paddingBottom: scaleHeight(40),
+  },
   container: {
     flex: 1,
   },
   spacer: {
     flex: 1,
-  },
-  bottomContainer: {
-    paddingBottom: scaleHeight(40),
   },
 });

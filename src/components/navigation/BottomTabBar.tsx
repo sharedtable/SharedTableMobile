@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Icon } from '@/components/base/Icon';
 import { theme } from '@/theme';
-import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
+import { scaleFont } from '@/utils/responsive';
 
 export type TabName = 'home' | 'events' | 'dashboard' | 'profile';
 
@@ -25,10 +26,7 @@ const tabs: TabItem[] = [
   { name: 'profile', label: 'Profile', icon: 'user' },
 ];
 
-export const BottomTabBar: React.FC<BottomTabBarProps> = ({
-  activeTab,
-  onTabPress,
-}) => {
+export const BottomTabBar: React.FC<BottomTabBarProps> = ({ activeTab, onTabPress }) => {
   const insets = useSafeAreaInsets();
 
   return (
@@ -39,10 +37,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
           return (
             <Pressable
               key={tab.name}
-              style={({ pressed }) => [
-                styles.tab,
-                pressed && styles.tabPressed,
-              ]}
+              style={({ pressed }) => [styles.tab, pressed && styles.tabPressed]}
               onPress={() => onTabPress(tab.name)}
             >
               <View style={styles.iconContainer}>
@@ -53,10 +48,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
                 />
                 {isActive && <View style={styles.activeIndicator} />}
               </View>
-              <Text style={[
-                styles.label,
-                isActive ? styles.labelActive : styles.labelInactive,
-              ]}>
+              <Text style={[styles.label, isActive ? styles.labelActive : styles.labelInactive]}>
                 {tab.label}
               </Text>
             </Pressable>
@@ -67,8 +59,15 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
   );
 };
 
-
 const styles = StyleSheet.create({
+  activeIndicator: {
+    backgroundColor: theme.colors.white,
+    borderRadius: 2,
+    bottom: -6,
+    height: 4,
+    position: 'absolute',
+    width: 4,
+  },
   container: {
     backgroundColor: theme.colors.primary.main,
     ...Platform.select({
@@ -83,38 +82,16 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  tabBar: {
-    flexDirection: 'row',
-    height: 56,
-    alignItems: 'center',
-  },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-  },
-  tabPressed: {
-    opacity: 0.8,
-  },
   iconContainer: {
-    position: 'relative',
     alignItems: 'center',
-    justifyContent: 'center',
     height: 28,
-  },
-  activeIndicator: {
-    position: 'absolute',
-    bottom: -6,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: theme.colors.white,
+    justifyContent: 'center',
+    position: 'relative',
   },
   label: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(11),
     marginTop: 4,
-    fontFamily: theme.typography.fontFamily.body,
   },
   labelActive: {
     color: theme.colors.white,
@@ -123,5 +100,19 @@ const styles = StyleSheet.create({
   labelInactive: {
     color: 'rgba(255, 255, 255, 0.6)',
     fontWeight: '400' as any,
+  },
+  tab: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  tabBar: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    height: 56,
+  },
+  tabPressed: {
+    opacity: 0.8,
   },
 });

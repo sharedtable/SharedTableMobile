@@ -1,5 +1,6 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosInstance } from 'axios';
 import * as SecureStore from 'expo-secure-store';
+
 import { env } from '@/config/env';
 
 // Create axios instance
@@ -43,12 +44,12 @@ apiClient.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     // Log request in dev mode
     if (env.IS_DEV) {
       console.log(`🚀 ${config.method?.toUpperCase()} ${config.url}`, config.data);
     }
-    
+
     return config;
   },
   (error) => {
@@ -61,16 +62,22 @@ apiClient.interceptors.response.use(
   (response) => {
     // Log response in dev mode
     if (env.IS_DEV) {
-      console.log(`✅ ${response.config.method?.toUpperCase()} ${response.config.url}`, response.data);
+      console.log(
+        `✅ ${response.config.method?.toUpperCase()} ${response.config.url}`,
+        response.data
+      );
     }
     return response;
   },
   async (error: AxiosError) => {
     // Log error in dev mode
     if (env.IS_DEV) {
-      console.error(`❌ ${error.config?.method?.toUpperCase()} ${error.config?.url}`, error.response?.data);
+      console.error(
+        `❌ ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
+        error.response?.data
+      );
     }
-    
+
     // Handle specific error cases
     if (error.response) {
       switch (error.response.status) {
@@ -101,7 +108,7 @@ apiClient.interceptors.response.use(
       // Network error
       console.error('Network error - please check your connection');
     }
-    
+
     return Promise.reject(error);
   }
 );

@@ -8,9 +8,11 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { Icon } from '@/components/base/Icon';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight } from '@/utils/responsive';
-import { Icon } from '@/components/base/Icon';
+
 import { ProgressBar } from './ProgressBar';
 
 interface OnboardingLayoutProps {
@@ -72,37 +74,35 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
     wrappedContent
   );
 
-  return (
-    <SafeAreaView style={styles.container}>{keyboardWrappedContent}</SafeAreaView>
-  );
+  return <SafeAreaView style={styles.container}>{keyboardWrappedContent}</SafeAreaView>;
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: theme.colors.white,
-  },
-  keyboardView: {
     flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: scaleHeight(100), // Space for bottom button
   },
   content: {
     flex: 1,
     paddingHorizontal: scaleWidth(24),
   },
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: scaleHeight(12),
-    paddingBottom: scaleHeight(20),
+    flexDirection: 'row',
     marginHorizontal: -scaleWidth(4),
+    paddingBottom: scaleHeight(20),
+    paddingTop: scaleHeight(12),
   },
   headerButton: {
     padding: scaleWidth(4),
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: scaleHeight(100), // Space for bottom button
+  },
+  scrollView: {
+    flex: 1,
   },
 });

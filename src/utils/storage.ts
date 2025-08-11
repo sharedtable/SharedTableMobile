@@ -1,5 +1,5 @@
-import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 // Secure storage for sensitive data (tokens, passwords, etc.)
 export const secureStorage = {
@@ -145,8 +145,8 @@ export const cacheStorage = {
 
   async clearExpired(): Promise<void> {
     const keys = await storage.getAllKeys();
-    const cacheKeys = keys.filter(k => k.startsWith('cache_'));
-    
+    const cacheKeys = keys.filter((k) => k.startsWith('cache_'));
+
     for (const key of cacheKeys) {
       const cached = await jsonStorage.getItem<{ expiry: number }>(key);
       if (cached && Date.now() >= cached.expiry) {

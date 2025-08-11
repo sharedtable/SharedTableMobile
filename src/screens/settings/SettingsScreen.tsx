@@ -1,20 +1,13 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  StatusBar,
-  Modal,
-} from 'react-native';
-import { theme } from '@/theme';
-import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
+import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar, Modal } from 'react-native';
+
 import { Icon } from '@/components/base/Icon';
 import { TopBar } from '@/components/navigation/TopBar';
+import { theme } from '@/theme';
+import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface SettingsScreenProps {
-  onNavigate?: (screen: string, data?: any) => void;
+  onNavigate?: (screen: string, data?: Record<string, unknown>) => void;
 }
 
 interface SettingsItem {
@@ -47,13 +40,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate }) =>
     if (item.id === 'logout') {
       setShowLogoutModal(true);
     } else {
-      console.log('Navigate to:', item.title);
+      // Navigate to settings item
     }
   };
 
   const handleLogout = () => {
     setShowLogoutModal(false);
-    console.log('Logging out...');
+    // Handle logout - would clear auth tokens in production
     onNavigate?.('welcome');
   };
 
@@ -64,13 +57,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate }) =>
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      
+
       {/* Top Bar */}
-      <TopBar
-        title="Settings"
-        showBack
-        onBack={handleBack}
-      />
+      <TopBar title="Settings" showBack onBack={handleBack} />
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* User Profile Section */}
@@ -99,18 +88,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate }) =>
               ]}
               onPress={() => handleSettingPress(item)}
             >
-              <Text style={[
-                styles.settingsText,
-                item.id === 'logout' && styles.logoutText
-              ]}>
+              <Text style={[styles.settingsText, item.id === 'logout' && styles.logoutText]}>
                 {item.title}
               </Text>
               {item.showArrow && (
-                <Icon 
-                  name="chevron-right" 
-                  size={20} 
-                  color={theme.colors.text.secondary} 
-                />
+                <Icon name="chevron-right" size={20} color={theme.colors.text.secondary} />
               )}
             </Pressable>
           ))}
@@ -139,10 +121,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate }) =>
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </Pressable>
-              <Pressable
-                style={[styles.modalButton, styles.logoutButton]}
-                onPress={handleLogout}
-              >
+              <Pressable style={[styles.modalButton, styles.logoutButton]} onPress={handleLogout}>
                 <Text style={styles.logoutButtonText}>Log out</Text>
               </Pressable>
             </View>
@@ -154,146 +133,146 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate }) =>
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9F9F9',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  profileSection: {
+  avatar: {
     alignItems: 'center',
-    paddingVertical: scaleHeight(30),
-    backgroundColor: theme.colors.white,
-    marginBottom: scaleHeight(20),
+    backgroundColor: '#B2EDE8',
+    borderRadius: scaleWidth(40),
+    height: scaleWidth(80),
+    justifyContent: 'center',
+    width: scaleWidth(80),
   },
   avatarContainer: {
-    position: 'relative',
     marginBottom: scaleHeight(16),
+    position: 'relative',
   },
-  avatar: {
-    width: scaleWidth(80),
-    height: scaleWidth(80),
-    borderRadius: scaleWidth(40),
-    backgroundColor: '#B2EDE8',
-    alignItems: 'center',
-    justifyContent: 'center',
+  cancelButton: {
+    backgroundColor: theme.colors.white,
+    borderColor: theme.colors.primary.main,
+    borderWidth: 1,
+  },
+  cancelButtonText: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '600' as any,
+  },
+  container: {
+    backgroundColor: '#F9F9F9',
+    flex: 1,
   },
   editBadge: {
-    position: 'absolute',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary.main,
+    borderColor: theme.colors.white,
+    borderRadius: scaleWidth(14),
+    borderWidth: 2,
     bottom: 0,
+    height: scaleWidth(28),
+    justifyContent: 'center',
+    position: 'absolute',
     right: 0,
     width: scaleWidth(28),
-    height: scaleWidth(28),
-    borderRadius: scaleWidth(14),
-    backgroundColor: theme.colors.primary.main,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: theme.colors.white,
-  },
-  userName: {
-    fontSize: scaleFont(20),
-    fontWeight: '600' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    marginBottom: scaleHeight(4),
-  },
-  userHandle: {
-    fontSize: scaleFont(14),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  settingsList: {
-    backgroundColor: theme.colors.white,
-    marginHorizontal: scaleWidth(16),
-    borderRadius: scaleWidth(27),
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    overflow: 'hidden',
-  },
-  settingsItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: scaleHeight(16),
-    paddingHorizontal: scaleWidth(20),
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  settingsItemPressed: {
-    backgroundColor: '#F5F5F5',
   },
   lastItem: {
     borderBottomWidth: 0,
-  },
-  settingsText: {
-    fontSize: scaleFont(16),
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    flex: 1,
-  },
-  logoutText: {
-    color: theme.colors.primary.main,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: theme.colors.white,
-    borderRadius: scaleWidth(20),
-    padding: scaleWidth(24),
-    marginHorizontal: scaleWidth(40),
-    width: '85%',
-    maxWidth: scaleWidth(350),
-  },
-  modalTitle: {
-    fontSize: scaleFont(20),
-    fontWeight: '700' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.bold,
-    marginBottom: scaleHeight(12),
-    textAlign: 'center',
-  },
-  modalMessage: {
-    fontSize: scaleFont(14),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    textAlign: 'center',
-    lineHeight: scaleFont(20),
-    marginBottom: scaleHeight(24),
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: scaleWidth(12),
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: scaleHeight(12),
-    borderRadius: scaleWidth(25),
-    alignItems: 'center',
-  },
-  cancelButton: {
-    borderWidth: 1,
-    borderColor: theme.colors.primary.main,
-    backgroundColor: theme.colors.white,
-  },
-  cancelButtonText: {
-    fontSize: scaleFont(14),
-    color: theme.colors.primary.main,
-    fontWeight: '600' as any,
-    fontFamily: theme.typography.fontFamily.body,
   },
   logoutButton: {
     backgroundColor: theme.colors.primary.main,
   },
   logoutButtonText: {
-    fontSize: scaleFont(14),
     color: theme.colors.white,
-    fontWeight: '600' as any,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '600' as any,
+  },
+  logoutText: {
+    color: theme.colors.primary.main,
+  },
+  modalButton: {
+    alignItems: 'center',
+    borderRadius: scaleWidth(25),
+    flex: 1,
+    paddingVertical: scaleHeight(12),
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: scaleWidth(12),
+  },
+  modalContent: {
+    backgroundColor: theme.colors.white,
+    borderRadius: scaleWidth(20),
+    marginHorizontal: scaleWidth(40),
+    maxWidth: scaleWidth(350),
+    padding: scaleWidth(24),
+    width: '85%',
+  },
+  modalMessage: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    lineHeight: scaleFont(20),
+    marginBottom: scaleHeight(24),
+    textAlign: 'center',
+  },
+  modalOverlay: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  modalTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: scaleFont(20),
+    fontWeight: '700' as any,
+    marginBottom: scaleHeight(12),
+    textAlign: 'center',
+  },
+  profileSection: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.white,
+    marginBottom: scaleHeight(20),
+    paddingVertical: scaleHeight(30),
+  },
+  scrollView: {
+    flex: 1,
+  },
+  settingsItem: {
+    alignItems: 'center',
+    borderBottomColor: '#F0F0F0',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: scaleWidth(20),
+    paddingVertical: scaleHeight(16),
+  },
+  settingsItemPressed: {
+    backgroundColor: '#F5F5F5',
+  },
+  settingsList: {
+    backgroundColor: theme.colors.white,
+    borderColor: '#E5E5E5',
+    borderRadius: scaleWidth(27),
+    borderWidth: 1,
+    marginHorizontal: scaleWidth(16),
+    overflow: 'hidden',
+  },
+  settingsText: {
+    color: theme.colors.text.primary,
+    flex: 1,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+  },
+  userHandle: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+  },
+  userName: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(20),
+    fontWeight: '600' as any,
+    marginBottom: scaleHeight(4),
   },
 });

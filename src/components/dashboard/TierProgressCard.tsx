@@ -1,9 +1,10 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+
+import { Icon } from '@/components/base/Icon';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
-import { Icon } from '@/components/base/Icon';
 
 interface TierProgressCardProps {
   tier: number;
@@ -36,7 +37,9 @@ export const TierProgressCard: React.FC<TierProgressCardProps> = ({
               <Text style={styles.percentText}>⬆ {percentComplete}%</Text>
             </View>
           </View>
-          <Text style={styles.levelText}>{level} • {dinnersAttended} dinners attended</Text>
+          <Text style={styles.levelText}>
+            {level} • {dinnersAttended} dinners attended
+          </Text>
         </View>
       </View>
     </LinearGradient>
@@ -47,49 +50,49 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.colors.primary.main,
     borderRadius: scaleWidth(35),
-    padding: scaleWidth(20),
     marginBottom: scaleHeight(16),
+    padding: scaleWidth(20),
   },
   content: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
+  },
+  header: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginBottom: scaleHeight(4),
   },
   iconContainer: {
-    marginRight: scaleWidth(16),
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: scaleWidth(16),
+  },
+  levelText: {
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    opacity: 0.9,
+  },
+  percentBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: scaleWidth(12),
+    marginLeft: scaleWidth(12),
+    paddingHorizontal: scaleWidth(8),
+    paddingVertical: scaleHeight(2),
+  },
+  percentText: {
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
+    fontWeight: '600' as any,
   },
   textContent: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: scaleHeight(4),
-  },
   tierText: {
-    fontSize: scaleFont(18),
-    fontWeight: '700' as any,
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.bold,
-  },
-  percentBadge: {
-    marginLeft: scaleWidth(12),
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    paddingHorizontal: scaleWidth(8),
-    paddingVertical: scaleHeight(2),
-    borderRadius: scaleWidth(12),
-  },
-  percentText: {
-    fontSize: scaleFont(12),
-    color: theme.colors.white,
-    fontWeight: '600' as any,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  levelText: {
-    fontSize: scaleFont(14),
-    color: theme.colors.white,
-    fontFamily: theme.typography.fontFamily.body,
-    opacity: 0.9,
+    fontSize: scaleFont(18),
+    fontWeight: '700' as any,
   },
 });

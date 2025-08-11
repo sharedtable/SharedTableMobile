@@ -1,16 +1,11 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { theme } from '@/theme';
-import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
+
 import { Icon } from '@/components/base/Icon';
 import { MaleIcon, FemaleIcon } from '@/components/icons/GenderIcons';
+import { theme } from '@/theme';
+import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface OnboardingGenderScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
@@ -46,7 +41,6 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
   // Calculate progress percentage
   const progress = (currentStep / totalSteps) * 100;
 
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -72,46 +66,38 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
         <View style={styles.optionsContainer}>
           {/* Male Option */}
           <Pressable
-            style={[
-              styles.genderCard,
-              selectedGender === 'male' && styles.genderCardSelected
-            ]}
+            style={[styles.genderCard, selectedGender === 'male' && styles.genderCardSelected]}
             onPress={() => setSelectedGender('male')}
           >
             <View style={styles.iconContainer}>
-              <MaleIcon 
-                size={50} 
-                color={theme.colors.primary.main} 
-                isSelected={selectedGender === 'male'} 
+              <MaleIcon
+                size={50}
+                color={theme.colors.primary.main}
+                isSelected={selectedGender === 'male'}
               />
             </View>
-            <Text style={[
-              styles.genderText,
-              selectedGender === 'male' && styles.genderTextSelected
-            ]}>
+            <Text
+              style={[styles.genderText, selectedGender === 'male' && styles.genderTextSelected]}
+            >
               Male
             </Text>
           </Pressable>
 
           {/* Female Option */}
           <Pressable
-            style={[
-              styles.genderCard,
-              selectedGender === 'female' && styles.genderCardSelected
-            ]}
+            style={[styles.genderCard, selectedGender === 'female' && styles.genderCardSelected]}
             onPress={() => setSelectedGender('female')}
           >
             <View style={styles.iconContainer}>
-              <FemaleIcon 
-                size={50} 
-                color={theme.colors.primary.main} 
-                isSelected={selectedGender === 'female'} 
+              <FemaleIcon
+                size={50}
+                color={theme.colors.primary.main}
+                isSelected={selectedGender === 'female'}
               />
             </View>
-            <Text style={[
-              styles.genderText,
-              selectedGender === 'female' && styles.genderTextSelected
-            ]}>
+            <Text
+              style={[styles.genderText, selectedGender === 'female' && styles.genderTextSelected]}
+            >
               Female
             </Text>
           </Pressable>
@@ -123,10 +109,7 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
         {/* Bottom Button */}
         <View style={styles.bottomContainer}>
           <Pressable
-            style={[
-              styles.nextButton,
-              !selectedGender && styles.nextButtonDisabled
-            ]}
+            style={[styles.nextButton, !selectedGender && styles.nextButtonDisabled]}
             onPress={handleNext}
             disabled={!selectedGender}
           >
@@ -139,20 +122,47 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
+  bottomContainer: {
+    paddingBottom: scaleHeight(40),
+    paddingTop: scaleHeight(20),
+  },
   container: {
-    flex: 1,
     backgroundColor: theme.colors.white,
+    flex: 1,
   },
   content: {
     flex: 1,
     paddingHorizontal: scaleWidth(24),
   },
-  header: {
-    flexDirection: 'row',
+  genderCard: {
     alignItems: 'center',
-    paddingTop: scaleHeight(12),
-    paddingBottom: scaleHeight(20),
+    backgroundColor: 'rgba(226, 72, 73, 0.1)', // 10% of brand color
+    borderColor: 'transparent',
+    borderRadius: scaleWidth(16),
+    borderWidth: 2,
+    flex: 1,
+    paddingVertical: scaleHeight(32),
+  },
+  genderCardSelected: {
+    backgroundColor: 'rgba(226, 72, 73, 0.3)', // 30% of brand color
+    borderColor: theme.colors.primary.main,
+  },
+  genderText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    fontWeight: '500' as any,
+  },
+  genderTextSelected: {
+    color: theme.colors.primary.main,
+    fontWeight: '600' as any,
+  },
+  header: {
+    alignItems: 'center',
+    flexDirection: 'row',
     marginHorizontal: -scaleWidth(4),
+    paddingBottom: scaleHeight(20),
+    paddingTop: scaleHeight(12),
   },
   headerButton: {
     padding: scaleWidth(4),
@@ -160,82 +170,55 @@ const styles = StyleSheet.create({
   headerSpacer: {
     flex: 1,
   },
-  progressContainer: {
-    marginBottom: scaleHeight(32),
-  },
-  progressBackground: {
-    height: scaleHeight(4),
-    backgroundColor: '#F0F0F0',
-    borderRadius: scaleHeight(2),
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: theme.colors.primary.main,
-    borderRadius: scaleHeight(2),
-  },
-  title: {
-    fontSize: scaleFont(32),
-    fontWeight: '700' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.heading,
-    marginBottom: scaleHeight(40),
-  },
-  optionsContainer: {
-    flexDirection: 'row',
-    gap: scaleWidth(16),
-  },
-  genderCard: {
-    flex: 1,
-    backgroundColor: 'rgba(226, 72, 73, 0.1)', // 10% of brand color
-    borderRadius: scaleWidth(16),
-    paddingVertical: scaleHeight(32),
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  genderCardSelected: {
-    backgroundColor: 'rgba(226, 72, 73, 0.3)', // 30% of brand color
-    borderColor: theme.colors.primary.main,
-  },
   iconContainer: {
-    width: scaleWidth(60),
-    height: scaleWidth(60),
     alignItems: 'center',
+    height: scaleWidth(60),
     justifyContent: 'center',
     marginBottom: scaleHeight(12),
-  },
-  genderText: {
-    fontSize: scaleFont(16),
-    fontWeight: '500' as any,
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  genderTextSelected: {
-    color: theme.colors.primary.main,
-    fontWeight: '600' as any,
-  },
-  spacer: {
-    flex: 1,
-  },
-  bottomContainer: {
-    paddingBottom: scaleHeight(40),
-    paddingTop: scaleHeight(20),
+    width: scaleWidth(60),
   },
   nextButton: {
-    height: scaleHeight(52),
+    alignItems: 'center',
     backgroundColor: theme.colors.primary.main,
     borderRadius: scaleWidth(12),
-    alignItems: 'center',
+    height: scaleHeight(52),
     justifyContent: 'center',
   },
   nextButtonDisabled: {
     opacity: 0.5,
   },
   nextButtonText: {
-    fontSize: scaleFont(18),
-    fontWeight: '600' as any,
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(18),
+    fontWeight: '600' as any,
+  },
+  optionsContainer: {
+    flexDirection: 'row',
+    gap: scaleWidth(16),
+  },
+  progressBackground: {
+    backgroundColor: '#F0F0F0',
+    borderRadius: scaleHeight(2),
+    height: scaleHeight(4),
+    overflow: 'hidden',
+  },
+  progressContainer: {
+    marginBottom: scaleHeight(32),
+  },
+  progressFill: {
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleHeight(2),
+    height: '100%',
+  },
+  spacer: {
+    flex: 1,
+  },
+  title: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.heading,
+    fontSize: scaleFont(32),
+    fontWeight: '700' as any,
+    marginBottom: scaleHeight(40),
   },
 });

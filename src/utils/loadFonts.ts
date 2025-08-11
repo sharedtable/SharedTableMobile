@@ -4,9 +4,9 @@ export const loadFonts = async () => {
   await Font.loadAsync({
     // Keania One font for headings
     'Keania One': require('@/assets/fonts/KeaniaOne-Regular.ttf'),
-    
+
     // Inter font family
-    'Inter': require('@/assets/fonts/Inter-Regular.ttf'),
+    Inter: require('@/assets/fonts/Inter-Regular.ttf'),
     'Inter-Thin': require('@/assets/fonts/Inter-Thin.ttf'),
     'Inter-Light': require('@/assets/fonts/Inter-Light.ttf'),
     'Inter-Regular': require('@/assets/fonts/Inter-Regular.ttf'),

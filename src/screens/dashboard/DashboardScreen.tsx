@@ -1,25 +1,19 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  StatusBar,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar } from 'react-native';
+// import { SafeAreaView } from 'react-native-safe-area-context';
+
+// import { Icon } from '@/components/base/Icon';
+import { GourmandProgressCard } from '@/components/dashboard/GourmandProgressCard';
+import { LeaderboardView } from '@/components/dashboard/LeaderboardView';
+import { LoyaltyShopView } from '@/components/dashboard/LoyaltyShopView';
+import { MyQuestView } from '@/components/dashboard/MyQuestView';
+import { StatsCard } from '@/components/dashboard/StatsCard';
+import { StreakTrackerCard } from '@/components/dashboard/StreakTrackerCard';
+import { TierProgressCard } from '@/components/dashboard/TierProgressCard';
+import { BottomTabBar, TabName } from '@/components/navigation/BottomTabBar';
+import { TopBar } from '@/components/navigation/TopBar';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
-import { Icon } from '@/components/base/Icon';
-import { TopBar } from '@/components/navigation/TopBar';
-import { TierProgressCard } from '@/components/dashboard/TierProgressCard';
-import { StatsCard } from '@/components/dashboard/StatsCard';
-import { GourmandProgressCard } from '@/components/dashboard/GourmandProgressCard';
-import { StreakTrackerCard } from '@/components/dashboard/StreakTrackerCard';
-import { LeaderboardView } from '@/components/dashboard/LeaderboardView';
-import { MyQuestView } from '@/components/dashboard/MyQuestView';
-import { LoyaltyShopView } from '@/components/dashboard/LoyaltyShopView';
-import { BottomTabBar, TabName } from '@/components/navigation/BottomTabBar';
 
 interface DashboardScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
@@ -93,11 +87,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
             <StreakTrackerCard
               weeksCount={6}
               weeklyPoints={{
-                description: "Maintain your streak to earn 50 bonus points per week",
+                description: 'Maintain your streak to earn 50 bonus points per week',
                 points: 200,
               }}
               nextReward={{
-                description: "Mystery reward unlocks every 3 weeks! Keep your streak to find out what's waiting for you",
+                description:
+                  "Mystery reward unlocks every 3 weeks! Keep your streak to find out what's waiting for you",
               }}
             />
           </>
@@ -125,8 +120,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
 
       {/* Tab Navigation */}
       <View style={styles.tabContainer}>
-        <ScrollView 
-          horizontal 
+        <ScrollView
+          horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.tabScrollContent}
         >
@@ -166,7 +161,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
       </View>
 
       {/* Content */}
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -182,70 +177,71 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9F9F9',
-  },
-  tabContainer: {
-    backgroundColor: theme.colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  tabScrollContent: {
-    paddingHorizontal: scaleWidth(24),
-  },
-  tab: {
-    paddingVertical: scaleHeight(12),
-    marginRight: scaleWidth(24),
-  },
   activeTab: {
-    borderBottomWidth: 2,
     borderBottomColor: theme.colors.primary.main,
-  },
-  tabText: {
-    fontSize: scaleFont(14),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
+    borderBottomWidth: 2,
   },
   activeTabText: {
     color: theme.colors.primary.main,
     fontWeight: '600' as any,
   },
-  scrollView: {
+  container: {
+    backgroundColor: '#F9F9F9',
     flex: 1,
   },
+  // Unused styles - kept for future use
+  // placeholderContainer: {
+  //   alignItems: 'center',
+  //   flex: 1,
+  //   justifyContent: 'center',
+  //   minHeight: scaleHeight(400),
+  // },
+  // placeholderText: {
+  //   color: theme.colors.text.secondary,
+  //   fontFamily: theme.typography.fontFamily.body,
+  //   fontSize: scaleFont(16),
+  // },
   scrollContent: {
     paddingHorizontal: scaleWidth(16),
     paddingTop: scaleHeight(20),
   },
-  welcomeSection: {
-    marginBottom: scaleHeight(24),
-  },
-  welcomeTitle: {
-    fontSize: scaleFont(24),
-    fontWeight: '700' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.bold,
-    marginBottom: scaleHeight(4),
-  },
-  welcomeSubtitle: {
-    fontSize: scaleFont(14),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
+  scrollView: {
+    flex: 1,
   },
   statsRow: {
     flexDirection: 'row',
     marginBottom: scaleHeight(16),
   },
-  placeholderContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: scaleHeight(400),
+  tab: {
+    marginRight: scaleWidth(24),
+    paddingVertical: scaleHeight(12),
   },
-  placeholderText: {
-    fontSize: scaleFont(16),
+  tabContainer: {
+    backgroundColor: theme.colors.white,
+    borderBottomColor: '#E5E5E5',
+    borderBottomWidth: 1,
+  },
+  tabScrollContent: {
+    paddingHorizontal: scaleWidth(24),
+  },
+  tabText: {
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+  },
+  welcomeSection: {
+    marginBottom: scaleHeight(24),
+  },
+  welcomeSubtitle: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+  },
+  welcomeTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: scaleFont(24),
+    fontWeight: '700' as any,
+    marginBottom: scaleHeight(4),
   },
 });

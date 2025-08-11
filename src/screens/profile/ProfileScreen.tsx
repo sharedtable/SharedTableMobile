@@ -1,21 +1,14 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  Image,
-  StatusBar,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Image, StatusBar } from 'react-native';
+
+import { Icon } from '@/components/base/Icon';
+import { BottomTabBar, TabName } from '@/components/navigation/BottomTabBar';
+import { TopBar } from '@/components/navigation/TopBar';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
-import { Icon } from '@/components/base/Icon';
-import { TopBar } from '@/components/navigation/TopBar';
-import { BottomTabBar, TabName } from '@/components/navigation/BottomTabBar';
 
 interface ProfileScreenProps {
-  onNavigate?: (screen: string, data?: any) => void;
+  onNavigate?: (screen: string, data?: Record<string, unknown>) => void;
 }
 
 type ProfileTab = 'reservations' | 'connections';
@@ -109,19 +102,16 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onNavigate }) => {
             <View style={styles.sectionCard}>
               <Text style={styles.sectionTitle}>Quick Action</Text>
               <View style={styles.actionButtons}>
-                <Pressable 
+                <Pressable
                   style={styles.refineButton}
                   onPress={() => {
-                    console.log('Refine button pressed, navigating to review');
+                    // Navigate to review screen
                     onNavigate?.('review');
                   }}
                 >
                   <Text style={styles.refineButtonText}>Refine</Text>
                 </Pressable>
-                <Pressable 
-                  style={styles.grabButton}
-                  onPress={() => onNavigate?.('filter')}
-                >
+                <Pressable style={styles.grabButton} onPress={() => onNavigate?.('filter')}>
                   <Text style={styles.grabButtonText}>Grab a Spot</Text>
                 </Pressable>
               </View>
@@ -137,8 +127,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onNavigate }) => {
                 <Text style={styles.smileyEmoji}>😊</Text>
               </View>
             </View>
-            
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.connectionsScroll}>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.connectionsScroll}
+            >
               <View style={styles.connectionsRow}>
                 {mockConnections.map((connection) => (
                   <View key={connection.id} style={styles.connectionItem}>
@@ -159,21 +153,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onNavigate }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      
+
       {/* Top Bar */}
-      <TopBar
-        title="Profile"
-        showSettings
-        onSettings={() => onNavigate?.('settings')}
-      />
+      <TopBar title="Profile" showSettings onSettings={() => onNavigate?.('settings')} />
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* User Header */}
         <View style={styles.userHeader}>
-          <Image 
-            source={{ uri: 'https://i.pravatar.cc/150?img=10' }} 
-            style={styles.userAvatar}
-          />
+          <Image source={{ uri: 'https://i.pravatar.cc/150?img=10' }} style={styles.userAvatar} />
           <View style={styles.userInfo}>
             <Text style={styles.welcomeText}>Welcome back, John</Text>
             <View style={styles.tierInfo}>
@@ -219,232 +206,232 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onNavigate }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9F9F9',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  userHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: scaleWidth(16),
-    paddingVertical: scaleHeight(20),
-    backgroundColor: theme.colors.white,
-  },
-  userAvatar: {
-    width: scaleWidth(60),
-    height: scaleWidth(60),
-    borderRadius: scaleWidth(30),
-    marginRight: scaleWidth(16),
-  },
-  userInfo: {
-    flex: 1,
-  },
-  welcomeText: {
-    fontSize: scaleFont(18),
-    fontWeight: '600' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    marginBottom: scaleHeight(4),
-  },
-  tierInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  tierText: {
-    fontSize: scaleFont(13),
-    color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  tierDivider: {
-    marginHorizontal: scaleWidth(6),
-    color: theme.colors.text.secondary,
-  },
-  tierLevel: {
-    fontSize: scaleFont(13),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  dinnerCount: {
-    fontSize: scaleFont(13),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: theme.colors.white,
-    paddingHorizontal: scaleWidth(16),
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-    marginBottom: scaleHeight(20),
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: scaleHeight(12),
-    alignItems: 'center',
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: theme.colors.primary.main,
-  },
-  tabText: {
-    fontSize: scaleFont(14),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  activeTabText: {
-    color: theme.colors.primary.main,
-    fontWeight: '600' as any,
-  },
-  sectionCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: scaleWidth(27),
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    padding: scaleWidth(20),
-    marginHorizontal: scaleWidth(16),
-    marginBottom: scaleHeight(16),
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: scaleHeight(16),
-  },
-  sectionTitle: {
-    fontSize: scaleFont(16),
-    fontWeight: '600' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  smileyIcon: {
-    width: scaleWidth(32),
-    height: scaleWidth(32),
-    borderRadius: scaleWidth(16),
-    backgroundColor: '#FFF4E6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  smileyEmoji: {
-    fontSize: scaleFont(18),
-  },
-  reservationItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: scaleHeight(12),
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  restaurantIcon: {
-    marginRight: scaleWidth(12),
-  },
-  iconPlaceholder: {
-    width: scaleWidth(40),
-    height: scaleWidth(40),
-    backgroundColor: '#D9D9D9',
-    borderRadius: scaleWidth(8),
-  },
-  reservationInfo: {
-    flex: 1,
-  },
-  restaurantName: {
-    fontSize: scaleFont(15),
-    fontWeight: '600' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    marginBottom: scaleHeight(4),
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  dateText: {
-    fontSize: scaleFont(13),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    marginLeft: scaleWidth(4),
-  },
-  statusBadge: {
-    alignItems: 'flex-end',
-  },
-  statusText: {
-    fontSize: scaleFont(12),
-    color: '#4CAF50',
-    fontFamily: theme.typography.fontFamily.body,
-    marginBottom: scaleHeight(4),
-  },
-  cancelButton: {
-    paddingVertical: scaleHeight(4),
-    paddingHorizontal: scaleWidth(12),
-    backgroundColor: '#F5F5F5',
-    borderRadius: scaleWidth(12),
-  },
-  cancelText: {
-    fontSize: scaleFont(12),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-  },
   actionButtons: {
     flexDirection: 'row',
     gap: scaleWidth(12),
     marginTop: scaleHeight(16),
   },
-  refineButton: {
-    flex: 1,
-    paddingVertical: scaleHeight(12),
-    borderRadius: scaleWidth(20),
-    borderWidth: 1,
-    borderColor: theme.colors.primary.main,
-    alignItems: 'center',
+  activeTab: {
+    borderBottomColor: theme.colors.primary.main,
+    borderBottomWidth: 2,
   },
-  refineButtonText: {
-    fontSize: scaleFont(14),
+  activeTabText: {
     color: theme.colors.primary.main,
     fontWeight: '600' as any,
+  },
+  cancelButton: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: scaleWidth(12),
+    paddingHorizontal: scaleWidth(12),
+    paddingVertical: scaleHeight(4),
+  },
+  cancelText: {
+    color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
   },
-  grabButton: {
-    flex: 1,
-    paddingVertical: scaleHeight(12),
-    borderRadius: scaleWidth(20),
-    backgroundColor: theme.colors.primary.main,
-    alignItems: 'center',
-  },
-  grabButtonText: {
-    fontSize: scaleFont(14),
-    color: theme.colors.white,
-    fontWeight: '600' as any,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  connectionsScroll: {
-    marginHorizontal: scaleWidth(-20),
-    paddingHorizontal: scaleWidth(20),
-  },
-  connectionsRow: {
-    flexDirection: 'row',
-    paddingRight: scaleWidth(20),
+  connectionAvatar: {
+    borderRadius: scaleWidth(30),
+    height: scaleWidth(60),
+    marginBottom: scaleHeight(8),
+    width: scaleWidth(60),
   },
   connectionItem: {
     alignItems: 'center',
     marginRight: scaleWidth(20),
   },
-  connectionAvatar: {
-    width: scaleWidth(60),
-    height: scaleWidth(60),
-    borderRadius: scaleWidth(30),
-    marginBottom: scaleHeight(8),
-  },
   connectionName: {
-    fontSize: scaleFont(12),
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
     marginBottom: scaleHeight(2),
   },
   connectionRating: {
-    fontSize: scaleFont(11),
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(11),
+  },
+  connectionsRow: {
+    flexDirection: 'row',
+    paddingRight: scaleWidth(20),
+  },
+  connectionsScroll: {
+    marginHorizontal: scaleWidth(-20),
+    paddingHorizontal: scaleWidth(20),
+  },
+  container: {
+    backgroundColor: '#F9F9F9',
+    flex: 1,
+  },
+  dateRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  dateText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
+    marginLeft: scaleWidth(4),
+  },
+  dinnerCount: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
+  },
+  grabButton: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(20),
+    flex: 1,
+    paddingVertical: scaleHeight(12),
+  },
+  grabButtonText: {
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '600' as any,
+  },
+  iconPlaceholder: {
+    backgroundColor: '#D9D9D9',
+    borderRadius: scaleWidth(8),
+    height: scaleWidth(40),
+    width: scaleWidth(40),
+  },
+  refineButton: {
+    alignItems: 'center',
+    borderColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(20),
+    borderWidth: 1,
+    flex: 1,
+    paddingVertical: scaleHeight(12),
+  },
+  refineButtonText: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '600' as any,
+  },
+  reservationInfo: {
+    flex: 1,
+  },
+  reservationItem: {
+    alignItems: 'center',
+    borderBottomColor: '#F0F0F0',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    paddingVertical: scaleHeight(12),
+  },
+  restaurantIcon: {
+    marginRight: scaleWidth(12),
+  },
+  restaurantName: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(15),
+    fontWeight: '600' as any,
+    marginBottom: scaleHeight(4),
+  },
+  scrollView: {
+    flex: 1,
+  },
+  sectionCard: {
+    backgroundColor: theme.colors.white,
+    borderColor: '#E5E5E5',
+    borderRadius: scaleWidth(27),
+    borderWidth: 1,
+    marginBottom: scaleHeight(16),
+    marginHorizontal: scaleWidth(16),
+    padding: scaleWidth(20),
+  },
+  sectionHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: scaleHeight(16),
+  },
+  sectionTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    fontWeight: '600' as any,
+  },
+  smileyEmoji: {
+    fontSize: scaleFont(18),
+  },
+  smileyIcon: {
+    alignItems: 'center',
+    backgroundColor: '#FFF4E6',
+    borderRadius: scaleWidth(16),
+    height: scaleWidth(32),
+    justifyContent: 'center',
+    width: scaleWidth(32),
+  },
+  statusBadge: {
+    alignItems: 'flex-end',
+  },
+  statusText: {
+    color: '#4CAF50',
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
+    marginBottom: scaleHeight(4),
+  },
+  tab: {
+    alignItems: 'center',
+    flex: 1,
+    paddingVertical: scaleHeight(12),
+  },
+  tabContainer: {
+    backgroundColor: theme.colors.white,
+    borderBottomColor: '#E5E5E5',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    marginBottom: scaleHeight(20),
+    paddingHorizontal: scaleWidth(16),
+  },
+  tabText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+  },
+  tierDivider: {
+    color: theme.colors.text.secondary,
+    marginHorizontal: scaleWidth(6),
+  },
+  tierInfo: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  tierLevel: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
+  },
+  tierText: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
+  },
+  userAvatar: {
+    borderRadius: scaleWidth(30),
+    height: scaleWidth(60),
+    marginRight: scaleWidth(16),
+    width: scaleWidth(60),
+  },
+  userHeader: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.white,
+    flexDirection: 'row',
+    paddingHorizontal: scaleWidth(16),
+    paddingVertical: scaleHeight(20),
+  },
+  userInfo: {
+    flex: 1,
+  },
+  welcomeText: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(18),
+    fontWeight: '600' as any,
+    marginBottom: scaleHeight(4),
   },
 });

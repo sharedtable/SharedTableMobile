@@ -8,9 +8,10 @@ import {
   StatusBar,
   SafeAreaView,
 } from 'react-native';
+
+import { Icon } from '@/components/base/Icon';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
-import { Icon } from '@/components/base/Icon';
 
 interface HowItWorksScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
@@ -20,12 +21,14 @@ const steps = [
   {
     number: '1',
     title: 'Create Your Profile',
-    description: 'Favorite cuisines, must-haves, dietary needs, and your vibe. The more we know, the better the match.',
+    description:
+      'Favorite cuisines, must-haves, dietary needs, and your vibe. The more we know, the better the match.',
   },
   {
     number: '2',
     title: 'We Create the Perfect Match',
-    description: 'Our agentic algorithm pairs you with a surprise restaurant and a dinner party. Both chosen to match your unique taste.',
+    description:
+      'Our agentic algorithm pairs you with a surprise restaurant and a dinner party. Both chosen to match your unique taste.',
   },
   {
     number: '3',
@@ -35,12 +38,14 @@ const steps = [
   {
     number: '4',
     title: 'Show Up, Dine, & Connect',
-    description: 'Enjoy an amazing meal and a great conversation with a fellow foodie. You might just discover your new favorite dish—or person.',
+    description:
+      'Enjoy an amazing meal and a great conversation with a fellow foodie. You might just discover your new favorite dish—or person.',
   },
   {
     number: '5',
     title: 'Create Your Profile',
-    description: 'Your feedback helps us fine-tune your future matches. The more you go, the better it gets.',
+    description:
+      'Your feedback helps us fine-tune your future matches. The more you go, the better it gets.',
   },
 ];
 
@@ -52,21 +57,21 @@ export const HowItWorksScreen: React.FC<HowItWorksScreenProps> = ({ onNavigate }
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <Pressable style={styles.closeButton} onPress={handleClose}>
           <Icon name="x" size={24} color={theme.colors.text.primary} />
         </Pressable>
       </View>
-      
+
       {/* Title */}
       <View style={styles.titleContainer}>
         <Text style={styles.headerTitle}>HOW DOES IT WORK?</Text>
       </View>
 
       {/* Content */}
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -92,96 +97,96 @@ export const HowItWorksScreen: React.FC<HowItWorksScreenProps> = ({ onNavigate }
 };
 
 const styles = StyleSheet.create({
+  closeButton: {
+    alignItems: 'center',
+    height: scaleWidth(32),
+    justifyContent: 'center',
+    width: scaleWidth(32),
+  },
   container: {
-    flex: 1,
     backgroundColor: theme.colors.white,
+    flex: 1,
   },
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'flex-end',
+    paddingBottom: scaleHeight(10),
     paddingHorizontal: scaleWidth(20),
     paddingTop: scaleHeight(20),
-    paddingBottom: scaleHeight(10),
-  },
-  closeButton: {
-    width: scaleWidth(32),
-    height: scaleWidth(32),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  titleContainer: {
-    paddingHorizontal: scaleWidth(24),
-    paddingBottom: scaleHeight(20),
   },
   headerTitle: {
-    fontSize: scaleFont(20),
-    fontWeight: '700' as any,
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.heading,
+    fontSize: scaleFont(20),
+    fontWeight: '700' as any,
     textAlign: 'center',
-  },
-  scrollView: {
-    flex: 1,
   },
   scrollContent: {
     paddingBottom: scaleHeight(24),
   },
-  stepsContainer: {
-    paddingHorizontal: scaleWidth(20),
-  },
-  stepCardWrapper: {
-    position: 'relative',
-    marginBottom: scaleHeight(14),
+  scrollView: {
+    flex: 1,
   },
   stepCard: {
     backgroundColor: theme.colors.white,
-    borderRadius: scaleWidth(40),
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
     borderBottomWidth: 2.5,
     borderColor: theme.colors.primary.main,
-    paddingVertical: scaleHeight(14),
+    borderLeftWidth: 1,
+    borderRadius: scaleWidth(40),
+    borderRightWidth: 1,
+    borderTopWidth: 1,
+    justifyContent: 'center',
+    minHeight: scaleHeight(70),
     paddingLeft: scaleWidth(64),
     paddingRight: scaleWidth(20),
-    minHeight: scaleHeight(70),
-    justifyContent: 'center',
+    paddingVertical: scaleHeight(14),
   },
-  stepNumber: {
-    position: 'absolute',
-    left: scaleWidth(20),
-    top: scaleHeight(16),
-    width: scaleWidth(36),
-    height: scaleWidth(36),
-    borderRadius: scaleWidth(18),
-    backgroundColor: theme.colors.primary.main,
-    borderWidth: 3,
-    borderColor: theme.colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 1, // For Android
-  },
-  stepNumberText: {
-    fontSize: scaleFont(22),
-    fontWeight: '700' as any,
-    color: theme.colors.white,
-    fontFamily: theme.typography.fontFamily.heading,
+  stepCardWrapper: {
+    marginBottom: scaleHeight(14),
+    position: 'relative',
   },
   stepContent: {
     flex: 1,
   },
-  stepTitle: {
-    fontSize: scaleFont(15),
-    fontWeight: '600' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    marginBottom: scaleHeight(3),
-  },
   stepDescription: {
-    fontSize: scaleFont(13),
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
     lineHeight: scaleFont(18),
+  },
+  stepNumber: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary.main,
+    borderColor: theme.colors.white,
+    borderRadius: scaleWidth(18),
+    borderWidth: 3,
+    elevation: 1,
+    height: scaleWidth(36),
+    justifyContent: 'center',
+    left: scaleWidth(20),
+    position: 'absolute',
+    top: scaleHeight(16),
+    width: scaleWidth(36), // For Android
+  },
+  stepNumberText: {
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.heading,
+    fontSize: scaleFont(22),
+    fontWeight: '700' as any,
+  },
+  stepTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(15),
+    fontWeight: '600' as any,
+    marginBottom: scaleHeight(3),
+  },
+  stepsContainer: {
+    paddingHorizontal: scaleWidth(20),
+  },
+  titleContainer: {
+    paddingBottom: scaleHeight(20),
+    paddingHorizontal: scaleWidth(24),
   },
 });

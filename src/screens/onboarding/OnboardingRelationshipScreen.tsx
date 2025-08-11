@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { View, Alert, StyleSheet, Text } from 'react-native';
-import { scaleHeight, scaleWidth, scaleFont } from '@/utils/responsive';
-import { theme } from '@/theme';
+
 import {
   OnboardingLayout,
   OnboardingTitle,
   SelectionCard,
   OnboardingButton,
 } from '@/components/onboarding';
+import { theme } from '@/theme';
+import { scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface OnboardingRelationshipScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
@@ -16,25 +17,15 @@ interface OnboardingRelationshipScreenProps {
   userData?: any;
 }
 
-const relationshipTypes = [
-  'Long term',
-  'Short term',
-  'Polyamorous',
-  'Open relationship',
-  'Other'
-];
+const relationshipTypes = ['Long term', 'Short term', 'Polyamorous', 'Open relationship', 'Other'];
 
-const timeSinceOptions = [
-  '0 - 3 months',
-  '3 - 12 months',
-  '> 12 months'
-];
+const timeSinceOptions = ['0 - 3 months', '3 - 12 months', '> 12 months'];
 
-export const OnboardingRelationshipScreen: React.FC<OnboardingRelationshipScreenProps> = ({ 
+export const OnboardingRelationshipScreen: React.FC<OnboardingRelationshipScreenProps> = ({
   onNavigate,
   currentStep = 7,
   totalSteps = 10,
-  userData = {}
+  userData = {},
 }) => {
   const [selectedRelationshipType, setSelectedRelationshipType] = useState<string | null>(null);
   const [selectedTimeSince, setSelectedTimeSince] = useState<string | null>(null);
@@ -50,10 +41,10 @@ export const OnboardingRelationshipScreen: React.FC<OnboardingRelationshipScreen
       return;
     }
 
-    onNavigate?.('onboarding-lifestyle', { 
+    onNavigate?.('onboarding-lifestyle', {
       ...userData,
       relationshipType: selectedRelationshipType,
-      timeSinceLastRelationship: selectedTimeSince
+      timeSinceLastRelationship: selectedTimeSince,
     });
   };
 
@@ -83,9 +74,7 @@ export const OnboardingRelationshipScreen: React.FC<OnboardingRelationshipScreen
           ))}
         </View>
 
-        <Text style={styles.secondTitle}>
-          How long has it been since your last relationship?
-        </Text>
+        <Text style={styles.secondTitle}>How long has it been since your last relationship?</Text>
 
         <View style={styles.optionsContainer}>
           {timeSinceOptions.map((option) => (
@@ -114,27 +103,27 @@ export const OnboardingRelationshipScreen: React.FC<OnboardingRelationshipScreen
 };
 
 const styles = StyleSheet.create({
+  bottomContainer: {
+    paddingBottom: scaleHeight(40),
+    paddingTop: scaleHeight(20),
+  },
   container: {
     flex: 1,
-  },
-  secondTitle: {
-    fontSize: scaleFont(32),
-    fontWeight: '700' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.heading,
-    lineHeight: scaleHeight(40),
-    marginTop: scaleHeight(32),
-    marginBottom: scaleHeight(24),
   },
   optionsContainer: {
     gap: scaleHeight(12),
   },
+  secondTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.heading,
+    fontSize: scaleFont(32),
+    fontWeight: '700' as any,
+    lineHeight: scaleHeight(40),
+    marginBottom: scaleHeight(24),
+    marginTop: scaleHeight(32),
+  },
   spacer: {
     flex: 1,
     minHeight: scaleHeight(40),
-  },
-  bottomContainer: {
-    paddingBottom: scaleHeight(40),
-    paddingTop: scaleHeight(20),
   },
 });

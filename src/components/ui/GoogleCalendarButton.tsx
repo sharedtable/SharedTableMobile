@@ -1,14 +1,9 @@
-import React, { memo } from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  View,
-  Platform,
-  Image,
-} from 'react-native';
-import * as Haptics from 'expo-haptics';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { theme, designTokens } from '@/theme';
+import * as Haptics from 'expo-haptics';
+import React, { memo } from 'react';
+import { Pressable, StyleSheet, View, Platform, Image } from 'react-native';
+
+import { theme } from '@/theme';
 
 interface GoogleCalendarButtonProps {
   onPress: () => void;
@@ -17,120 +12,111 @@ interface GoogleCalendarButtonProps {
   disabled?: boolean;
 }
 
-export const GoogleCalendarButton = memo<GoogleCalendarButtonProps>(({
-  onPress,
-  size = 'medium',
-  variant = 'icon',
-  disabled = false,
-}) => {
-  const handlePress = () => {
-    if (disabled) return;
-    
-    if (Platform.OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+export const GoogleCalendarButton = memo<GoogleCalendarButtonProps>(
+  ({ onPress, size = 'medium', variant = 'icon', disabled = false }) => {
+    const handlePress = () => {
+      if (disabled) return;
+
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+
+      onPress();
+    };
+
+    const sizeConfig = {
+      small: { iconSize: 20, buttonSize: 36 },
+      medium: { iconSize: 24, buttonSize: 44 },
+      large: { iconSize: 32, buttonSize: 56 },
+    };
+
+    const config = sizeConfig[size];
+
+    if (variant === 'icon') {
+      return (
+        <Pressable
+          onPress={handlePress}
+          disabled={disabled}
+          style={({ pressed }) => [
+            styles.iconButton,
+            {
+              width: config.buttonSize,
+              height: config.buttonSize,
+            },
+            pressed && styles.pressed,
+            disabled && styles.disabled,
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="Open Google Calendar"
+          accessibilityState={{ disabled }}
+        >
+          <MaterialCommunityIcons name="google" size={config.iconSize} color="#4285F4" />
+        </Pressable>
+      );
     }
-    
-    onPress();
-  };
 
-  const sizeConfig = {
-    small: { iconSize: 20, buttonSize: 36 },
-    medium: { iconSize: 24, buttonSize: 44 },
-    large: { iconSize: 32, buttonSize: 56 },
-  };
-
-  const config = sizeConfig[size];
-
-  if (variant === 'icon') {
+    // Full Google Calendar logo/icon
     return (
       <Pressable
         onPress={handlePress}
         disabled={disabled}
         style={({ pressed }) => [
-          styles.iconButton,
-          {
-            width: config.buttonSize,
-            height: config.buttonSize,
-          },
+          styles.fullButton,
           pressed && styles.pressed,
           disabled && styles.disabled,
         ]}
         accessibilityRole="button"
-        accessibilityLabel="Open Google Calendar"
+        accessibilityLabel="Add to Google Calendar"
         accessibilityState={{ disabled }}
       >
-        <MaterialCommunityIcons 
-          name="google" 
-          size={config.iconSize} 
-          color="#4285F4"
-        />
+        <View style={styles.calendarIconContainer}>
+          <Image
+            source={{
+              uri: 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg',
+            }}
+            style={styles.calendarImage}
+            resizeMode="contain"
+          />
+        </View>
       </Pressable>
     );
   }
-
-  // Full Google Calendar logo/icon
-  return (
-    <Pressable
-      onPress={handlePress}
-      disabled={disabled}
-      style={({ pressed }) => [
-        styles.fullButton,
-        pressed && styles.pressed,
-        disabled && styles.disabled,
-      ]}
-      accessibilityRole="button"
-      accessibilityLabel="Add to Google Calendar"
-      accessibilityState={{ disabled }}
-    >
-      <View style={styles.calendarIconContainer}>
-        <Image
-          source={{ 
-            uri: 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg' 
-          }}
-          style={styles.calendarImage}
-          resizeMode="contain"
-        />
-      </View>
-    </Pressable>
-  );
-});
+);
 
 GoogleCalendarButton.displayName = 'GoogleCalendarButton';
 
 // Alternative: Calendar icon in brand colors
-export const CalendarIcon = memo<{ size?: number; color?: string }>(({
-  size = 24,
-  color = theme.colors.brand.primary,
-}) => {
-  return (
-    <MaterialCommunityIcons 
-      name="calendar-month" 
-      size={size} 
-      color={color}
-    />
-  );
-});
+export const CalendarIcon = memo<{ size?: number; color?: string }>(
+  ({ size = 24, color = theme.colors.brand.primary }) => {
+    return <MaterialCommunityIcons name="calendar-month" size={size} color={color} />;
+  }
+);
 
 CalendarIcon.displayName = 'CalendarIcon';
 
 const styles = StyleSheet.create({
-  iconButton: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: 'transparent',
+  calendarIconContainer: {
+    height: 24,
+    width: 24,
+  },
+  calendarImage: {
+    height: '100%',
+    width: '100%',
+  },
+  disabled: {
+    opacity: 0.5,
   },
   fullButton: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: theme.colors.white,
+    borderColor: theme.colors.gray['1'],
     borderRadius: theme.borderRadius.md,
     borderWidth: 1,
-    borderColor: theme.colors.gray['1'],
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    flexDirection: 'row',
+    justifyContent: 'center',
     minHeight: 44,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -143,19 +129,14 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  calendarIconContainer: {
-    width: 24,
-    height: 24,
-  },
-  calendarImage: {
-    width: '100%',
-    height: '100%',
+  iconButton: {
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    borderRadius: theme.borderRadius.md,
+    justifyContent: 'center',
   },
   pressed: {
     opacity: 0.7,
     transform: [{ scale: 0.95 }],
-  },
-  disabled: {
-    opacity: 0.5,
   },
 });

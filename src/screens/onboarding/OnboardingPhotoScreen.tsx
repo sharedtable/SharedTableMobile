@@ -1,13 +1,10 @@
+import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Image, Alert } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+
+import { OnboardingLayout, OnboardingTitle, OnboardingButton } from '@/components/onboarding';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
-import {
-  OnboardingLayout,
-  OnboardingTitle,
-  OnboardingButton,
-} from '@/components/onboarding';
 
 interface OnboardingPhotoScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
@@ -16,19 +13,19 @@ interface OnboardingPhotoScreenProps {
   userData?: any;
 }
 
-export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({ 
+export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
   onNavigate,
   currentStep = 10,
   totalSteps = 10,
-  userData = {}
+  userData = {},
 }) => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [_loading, _setLoading] = useState(false);
 
   const handleTakePhoto = async () => {
     // Request camera permissions
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-    
+
     if (!permissionResult.granted) {
       Alert.alert(
         'Permission Required',
@@ -54,7 +51,7 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
   const handleChooseFromLibrary = async () => {
     // Request media library permissions
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
+
     if (!permissionResult.granted) {
       Alert.alert(
         'Permission Required',
@@ -95,15 +92,15 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
       );
       return;
     }
-    
+
     navigateToComplete();
   };
 
   const navigateToComplete = () => {
     // Navigate to completion screen
-    onNavigate?.('onboarding-complete', { 
+    onNavigate?.('onboarding-complete', {
       ...userData,
-      profileImage
+      profileImage,
     });
   };
 
@@ -112,32 +109,24 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
   };
 
   const showPhotoOptions = () => {
-    Alert.alert(
-      'Choose Photo',
-      'Select how you want to add your profile photo',
-      [
-        {
-          text: 'Take Selfie',
-          onPress: handleTakePhoto,
-        },
-        {
-          text: 'Choose from Library',
-          onPress: handleChooseFromLibrary,
-        },
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-      ]
-    );
+    Alert.alert('Choose Photo', 'Select how you want to add your profile photo', [
+      {
+        text: 'Take Selfie',
+        onPress: handleTakePhoto,
+      },
+      {
+        text: 'Choose from Library',
+        onPress: handleChooseFromLibrary,
+      },
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+    ]);
   };
 
   return (
-    <OnboardingLayout
-      onBack={handleBack}
-      currentStep={currentStep}
-      totalSteps={totalSteps}
-    >
+    <OnboardingLayout onBack={handleBack} currentStep={currentStep} totalSteps={totalSteps}>
       <View style={styles.container}>
         {/* Title */}
         <OnboardingTitle>
@@ -153,9 +142,9 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
               {profileImage ? (
                 <Image source={{ uri: profileImage }} style={styles.profileImage} />
               ) : (
-                <Image 
+                <Image
                   source={require('@/assets/icon.png')} // Placeholder image
-                  style={styles.placeholderImage} 
+                  style={styles.placeholderImage}
                 />
               )}
             </View>
@@ -164,13 +153,11 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
 
         {/* Take Photo Button */}
         <View style={styles.takePhotoContainer}>
-          <Pressable 
+          <Pressable
             style={styles.takePhotoButton}
             onPress={profileImage ? showPhotoOptions : handleTakePhoto}
           >
-            <Text style={styles.takePhotoText}>
-              {profileImage ? 'Change Photo' : 'Take Photo'}
-            </Text>
+            <Text style={styles.takePhotoText}>{profileImage ? 'Change Photo' : 'Take Photo'}</Text>
           </Pressable>
         </View>
 
@@ -178,10 +165,7 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
 
         {/* Next Button */}
         <View style={styles.bottomContainer}>
-          <OnboardingButton
-            onPress={handleContinue}
-            label="Next"
-          />
+          <OnboardingButton onPress={handleContinue} label="Next" />
         </View>
       </View>
     </OnboardingLayout>
@@ -189,65 +173,65 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
+  bottomContainer: {
+    paddingBottom: scaleHeight(40),
+    paddingTop: scaleHeight(20),
+  },
   container: {
     flex: 1,
   },
-  photoContainer: {
-    marginBottom: scaleHeight(40),
+  photoCircleInner: {
     alignItems: 'center',
+    backgroundColor: theme.colors.white,
+    borderRadius: scaleWidth(120),
+    height: scaleWidth(240),
+    justifyContent: 'center',
+    overflow: 'hidden',
+    width: scaleWidth(240),
   },
   photoCircleOuter: {
-    width: scaleWidth(280),
-    height: scaleWidth(280),
-    borderRadius: scaleWidth(140),
+    alignItems: 'center',
     backgroundColor: 'rgba(226, 72, 73, 0.1)', // 10% of brand color
+    borderRadius: scaleWidth(140),
+    height: scaleWidth(280),
+    justifyContent: 'center',
     padding: scaleWidth(20),
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: scaleWidth(280),
   },
-  photoCircleInner: {
-    width: scaleWidth(240),
-    height: scaleWidth(240),
-    borderRadius: scaleWidth(120),
-    backgroundColor: theme.colors.white,
-    overflow: 'hidden',
+  photoContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  profileImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+    marginBottom: scaleHeight(40),
   },
   placeholderImage: {
+    height: '100%',
+    opacity: 0.8,
+    resizeMode: 'cover',
     width: '100%',
+  },
+  profileImage: {
     height: '100%',
     resizeMode: 'cover',
-    opacity: 0.8,
-  },
-  takePhotoContainer: {
-    alignItems: 'center',
-  },
-  takePhotoButton: {
-    paddingVertical: scaleHeight(12),
-    paddingHorizontal: scaleWidth(40),
-    borderWidth: 2,
-    borderColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(24),
-    backgroundColor: theme.colors.white,
-  },
-  takePhotoText: {
-    fontSize: scaleFont(16),
-    fontWeight: '600' as any,
-    color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.body,
+    width: '100%',
   },
   spacer: {
     flex: 1,
     minHeight: scaleHeight(40),
   },
-  bottomContainer: {
-    paddingBottom: scaleHeight(40),
-    paddingTop: scaleHeight(20),
+  takePhotoButton: {
+    backgroundColor: theme.colors.white,
+    borderColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(24),
+    borderWidth: 2,
+    paddingHorizontal: scaleWidth(40),
+    paddingVertical: scaleHeight(12),
+  },
+  takePhotoContainer: {
+    alignItems: 'center',
+  },
+  takePhotoText: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    fontWeight: '600' as any,
   },
 });

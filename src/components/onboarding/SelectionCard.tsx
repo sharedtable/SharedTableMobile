@@ -1,8 +1,9 @@
 import React from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
+
+import { Icon } from '@/components/base/Icon';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
-import { Icon } from '@/components/base/Icon';
 
 interface SelectionCardProps {
   label: string;
@@ -31,9 +32,7 @@ export const SelectionCard: React.FC<SelectionCardProps> = ({
     >
       <View style={styles.cardContent}>
         {icon && <View style={styles.iconContainer}>{icon}</View>}
-        <Text style={[styles.cardText, selected && styles.selectedText]}>
-          {label}
-        </Text>
+        <Text style={[styles.cardText, selected && styles.selectedText]}>{label}</Text>
         {selected && (
           <View style={styles.checkmark}>
             <Icon name="checkmark" size={20} color={theme.colors.white} />
@@ -46,51 +45,51 @@ export const SelectionCard: React.FC<SelectionCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 2,
+    backgroundColor: 'rgba(226, 72, 73, 0.1)',
     borderColor: 'transparent',
     borderRadius: scaleWidth(12),
-    paddingVertical: scaleHeight(16),
+    borderWidth: 2,
     paddingHorizontal: scaleWidth(20),
-    backgroundColor: 'rgba(226, 72, 73, 0.1)', // 10% of brand color
+    paddingVertical: scaleHeight(16), // 10% of brand color
+  },
+  cardContent: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  cardText: {
+    color: theme.colors.text.primary,
+    flex: 1,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    fontWeight: '500' as any,
+  },
+  checkmark: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(12),
+    height: scaleWidth(24),
+    justifyContent: 'center',
+    marginLeft: scaleWidth(12),
+    width: scaleWidth(24),
   },
   compactCard: {
-    paddingVertical: scaleHeight(12),
     paddingHorizontal: scaleWidth(16),
+    paddingVertical: scaleHeight(12),
   },
-  selectedCard: {
-    borderColor: theme.colors.primary.main,
-    backgroundColor: 'rgba(226, 72, 73, 0.3)', // 30% of brand color
+  iconContainer: {
+    marginRight: scaleWidth(12),
   },
   pressed: {
     opacity: 0.8,
     transform: [{ scale: 0.98 }],
   },
-  cardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  iconContainer: {
-    marginRight: scaleWidth(12),
-  },
-  cardText: {
-    flex: 1,
-    fontSize: scaleFont(16),
-    fontWeight: '500' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
+  selectedCard: {
+    backgroundColor: 'rgba(226, 72, 73, 0.3)',
+    borderColor: theme.colors.primary.main, // 30% of brand color
   },
   selectedText: {
     color: theme.colors.primary.main,
     fontWeight: '600' as any,
-  },
-  checkmark: {
-    width: scaleWidth(24),
-    height: scaleWidth(24),
-    borderRadius: scaleWidth(12),
-    backgroundColor: theme.colors.primary.main,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: scaleWidth(12),
   },
 });

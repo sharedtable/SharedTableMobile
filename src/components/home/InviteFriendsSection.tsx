@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable, Keyboard } from 'react-native';
+
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -7,9 +8,7 @@ interface InviteFriendsSectionProps {
   onInvite?: (email: string) => void;
 }
 
-export const InviteFriendsSection: React.FC<InviteFriendsSectionProps> = ({
-  onInvite,
-}) => {
+export const InviteFriendsSection: React.FC<InviteFriendsSectionProps> = ({ onInvite }) => {
   const [email, setEmail] = useState('');
 
   const handleInvite = () => {
@@ -40,63 +39,61 @@ export const InviteFriendsSection: React.FC<InviteFriendsSectionProps> = ({
           <Text style={styles.addButtonText}>+</Text>
         </Pressable>
       </View>
-      <Text style={styles.helperText}>
-        Friends will receive invitations to join your dinner
-      </Text>
+      <Text style={styles.helperText}>Friends will receive invitations to join your dinner</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    paddingVertical: scaleHeight(24),
-    paddingHorizontal: scaleWidth(24),
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    marginTop: scaleHeight(24),
-  },
-  title: {
-    fontSize: scaleFont(16),
-    fontWeight: '600' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    marginBottom: scaleHeight(16),
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FAFAFA',
-    borderRadius: scaleWidth(28),
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    paddingLeft: scaleWidth(20),
-    paddingRight: scaleWidth(4),
-    height: scaleHeight(56),
-  },
-  input: {
-    flex: 1,
-    fontSize: scaleFont(15),
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-  },
   addButton: {
-    width: scaleWidth(48),
-    height: scaleWidth(48),
-    borderRadius: scaleWidth(12),
-    backgroundColor: theme.colors.primary.main,
     alignItems: 'center',
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(12),
+    height: scaleWidth(48),
     justifyContent: 'center',
+    width: scaleWidth(48),
   },
   addButtonText: {
-    fontSize: scaleFont(28),
     color: theme.colors.white,
+    fontSize: scaleFont(28),
     fontWeight: '400' as any,
   },
+  container: {
+    borderTopColor: '#F0F0F0',
+    borderTopWidth: 1,
+    marginTop: scaleHeight(24),
+    paddingHorizontal: scaleWidth(24),
+    paddingVertical: scaleHeight(24),
+  },
   helperText: {
-    fontSize: scaleFont(13),
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
     marginTop: scaleHeight(8),
     paddingHorizontal: scaleWidth(4),
+  },
+  input: {
+    color: theme.colors.text.primary,
+    flex: 1,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(15),
+  },
+  inputContainer: {
+    alignItems: 'center',
+    backgroundColor: '#FAFAFA',
+    borderColor: '#E5E5E5',
+    borderRadius: scaleWidth(28),
+    borderWidth: 1,
+    flexDirection: 'row',
+    height: scaleHeight(56),
+    paddingLeft: scaleWidth(20),
+    paddingRight: scaleWidth(4),
+  },
+  title: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    fontWeight: '600' as any,
+    marginBottom: scaleHeight(16),
   },
 });

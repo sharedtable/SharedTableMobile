@@ -1,13 +1,8 @@
 import React, { memo, useEffect, useRef } from 'react';
-import {
-  View,
-  StyleSheet,
-  Animated,
-  StatusBar,
-  Text as RNText,
-} from 'react-native';
+import { View, StyleSheet, Animated, StatusBar, Text as RNText } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Logo } from '@/components/base/Logo';
+
+// import { Logo } from '@/components/base/Logo';
 import { theme } from '@/theme';
 
 interface LoadingScreenProps {
@@ -15,11 +10,8 @@ interface LoadingScreenProps {
   duration?: number;
 }
 
-export const LoadingScreen = memo<LoadingScreenProps>(({ 
-  onLoadingComplete,
-  duration = 2000,
-}) => {
-  const insets = useSafeAreaInsets();
+export const LoadingScreen = memo<LoadingScreenProps>(({ onLoadingComplete, duration = 2000 }) => {
+  const _insets = useSafeAreaInsets();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
@@ -49,12 +41,12 @@ export const LoadingScreen = memo<LoadingScreenProps>(({
 
   return (
     <View style={styles.container}>
-      <StatusBar 
-        barStyle="light-content" 
+      <StatusBar
+        barStyle="light-content"
         backgroundColor={theme.colors.brand.primary}
         translucent={false}
       />
-      
+
       {/* Logo centered on brand color background - matching Figma exactly */}
       <Animated.View
         style={[
@@ -79,26 +71,26 @@ LoadingScreen.displayName = 'LoadingScreen';
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: theme.colors.brand.primary,
-    justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: theme.colors.brand.primary,
+    flex: 1,
+    justifyContent: 'center',
   },
   logoContainer: {
-    justifyContent: 'center',
     alignItems: 'center',
-  },
-  logoWrapper: {
-    width: 141, // Based on Figma 141x141 aspect ratio
-    height: 141,
     justifyContent: 'center',
-    alignItems: 'center',
   },
   logoText: {
-    fontSize: 72, // Large TT letters
-    fontFamily: theme.typography.fontFamily.heading, // Keania One
     color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.heading, // Keania One
+    fontSize: 72, // Large TT letters
     fontWeight: 'bold',
     letterSpacing: -2,
+  },
+  logoWrapper: {
+    alignItems: 'center',
+    height: 141, // Based on Figma 141x141 aspect ratio
+    justifyContent: 'center',
+    width: 141,
   },
 });

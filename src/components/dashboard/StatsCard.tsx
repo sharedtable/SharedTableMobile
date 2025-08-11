@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+
+import { Icon } from '@/components/base/Icon';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
-import { Icon } from '@/components/base/Icon';
 
 interface StatsCardProps {
   icon: string;
@@ -30,7 +31,12 @@ export const StatsCard: React.FC<StatsCardProps> = ({
         <View style={styles.valueRow}>
           <Text style={styles.value}>{value}</Text>
           {trend && (
-            <Text style={[styles.trend, { color: trend.startsWith('+') ? '#16A34A' : theme.colors.primary.main }]}>
+            <Text
+              style={[
+                styles.trend,
+                { color: trend.startsWith('+') ? '#16A34A' : theme.colors.primary.main },
+              ]}
+            >
               {trend}
             </Text>
           )}
@@ -44,53 +50,53 @@ export const StatsCard: React.FC<StatsCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    alignItems: 'center',
     backgroundColor: theme.colors.white,
+    borderColor: '#E5E5E5',
     borderRadius: scaleWidth(27),
     borderWidth: 1,
-    borderColor: '#E5E5E5',
-    padding: scaleWidth(16),
+    flex: 1,
     flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconContainer: {
-    width: scaleWidth(36),
-    height: scaleWidth(36),
-    borderRadius: scaleWidth(18),
-    backgroundColor: 'rgba(226, 72, 73, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: scaleWidth(12),
+    padding: scaleWidth(16),
   },
   content: {
     flex: 1,
   },
-  valueRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  value: {
-    fontSize: scaleFont(20),
-    fontWeight: '700' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.bold,
-  },
-  trend: {
-    fontSize: scaleFont(12),
-    fontWeight: '600' as any,
-    marginLeft: scaleWidth(4),
-    fontFamily: theme.typography.fontFamily.body,
+  iconContainer: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(226, 72, 73, 0.1)',
+    borderRadius: scaleWidth(18),
+    height: scaleWidth(36),
+    justifyContent: 'center',
+    marginRight: scaleWidth(12),
+    width: scaleWidth(36),
   },
   label: {
-    fontSize: scaleFont(12),
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
     marginTop: scaleHeight(2),
   },
   sublabel: {
-    fontSize: scaleFont(11),
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(11),
     opacity: 0.8,
+  },
+  trend: {
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
+    fontWeight: '600' as any,
+    marginLeft: scaleWidth(4),
+  },
+  value: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: scaleFont(20),
+    fontWeight: '700' as any,
+  },
+  valueRow: {
+    alignItems: 'baseline',
+    flexDirection: 'row',
   },
 });

@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import { Image, View, StyleSheet, ImageStyle, ViewStyle } from 'react-native';
-import { theme } from '@/theme';
+
+// import { theme } from '@/theme';
 
 interface LogoProps {
   size?: 'small' | 'medium' | 'large' | 'xlarge';
@@ -16,37 +17,40 @@ const sizeMap = {
   xlarge: { width: 200, height: 60 },
 };
 
-export const Logo = memo<LogoProps>(({
-  size = 'medium',
-  variant = 'full',
-  style,
-  aspectRatio = '141:141', // From Figma: 141 × 141
-}) => {
-  const dimensions = sizeMap[size];
-  
-  // Calculate dimensions based on aspect ratio if provided
-  const [widthRatio, heightRatio] = aspectRatio.split(':').map(Number);
-  const calculatedHeight = (dimensions.width * heightRatio) / widthRatio;
+export const Logo = memo<LogoProps>(
+  ({
+    size = 'medium',
+    variant: _variant = 'full',
+    style,
+    aspectRatio = '141:141', // From Figma: 141 × 141
+  }) => {
+    const dimensions = sizeMap[size];
 
-  // Use the icon.png file for all variants for now
-  const logoSource = require('@/assets/icon.png');
+    // Calculate dimensions based on aspect ratio if provided
+    const [widthRatio, heightRatio] = aspectRatio.split(':').map(Number);
+    const calculatedHeight = (dimensions.width * heightRatio) / widthRatio;
 
-  return (
-    <View style={[styles.container, style]}>
-      <Image
-        source={logoSource}
-        style={[
-          styles.logo,
-          {
-            width: dimensions.width,
-            height: aspectRatio === '1:1' ? dimensions.width : calculatedHeight,
-          },
-        ]}
-        resizeMode="contain"
-      />
-    </View>
-  );
-});
+    // Use the icon.png file for all variants for now
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const logoSource = require('@/assets/icon.png');
+
+    return (
+      <View style={[styles.container, style]}>
+        <Image
+          source={logoSource}
+          style={[
+            styles.logo,
+            {
+              width: dimensions.width,
+              height: aspectRatio === '1:1' ? dimensions.width : calculatedHeight,
+            },
+          ]}
+          resizeMode="contain"
+        />
+      </View>
+    );
+  }
+);
 
 Logo.displayName = 'Logo';
 
@@ -67,22 +71,24 @@ interface LogoWithTextProps {
   style?: ViewStyle;
 }
 
-export const LogoWithText = memo<LogoWithTextProps>(({
-  size = 'medium',
-  tagline = 'The logo should maintain a 1:1 aspect ratio (equal width and height)',
-  style,
-}) => {
-  return (
-    <View style={[logoWithTextStyles.logoWithTextContainer, style]}>
-      <Logo size={size} aspectRatio="1:1" />
-      {tagline && (
-        <View style={logoWithTextStyles.taglineContainer}>
-          {/* Text component would go here */}
-        </View>
-      )}
-    </View>
-  );
-});
+export const LogoWithText = memo<LogoWithTextProps>(
+  ({
+    size = 'medium',
+    tagline = 'The logo should maintain a 1:1 aspect ratio (equal width and height)',
+    style,
+  }) => {
+    return (
+      <View style={[logoWithTextStyles.logoWithTextContainer, style]}>
+        <Logo size={size} aspectRatio="1:1" />
+        {tagline && (
+          <View style={logoWithTextStyles.taglineContainer}>
+            {/* Text component would go here */}
+          </View>
+        )}
+      </View>
+    );
+  }
+);
 
 LogoWithText.displayName = 'LogoWithText';
 

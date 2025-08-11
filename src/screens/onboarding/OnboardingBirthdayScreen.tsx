@@ -1,16 +1,10 @@
 import React, { useState, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  ScrollView,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { Icon } from '@/components/base/Icon';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
-import { Icon } from '@/components/base/Icon';
 
 interface OnboardingBirthdayScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
@@ -20,28 +14,38 @@ interface OnboardingBirthdayScreenProps {
 }
 
 const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 const ITEM_HEIGHT = 50;
 const VISIBLE_ITEMS = 3;
 const PICKER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
 
-export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> = ({ 
+export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> = ({
   onNavigate,
   currentStep = 2,
   totalSteps = 10,
-  userData = {}
+  userData = {},
 }) => {
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth();
   const currentDay = new Date().getDate();
-  
+
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [selectedDay, setSelectedDay] = useState(currentDay);
   const [selectedYear, setSelectedYear] = useState(currentYear - 25); // Default to 25 years ago
-  
+
   const monthScrollRef = useRef<ScrollView>(null);
   const dayScrollRef = useRef<ScrollView>(null);
   const yearScrollRef = useRef<ScrollView>(null);
@@ -52,18 +56,20 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
 
   const handleNext = () => {
     const birthday = new Date(selectedYear, selectedMonth, selectedDay);
-    
+
     // Validate age (must be at least 18)
-    const age = Math.floor((new Date().getTime() - birthday.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+    const age = Math.floor(
+      (new Date().getTime() - birthday.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+    );
     if (age < 18) {
       Alert.alert('Age Requirement', 'You must be at least 18 years old to use SharedTable');
       return;
     }
 
-    onNavigate?.('onboarding-gender', { 
+    onNavigate?.('onboarding-gender', {
       ...userData,
       birthday: birthday.toISOString(),
-      age
+      age,
     });
   };
 
@@ -71,14 +77,13 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
     onNavigate?.('onboarding-name');
   };
 
-
   const handleScroll = (event: any, type: 'month' | 'day' | 'year') => {
     const offset = event.nativeEvent.contentOffset.y;
-    
+
     // The selected item is at position ITEM_HEIGHT from the top of the visible area
     // Since we have padding at the top, we need to calculate which item is at that position
     let index: number;
-    
+
     if (type === 'year') {
       // Year has 2 * ITEM_HEIGHT padding at top
       // Selected position is at offset + ITEM_HEIGHT (since selection highlight is at ITEM_HEIGHT)
@@ -88,7 +93,7 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
       // Selected position is at offset + ITEM_HEIGHT
       index = Math.round((offset + ITEM_HEIGHT) / ITEM_HEIGHT) - 1;
     }
-    
+
     if (type === 'month') {
       const monthIndex = Math.min(Math.max(0, index), 11);
       setSelectedMonth(monthIndex);
@@ -101,10 +106,14 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
     }
   };
 
-  const scrollToIndex = (scrollRef: React.RefObject<ScrollView | null>, index: number, type: 'month' | 'day' | 'year' = 'month') => {
+  const scrollToIndex = (
+    scrollRef: React.RefObject<ScrollView | null>,
+    index: number,
+    type: 'month' | 'day' | 'year' = 'month'
+  ) => {
     // Month and day have 1 ITEM_HEIGHT padding, year has 2 ITEM_HEIGHT padding
     const paddingHeight = type === 'year' ? ITEM_HEIGHT * 2 : ITEM_HEIGHT;
-    const scrollPosition = (index * ITEM_HEIGHT) + paddingHeight;
+    const scrollPosition = index * ITEM_HEIGHT + paddingHeight;
     scrollRef.current?.scrollTo({ y: scrollPosition, animated: true });
   };
 
@@ -121,19 +130,8 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
   const renderPickerItem = (item: string | number, index: number, selectedIndex: number) => {
     const isSelected = index === selectedIndex;
     return (
-      <View 
-        key={index} 
-        style={[
-          styles.pickerItem,
-          isSelected && styles.pickerItemSelected
-        ]}
-      >
-        <Text style={[
-          styles.pickerText,
-          isSelected && styles.pickerTextSelected
-        ]}>
-          {item}
-        </Text>
+      <View key={index} style={[styles.pickerItem, isSelected && styles.pickerItemSelected]}>
+        <Text style={[styles.pickerText, isSelected && styles.pickerTextSelected]}>{item}</Text>
       </View>
     );
   };
@@ -165,74 +163,67 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
 
           {/* Date Pickers */}
           <View style={styles.pickersContainer}>
-          {/* Month Picker */}
-          <View style={styles.pickerWrapper}>
-            <ScrollView
-              ref={monthScrollRef}
-              style={styles.picker}
-              showsVerticalScrollIndicator={false}
-              snapToInterval={ITEM_HEIGHT}
-              decelerationRate="fast"
-              onMomentumScrollEnd={(e) => handleScroll(e, 'month')}
-              contentContainerStyle={styles.pickerContent}
-            >
-              <View style={{ height: ITEM_HEIGHT }} />
-              {MONTHS.map((month, index) => 
-                renderPickerItem(month, index, selectedMonth)
-              )}
-              <View style={{ height: ITEM_HEIGHT }} />
-            </ScrollView>
-          </View>
+            {/* Month Picker */}
+            <View style={styles.pickerWrapper}>
+              <ScrollView
+                ref={monthScrollRef}
+                style={styles.picker}
+                showsVerticalScrollIndicator={false}
+                snapToInterval={ITEM_HEIGHT}
+                decelerationRate="fast"
+                onMomentumScrollEnd={(e) => handleScroll(e, 'month')}
+                contentContainerStyle={styles.pickerContent}
+              >
+                <View style={{ height: ITEM_HEIGHT }} />
+                {MONTHS.map((month, index) => renderPickerItem(month, index, selectedMonth))}
+                <View style={{ height: ITEM_HEIGHT }} />
+              </ScrollView>
+            </View>
 
-          {/* Day Picker */}
-          <View style={styles.pickerWrapper}>
-            <ScrollView
-              ref={dayScrollRef}
-              style={styles.picker}
-              showsVerticalScrollIndicator={false}
-              snapToInterval={ITEM_HEIGHT}
-              decelerationRate="fast"
-              onMomentumScrollEnd={(e) => handleScroll(e, 'day')}
-              contentContainerStyle={styles.pickerContent}
-            >
-              <View style={{ height: ITEM_HEIGHT }} />
-              {days.map((day, index) => 
-                renderPickerItem(day, index, selectedDay - 1)
-              )}
-              <View style={{ height: ITEM_HEIGHT }} />
-            </ScrollView>
-          </View>
+            {/* Day Picker */}
+            <View style={styles.pickerWrapper}>
+              <ScrollView
+                ref={dayScrollRef}
+                style={styles.picker}
+                showsVerticalScrollIndicator={false}
+                snapToInterval={ITEM_HEIGHT}
+                decelerationRate="fast"
+                onMomentumScrollEnd={(e) => handleScroll(e, 'day')}
+                contentContainerStyle={styles.pickerContent}
+              >
+                <View style={{ height: ITEM_HEIGHT }} />
+                {days.map((day, index) => renderPickerItem(day, index, selectedDay - 1))}
+                <View style={{ height: ITEM_HEIGHT }} />
+              </ScrollView>
+            </View>
 
-          {/* Year Picker */}
-          <View style={styles.pickerWrapper}>
-            <ScrollView
-              ref={yearScrollRef}
-              style={styles.picker}
-              showsVerticalScrollIndicator={false}
-              snapToInterval={ITEM_HEIGHT}
-              decelerationRate="fast"
-              onMomentumScrollEnd={(e) => handleScroll(e, 'year')}
-              contentContainerStyle={styles.pickerContent}
-            >
-              <View style={{ height: ITEM_HEIGHT * 2 }} />
-              {years.map((year, index) => 
-                renderPickerItem(year, index, years.indexOf(selectedYear))
-              )}
-              <View style={{ height: ITEM_HEIGHT * 2 }} />
-            </ScrollView>
-          </View>
+            {/* Year Picker */}
+            <View style={styles.pickerWrapper}>
+              <ScrollView
+                ref={yearScrollRef}
+                style={styles.picker}
+                showsVerticalScrollIndicator={false}
+                snapToInterval={ITEM_HEIGHT}
+                decelerationRate="fast"
+                onMomentumScrollEnd={(e) => handleScroll(e, 'year')}
+                contentContainerStyle={styles.pickerContent}
+              >
+                <View style={{ height: ITEM_HEIGHT * 2 }} />
+                {years.map((year, index) =>
+                  renderPickerItem(year, index, years.indexOf(selectedYear))
+                )}
+                <View style={{ height: ITEM_HEIGHT * 2 }} />
+              </ScrollView>
+            </View>
 
-          {/* Selection Highlight */}
-          <View style={styles.selectionHighlight} pointerEvents="none" />
-        </View>
+            {/* Selection Highlight */}
+            <View style={styles.selectionHighlight} pointerEvents="none" />
+          </View>
         </View>
 
         {/* Bottom Button - Fixed Position */}
         <View style={styles.bottomContainer}>
-          <Pressable
-            style={styles.nextButton}
-            onPress={handleNext}
-          >
+          <Pressable style={styles.nextButton} onPress={handleNext}>
             <Text style={styles.nextButtonText}>Next</Text>
           </Pressable>
         </View>
@@ -242,23 +233,29 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  bottomContainer: {
     backgroundColor: theme.colors.white,
+    bottom: 0,
+    left: scaleWidth(24),
+    paddingBottom: scaleHeight(40),
+    paddingTop: scaleHeight(20),
+    position: 'absolute',
+    right: scaleWidth(24),
+  },
+  container: {
+    backgroundColor: theme.colors.white,
+    flex: 1,
   },
   content: {
     flex: 1,
     paddingHorizontal: scaleWidth(24),
   },
-  scrollContent: {
-    flex: 1,
-  },
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: scaleHeight(12),
-    paddingBottom: scaleHeight(20),
+    flexDirection: 'row',
     marginHorizontal: -scaleWidth(4),
+    paddingBottom: scaleHeight(20),
+    paddingTop: scaleHeight(12),
   },
   headerButton: {
     padding: scaleWidth(4),
@@ -266,37 +263,18 @@ const styles = StyleSheet.create({
   headerSpacer: {
     flex: 1,
   },
-  progressContainer: {
-    marginBottom: scaleHeight(32),
-  },
-  progressBackground: {
-    height: scaleHeight(4),
-    backgroundColor: '#F0F0F0',
-    borderRadius: scaleHeight(2),
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
+  nextButton: {
+    alignItems: 'center',
     backgroundColor: theme.colors.primary.main,
-    borderRadius: scaleHeight(2),
+    borderRadius: scaleWidth(12),
+    height: scaleHeight(52),
+    justifyContent: 'center',
   },
-  title: {
-    fontSize: scaleFont(32),
-    fontWeight: '700' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.heading,
-    marginBottom: scaleHeight(40),
-  },
-  pickersContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    height: PICKER_HEIGHT,
-    position: 'relative',
-    marginTop: scaleHeight(40),
-  },
-  pickerWrapper: {
-    flex: 1,
-    marginHorizontal: scaleWidth(4),
+  nextButtonText: {
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(18),
+    fontWeight: '600' as any,
   },
   picker: {
     height: PICKER_HEIGHT,
@@ -305,52 +283,65 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   pickerItem: {
+    alignItems: 'center',
     height: ITEM_HEIGHT,
     justifyContent: 'center',
-    alignItems: 'center',
   },
   pickerItemSelected: {
     // Selected items will be highlighted by the overlay
   },
   pickerText: {
-    fontSize: scaleFont(16),
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
   },
   pickerTextSelected: {
+    color: '#000000',
     fontSize: scaleFont(18),
-    fontWeight: '700' as any,
-    color: '#000000', // Pure black for selected text
+    fontWeight: '700' as any, // Pure black for selected text
+  },
+  pickerWrapper: {
+    flex: 1,
+    marginHorizontal: scaleWidth(4),
+  },
+  pickersContainer: {
+    flexDirection: 'row',
+    height: PICKER_HEIGHT,
+    justifyContent: 'space-between',
+    marginTop: scaleHeight(40),
+    position: 'relative',
+  },
+  progressBackground: {
+    backgroundColor: '#F0F0F0',
+    borderRadius: scaleHeight(2),
+    height: scaleHeight(4),
+    overflow: 'hidden',
+  },
+  progressContainer: {
+    marginBottom: scaleHeight(32),
+  },
+  progressFill: {
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleHeight(2),
+    height: '100%',
+  },
+  scrollContent: {
+    flex: 1,
   },
   selectionHighlight: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: ITEM_HEIGHT, // Center selection for 3 visible items
-    height: ITEM_HEIGHT,
     backgroundColor: 'rgba(226, 72, 73, 0.1)', // 30% opacity of #E24849 (primary color)
     borderRadius: scaleWidth(8),
-  },
-  bottomContainer: {
+    height: ITEM_HEIGHT,
+    left: 0,
     position: 'absolute',
-    bottom: 0,
-    left: scaleWidth(24),
-    right: scaleWidth(24),
-    paddingBottom: scaleHeight(40),
-    paddingTop: scaleHeight(20),
-    backgroundColor: theme.colors.white,
+    right: 0,
+    top: ITEM_HEIGHT, // Center selection for 3 visible items
   },
-  nextButton: {
-    height: scaleHeight(52),
-    backgroundColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(12),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  nextButtonText: {
-    fontSize: scaleFont(18),
-    fontWeight: '600' as any,
-    color: theme.colors.white,
-    fontFamily: theme.typography.fontFamily.body,
+  title: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.heading,
+    fontSize: scaleFont(32),
+    fontWeight: '700' as any,
+    marginBottom: scaleHeight(40),
   },
 });

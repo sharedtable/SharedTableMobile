@@ -5,51 +5,51 @@ export const colors = {
   brand: {
     primary: '#E24849', // Primary red from design
   },
-  
+
   // Primary (alias for brand)
   primary: {
     main: '#E24849',
     contrast: '#FFFFFF',
   },
-  
+
   // State Colors
   state: {
     info: '#B2EDE8', // Light cyan/blue
     action: '#340068', // Deep purple
   },
-  
+
   // Semantic Colors
   error: {
     main: '#DC2626',
     light: '#EF4444',
     dark: '#B91C1C',
   },
-  
+
   success: {
     main: '#16A34A',
     light: '#22C55E',
     dark: '#15803D',
   },
-  
+
   warning: {
     main: '#EAB308',
     light: '#FDE047',
     dark: '#CA8A04',
   },
-  
+
   // Text Colors
   text: {
     primary: '#1F2024',
     secondary: '#808080',
     disabled: '#9A9A9A',
   },
-  
+
   // Background Colors
   background: {
     default: '#FFFFFF',
     paper: '#F9FAFB',
   },
-  
+
   // Neutral Colors (for compatibility)
   neutral: {
     white: '#FFFFFF',
@@ -66,17 +66,17 @@ export const colors = {
       '900': '#111827',
     },
   },
-  
+
   // Black Colors
   black: {
     '1': '#000000', // Pure black
     '2': '#1F2024', // Dark gray
   },
-  
+
   // White & Extra
   white: '#FFFFFF',
-  extra: '#3E192A', 
-  
+  extra: '#3E192A',
+
   // Gray Colors
   gray: {
     '1': '#D9D9D9', // Light gray (40% opacity would be rgba(217, 217, 217, 0.4))
@@ -133,7 +133,7 @@ export const typography = {
       default: 'System',
     }),
   },
-  
+
   fontSize: {
     xs: 12,
     sm: 14,
@@ -142,12 +142,12 @@ export const typography = {
     xl: 20,
     '2xl': 24,
     '3xl': 30,
-    title: 32,  // Standard title size
+    title: 32, // Standard title size
     '4xl': 36,
     '5xl': 48,
     '6xl': 60,
   },
-  
+
   fontWeight: {
     thin: '100',
     light: '300',
@@ -158,7 +158,7 @@ export const typography = {
     extrabold: '800',
     black: '900',
   },
-  
+
   lineHeight: {
     tight: 1.1,
     snug: 1.2,
@@ -166,7 +166,7 @@ export const typography = {
     relaxed: 1.75,
     loose: 2,
   },
-  
+
   letterSpacing: {
     tighter: -0.05,
     tight: -0.025,

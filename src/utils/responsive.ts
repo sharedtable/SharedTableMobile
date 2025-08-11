@@ -32,12 +32,11 @@ export const scaleHeight = (size: number): number => {
  */
 export const scaleFont = (size: number): number => {
   const scale = screenWidth / baseWidth;
-  const newSize = size * scale;
-  
+
   // Limit scaling to maintain readability
   const maxScale = 1.2;
   const minScale = 0.8;
-  
+
   const limitedScale = Math.min(Math.max(scale, minScale), maxScale);
   return Math.round(PixelRatio.roundToNearestPixel(size * limitedScale));
 };
@@ -58,12 +57,7 @@ export const isLargeDevice = screenWidth >= 414;
 /**
  * Responsive value based on device size
  */
-export function responsive<T>(values: {
-  small?: T;
-  medium?: T;
-  large?: T;
-  default: T;
-}): T {
+export function responsive<T>(values: { small?: T; medium?: T; large?: T; default: T }): T {
   if (isSmallDevice && values.small !== undefined) return values.small;
   if (isMediumDevice && values.medium !== undefined) return values.medium;
   if (isLargeDevice && values.large !== undefined) return values.large;

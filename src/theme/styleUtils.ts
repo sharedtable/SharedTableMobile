@@ -1,6 +1,8 @@
 import { Platform, StyleSheet } from 'react-native';
-import { theme } from './index';
+
 import { designTokens } from './designTokens';
+
+import { theme } from './index';
 
 // Platform-specific shadow helper
 export const createShadow = (elevation: keyof typeof theme.shadows) => {
@@ -13,9 +15,9 @@ export const createShadow = (elevation: keyof typeof theme.shadows) => {
 };
 
 // Responsive value helper
-export const responsive = <T,>(values: { small?: T; medium?: T; large?: T; default: T }): T => {
+export const responsive = <T>(values: { small?: T; medium?: T; large?: T; default: T }): T => {
   const { deviceSize } = designTokens;
-  
+
   if (deviceSize.isLarge && values.large !== undefined) {
     return values.large;
   }
@@ -25,27 +27,24 @@ export const responsive = <T,>(values: { small?: T; medium?: T; large?: T; defau
   if (deviceSize.isSmall && values.small !== undefined) {
     return values.small;
   }
-  
+
   return values.default;
 };
 
 // Common flex layouts
 export const flexLayouts = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
+  alignEnd: {
+    alignItems: 'flex-end',
   },
-  rowReverse: {
-    flexDirection: 'row-reverse',
+  alignStart: {
+    alignItems: 'flex-start',
   },
-  column: {
-    flexDirection: 'column',
-  },
-  columnReverse: {
-    flexDirection: 'column-reverse',
+  alignStretch: {
+    alignItems: 'stretch',
   },
   center: {
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   centerHorizontal: {
     alignItems: 'center',
@@ -53,29 +52,11 @@ export const flexLayouts = StyleSheet.create({
   centerVertical: {
     justifyContent: 'center',
   },
-  spaceBetween: {
-    justifyContent: 'space-between',
+  column: {
+    flexDirection: 'column',
   },
-  spaceAround: {
-    justifyContent: 'space-around',
-  },
-  spaceEvenly: {
-    justifyContent: 'space-evenly',
-  },
-  alignStart: {
-    alignItems: 'flex-start',
-  },
-  alignEnd: {
-    alignItems: 'flex-end',
-  },
-  alignStretch: {
-    alignItems: 'stretch',
-  },
-  justifyStart: {
-    justifyContent: 'flex-start',
-  },
-  justifyEnd: {
-    justifyContent: 'flex-end',
+  columnReverse: {
+    flexDirection: 'column-reverse',
   },
   flex1: {
     flex: 1,
@@ -89,6 +70,27 @@ export const flexLayouts = StyleSheet.create({
   flexWrap: {
     flexWrap: 'wrap',
   },
+  justifyEnd: {
+    justifyContent: 'flex-end',
+  },
+  justifyStart: {
+    justifyContent: 'flex-start',
+  },
+  row: {
+    flexDirection: 'row',
+  },
+  rowReverse: {
+    flexDirection: 'row-reverse',
+  },
+  spaceAround: {
+    justifyContent: 'space-around',
+  },
+  spaceBetween: {
+    justifyContent: 'space-between',
+  },
+  spaceEvenly: {
+    justifyContent: 'space-evenly',
+  },
 });
 
 // Position utilities
@@ -96,73 +98,37 @@ export const positions = StyleSheet.create({
   absolute: {
     position: 'absolute',
   },
-  relative: {
-    position: 'relative',
-  },
-  fillAbsolute: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
   centerAbsolute: {
+    left: '50%',
     position: 'absolute',
     top: '50%',
-    left: '50%',
     transform: [{ translateX: -50 }, { translateY: -50 }],
+  },
+  fillAbsolute: {
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  relative: {
+    position: 'relative',
   },
 });
 
 // Common text styles
 export const textStyles = StyleSheet.create({
-  h1: {
-    fontSize: theme.typography.fontSize['4xl'],
-    fontWeight: theme.typography.fontWeight.bold,
-    lineHeight: theme.typography.fontSize['4xl'] * theme.typography.lineHeight.tight,
-    color: theme.colors.text.primary,
-  },
-  h2: {
-    fontSize: theme.typography.fontSize['3xl'],
-    fontWeight: theme.typography.fontWeight.bold,
-    lineHeight: theme.typography.fontSize['3xl'] * theme.typography.lineHeight.tight,
-    color: theme.colors.text.primary,
-  },
-  h3: {
-    fontSize: theme.typography.fontSize['2xl'],
-    fontWeight: theme.typography.fontWeight.semibold,
-    lineHeight: theme.typography.fontSize['2xl'] * theme.typography.lineHeight.tight,
-    color: theme.colors.text.primary,
-  },
-  h4: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.semibold,
-    lineHeight: theme.typography.fontSize.xl * theme.typography.lineHeight.normal,
-    color: theme.colors.text.primary,
-  },
-  h5: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.medium,
-    lineHeight: theme.typography.fontSize.lg * theme.typography.lineHeight.normal,
-    color: theme.colors.text.primary,
-  },
   body: {
+    color: theme.colors.text.primary,
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.normal,
     lineHeight: theme.typography.fontSize.base * theme.typography.lineHeight.normal,
-    color: theme.colors.text.primary,
   },
   bodySmall: {
+    color: theme.colors.text.secondary,
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.normal,
     lineHeight: theme.typography.fontSize.sm * theme.typography.lineHeight.normal,
-    color: theme.colors.text.secondary,
-  },
-  caption: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.normal,
-    lineHeight: theme.typography.fontSize.xs * theme.typography.lineHeight.normal,
-    color: theme.colors.text.secondary,
   },
   button: {
     fontSize: theme.typography.fontSize.base,
@@ -170,85 +136,116 @@ export const textStyles = StyleSheet.create({
     lineHeight: theme.typography.fontSize.base * theme.typography.lineHeight.tight,
     textAlign: 'center',
   },
-  link: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.normal,
-    color: theme.colors.primary.main,
-    textDecorationLine: 'underline',
+  capitalize: {
+    textTransform: 'capitalize',
   },
-  label: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    lineHeight: theme.typography.fontSize.sm * theme.typography.lineHeight.tight,
-    color: theme.colors.text.primary,
-  },
-  error: {
+  caption: {
+    color: theme.colors.text.secondary,
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.normal,
-    color: theme.colors.error.main,
-  },
-  success: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.normal,
-    color: theme.colors.success.main,
+    lineHeight: theme.typography.fontSize.xs * theme.typography.lineHeight.normal,
   },
   center: {
     textAlign: 'center',
   },
+  error: {
+    color: theme.colors.error.main,
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.normal,
+  },
+  h1: {
+    color: theme.colors.text.primary,
+    fontSize: theme.typography.fontSize['4xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    lineHeight: theme.typography.fontSize['4xl'] * theme.typography.lineHeight.tight,
+  },
+  h2: {
+    color: theme.colors.text.primary,
+    fontSize: theme.typography.fontSize['3xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    lineHeight: theme.typography.fontSize['3xl'] * theme.typography.lineHeight.tight,
+  },
+  h3: {
+    color: theme.colors.text.primary,
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeight.semibold,
+    lineHeight: theme.typography.fontSize['2xl'] * theme.typography.lineHeight.tight,
+  },
+  h4: {
+    color: theme.colors.text.primary,
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.semibold,
+    lineHeight: theme.typography.fontSize.xl * theme.typography.lineHeight.normal,
+  },
+  h5: {
+    color: theme.colors.text.primary,
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.medium,
+    lineHeight: theme.typography.fontSize.lg * theme.typography.lineHeight.normal,
+  },
+  label: {
+    color: theme.colors.text.primary,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+    lineHeight: theme.typography.fontSize.sm * theme.typography.lineHeight.tight,
+  },
+  link: {
+    color: theme.colors.primary.main,
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.normal,
+    textDecorationLine: 'underline',
+  },
+  success: {
+    color: theme.colors.success.main,
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.normal,
+  },
   uppercase: {
     textTransform: 'uppercase',
-  },
-  capitalize: {
-    textTransform: 'capitalize',
   },
 });
 
 // Border utilities
 export const borders = StyleSheet.create({
+  all: {
+    borderColor: theme.colors.neutral.gray['200'],
+    borderWidth: 1,
+  },
+  bottom: {
+    borderBottomColor: theme.colors.neutral.gray['200'],
+    borderBottomWidth: 1,
+  },
+  left: {
+    borderLeftColor: theme.colors.neutral.gray['200'],
+    borderLeftWidth: 1,
+  },
   none: {
     borderWidth: 0,
   },
-  all: {
-    borderWidth: 1,
-    borderColor: theme.colors.neutral.gray['200'],
-  },
-  top: {
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.neutral.gray['200'],
-  },
-  bottom: {
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.neutral.gray['200'],
-  },
-  left: {
-    borderLeftWidth: 1,
-    borderLeftColor: theme.colors.neutral.gray['200'],
-  },
   right: {
-    borderRightWidth: 1,
     borderRightColor: theme.colors.neutral.gray['200'],
+    borderRightWidth: 1,
   },
   rounded: {
     borderRadius: theme.borderRadius.md,
   },
-  roundedSm: {
-    borderRadius: theme.borderRadius.sm,
+  roundedFull: {
+    borderRadius: theme.borderRadius.full,
   },
   roundedLg: {
     borderRadius: theme.borderRadius.lg,
   },
-  roundedFull: {
-    borderRadius: theme.borderRadius.full,
+  roundedSm: {
+    borderRadius: theme.borderRadius.sm,
+  },
+  top: {
+    borderTopColor: theme.colors.neutral.gray['200'],
+    borderTopWidth: 1,
   },
 });
 
 // Spacing utilities
-export const createSpacing = (
-  top?: number,
-  right?: number,
-  bottom?: number,
-  left?: number
-) => {
+export const createSpacing = (top?: number, right?: number, bottom?: number, left?: number) => {
   const rightValue = right ?? top;
   const bottomValue = bottom ?? top;
   const leftValue = left ?? rightValue;
@@ -261,12 +258,7 @@ export const createSpacing = (
   };
 };
 
-export const createMargin = (
-  top?: number,
-  right?: number,
-  bottom?: number,
-  left?: number
-) => {
+export const createMargin = (top?: number, right?: number, bottom?: number, left?: number) => {
   const rightValue = right ?? top;
   const bottomValue = bottom ?? top;
   const leftValue = left ?? rightValue;

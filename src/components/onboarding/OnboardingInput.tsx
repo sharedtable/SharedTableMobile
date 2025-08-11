@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
+
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -47,28 +48,28 @@ export const OnboardingInput: React.FC<OnboardingInputProps> = ({
 };
 
 const styles = StyleSheet.create({
+  input: {
+    backgroundColor: theme.colors.white,
+    borderColor: theme.colors.gray['1'],
+    borderRadius: scaleWidth(12),
+    borderWidth: 1,
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    height: scaleHeight(52),
+    paddingHorizontal: scaleWidth(16),
+  },
   inputGroup: {
     marginBottom: scaleHeight(20),
   },
   label: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(15),
     fontWeight: '600' as any,
-    color: theme.colors.text.primary,
     marginBottom: scaleHeight(8),
-    fontFamily: theme.typography.fontFamily.body,
   },
   required: {
     color: theme.colors.brand.primary,
-  },
-  input: {
-    height: scaleHeight(52),
-    borderWidth: 1,
-    borderColor: theme.colors.gray['1'],
-    borderRadius: scaleWidth(12),
-    paddingHorizontal: scaleWidth(16),
-    fontSize: scaleFont(16),
-    color: theme.colors.text.primary,
-    backgroundColor: theme.colors.white,
-    fontFamily: theme.typography.fontFamily.body,
   },
 });

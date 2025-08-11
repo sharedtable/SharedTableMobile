@@ -43,7 +43,7 @@ export interface ProfileData {
   lastName: string;
   email: string;
   phone: string;
-  
+
   // Demographics
   studentStatus: string;
   ethnicity: string[];
@@ -55,7 +55,7 @@ export interface ProfileData {
   gender: string;
   major: string;
   nationality: string;
-  
+
   // Personality & Lifestyle
   q1LeadConversations: number | null;
   q2CompromisePeace: number | null;
@@ -67,14 +67,14 @@ export interface ProfileData {
   smokeDrink: string[];
   favoriteHobby: string;
   mbti: string;
-  
+
   // Social Media
   useSocialMedia: string;
   socialMedia1Platform: string;
   socialMedia1Handle: string;
   socialMedia2Platform: string;
   socialMedia2Handle: string;
-  
+
   // Dietary & Dining
   mealBudget: number | null;
   eatingSpeed: number | null;
@@ -83,14 +83,14 @@ export interface ProfileData {
   interestingFact: string;
   dinnerGoals: string;
   dinnerType: string;
-  
+
   // Singles Preferences
   relationshipLookingFor: string[];
   wantChildren: string;
   attractedToEthnicities: string[];
   ageRangeMin: number | null;
   ageRangeMax: number | null;
-  
+
   // Profile Photo
   selfieUrl?: string;
 }

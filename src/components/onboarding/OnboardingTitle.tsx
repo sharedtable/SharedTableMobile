@@ -1,5 +1,6 @@
 import React from 'react';
 import { Text, StyleSheet } from 'react-native';
+
 import { theme } from '@/theme';
 import { scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -14,11 +15,11 @@ export const OnboardingTitle: React.FC<OnboardingTitleProps> = ({ children, styl
 
 const styles = StyleSheet.create({
   title: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(32),
     fontWeight: '700' as any,
-    color: theme.colors.text.primary,
-    marginBottom: scaleHeight(32),
-    fontFamily: theme.typography.fontFamily.heading,
     lineHeight: scaleHeight(40),
+    marginBottom: scaleHeight(32),
   },
 });

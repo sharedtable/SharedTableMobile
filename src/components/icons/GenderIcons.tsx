@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { scaleWidth } from '@/utils/responsive';
+
+// import { scaleWidth } from '@/utils/responsive';
 
 interface GenderIconProps {
   size?: number;
@@ -8,16 +9,16 @@ interface GenderIconProps {
   isSelected?: boolean;
 }
 
-export const MaleIcon: React.FC<GenderIconProps> = ({ 
-  size = 50, 
+export const MaleIcon: React.FC<GenderIconProps> = ({
+  size = 50,
   color = '#999999',
-  isSelected = false 
+  isSelected = false,
 }) => {
   const activeColor = isSelected ? color : '#999999';
   const circleSize = size * 0.65; // Circle is 65% of total size
   const arrowLength = size * 0.4; // Arrow length
   const strokeWidth = size * 0.06; // Line thickness
-  
+
   return (
     <View style={[styles.container, { width: size, height: size }]}>
       {/* Circle */}
@@ -33,10 +34,10 @@ export const MaleIcon: React.FC<GenderIconProps> = ({
             backgroundColor: isSelected ? activeColor : 'transparent',
             left: 0,
             bottom: 0,
-          }
+          },
         ]}
       />
-      
+
       {/* Arrow pointing to top-right at 45 degrees - closer to circle */}
       <View
         style={[
@@ -45,7 +46,7 @@ export const MaleIcon: React.FC<GenderIconProps> = ({
             position: 'absolute',
             top: size * 0.05,
             right: size * 0.05,
-          }
+          },
         ]}
       >
         {/* Arrow line */}
@@ -61,7 +62,7 @@ export const MaleIcon: React.FC<GenderIconProps> = ({
             transformOrigin: 'center',
           }}
         />
-        
+
         {/* Arrow head - horizontal part */}
         <View
           style={{
@@ -73,7 +74,7 @@ export const MaleIcon: React.FC<GenderIconProps> = ({
             right: 0,
           }}
         />
-        
+
         {/* Arrow head - vertical part */}
         <View
           style={{
@@ -90,16 +91,16 @@ export const MaleIcon: React.FC<GenderIconProps> = ({
   );
 };
 
-export const FemaleIcon: React.FC<GenderIconProps> = ({ 
-  size = 50, 
+export const FemaleIcon: React.FC<GenderIconProps> = ({
+  size = 50,
   color = '#999999',
-  isSelected = false 
+  isSelected = false,
 }) => {
   const activeColor = isSelected ? color : '#999999';
   const circleSize = size * 0.65; // Circle is 65% of total size
   const crossLength = size * 0.35; // Length of cross stem and arms
   const strokeWidth = size * 0.06; // Line thickness
-  
+
   return (
     <View style={[styles.container, { width: size, height: size }]}>
       {/* Circle positioned top-right */}
@@ -115,10 +116,10 @@ export const FemaleIcon: React.FC<GenderIconProps> = ({
             backgroundColor: isSelected ? activeColor : 'transparent',
             top: 0,
             right: 0,
-          }
+          },
         ]}
       />
-      
+
       {/* Cross pointing to bottom-left corner at 45 degrees */}
       <View
         style={{
@@ -141,7 +142,7 @@ export const FemaleIcon: React.FC<GenderIconProps> = ({
             top: -crossLength * 0.4,
           }}
         />
-        
+
         {/* Horizontal arm of cross */}
         <View
           style={{
@@ -159,14 +160,14 @@ export const FemaleIcon: React.FC<GenderIconProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
+  arrowContainer: {
     position: 'relative',
   },
   circle: {
-    position: 'absolute',
     backgroundColor: 'transparent',
+    position: 'absolute',
   },
-  arrowContainer: {
+  container: {
     position: 'relative',
   },
 });

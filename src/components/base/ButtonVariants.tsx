@@ -1,16 +1,9 @@
-import React, { memo, ReactNode } from 'react';
-import {
-  Pressable,
-  Text,
-  StyleSheet,
-  View,
-  Platform,
-  ViewStyle,
-  TextStyle,
-} from 'react-native';
 import * as Haptics from 'expo-haptics';
+import React, { memo, ReactNode } from 'react';
+import { Pressable, Text, StyleSheet, View, Platform, ViewStyle, TextStyle } from 'react-native';
+
 import { theme } from '@/theme';
-import { designTokens } from '@/theme/designTokens';
+// import { /* designTokens } from '@/theme/designTokens';
 import { createShadow } from '@/theme/styleUtils';
 
 // Base button props that all variants share
@@ -32,106 +25,108 @@ interface SquareButtonProps extends BaseButtonProps {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
 }
 
-export const SquareButton = memo<SquareButtonProps>(({
-  onPress,
-  disabled = false,
-  loading = false,
-  fullWidth = false,
-  size = 'medium',
-  variant = 'outline',
-  leftIcon,
-  rightIcon,
-  style,
-  textStyle,
-  children,
-}) => {
-  const handlePress = () => {
-    if (disabled || loading) return;
-    
-    if (Platform.OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    
-    onPress();
-  };
+export const SquareButton = memo<SquareButtonProps>(
+  ({
+    onPress,
+    disabled = false,
+    loading = false,
+    fullWidth = false,
+    size = 'medium',
+    variant = 'outline',
+    leftIcon,
+    rightIcon,
+    style,
+    textStyle,
+    children,
+  }) => {
+    const handlePress = () => {
+      if (disabled || loading) return;
 
-  const sizeStyles = {
-    small: { height: 36, paddingHorizontal: 12, fontSize: 14 },
-    medium: { height: 44, paddingHorizontal: 20, fontSize: 16 },
-    large: { height: 52, paddingHorizontal: 24, fontSize: 18 },
-  };
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
 
-  const variantStyles = {
-    primary: {
-      backgroundColor: theme.colors.brand.primary,
-      borderWidth: 0,
-      textColor: theme.colors.white,
-    },
-    secondary: {
-      backgroundColor: theme.colors.state.action,
-      borderWidth: 0,
-      textColor: theme.colors.white,
-    },
-    outline: {
-      backgroundColor: theme.colors.white,
-      borderWidth: 1,
-      borderColor: theme.colors.gray['1'],
-      textColor: theme.colors.text.primary,
-    },
-    ghost: {
-      backgroundColor: 'transparent',
-      borderWidth: 0,
-      textColor: theme.colors.text.primary,
-    },
-  };
+      onPress();
+    };
 
-  const currentSize = sizeStyles[size];
-  const currentVariant = variantStyles[variant];
+    const sizeStyles = {
+      small: { height: 36, paddingHorizontal: 12, fontSize: 14 },
+      medium: { height: 44, paddingHorizontal: 20, fontSize: 16 },
+      large: { height: 52, paddingHorizontal: 24, fontSize: 18 },
+    };
 
-  return (
-    <Pressable
-      onPress={handlePress}
-      disabled={disabled || loading}
-      style={({ pressed }) => [
-        styles.squareButton,
-        {
-          height: currentSize.height,
-          paddingHorizontal: currentSize.paddingHorizontal,
-          backgroundColor: currentVariant.backgroundColor,
-          borderWidth: currentVariant.borderWidth,
-          borderColor: currentVariant.borderColor,
-        },
-        fullWidth && styles.fullWidth,
-        pressed && styles.pressed,
-        (disabled || loading) && styles.disabled,
-        style,
-      ]}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: disabled || loading }}
-    >
-      {leftIcon && <View style={styles.iconWrapper}>{leftIcon}</View>}
-      
-      {typeof children === 'string' ? (
-        <Text 
-          style={[
-            styles.text,
-            { 
-              fontSize: currentSize.fontSize,
-              color: currentVariant.textColor,
-            },
-            textStyle,
-          ]}
-        >
-          {children}
-        </Text>
-      ) : (
-        children
-      )}
-      
-      {rightIcon && <View style={styles.iconWrapper}>{rightIcon}</View>}
-    </Pressable>
-  );
-});
+    const variantStyles = {
+      primary: {
+        backgroundColor: theme.colors.brand.primary,
+        borderWidth: 0,
+        textColor: theme.colors.white,
+      },
+      secondary: {
+        backgroundColor: theme.colors.state.action,
+        borderWidth: 0,
+        textColor: theme.colors.white,
+      },
+      outline: {
+        backgroundColor: theme.colors.white,
+        borderWidth: 1,
+        borderColor: theme.colors.gray['1'],
+        textColor: theme.colors.text.primary,
+      },
+      ghost: {
+        backgroundColor: 'transparent',
+        borderWidth: 0,
+        textColor: theme.colors.text.primary,
+      },
+    };
+
+    const currentSize = sizeStyles[size];
+    const currentVariant = variantStyles[variant];
+
+    return (
+      <Pressable
+        onPress={handlePress}
+        disabled={disabled || loading}
+        style={({ pressed }) => [
+          styles.squareButton,
+          {
+            height: currentSize.height,
+            paddingHorizontal: currentSize.paddingHorizontal,
+            backgroundColor: currentVariant.backgroundColor,
+            borderWidth: currentVariant.borderWidth,
+            borderColor: currentVariant.borderColor,
+          },
+          fullWidth && styles.fullWidth,
+          pressed && styles.pressed,
+          (disabled || loading) && styles.disabled,
+          style,
+        ]}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: disabled || loading }}
+      >
+        {leftIcon && <View style={styles.iconWrapper}>{leftIcon}</View>}
+
+        {typeof children === 'string' ? (
+          <Text
+            style={[
+              styles.text,
+              {
+                fontSize: currentSize.fontSize,
+                color: currentVariant.textColor,
+              },
+              textStyle,
+            ]}
+          >
+            {children}
+          </Text>
+        ) : (
+          children
+        )}
+
+        {rightIcon && <View style={styles.iconWrapper}>{rightIcon}</View>}
+      </Pressable>
+    );
+  }
+);
 
 SquareButton.displayName = 'SquareButton';
 
@@ -141,104 +136,106 @@ interface RoundedButtonProps extends BaseButtonProps {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
 }
 
-export const RoundedButton = memo<RoundedButtonProps>(({
-  onPress,
-  disabled = false,
-  loading = false,
-  size = 'small',
-  variant = 'outline',
-  leftIcon,
-  rightIcon,
-  style,
-  textStyle,
-  children,
-}) => {
-  const handlePress = () => {
-    if (disabled || loading) return;
-    
-    if (Platform.OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    
-    onPress();
-  };
+export const RoundedButton = memo<RoundedButtonProps>(
+  ({
+    onPress,
+    disabled = false,
+    loading = false,
+    size = 'small',
+    variant = 'outline',
+    leftIcon,
+    rightIcon,
+    style,
+    textStyle,
+    children,
+  }) => {
+    const handlePress = () => {
+      if (disabled || loading) return;
 
-  const sizeStyles = {
-    small: { height: 32, paddingHorizontal: 16, fontSize: 12 },
-    medium: { height: 40, paddingHorizontal: 20, fontSize: 14 },
-    large: { height: 48, paddingHorizontal: 24, fontSize: 16 },
-  };
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
 
-  const variantStyles = {
-    primary: {
-      backgroundColor: theme.colors.brand.primary,
-      borderWidth: 0,
-      textColor: theme.colors.white,
-    },
-    secondary: {
-      backgroundColor: theme.colors.state.action,
-      borderWidth: 0,
-      textColor: theme.colors.white,
-    },
-    outline: {
-      backgroundColor: theme.colors.white,
-      borderWidth: 1,
-      borderColor: theme.colors.gray['1'],
-      textColor: theme.colors.gray['4'],
-    },
-    ghost: {
-      backgroundColor: 'transparent',
-      borderWidth: 0,
-      textColor: theme.colors.text.primary,
-    },
-  };
+      onPress();
+    };
 
-  const currentSize = sizeStyles[size];
-  const currentVariant = variantStyles[variant];
+    const sizeStyles = {
+      small: { height: 32, paddingHorizontal: 16, fontSize: 12 },
+      medium: { height: 40, paddingHorizontal: 20, fontSize: 14 },
+      large: { height: 48, paddingHorizontal: 24, fontSize: 16 },
+    };
 
-  return (
-    <Pressable
-      onPress={handlePress}
-      disabled={disabled || loading}
-      style={({ pressed }) => [
-        styles.roundedButton,
-        {
-          height: currentSize.height,
-          paddingHorizontal: currentSize.paddingHorizontal,
-          backgroundColor: currentVariant.backgroundColor,
-          borderWidth: currentVariant.borderWidth,
-          borderColor: currentVariant.borderColor,
-        },
-        pressed && styles.roundedPressed,
-        (disabled || loading) && styles.disabled,
-        style,
-      ]}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: disabled || loading }}
-    >
-      {leftIcon && <View style={styles.iconWrapperSmall}>{leftIcon}</View>}
-      
-      {typeof children === 'string' ? (
-        <Text 
-          style={[
-            styles.roundedText,
-            { 
-              fontSize: currentSize.fontSize,
-              color: currentVariant.textColor,
-            },
-            textStyle,
-          ]}
-        >
-          {children}
-        </Text>
-      ) : (
-        children
-      )}
-      
-      {rightIcon && <View style={styles.iconWrapperSmall}>{rightIcon}</View>}
-    </Pressable>
-  );
-});
+    const variantStyles = {
+      primary: {
+        backgroundColor: theme.colors.brand.primary,
+        borderWidth: 0,
+        textColor: theme.colors.white,
+      },
+      secondary: {
+        backgroundColor: theme.colors.state.action,
+        borderWidth: 0,
+        textColor: theme.colors.white,
+      },
+      outline: {
+        backgroundColor: theme.colors.white,
+        borderWidth: 1,
+        borderColor: theme.colors.gray['1'],
+        textColor: theme.colors.gray['4'],
+      },
+      ghost: {
+        backgroundColor: 'transparent',
+        borderWidth: 0,
+        textColor: theme.colors.text.primary,
+      },
+    };
+
+    const currentSize = sizeStyles[size];
+    const currentVariant = variantStyles[variant];
+
+    return (
+      <Pressable
+        onPress={handlePress}
+        disabled={disabled || loading}
+        style={({ pressed }) => [
+          styles.roundedButton,
+          {
+            height: currentSize.height,
+            paddingHorizontal: currentSize.paddingHorizontal,
+            backgroundColor: currentVariant.backgroundColor,
+            borderWidth: currentVariant.borderWidth,
+            borderColor: currentVariant.borderColor,
+          },
+          pressed && styles.roundedPressed,
+          (disabled || loading) && styles.disabled,
+          style,
+        ]}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: disabled || loading }}
+      >
+        {leftIcon && <View style={styles.iconWrapperSmall}>{leftIcon}</View>}
+
+        {typeof children === 'string' ? (
+          <Text
+            style={[
+              styles.roundedText,
+              {
+                fontSize: currentSize.fontSize,
+                color: currentVariant.textColor,
+              },
+              textStyle,
+            ]}
+          >
+            {children}
+          </Text>
+        ) : (
+          children
+        )}
+
+        {rightIcon && <View style={styles.iconWrapperSmall}>{rightIcon}</View>}
+      </Pressable>
+    );
+  }
+);
 
 RoundedButton.displayName = 'RoundedButton';
 
@@ -252,106 +249,77 @@ interface FABProps {
   style?: ViewStyle;
 }
 
-export const FAB = memo<FABProps>(({
-  onPress,
-  icon,
-  size = 'medium',
-  variant = 'primary',
-  disabled = false,
-  style,
-}) => {
-  const handlePress = () => {
-    if (disabled) return;
-    
-    if (Platform.OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    
-    onPress();
-  };
+export const FAB = memo<FABProps>(
+  ({ onPress, icon, size = 'medium', variant = 'primary', disabled = false, style }) => {
+    const handlePress = () => {
+      if (disabled) return;
 
-  const sizeStyles = {
-    small: 40,
-    medium: 56,
-    large: 72,
-  };
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
 
-  const variantStyles = {
-    primary: {
-      backgroundColor: theme.colors.brand.primary,
-      borderWidth: 0,
-    },
-    secondary: {
-      backgroundColor: theme.colors.state.action,
-      borderWidth: 0,
-    },
-    outline: {
-      backgroundColor: theme.colors.white,
-      borderWidth: 1,
-      borderColor: theme.colors.gray['1'],
-    },
-  };
+      onPress();
+    };
 
-  const buttonSize = sizeStyles[size];
-  const currentVariant = variantStyles[variant];
+    const sizeStyles = {
+      small: 40,
+      medium: 56,
+      large: 72,
+    };
 
-  return (
-    <Pressable
-      onPress={handlePress}
-      disabled={disabled}
-      style={({ pressed }) => [
-        styles.fab,
-        {
-          width: buttonSize,
-          height: buttonSize,
-          borderRadius: buttonSize / 2,
-          backgroundColor: currentVariant.backgroundColor,
-          borderWidth: currentVariant.borderWidth,
-          borderColor: currentVariant.borderColor,
-        },
-        pressed && styles.fabPressed,
-        disabled && styles.disabled,
-        style,
-      ]}
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
-    >
-      {icon}
-    </Pressable>
-  );
-});
+    const variantStyles = {
+      primary: {
+        backgroundColor: theme.colors.brand.primary,
+        borderWidth: 0,
+      },
+      secondary: {
+        backgroundColor: theme.colors.state.action,
+        borderWidth: 0,
+      },
+      outline: {
+        backgroundColor: theme.colors.white,
+        borderWidth: 1,
+        borderColor: theme.colors.gray['1'],
+      },
+    };
+
+    const buttonSize = sizeStyles[size];
+    const currentVariant = variantStyles[variant];
+
+    return (
+      <Pressable
+        onPress={handlePress}
+        disabled={disabled}
+        style={({ pressed }) => [
+          styles.fab,
+          {
+            width: buttonSize,
+            height: buttonSize,
+            borderRadius: buttonSize / 2,
+            backgroundColor: currentVariant.backgroundColor,
+            borderWidth: currentVariant.borderWidth,
+            borderColor: currentVariant.borderColor,
+          },
+          pressed && styles.fabPressed,
+          disabled && styles.disabled,
+          style,
+        ]}
+        accessibilityRole="button"
+        accessibilityState={{ disabled }}
+      >
+        {icon}
+      </Pressable>
+    );
+  }
+);
 
 FAB.displayName = 'FAB';
 
 const styles = StyleSheet.create({
-  // Square Button Styles
-  squareButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: theme.borderRadius.lg,
-    gap: 8,
-    ...createShadow('sm'),
+  // Common Styles
+  disabled: {
+    opacity: 0.5,
   },
-  
-  // Rounded Button Styles
-  roundedButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: theme.borderRadius.full,
-    gap: 6,
-    ...createShadow('sm'),
-  },
-  roundedPressed: {
-    transform: [{ scale: 0.95 }],
-  },
-  roundedText: {
-    fontWeight: theme.typography.fontWeight.medium,
-    fontFamily: theme.typography.fontFamily.medium,
-  },
-  
-  // FAB Styles
   fab: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -360,26 +328,44 @@ const styles = StyleSheet.create({
   fabPressed: {
     transform: [{ scale: 0.9 }],
   },
-  
-  // Common Styles
   fullWidth: {
     width: '100%',
-  },
-  pressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }],
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  text: {
-    fontWeight: theme.typography.fontWeight.medium,
-    fontFamily: theme.typography.fontFamily.medium,
   },
   iconWrapper: {
     marginHorizontal: 4,
   },
   iconWrapperSmall: {
     marginHorizontal: 2,
+  },
+  pressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
+  },
+  roundedButton: {
+    alignItems: 'center',
+    borderRadius: theme.borderRadius.full,
+    flexDirection: 'row',
+    gap: 6,
+    justifyContent: 'center',
+    ...createShadow('sm'),
+  },
+  roundedPressed: {
+    transform: [{ scale: 0.95 }],
+  },
+  roundedText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  squareButton: {
+    alignItems: 'center',
+    borderRadius: theme.borderRadius.lg,
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'center',
+    ...createShadow('sm'),
+  },
+  text: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontWeight: theme.typography.fontWeight.medium,
   },
 });

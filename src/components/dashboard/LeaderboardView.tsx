@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  Image,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Image } from 'react-native';
+
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -22,28 +16,112 @@ interface LeaderboardEntry {
 }
 
 // Generate mock data for ranks 4-100
-const generateMockEntries = (startRank: number, endRank: number, currentUserRank: number = 56): LeaderboardEntry[] => {
+const generateMockEntries = (
+  startRank: number,
+  endRank: number,
+  currentUserRank: number = 56
+): LeaderboardEntry[] => {
   const names = [
-    'Marsha Fisher', 'Juanita Cormier', 'Tamara Schmidt', 'Ricardo Veum', 'Gary Sanford',
-    'Becky Bartell', 'Emily Johnson', 'Michael Chen', 'Sarah Williams', 'David Brown',
-    'Lisa Anderson', 'James Wilson', 'Maria Garcia', 'Robert Taylor', 'Jennifer Davis',
-    'William Martinez', 'Patricia Jones', 'Christopher Lee', 'Barbara White', 'Daniel Harris',
-    'Nancy Clark', 'Matthew Lewis', 'Betty Walker', 'Mark Hall', 'Sandra Young',
-    'Joseph Allen', 'Helen King', 'Paul Wright', 'Karen Scott', 'Steven Green',
-    'Linda Baker', 'Andrew Hill', 'Donna Adams', 'Kenneth Nelson', 'Carol Campbell',
-    'Joshua Mitchell', 'Michelle Roberts', 'George Turner', 'Dorothy Phillips', 'Kevin Parker',
-    'Laura Evans', 'Brian Edwards', 'Amy Collins', 'Ronald Stewart', 'Kimberly Morris',
-    'Jason Rogers', 'Deborah Reed', 'Ryan Cook', 'Sharon Bailey', 'Jeffrey Bell',
-    'Cynthia Cooper', 'Jacob Richardson', 'Marie Cox', 'Gary Howard', 'Angela Ward',
-    'Stephen Torres', 'Brenda Peterson', 'Edward Gray', 'Rebecca Ramirez', 'Eric Watson',
-    'Teresa Brooks', 'Gerald Kelly', 'Joyce Sanders', 'Harry Price', 'Frances Bennett',
-    'Arthur Wood', 'Shirley Barnes', 'Peter Ross', 'Joan Henderson', 'Jack Coleman',
-    'Judy Jenkins', 'Albert Perry', 'Madison Powell', 'Willie Long', 'Katherine Patterson',
-    'Eugene Hughes', 'Doris Flores', 'Ralph Washington', 'Diane Butler', 'Carl Simmons',
-    'Judith Foster', 'Russell Gonzales', 'Ruby Bryant', 'Roy Alexander', 'Alice Russell',
-    'Philip Griffin', 'Tina Diaz', 'Bruce Hayes', 'Gloria Myers', 'Raymond Ford',
-    'Lori Hamilton', 'Dennis Graham', 'Janet Sullivan', 'Henry Wallace', 'Virginia Woods',
-    'Douglas Cole', 'Marilyn West', 'Aaron Jordan', 'Martha Owens', 'Jose Reynolds'
+    'Marsha Fisher',
+    'Juanita Cormier',
+    'Tamara Schmidt',
+    'Ricardo Veum',
+    'Gary Sanford',
+    'Becky Bartell',
+    'Emily Johnson',
+    'Michael Chen',
+    'Sarah Williams',
+    'David Brown',
+    'Lisa Anderson',
+    'James Wilson',
+    'Maria Garcia',
+    'Robert Taylor',
+    'Jennifer Davis',
+    'William Martinez',
+    'Patricia Jones',
+    'Christopher Lee',
+    'Barbara White',
+    'Daniel Harris',
+    'Nancy Clark',
+    'Matthew Lewis',
+    'Betty Walker',
+    'Mark Hall',
+    'Sandra Young',
+    'Joseph Allen',
+    'Helen King',
+    'Paul Wright',
+    'Karen Scott',
+    'Steven Green',
+    'Linda Baker',
+    'Andrew Hill',
+    'Donna Adams',
+    'Kenneth Nelson',
+    'Carol Campbell',
+    'Joshua Mitchell',
+    'Michelle Roberts',
+    'George Turner',
+    'Dorothy Phillips',
+    'Kevin Parker',
+    'Laura Evans',
+    'Brian Edwards',
+    'Amy Collins',
+    'Ronald Stewart',
+    'Kimberly Morris',
+    'Jason Rogers',
+    'Deborah Reed',
+    'Ryan Cook',
+    'Sharon Bailey',
+    'Jeffrey Bell',
+    'Cynthia Cooper',
+    'Jacob Richardson',
+    'Marie Cox',
+    'Gary Howard',
+    'Angela Ward',
+    'Stephen Torres',
+    'Brenda Peterson',
+    'Edward Gray',
+    'Rebecca Ramirez',
+    'Eric Watson',
+    'Teresa Brooks',
+    'Gerald Kelly',
+    'Joyce Sanders',
+    'Harry Price',
+    'Frances Bennett',
+    'Arthur Wood',
+    'Shirley Barnes',
+    'Peter Ross',
+    'Joan Henderson',
+    'Jack Coleman',
+    'Judy Jenkins',
+    'Albert Perry',
+    'Madison Powell',
+    'Willie Long',
+    'Katherine Patterson',
+    'Eugene Hughes',
+    'Doris Flores',
+    'Ralph Washington',
+    'Diane Butler',
+    'Carl Simmons',
+    'Judith Foster',
+    'Russell Gonzales',
+    'Ruby Bryant',
+    'Roy Alexander',
+    'Alice Russell',
+    'Philip Griffin',
+    'Tina Diaz',
+    'Bruce Hayes',
+    'Gloria Myers',
+    'Raymond Ford',
+    'Lori Hamilton',
+    'Dennis Graham',
+    'Janet Sullivan',
+    'Henry Wallace',
+    'Virginia Woods',
+    'Douglas Cole',
+    'Marilyn West',
+    'Aaron Jordan',
+    'Martha Owens',
+    'Jose Reynolds',
   ];
 
   const entries: LeaderboardEntry[] = [];
@@ -64,21 +142,75 @@ const generateMockEntries = (startRank: number, endRank: number, currentUserRank
 
 const mockData: Record<LeaderboardTab, LeaderboardEntry[]> = {
   dinners: [
-    { rank: 1, name: 'Bryan Wolf', avatar: 'https://i.pravatar.cc/150?img=1', value: 100, unit: 'pts' },
-    { rank: 2, name: 'Meghan Jess...', avatar: 'https://i.pravatar.cc/150?img=2', value: 90, unit: 'pts' },
-    { rank: 3, name: 'Alex Turner', avatar: 'https://i.pravatar.cc/150?img=3', value: 88, unit: 'pts' },
+    {
+      rank: 1,
+      name: 'Bryan Wolf',
+      avatar: 'https://i.pravatar.cc/150?img=1',
+      value: 100,
+      unit: 'pts',
+    },
+    {
+      rank: 2,
+      name: 'Meghan Jess...',
+      avatar: 'https://i.pravatar.cc/150?img=2',
+      value: 90,
+      unit: 'pts',
+    },
+    {
+      rank: 3,
+      name: 'Alex Turner',
+      avatar: 'https://i.pravatar.cc/150?img=3',
+      value: 88,
+      unit: 'pts',
+    },
     ...generateMockEntries(4, 100, 56),
   ],
   points: [
-    { rank: 1, name: 'Bryan Wolf', avatar: 'https://i.pravatar.cc/150?img=1', value: 100, unit: 'pts' },
-    { rank: 2, name: 'Meghan Jess...', avatar: 'https://i.pravatar.cc/150?img=2', value: 90, unit: 'pts' },
-    { rank: 3, name: 'Alex Turner', avatar: 'https://i.pravatar.cc/150?img=3', value: 88, unit: 'pts' },
+    {
+      rank: 1,
+      name: 'Bryan Wolf',
+      avatar: 'https://i.pravatar.cc/150?img=1',
+      value: 100,
+      unit: 'pts',
+    },
+    {
+      rank: 2,
+      name: 'Meghan Jess...',
+      avatar: 'https://i.pravatar.cc/150?img=2',
+      value: 90,
+      unit: 'pts',
+    },
+    {
+      rank: 3,
+      name: 'Alex Turner',
+      avatar: 'https://i.pravatar.cc/150?img=3',
+      value: 88,
+      unit: 'pts',
+    },
     ...generateMockEntries(4, 100, 42),
   ],
   monthly: [
-    { rank: 1, name: 'Bryan Wolf', avatar: 'https://i.pravatar.cc/150?img=1', value: 100, unit: 'pts' },
-    { rank: 2, name: 'Meghan Jess...', avatar: 'https://i.pravatar.cc/150?img=2', value: 90, unit: 'pts' },
-    { rank: 3, name: 'Alex Turner', avatar: 'https://i.pravatar.cc/150?img=3', value: 88, unit: 'pts' },
+    {
+      rank: 1,
+      name: 'Bryan Wolf',
+      avatar: 'https://i.pravatar.cc/150?img=1',
+      value: 100,
+      unit: 'pts',
+    },
+    {
+      rank: 2,
+      name: 'Meghan Jess...',
+      avatar: 'https://i.pravatar.cc/150?img=2',
+      value: 90,
+      unit: 'pts',
+    },
+    {
+      rank: 3,
+      name: 'Alex Turner',
+      avatar: 'https://i.pravatar.cc/150?img=3',
+      value: 88,
+      unit: 'pts',
+    },
     ...generateMockEntries(4, 100, 23),
   ],
 };
@@ -181,16 +313,16 @@ export const LeaderboardView: React.FC = () => {
           {restOfList.map((entry) => (
             <View
               key={entry.rank}
-              style={[
-                styles.listItem,
-                entry.isCurrentUser && styles.currentUserItem,
-              ]}
+              style={[styles.listItem, entry.isCurrentUser && styles.currentUserItem]}
             >
               <Text style={[styles.listRank, entry.isCurrentUser && styles.currentUserText]}>
                 {entry.rank}
               </Text>
               <Image source={{ uri: entry.avatar }} style={styles.listAvatar} />
-              <Text style={[styles.listName, entry.isCurrentUser && styles.currentUserText]} numberOfLines={1}>
+              <Text
+                style={[styles.listName, entry.isCurrentUser && styles.currentUserText]}
+                numberOfLines={1}
+              >
                 {entry.name}
               </Text>
               <Text style={[styles.listPoints, entry.isCurrentUser && styles.currentUserText]}>
@@ -205,55 +337,31 @@ export const LeaderboardView: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9F9F9',
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: theme.colors.white,
-    paddingHorizontal: scaleWidth(24),
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  tab: {
-    paddingVertical: scaleHeight(12),
-    marginRight: scaleWidth(24),
-  },
   activeTab: {
-    borderBottomWidth: 2,
     borderBottomColor: theme.colors.primary.main,
-  },
-  tabText: {
-    fontSize: scaleFont(14),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
+    borderBottomWidth: 2,
   },
   activeTabText: {
     color: theme.colors.text.primary,
     fontWeight: '600' as any,
   },
-  podiumContainer: {
-    backgroundColor: theme.colors.white,
-    paddingVertical: scaleHeight(40),
-    marginBottom: scaleHeight(16),
-    marginHorizontal: scaleWidth(16),
-    borderRadius: scaleWidth(27),
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
+  avatar: {
+    borderRadius: scaleWidth(30),
+    height: scaleWidth(60),
+    width: scaleWidth(60),
   },
-  podiumWrapper: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    paddingHorizontal: scaleWidth(20),
+  avatarContainer: {
+    marginBottom: scaleHeight(8),
+    position: 'relative',
   },
-  podiumItem: {
-    alignItems: 'center',
-    marginHorizontal: scaleWidth(15),
+  avatarLarge: {
+    borderRadius: scaleWidth(35),
+    height: scaleWidth(70),
+    width: scaleWidth(70),
   },
-  firstPlaceItem: {
-    marginBottom: scaleHeight(20),
+  container: {
+    backgroundColor: '#F9F9F9',
+    flex: 1,
   },
   crownContainer: {
     position: 'absolute',
@@ -263,121 +371,145 @@ const styles = StyleSheet.create({
   crownEmoji: {
     fontSize: scaleFont(30),
   },
-  avatarContainer: {
-    position: 'relative',
-    marginBottom: scaleHeight(8),
-  },
-  firstPlace: {
-    borderWidth: 3,
-    borderColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(40),
-    padding: scaleWidth(3),
-  },
-  secondPlace: {
-    borderWidth: 2,
-    borderColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(35),
-    padding: scaleWidth(2),
-  },
-  thirdPlace: {
-    borderWidth: 2,
-    borderColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(35),
-    padding: scaleWidth(2),
-  },
-  avatar: {
-    width: scaleWidth(60),
-    height: scaleWidth(60),
-    borderRadius: scaleWidth(30),
-  },
-  avatarLarge: {
-    width: scaleWidth(70),
-    height: scaleWidth(70),
-    borderRadius: scaleWidth(35),
-  },
-  rankBadge: {
-    position: 'absolute',
-    bottom: scaleHeight(-5),
-    right: scaleWidth(-5),
-    backgroundColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(12),
-    width: scaleWidth(24),
-    height: scaleWidth(24),
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: theme.colors.white,
-  },
-  firstRankBadge: {
-    backgroundColor: theme.colors.primary.main,
-  },
-  rankText: {
-    color: theme.colors.white,
-    fontSize: scaleFont(12),
-    fontWeight: '700' as any,
-    fontFamily: theme.typography.fontFamily.bold,
-  },
-  podiumName: {
-    fontSize: scaleFont(14),
-    fontWeight: '600' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    marginBottom: scaleHeight(4),
-    maxWidth: scaleWidth(80),
-  },
-  podiumPoints: {
-    fontSize: scaleFont(13),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  listContainer: {
-    backgroundColor: theme.colors.white,
-    paddingHorizontal: scaleWidth(16),
-    paddingVertical: scaleHeight(16),
-    marginHorizontal: scaleWidth(16),
-    borderRadius: scaleWidth(27),
-    marginBottom: scaleHeight(16),
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-  },
-  listItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: scaleHeight(12),
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
   currentUserItem: {
     backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(27),
     marginHorizontal: scaleWidth(-16),
     paddingHorizontal: scaleWidth(16),
-    borderRadius: scaleWidth(27),
-  },
-  listRank: {
-    width: scaleWidth(30),
-    fontSize: scaleFont(14),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  listAvatar: {
-    width: scaleWidth(40),
-    height: scaleWidth(40),
-    borderRadius: scaleWidth(20),
-    marginHorizontal: scaleWidth(12),
-  },
-  listName: {
-    flex: 1,
-    fontSize: scaleFont(15),
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  listPoints: {
-    fontSize: scaleFont(14),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
   },
   currentUserText: {
     color: theme.colors.white,
     fontWeight: '600' as any,
+  },
+  firstPlace: {
+    borderColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(40),
+    borderWidth: 3,
+    padding: scaleWidth(3),
+  },
+  firstPlaceItem: {
+    marginBottom: scaleHeight(20),
+  },
+  firstRankBadge: {
+    backgroundColor: theme.colors.primary.main,
+  },
+  listAvatar: {
+    borderRadius: scaleWidth(20),
+    height: scaleWidth(40),
+    marginHorizontal: scaleWidth(12),
+    width: scaleWidth(40),
+  },
+  listContainer: {
+    backgroundColor: theme.colors.white,
+    borderColor: '#E5E5E5',
+    borderRadius: scaleWidth(27),
+    borderWidth: 1,
+    marginBottom: scaleHeight(16),
+    marginHorizontal: scaleWidth(16),
+    paddingHorizontal: scaleWidth(16),
+    paddingVertical: scaleHeight(16),
+  },
+  listItem: {
+    alignItems: 'center',
+    borderBottomColor: '#F0F0F0',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    paddingVertical: scaleHeight(12),
+  },
+  listName: {
+    color: theme.colors.text.primary,
+    flex: 1,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(15),
+  },
+  listPoints: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+  },
+  listRank: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    width: scaleWidth(30),
+  },
+  podiumContainer: {
+    backgroundColor: theme.colors.white,
+    borderColor: '#E5E5E5',
+    borderRadius: scaleWidth(27),
+    borderWidth: 1,
+    marginBottom: scaleHeight(16),
+    marginHorizontal: scaleWidth(16),
+    paddingVertical: scaleHeight(40),
+  },
+  podiumItem: {
+    alignItems: 'center',
+    marginHorizontal: scaleWidth(15),
+  },
+  podiumName: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '600' as any,
+    marginBottom: scaleHeight(4),
+    maxWidth: scaleWidth(80),
+  },
+  podiumPoints: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
+  },
+  podiumWrapper: {
+    alignItems: 'flex-end',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingHorizontal: scaleWidth(20),
+  },
+  rankBadge: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary.main,
+    borderColor: theme.colors.white,
+    borderRadius: scaleWidth(12),
+    borderWidth: 2,
+    bottom: scaleHeight(-5),
+    height: scaleWidth(24),
+    justifyContent: 'center',
+    position: 'absolute',
+    right: scaleWidth(-5),
+    width: scaleWidth(24),
+  },
+  rankText: {
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: scaleFont(12),
+    fontWeight: '700' as any,
+  },
+  secondPlace: {
+    borderColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(35),
+    borderWidth: 2,
+    padding: scaleWidth(2),
+  },
+  tab: {
+    marginRight: scaleWidth(24),
+    paddingVertical: scaleHeight(12),
+  },
+  tabContainer: {
+    backgroundColor: theme.colors.white,
+    borderBottomColor: '#E5E5E5',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    paddingHorizontal: scaleWidth(24),
+  },
+  tabText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+  },
+  thirdPlace: {
+    borderColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(35),
+    borderWidth: 2,
+    padding: scaleWidth(2),
   },
 });

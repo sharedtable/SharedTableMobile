@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { View, ScrollView, Alert, StyleSheet } from 'react-native';
-import { scaleHeight } from '@/utils/responsive';
+import { View, Alert, StyleSheet } from 'react-native';
+
 import {
   OnboardingLayout,
   OnboardingTitle,
   SelectionCard,
   OnboardingButton,
 } from '@/components/onboarding';
+import { scaleHeight } from '@/utils/responsive';
 
 interface OnboardingWorkScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
@@ -24,7 +25,7 @@ const workOptions = [
   'Marketing',
   'Student',
   'Engineering',
-  'Other'
+  'Other',
 ];
 
 export const OnboardingWorkScreen: React.FC<OnboardingWorkScreenProps> = ({
@@ -76,11 +77,7 @@ export const OnboardingWorkScreen: React.FC<OnboardingWorkScreenProps> = ({
         <View style={styles.spacer} />
 
         <View style={styles.bottomContainer}>
-          <OnboardingButton
-            onPress={handleNext}
-            label="Next"
-            disabled={!selectedWork}
-          />
+          <OnboardingButton onPress={handleNext} label="Next" disabled={!selectedWork} />
         </View>
       </View>
     </OnboardingLayout>
@@ -88,6 +85,9 @@ export const OnboardingWorkScreen: React.FC<OnboardingWorkScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
+  bottomContainer: {
+    paddingBottom: scaleHeight(40),
+  },
   container: {
     flex: 1,
   },
@@ -96,8 +96,5 @@ const styles = StyleSheet.create({
   },
   spacer: {
     height: scaleHeight(40),
-  },
-  bottomContainer: {
-    paddingBottom: scaleHeight(40),
   },
 });

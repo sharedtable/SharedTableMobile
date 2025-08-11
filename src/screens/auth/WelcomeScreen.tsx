@@ -1,3 +1,4 @@
+import * as AppleAuthentication from 'expo-apple-authentication';
 import React, { memo, useState } from 'react';
 import {
   View,
@@ -13,11 +14,11 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from 'react-native';
-import { theme } from '@/theme';
-import { GoogleIcon } from '@/components/icons/GoogleIcon';
+
 import { AppleIcon } from '@/components/icons/AppleIcon';
+import { GoogleIcon } from '@/components/icons/GoogleIcon';
+import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
-import * as AppleAuthentication from 'expo-apple-authentication';
 
 interface WelcomeScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
@@ -31,7 +32,7 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
       Alert.alert('Email Required', 'Please enter your email address');
       return;
     }
-    
+
     if (!email.includes('@')) {
       Alert.alert('Invalid Email', 'Please enter a valid email address');
       return;
@@ -39,13 +40,12 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
 
     // Dismiss keyboard before navigating
     Keyboard.dismiss();
-    
+
     // Navigate directly to confirmation code screen with email
     if (onNavigate) {
       onNavigate('confirmation', { email });
     }
   };
-
 
   const handleAppleSignIn = async () => {
     if (Platform.OS === 'ios') {
@@ -79,12 +79,12 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={styles.container}>
-        <KeyboardAvoidingView 
+        <KeyboardAvoidingView
           style={styles.keyboardView}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
-          <ScrollView 
+          <ScrollView
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -162,15 +162,12 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
                     </Pressable>
                   )}
                 </View>
-                
+
                 {/* Temporary Skip to Home Button - FOR TESTING ONLY */}
-                <Pressable 
-                  style={styles.skipButton}
-                  onPress={() => onNavigate?.('home')}
-                >
+                <Pressable style={styles.skipButton} onPress={() => onNavigate?.('home')}>
                   <Text style={styles.skipButtonText}>[DEV] Skip to Home</Text>
                 </Pressable>
-                
+
                 {/* Bottom spacing to ensure buttons are visible */}
                 <View style={styles.bottomSpacer} />
               </View>
@@ -185,142 +182,142 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
 WelcomeScreen.displayName = 'WelcomeScreen';
 
 const styles = StyleSheet.create({
+  appleButton: {
+    backgroundColor: theme.colors.text.primary,
+  },
+  appleButtonText: {
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    fontWeight: '500' as any,
+  },
+  bottomSpacer: {
+    height: scaleHeight(40),
+  },
+  buttonPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.98 }],
+  },
   container: {
-    flex: 1,
     backgroundColor: theme.colors.white,
-  },
-  keyboardView: {
     flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
   },
   content: {
     flex: 1,
     paddingHorizontal: scaleWidth(24),
   },
-  titleSection: {
-    paddingTop: scaleHeight(80),
-    alignItems: 'center',
-    marginBottom: scaleHeight(40),
-  },
-  title: {
-    fontSize: scaleFont(32),
-    fontWeight: '700' as any,
-    color: theme.colors.text.primary,
-    textAlign: 'center',
-    fontFamily: theme.typography.fontFamily.heading,
-    marginBottom: scaleHeight(8),
-  },
-  subtitle: {
-    fontSize: scaleFont(16),
-    color: theme.colors.text.secondary,
-    textAlign: 'center',
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  inputSection: {
-    paddingTop: scaleHeight(20),
-  },
-  inputContainer: {
-    marginBottom: scaleHeight(24),
-  },
-  emailInput: {
-    height: scaleHeight(52),
-    borderWidth: 1,
-    borderColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(12),
-    paddingHorizontal: scaleWidth(16),
-    fontSize: scaleFont(16),
-    color: theme.colors.text.primary,
-    backgroundColor: theme.colors.white,
-    fontFamily: theme.typography.fontFamily.body,
-    marginBottom: scaleHeight(16),
-  },
   continueButton: {
-    height: scaleHeight(52),
+    alignItems: 'center',
     backgroundColor: theme.colors.primary.main,
     borderRadius: scaleWidth(12),
-    alignItems: 'center',
+    height: scaleHeight(52),
     justifyContent: 'center',
   },
   continueButtonDisabled: {
     opacity: 0.5,
   },
   continueButtonText: {
-    fontSize: scaleFont(18),
-    fontWeight: '600' as any,
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(18),
+    fontWeight: '600' as any,
+  },
+  emailInput: {
+    backgroundColor: theme.colors.white,
+    borderColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(12),
+    borderWidth: 1,
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    height: scaleHeight(52),
+    marginBottom: scaleHeight(16),
+    paddingHorizontal: scaleWidth(16),
+  },
+  googleButton: {
+    backgroundColor: theme.colors.white,
+    borderColor: theme.colors.gray['1'],
+    borderWidth: 1,
+  },
+  googleButtonText: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    fontWeight: '500' as any,
+  },
+  inputContainer: {
+    marginBottom: scaleHeight(24),
+  },
+  inputSection: {
+    paddingTop: scaleHeight(20),
+  },
+  keyboardView: {
+    flex: 1,
   },
   orContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginVertical: scaleHeight(24),
   },
   orLine: {
+    backgroundColor: theme.colors.gray['1'],
     flex: 1,
     height: 1,
-    backgroundColor: theme.colors.gray['1'],
   },
   orText: {
-    fontSize: scaleFont(14),
     color: theme.colors.text.secondary,
-    marginHorizontal: scaleWidth(16),
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    marginHorizontal: scaleWidth(16),
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  skipButton: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(226, 72, 73, 0.1)',
+    borderColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(12),
+    borderStyle: 'dashed' as any,
+    borderWidth: 1,
+    marginTop: scaleHeight(24),
+    paddingHorizontal: scaleWidth(24),
+    paddingVertical: scaleHeight(12),
+  },
+  skipButtonText: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '600' as any,
+  },
+  socialButton: {
+    alignItems: 'center',
+    borderRadius: scaleWidth(12),
+    flexDirection: 'row',
+    gap: scaleWidth(12),
+    height: scaleHeight(52),
+    justifyContent: 'center',
   },
   socialButtons: {
     gap: scaleHeight(12),
   },
-  socialButton: {
-    height: scaleHeight(52),
-    borderRadius: scaleWidth(12),
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: scaleWidth(12),
-  },
-  googleButton: {
-    backgroundColor: theme.colors.white,
-    borderWidth: 1,
-    borderColor: theme.colors.gray['1'],
-  },
-  googleButtonText: {
+  subtitle: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '500' as any,
+    textAlign: 'center',
+  },
+  title: {
     color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
+    fontFamily: theme.typography.fontFamily.heading,
+    fontSize: scaleFont(32),
+    fontWeight: '700' as any,
+    marginBottom: scaleHeight(8),
+    textAlign: 'center',
   },
-  appleButton: {
-    backgroundColor: theme.colors.text.primary,
-  },
-  appleButtonText: {
-    fontSize: scaleFont(16),
-    fontWeight: '500' as any,
-    color: theme.colors.white,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  buttonPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.98 }],
-  },
-  bottomSpacer: {
-    height: scaleHeight(40),
-  },
-  skipButton: {
-    marginTop: scaleHeight(24),
-    paddingVertical: scaleHeight(12),
-    paddingHorizontal: scaleWidth(24),
-    backgroundColor: 'rgba(226, 72, 73, 0.1)',
-    borderRadius: scaleWidth(12),
+  titleSection: {
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: theme.colors.primary.main,
-    borderStyle: 'dashed' as any,
-  },
-  skipButtonText: {
-    fontSize: scaleFont(14),
-    color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.body,
-    fontWeight: '600' as any,
+    marginBottom: scaleHeight(40),
+    paddingTop: scaleHeight(80),
   },
 });

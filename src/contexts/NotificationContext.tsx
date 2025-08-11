@@ -1,5 +1,5 @@
-import React, { createContext, useContext, ReactNode, useState, useCallback } from 'react';
 import * as Notifications from 'expo-notifications';
+import React, { createContext, useContext, ReactNode, useState, useCallback } from 'react';
 
 interface NotificationContextType {
   expoPushToken: string | null;
@@ -11,32 +11,32 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
-  const [notification, setNotification] = useState<Notifications.Notification | null>(null);
+  const [notification, _setNotification] = useState<Notifications.Notification | null>(null);
 
   const registerForPushNotifications = useCallback(async () => {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
-    
+
     if (existingStatus !== 'granted') {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
-    
+
     if (finalStatus !== 'granted') {
       console.log('Failed to get push token for push notification!');
       return;
     }
-    
+
     const token = await Notifications.getExpoPushTokenAsync();
     setExpoPushToken(token.data);
   }, []);
 
   return (
-    <NotificationContext.Provider 
-      value={{ 
-        expoPushToken, 
-        notification, 
-        registerForPushNotifications 
+    <NotificationContext.Provider
+      value={{
+        expoPushToken,
+        notification,
+        registerForPushNotifications,
       }}
     >
       {children}

@@ -1,5 +1,7 @@
-import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React from 'react';
+
+import { LoadingScreen } from '@/screens/LoadingScreen';
 import { useAuthStore } from '@/store/authStore';
 
 // Navigators
@@ -7,7 +9,6 @@ import { AuthNavigator } from './AuthNavigator';
 import { MainTabNavigator } from './MainTabNavigator';
 
 // Screens
-import { LoadingScreen } from '@/screens/LoadingScreen';
 
 export type RootStackParamList = {
   Loading: undefined;
@@ -25,10 +26,10 @@ export function RootNavigator() {
   }
 
   return (
-    <Stack.Navigator 
-      screenOptions={{ 
+    <Stack.Navigator
+      screenOptions={{
         headerShown: false,
-        animation: 'fade'
+        animation: 'fade',
       }}
     >
       {isAuthenticated ? (

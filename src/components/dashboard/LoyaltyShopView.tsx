@@ -1,11 +1,6 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -40,7 +35,8 @@ const rewardItems: RewardItem[] = [
   {
     id: '4',
     title: 'Monthly Loot Box',
-    description: 'Get your hands on a special box filled with exciting rewards, refreshed every month!',
+    description:
+      'Get your hands on a special box filled with exciting rewards, refreshed every month!',
     points: 200,
   },
   {
@@ -90,9 +86,7 @@ export const LoyaltyShopView: React.FC = () => {
       {rewardItems.map((item) => (
         <View key={item.id} style={styles.rewardCard}>
           <View style={styles.cardContent}>
-            {item.locked && (
-              <Text style={styles.lockEmoji}>🔒</Text>
-            )}
+            {item.locked && <Text style={styles.lockEmoji}>🔒</Text>}
             <View style={styles.textContent}>
               <Text style={[styles.itemTitle, item.locked && styles.lockedTitle]}>
                 {item.title}
@@ -100,9 +94,7 @@ export const LoyaltyShopView: React.FC = () => {
               <Text style={[styles.itemDescription, item.locked && styles.lockedDescription]}>
                 {item.description}
               </Text>
-              {!item.locked && (
-                <Text style={styles.itemPoints}>{item.points} points</Text>
-              )}
+              {!item.locked && <Text style={styles.itemPoints}>{item.points} points</Text>}
             </View>
             {!item.locked && (
               <Pressable
@@ -127,129 +119,129 @@ export const LoyaltyShopView: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  cardContent: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  claimButton: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(20),
+    justifyContent: 'center',
+    paddingHorizontal: scaleWidth(24),
+    paddingVertical: scaleHeight(10),
+  },
+  claimButtonDisabled: {
+    backgroundColor: '#CCCCCC',
+  },
+  claimButtonPressed: {
+    opacity: 0.8,
+  },
+  claimButtonText: {
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '600' as any,
+  },
   container: {
-    flex: 1,
     backgroundColor: '#F9F9F9',
+    flex: 1,
     paddingTop: scaleHeight(10),
   },
   header: {
     marginBottom: scaleHeight(20),
     paddingHorizontal: scaleWidth(16),
   },
-  shopTitle: {
-    fontSize: scaleFont(20),
-    fontWeight: '700' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.bold,
-  },
   infoRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: scaleHeight(4),
   },
+  itemDescription: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
+    lineHeight: scaleFont(18),
+    marginBottom: scaleHeight(4),
+  },
+  itemPoints: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+  },
+  itemTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    fontWeight: '600' as any,
+    marginBottom: scaleHeight(4),
+  },
+  lockEmoji: {
+    fontSize: scaleFont(24),
+    marginRight: scaleWidth(12),
+  },
+  lockedDescription: {
+    fontStyle: 'italic',
+  },
+  lockedTitle: {
+    color: theme.colors.text.secondary,
+  },
   pointsContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.white,
-    paddingVertical: scaleHeight(6),
-    paddingHorizontal: scaleWidth(10),
+    borderColor: '#E5E5E5',
     borderRadius: scaleWidth(20),
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    flexDirection: 'row',
+    paddingHorizontal: scaleWidth(10),
+    paddingVertical: scaleHeight(6),
   },
   pointsEmoji: {
     fontSize: scaleFont(14),
     marginRight: scaleWidth(4),
   },
   pointsValue: {
-    fontSize: scaleFont(14),
-    fontWeight: '600' as any,
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '600' as any,
+  },
+  rewardCard: {
+    backgroundColor: theme.colors.white,
+    borderColor: '#E5E5E5',
+    borderRadius: scaleWidth(27),
+    borderWidth: 1,
+    marginBottom: scaleHeight(16),
+    padding: scaleWidth(20),
+  },
+  shopTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: scaleFont(20),
+    fontWeight: '700' as any,
+  },
+  textContent: {
+    flex: 1,
   },
   tierContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.white,
-    paddingVertical: scaleHeight(6),
-    paddingHorizontal: scaleWidth(10),
+    borderColor: '#E5E5E5',
     borderRadius: scaleWidth(20),
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    flexDirection: 'row',
+    paddingHorizontal: scaleWidth(10),
+    paddingVertical: scaleHeight(6),
   },
   tierEmoji: {
     fontSize: scaleFont(14),
     marginRight: scaleWidth(4),
   },
   tierValue: {
-    fontSize: scaleFont(14),
-    fontWeight: '600' as any,
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
-  },
-  rewardCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: scaleWidth(27),
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    padding: scaleWidth(20),
-    marginBottom: scaleHeight(16),
-  },
-  cardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  lockEmoji: {
-    fontSize: scaleFont(24),
-    marginRight: scaleWidth(12),
-  },
-  textContent: {
-    flex: 1,
-  },
-  itemTitle: {
-    fontSize: scaleFont(16),
-    fontWeight: '600' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    marginBottom: scaleHeight(4),
-  },
-  lockedTitle: {
-    color: theme.colors.text.secondary,
-  },
-  itemDescription: {
-    fontSize: scaleFont(13),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    lineHeight: scaleFont(18),
-    marginBottom: scaleHeight(4),
-  },
-  lockedDescription: {
-    fontStyle: 'italic',
-  },
-  itemPoints: {
-    fontSize: scaleFont(14),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  claimButton: {
-    backgroundColor: theme.colors.primary.main,
-    paddingVertical: scaleHeight(10),
-    paddingHorizontal: scaleWidth(24),
-    borderRadius: scaleWidth(20),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  claimButtonPressed: {
-    opacity: 0.8,
-  },
-  claimButtonDisabled: {
-    backgroundColor: '#CCCCCC',
-  },
-  claimButtonText: {
     fontSize: scaleFont(14),
     fontWeight: '600' as any,
-    color: theme.colors.white,
-    fontFamily: theme.typography.fontFamily.body,
   },
 });

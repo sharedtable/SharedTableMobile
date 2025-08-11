@@ -1,5 +1,6 @@
-import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
+import { create } from 'zustand';
+
 import { api, User } from '@/services/api';
 
 interface AuthState {
@@ -37,13 +38,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initializeAuth: async () => {
     try {
       set({ isLoading: true });
-      
+
       // Check for stored user
       const storedUser = await SecureStore.getItemAsync(USER_KEY);
-      
+
       if (storedUser) {
-        const user = JSON.parse(storedUser);
-        
+        const _user = JSON.parse(storedUser);
+
         // Verify session with backend
         try {
           const response = await api.getSession();
@@ -86,15 +87,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email: string, password: string) => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const response = await api.login(email, password);
-      
+
       if (response.success && response.data) {
         const { user } = response.data;
-        
+
         // Store user data
         await SecureStore.setItemAsync(USER_KEY, JSON.stringify(user));
-        
+
         set({
           user,
           isAuthenticated: true,
@@ -118,15 +119,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signUp: async (data: SignUpData) => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const response = await api.createAccount(data);
-      
+
       if (response.success && response.data) {
         const { user } = response.data;
-        
+
         // Store user data
         await SecureStore.setItemAsync(USER_KEY, JSON.stringify(user));
-        
+
         set({
           user,
           isAuthenticated: true,
@@ -150,13 +151,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: async () => {
     try {
       set({ isLoading: true });
-      
+
       // Call logout API
       await api.logout();
-      
+
       // Clear stored data
       await SecureStore.deleteItemAsync(USER_KEY);
-      
+
       set({
         user: null,
         isAuthenticated: false,
@@ -167,7 +168,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.error('Logout error:', error);
       // Even if API call fails, clear local data
       await SecureStore.deleteItemAsync(USER_KEY);
-      
+
       set({
         user: null,
         isAuthenticated: false,
@@ -182,7 +183,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (currentUser) {
       const updatedUser = { ...currentUser, ...userData };
       set({ user: updatedUser });
-      
+
       // Update stored data
       SecureStore.setItemAsync(USER_KEY, JSON.stringify(updatedUser));
     }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight } from '@/utils/responsive';
 
@@ -14,12 +15,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep, totalStep
   return (
     <View style={styles.container}>
       <View style={styles.progressBackground}>
-        <View 
-          style={[
-            styles.progressFill,
-            { width: `${progress}%` }
-          ]} 
-        />
+        <View style={[styles.progressFill, { width: `${progress}%` }]} />
       </View>
     </View>
   );
@@ -30,14 +26,14 @@ const styles = StyleSheet.create({
     paddingVertical: scaleHeight(12),
   },
   progressBackground: {
-    height: scaleHeight(6),
     backgroundColor: theme.colors.gray['1'],
     borderRadius: scaleWidth(3),
+    height: scaleHeight(6),
     overflow: 'hidden',
   },
   progressFill: {
-    height: '100%',
     backgroundColor: theme.colors.brand.primary,
     borderRadius: scaleWidth(3),
+    height: '100%',
   },
 });

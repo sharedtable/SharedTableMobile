@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, Text, StyleSheet } from 'react-native';
+
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -48,42 +49,42 @@ export const OnboardingButton: React.FC<OnboardingButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    height: scaleHeight(52),
-    borderRadius: scaleWidth(12),
     alignItems: 'center',
+    borderRadius: scaleWidth(12),
+    height: scaleHeight(52),
     justifyContent: 'center',
     paddingHorizontal: scaleWidth(24),
   },
-  primaryButton: {
-    backgroundColor: theme.colors.primary.main,
-  },
-  secondaryButton: {
-    backgroundColor: theme.colors.text.secondary,
-  },
-  outlineButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: theme.colors.primary.main,
+  buttonText: {
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(18),
+    fontWeight: '600' as any,
   },
   disabled: {
     opacity: 0.5,
+  },
+  outlineButton: {
+    backgroundColor: 'transparent',
+    borderColor: theme.colors.primary.main,
+    borderWidth: 2,
+  },
+  outlineButtonText: {
+    color: theme.colors.primary.main,
   },
   pressed: {
     opacity: 0.85,
     transform: [{ scale: 0.98 }],
   },
-  buttonText: {
-    fontSize: scaleFont(18),
-    fontWeight: '600' as any,
-    fontFamily: theme.typography.fontFamily.body,
+  primaryButton: {
+    backgroundColor: theme.colors.primary.main,
   },
   primaryButtonText: {
     color: theme.colors.white,
   },
+  secondaryButton: {
+    backgroundColor: theme.colors.text.secondary,
+  },
   secondaryButtonText: {
     color: theme.colors.white,
-  },
-  outlineButtonText: {
-    color: theme.colors.primary.main,
   },
 });

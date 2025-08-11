@@ -1,10 +1,6 @@
 import React, { memo } from 'react';
-import {
-  Text as RNText,
-  TextProps as RNTextProps,
-  StyleSheet,
-  TextStyle,
-} from 'react-native';
+import { Text as RNText, TextProps as RNTextProps, StyleSheet, TextStyle } from 'react-native';
+
 import { theme } from '@/theme';
 import { fontConfig } from '@/utils/loadFonts';
 
@@ -23,7 +19,7 @@ type TextVariant =
   | 'button'
   | 'link';
 
-type TextColor = 
+type TextColor =
   | 'primary'
   | 'secondary'
   | 'disabled'
@@ -45,47 +41,41 @@ interface TextProps extends RNTextProps {
   style?: TextStyle | TextStyle[];
 }
 
-export const Text = memo<TextProps>(({
-  variant = 'body',
-  color = 'primary',
-  align,
-  weight,
-  children,
-  style,
-  ...restProps
-}) => {
-  const getTextStyle = (): TextStyle[] => {
-    const styles: TextStyle[] = [baseStyles[variant]];
+export const Text = memo<TextProps>(
+  ({ variant = 'body', color = 'primary', align, weight, children, style, ...restProps }) => {
+    const getTextStyle = (): TextStyle[] => {
+      const styles: TextStyle[] = [baseStyles[variant]];
 
-    // Add color
-    if (color) {
-      styles.push({ color: colorMap[color] });
-    }
+      // Add color
+      if (color) {
+        styles.push({ color: colorMap[color] });
+      }
 
-    // Add alignment
-    if (align) {
-      styles.push({ textAlign: align });
-    }
+      // Add alignment
+      if (align) {
+        styles.push({ textAlign: align });
+      }
 
-    // Add custom weight
-    if (weight) {
-      styles.push({ fontWeight: theme.typography.fontWeight[weight] });
-    }
+      // Add custom weight
+      if (weight) {
+        styles.push({ fontWeight: theme.typography.fontWeight[weight] });
+      }
 
-    // Add custom style
-    if (style) {
-      styles.push(style as TextStyle);
-    }
+      // Add custom style
+      if (style) {
+        styles.push(style as TextStyle);
+      }
 
-    return styles;
-  };
+      return styles;
+    };
 
-  return (
-    <RNText style={getTextStyle()} {...restProps}>
-      {children}
-    </RNText>
-  );
-});
+    return (
+      <RNText style={getTextStyle()} {...restProps}>
+        {children}
+      </RNText>
+    );
+  }
+);
 
 Text.displayName = 'Text';
 
@@ -102,6 +92,26 @@ const colorMap = {
 };
 
 const baseStyles = StyleSheet.create({
+  body: {
+    ...fontConfig.body.regular,
+    color: theme.colors.text.primary,
+  },
+  bodyLarge: {
+    ...fontConfig.body.large,
+    color: theme.colors.text.primary,
+  },
+  bodySmall: {
+    ...fontConfig.body.small,
+    color: theme.colors.text.secondary,
+  },
+  button: {
+    ...fontConfig.button.regular,
+    color: theme.colors.text.primary,
+  },
+  caption: {
+    ...fontConfig.caption,
+    color: theme.colors.text.secondary,
+  },
   h1: {
     ...fontConfig.heading.h1,
     color: theme.colors.text.primary,
@@ -126,28 +136,8 @@ const baseStyles = StyleSheet.create({
     ...fontConfig.heading.h6,
     color: theme.colors.text.primary,
   },
-  body: {
-    ...fontConfig.body.regular,
-    color: theme.colors.text.primary,
-  },
-  bodyLarge: {
-    ...fontConfig.body.large,
-    color: theme.colors.text.primary,
-  },
-  bodySmall: {
-    ...fontConfig.body.small,
-    color: theme.colors.text.secondary,
-  },
-  caption: {
-    ...fontConfig.caption,
-    color: theme.colors.text.secondary,
-  },
   label: {
     ...fontConfig.label,
-    color: theme.colors.text.primary,
-  },
-  button: {
-    ...fontConfig.button.regular,
     color: theme.colors.text.primary,
   },
   link: {

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { View, Alert, StyleSheet, Text } from 'react-native';
-import { scaleHeight, scaleFont } from '@/utils/responsive';
-import { theme } from '@/theme';
+
 import {
   OnboardingLayout,
   OnboardingTitle,
   SelectionCard,
   OnboardingButton,
 } from '@/components/onboarding';
+import { theme } from '@/theme';
+import { scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface OnboardingLifestyleScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
@@ -19,11 +20,11 @@ interface OnboardingLifestyleScreenProps {
 const childrenOptions = ['Yes', 'No', 'Maybe'];
 const smokingOptions = ['Rarely', 'Sometimes', 'Always'];
 
-export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps> = ({ 
+export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps> = ({
   onNavigate,
   currentStep = 8,
   totalSteps = 10,
-  userData = {}
+  userData = {},
 }) => {
   const [wantChildren, setWantChildren] = useState<string | null>(null);
   const [smokingHabit, setSmokingHabit] = useState<string | null>(null);
@@ -39,10 +40,10 @@ export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps>
       return;
     }
 
-    onNavigate?.('onboarding-interests', { 
+    onNavigate?.('onboarding-interests', {
       ...userData,
       wantChildren,
-      smokingHabit
+      smokingHabit,
     });
   };
 
@@ -72,9 +73,7 @@ export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps>
           ))}
         </View>
 
-        <Text style={styles.secondTitle}>
-          Do you smoke or vape?
-        </Text>
+        <Text style={styles.secondTitle}>Do you smoke or vape?</Text>
 
         <View style={styles.optionsContainer}>
           {smokingOptions.map((option) => (
@@ -103,27 +102,27 @@ export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps>
 };
 
 const styles = StyleSheet.create({
+  bottomContainer: {
+    paddingBottom: scaleHeight(40),
+    paddingTop: scaleHeight(20),
+  },
   container: {
     flex: 1,
-  },
-  secondTitle: {
-    fontSize: scaleFont(32),
-    fontWeight: '700' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.heading,
-    lineHeight: scaleHeight(40),
-    marginTop: scaleHeight(32),
-    marginBottom: scaleHeight(24),
   },
   optionsContainer: {
     gap: scaleHeight(12),
   },
+  secondTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.heading,
+    fontSize: scaleFont(32),
+    fontWeight: '700' as any,
+    lineHeight: scaleHeight(40),
+    marginBottom: scaleHeight(24),
+    marginTop: scaleHeight(32),
+  },
   spacer: {
     flex: 1,
     minHeight: scaleHeight(40),
-  },
-  bottomContainer: {
-    paddingBottom: scaleHeight(40),
-    paddingTop: scaleHeight(20),
   },
 });

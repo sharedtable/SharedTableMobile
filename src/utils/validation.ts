@@ -4,10 +4,7 @@ import { z } from 'zod';
 export const emailSchema = z
   .string()
   .email('Invalid email address')
-  .refine(
-    (email) => email.endsWith('@stanford.edu'),
-    'Must be a Stanford email address'
-  );
+  .refine((email) => email.endsWith('@stanford.edu'), 'Must be a Stanford email address');
 
 // Password validation
 export const passwordSchema = z
@@ -18,9 +15,7 @@ export const passwordSchema = z
   .regex(/[0-9]/, 'Password must contain at least one number');
 
 // Phone validation
-export const phoneSchema = z
-  .string()
-  .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number');
+export const phoneSchema = z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number');
 
 // Login form schema
 export const loginSchema = z.object({
@@ -29,17 +24,19 @@ export const loginSchema = z.object({
 });
 
 // Signup form schema
-export const signupSchema = z.object({
-  email: emailSchema,
-  password: passwordSchema,
-  confirmPassword: z.string(),
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  phone: phoneSchema,
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
+export const signupSchema = z
+  .object({
+    email: emailSchema,
+    password: passwordSchema,
+    confirmPassword: z.string(),
+    firstName: z.string().min(1, 'First name is required'),
+    lastName: z.string().min(1, 'Last name is required'),
+    phone: phoneSchema,
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 // Profile update schema
 export const profileUpdateSchema = z.object({
@@ -64,12 +61,12 @@ export const bookingSchema = z.object({
 // Helper function to format validation errors
 export const formatValidationErrors = (error: z.ZodError): Record<string, string> => {
   const errors: Record<string, string> = {};
-  
+
   error.errors.forEach((err) => {
     const path = err.path.join('.');
     errors[path] = err.message;
   });
-  
+
   return errors;
 };
 

@@ -1,6 +1,7 @@
+import * as Updates from 'expo-updates';
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import * as Updates from 'expo-updates';
+
 import { env } from '@/config/env';
 
 interface Props {
@@ -35,13 +36,13 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error to error reporting service
     console.error('Error caught by boundary:', error, errorInfo);
-    
+
     // Update state with error info
     this.setState({
       error,
       errorInfo,
     });
-    
+
     // Report to Sentry or other error tracking service
     if (env.ENABLE_CRASH_REPORTING && env.SENTRY_DSN) {
       // Sentry.captureException(error, { contexts: { react: { componentStack: errorInfo.componentStack } } });
@@ -49,6 +50,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   handleRestart = async () => {
+    // @ts-expect-error - Updates.isAvailable is a property, not in namespace
+    // eslint-disable-next-line import/namespace
     if (Updates.isAvailable) {
       await Updates.reloadAsync();
     } else {
@@ -74,21 +77,19 @@ export class ErrorBoundary extends Component<Props, State> {
             <Text style={styles.message}>
               We're sorry for the inconvenience. Please try restarting the app.
             </Text>
-            
+
             {env.IS_DEV && this.state.error && (
               <View style={styles.errorDetails}>
                 <Text style={styles.errorTitle}>Error Details (Dev Only):</Text>
                 <Text style={styles.errorText}>{this.state.error.toString()}</Text>
                 {this.state.errorInfo && (
                   <ScrollView style={styles.stackTrace}>
-                    <Text style={styles.stackText}>
-                      {this.state.errorInfo.componentStack}
-                    </Text>
+                    <Text style={styles.stackText}>{this.state.errorInfo.componentStack}</Text>
                   </ScrollView>
                 )}
               </View>
             )}
-            
+
             <TouchableOpacity style={styles.button} onPress={this.handleRestart}>
               <Text style={styles.buttonText}>Restart App</Text>
             </TouchableOpacity>
@@ -102,63 +103,63 @@ export class ErrorBoundary extends Component<Props, State> {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  message: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 30,
-  },
   button: {
     backgroundColor: '#007AFF',
+    borderRadius: 8,
     paddingHorizontal: 30,
     paddingVertical: 12,
-    borderRadius: 8,
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
+  container: {
+    backgroundColor: '#fff',
+    flex: 1,
+  },
+  content: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+  },
   errorDetails: {
     backgroundColor: '#f5f5f5',
-    padding: 15,
     borderRadius: 8,
     marginBottom: 20,
+    padding: 15,
     width: '100%',
+  },
+  errorText: {
+    color: '#d32f2f',
+    fontFamily: 'monospace',
+    fontSize: 12,
   },
   errorTitle: {
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 5,
   },
-  errorText: {
-    fontSize: 12,
-    color: '#d32f2f',
-    fontFamily: 'monospace',
-  },
-  stackTrace: {
-    maxHeight: 200,
-    marginTop: 10,
+  message: {
+    color: '#666',
+    fontSize: 16,
+    marginBottom: 30,
+    textAlign: 'center',
   },
   stackText: {
-    fontSize: 10,
     color: '#666',
     fontFamily: 'monospace',
+    fontSize: 10,
+  },
+  stackTrace: {
+    marginTop: 10,
+    maxHeight: 200,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
   },
 });

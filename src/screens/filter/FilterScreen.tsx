@@ -1,35 +1,53 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  StatusBar,
-  TextInput,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { Icon } from '@/components/base/Icon';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
-import { Icon } from '@/components/base/Icon';
 
-interface FilterScreenProps {
-  onNavigate?: (screen: string, data?: any) => void;
-  onApply?: (filters: any) => void;
+interface FilterData {
+  atmosphere: AtmosphereTag[];
+  cuisines: CuisineType[];
+  priceRanges: PriceRange[];
+  drinks: DrinkPreference[];
+  additionalNotes: string;
 }
 
-type AtmosphereTag = 'CASUAL' | 'FORMAL' | 'COZY' | 'LIVELY' | 'RUSTIC' | 'QUIET/INTIMATE' | 'MODERN/CHIC';
-type CuisineType = 'Italian' | 'Japanese' | 'Mexican' | 'Chinese' | 'Indian' | 'Thai' | 'French' | 'Mediterranean' | 'American' | 'Korean';
+interface FilterScreenProps {
+  onNavigate?: (screen: string, data?: Record<string, unknown>) => void;
+  onApply?: (filters: FilterData) => void;
+}
+
+type AtmosphereTag =
+  | 'CASUAL'
+  | 'FORMAL'
+  | 'COZY'
+  | 'LIVELY'
+  | 'RUSTIC'
+  | 'QUIET/INTIMATE'
+  | 'MODERN/CHIC';
+type CuisineType =
+  | 'Italian'
+  | 'Japanese'
+  | 'Mexican'
+  | 'Chinese'
+  | 'Indian'
+  | 'Thai'
+  | 'French'
+  | 'Mediterranean'
+  | 'American'
+  | 'Korean';
 type PriceRange = '$' | '$$' | '$$$' | '$$$$';
 type DrinkPreference = 'Wine' | 'Cocktails' | 'Beer' | 'Non-Alcoholic' | 'Sake' | 'Spirits';
 
-interface FilterSection {
-  id: string;
-  title: string;
-  hasCount?: boolean;
-  count?: number;
-  isExpanded?: boolean;
-}
+// interface FilterSection {
+//   id: string;
+//   title: string;
+//   hasCount?: boolean;
+//   count?: number;
+//   isExpanded?: boolean;
+// }
 
 const atmosphereTags: AtmosphereTag[] = [
   'CASUAL',
@@ -77,7 +95,7 @@ export const FilterScreen: React.FC<FilterScreenProps> = ({ onNavigate, onApply 
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<PriceRange[]>([]);
   const [selectedDrinks, setSelectedDrinks] = useState<DrinkPreference[]>([]);
   const [additionalNotes, setAdditionalNotes] = useState<string>('');
-  
+
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     cuisine: false,
     priceRange: false,
@@ -111,39 +129,31 @@ export const FilterScreen: React.FC<FilterScreenProps> = ({ onNavigate, onApply 
   };
 
   const toggleAtmosphere = (tag: AtmosphereTag) => {
-    setSelectedAtmosphere(prev => 
-      prev.includes(tag) 
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
+    setSelectedAtmosphere((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
   };
 
   const toggleCuisine = (cuisine: CuisineType) => {
-    setSelectedCuisines(prev => 
-      prev.includes(cuisine) 
-        ? prev.filter(c => c !== cuisine)
-        : [...prev, cuisine]
+    setSelectedCuisines((prev) =>
+      prev.includes(cuisine) ? prev.filter((c) => c !== cuisine) : [...prev, cuisine]
     );
   };
 
   const togglePriceRange = (price: PriceRange) => {
-    setSelectedPriceRanges(prev => 
-      prev.includes(price) 
-        ? prev.filter(p => p !== price)
-        : [...prev, price]
+    setSelectedPriceRanges((prev) =>
+      prev.includes(price) ? prev.filter((p) => p !== price) : [...prev, price]
     );
   };
 
   const toggleDrink = (drink: DrinkPreference) => {
-    setSelectedDrinks(prev => 
-      prev.includes(drink) 
-        ? prev.filter(d => d !== drink)
-        : [...prev, drink]
+    setSelectedDrinks((prev) =>
+      prev.includes(drink) ? prev.filter((d) => d !== drink) : [...prev, drink]
     );
   };
 
   const toggleSection = (sectionId: string) => {
-    setExpandedSections(prev => ({
+    setExpandedSections((prev) => ({
       ...prev,
       [sectionId]: !prev[sectionId],
     }));
@@ -156,13 +166,10 @@ export const FilterScreen: React.FC<FilterScreenProps> = ({ onNavigate, onApply 
     children?: React.ReactNode
   ) => {
     const isExpanded = expandedSections[id];
-    
+
     return (
       <View key={id} style={styles.filterSection}>
-        <Pressable
-          style={styles.sectionHeader}
-          onPress={() => toggleSection(id)}
-        >
+        <Pressable style={styles.sectionHeader} onPress={() => toggleSection(id)}>
           <View style={styles.sectionTitleRow}>
             <Text style={styles.sectionTitle}>{title}</Text>
             {count !== undefined && count > 0 && (
@@ -185,7 +192,7 @@ export const FilterScreen: React.FC<FilterScreenProps> = ({ onNavigate, onApply 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      
+
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + scaleHeight(16) }]}>
         <Pressable onPress={handleCancel}>
@@ -207,29 +214,34 @@ export const FilterScreen: React.FC<FilterScreenProps> = ({ onNavigate, onApply 
         </View>
 
         {/* Filter Sections */}
-        {renderFilterSection('cuisine', 'Cuisine', selectedCuisines.length, (
+        {renderFilterSection(
+          'cuisine',
+          'Cuisine',
+          selectedCuisines.length,
           <View style={styles.tagsContainer}>
             {cuisineTypes.map((cuisine) => (
               <Pressable
                 key={cuisine}
-                style={[
-                  styles.tag,
-                  selectedCuisines.includes(cuisine) && styles.tagSelected,
-                ]}
+                style={[styles.tag, selectedCuisines.includes(cuisine) && styles.tagSelected]}
                 onPress={() => toggleCuisine(cuisine)}
               >
-                <Text style={[
-                  styles.tagText,
-                  selectedCuisines.includes(cuisine) && styles.tagTextSelected,
-                ]}>
+                <Text
+                  style={[
+                    styles.tagText,
+                    selectedCuisines.includes(cuisine) && styles.tagTextSelected,
+                  ]}
+                >
                   {cuisine}
                 </Text>
               </Pressable>
             ))}
           </View>
-        ))}
-        
-        {renderFilterSection('priceRange', 'Price Range', selectedPriceRanges.length, (
+        )}
+
+        {renderFilterSection(
+          'priceRange',
+          'Price Range',
+          selectedPriceRanges.length,
           <View style={styles.optionsContainer}>
             {priceRanges.map((range) => (
               <Pressable
@@ -239,10 +251,12 @@ export const FilterScreen: React.FC<FilterScreenProps> = ({ onNavigate, onApply 
               >
                 <View style={styles.optionRow}>
                   <Text style={styles.optionText}>{range.label}</Text>
-                  <View style={[
-                    styles.checkbox,
-                    selectedPriceRanges.includes(range.value) && styles.checkboxSelected,
-                  ]}>
+                  <View
+                    style={[
+                      styles.checkbox,
+                      selectedPriceRanges.includes(range.value) && styles.checkboxSelected,
+                    ]}
+                  >
                     {selectedPriceRanges.includes(range.value) && (
                       <Icon name="check" size={14} color={theme.colors.white} />
                     )}
@@ -251,53 +265,57 @@ export const FilterScreen: React.FC<FilterScreenProps> = ({ onNavigate, onApply 
               </Pressable>
             ))}
           </View>
-        ))}
-        
-        {renderFilterSection('atmosphere', 'Atmosphere', selectedAtmosphere.length, (
+        )}
+
+        {renderFilterSection(
+          'atmosphere',
+          'Atmosphere',
+          selectedAtmosphere.length,
           <View style={styles.tagsContainer}>
             {atmosphereTags.map((tag) => (
               <Pressable
                 key={tag}
-                style={[
-                  styles.tag,
-                  selectedAtmosphere.includes(tag) && styles.tagSelected,
-                ]}
+                style={[styles.tag, selectedAtmosphere.includes(tag) && styles.tagSelected]}
                 onPress={() => toggleAtmosphere(tag)}
               >
-                <Text style={[
-                  styles.tagText,
-                  selectedAtmosphere.includes(tag) && styles.tagTextSelected,
-                ]}>
+                <Text
+                  style={[
+                    styles.tagText,
+                    selectedAtmosphere.includes(tag) && styles.tagTextSelected,
+                  ]}
+                >
                   {tag}
                 </Text>
               </Pressable>
             ))}
           </View>
-        ))}
-        
-        {renderFilterSection('drinkPreference', 'Drink preference', selectedDrinks.length, (
+        )}
+
+        {renderFilterSection(
+          'drinkPreference',
+          'Drink preference',
+          selectedDrinks.length,
           <View style={styles.tagsContainer}>
             {drinkPreferences.map((drink) => (
               <Pressable
                 key={drink}
-                style={[
-                  styles.tag,
-                  selectedDrinks.includes(drink) && styles.tagSelected,
-                ]}
+                style={[styles.tag, selectedDrinks.includes(drink) && styles.tagSelected]}
                 onPress={() => toggleDrink(drink)}
               >
-                <Text style={[
-                  styles.tagText,
-                  selectedDrinks.includes(drink) && styles.tagTextSelected,
-                ]}>
+                <Text
+                  style={[styles.tagText, selectedDrinks.includes(drink) && styles.tagTextSelected]}
+                >
                   {drink}
                 </Text>
               </Pressable>
             ))}
           </View>
-        ))}
-        
-        {renderFilterSection('additional', "Anything you'd like us to keep in mind?", undefined, (
+        )}
+
+        {renderFilterSection(
+          'additional',
+          "Anything you'd like us to keep in mind?",
+          undefined,
           <View style={styles.textInputContainer}>
             <TextInput
               style={styles.textInput}
@@ -308,7 +326,7 @@ export const FilterScreen: React.FC<FilterScreenProps> = ({ onNavigate, onApply 
               onChangeText={setAdditionalNotes}
             />
           </View>
-        ))}
+        )}
 
         <View style={{ height: scaleHeight(100) }} />
       </ScrollView>
@@ -316,10 +334,7 @@ export const FilterScreen: React.FC<FilterScreenProps> = ({ onNavigate, onApply 
       {/* Apply Button */}
       <View style={styles.applyButtonContainer}>
         <Pressable
-          style={({ pressed }) => [
-            styles.applyButton,
-            pressed && styles.applyButtonPressed,
-          ]}
+          style={({ pressed }) => [styles.applyButton, pressed && styles.applyButtonPressed]}
           onPress={handleApply}
         >
           <Text style={styles.applyButtonText}>Apply</Text>
@@ -330,190 +345,190 @@ export const FilterScreen: React.FC<FilterScreenProps> = ({ onNavigate, onApply 
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.white,
-  },
-  header: {
-    flexDirection: 'row',
+  applyButton: {
     alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(27),
+    paddingVertical: scaleHeight(16),
+  },
+  applyButtonContainer: {
+    backgroundColor: theme.colors.white,
+    borderTopColor: '#E5E5E5',
+    borderTopWidth: 1,
     paddingHorizontal: scaleWidth(16),
-    paddingBottom: scaleHeight(16),
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    paddingVertical: scaleHeight(16),
+  },
+  applyButtonPressed: {
+    opacity: 0.8,
+  },
+  applyButtonText: {
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    fontWeight: '600' as any,
   },
   cancelText: {
-    fontSize: scaleFont(16),
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
   },
-  headerTitle: {
-    fontSize: scaleFont(18),
-    fontWeight: '600' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
+  checkbox: {
+    alignItems: 'center',
+    borderColor: '#E5E5E5',
+    borderRadius: scaleWidth(4),
+    borderWidth: 2,
+    height: scaleWidth(20),
+    justifyContent: 'center',
+    width: scaleWidth(20),
+  },
+  checkboxSelected: {
+    backgroundColor: theme.colors.primary.main,
+    borderColor: theme.colors.primary.main,
   },
   clearText: {
-    fontSize: scaleFont(16),
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+  },
+  container: {
+    backgroundColor: theme.colors.white,
+    flex: 1,
+  },
+  countBadge: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(12),
+    marginLeft: scaleWidth(12),
+    minWidth: scaleWidth(24),
+    paddingHorizontal: scaleWidth(8),
+    paddingVertical: scaleHeight(2),
+  },
+  countText: {
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
+    fontWeight: '600' as any,
+  },
+  filterSection: {
+    borderBottomColor: '#E5E5E5',
+    borderBottomWidth: 1,
+  },
+  header: {
+    alignItems: 'center',
+    borderBottomColor: '#E5E5E5',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingBottom: scaleHeight(16),
+    paddingHorizontal: scaleWidth(16),
+  },
+  headerTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(18),
+    fontWeight: '600' as any,
+  },
+  optionItem: {
+    borderBottomColor: '#F0F0F0',
+    borderBottomWidth: 1,
+    paddingVertical: scaleHeight(12),
+  },
+  optionRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  optionText: {
+    color: theme.colors.text.primary,
+    flex: 1,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(15),
+  },
+  optionsContainer: {
+    paddingBottom: scaleHeight(16),
+    paddingHorizontal: scaleWidth(16),
+  },
+  refineDescription: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    lineHeight: scaleFont(20),
+  },
+  refineSection: {
+    borderBottomColor: '#E5E5E5',
+    borderBottomWidth: 1,
+    paddingHorizontal: scaleWidth(16),
+    paddingVertical: scaleHeight(20),
+  },
+  refineTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(18),
+    fontWeight: '600' as any,
+    marginBottom: scaleHeight(8),
   },
   scrollView: {
     flex: 1,
   },
-  refineSection: {
-    paddingHorizontal: scaleWidth(16),
-    paddingVertical: scaleHeight(20),
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  refineTitle: {
-    fontSize: scaleFont(18),
-    fontWeight: '600' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    marginBottom: scaleHeight(8),
-  },
-  refineDescription: {
-    fontSize: scaleFont(14),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    lineHeight: scaleFont(20),
-  },
-  filterSection: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
   sectionHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(16),
   },
-  sectionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
   sectionTitle: {
-    fontSize: scaleFont(16),
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
   },
-  countBadge: {
-    marginLeft: scaleWidth(12),
-    backgroundColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(12),
-    paddingHorizontal: scaleWidth(8),
-    paddingVertical: scaleHeight(2),
-    minWidth: scaleWidth(24),
+  sectionTitleRow: {
     alignItems: 'center',
-  },
-  countText: {
-    fontSize: scaleFont(12),
-    color: theme.colors.white,
-    fontWeight: '600' as any,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  tagsContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: scaleWidth(16),
-    paddingBottom: scaleHeight(16),
-    gap: scaleWidth(8),
+    flex: 1,
   },
   tag: {
-    paddingHorizontal: scaleWidth(16),
-    paddingVertical: scaleHeight(8),
+    backgroundColor: theme.colors.white,
+    borderColor: '#E5E5E5',
     borderRadius: scaleWidth(20),
     borderWidth: 1,
-    borderColor: '#E5E5E5',
-    backgroundColor: theme.colors.white,
     marginBottom: scaleHeight(8),
+    paddingHorizontal: scaleWidth(16),
+    paddingVertical: scaleHeight(8),
   },
   tagSelected: {
     backgroundColor: '#FFE4E4',
     borderColor: theme.colors.primary.main,
   },
   tagText: {
-    fontSize: scaleFont(14),
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
   },
   tagTextSelected: {
     color: theme.colors.primary.main,
     fontWeight: '600' as any,
   },
-  applyButtonContainer: {
-    paddingHorizontal: scaleWidth(16),
-    paddingVertical: scaleHeight(16),
-    backgroundColor: theme.colors.white,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
-  },
-  applyButton: {
-    backgroundColor: theme.colors.primary.main,
-    paddingVertical: scaleHeight(16),
-    borderRadius: scaleWidth(27),
-    alignItems: 'center',
-  },
-  applyButtonPressed: {
-    opacity: 0.8,
-  },
-  applyButtonText: {
-    fontSize: scaleFont(16),
-    color: theme.colors.white,
-    fontWeight: '600' as any,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  optionsContainer: {
-    paddingHorizontal: scaleWidth(16),
-    paddingBottom: scaleHeight(16),
-  },
-  optionItem: {
-    paddingVertical: scaleHeight(12),
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  optionRow: {
+  tagsContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  optionText: {
-    fontSize: scaleFont(15),
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    flex: 1,
-  },
-  checkbox: {
-    width: scaleWidth(20),
-    height: scaleWidth(20),
-    borderRadius: scaleWidth(4),
-    borderWidth: 2,
-    borderColor: '#E5E5E5',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxSelected: {
-    backgroundColor: theme.colors.primary.main,
-    borderColor: theme.colors.primary.main,
-  },
-  textInputContainer: {
-    paddingHorizontal: scaleWidth(16),
+    flexWrap: 'wrap',
+    gap: scaleWidth(8),
     paddingBottom: scaleHeight(16),
+    paddingHorizontal: scaleWidth(16),
   },
   textInput: {
-    borderWidth: 1,
     borderColor: '#E5E5E5',
     borderRadius: scaleWidth(12),
-    padding: scaleWidth(12),
-    minHeight: scaleHeight(80),
-    fontSize: scaleFont(14),
+    borderWidth: 1,
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    minHeight: scaleHeight(80),
+    padding: scaleWidth(12),
     textAlignVertical: 'top',
+  },
+  textInputContainer: {
+    paddingBottom: scaleHeight(16),
+    paddingHorizontal: scaleWidth(16),
   },
 });

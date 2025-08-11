@@ -1,15 +1,10 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+
+import { Icon } from '@/components/base/Icon';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
-import { Icon } from '@/components/base/Icon';
 
 interface Task {
   id: string;
@@ -25,23 +20,23 @@ export const MyQuestView: React.FC = () => {
   ]);
 
   const toggleTask = (taskId: string) => {
-    setTasks(prev => prev.map(task => 
-      task.id === taskId ? { ...task, completed: !task.completed } : task
-    ));
+    setTasks((prev) =>
+      prev.map((task) => (task.id === taskId ? { ...task, completed: !task.completed } : task))
+    );
   };
 
   const completedPoints = tasks
-    .filter(task => task.completed)
+    .filter((task) => task.completed)
     .reduce((sum, task) => sum + task.points, 0);
 
-  const totalPossiblePoints = tasks.reduce((sum, task) => sum + task.points, 0);
+  const _totalPossiblePoints = tasks.reduce((sum, task) => sum + task.points, 0);
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Monthly Streak Tracker */}
       <View style={styles.streakCard}>
         <Text style={styles.cardTitle}>Monthly Streak Tracker</Text>
-        
+
         <View style={styles.streakDisplay}>
           <Text style={styles.streakNumber}>6</Text>
           <Text style={styles.streakLabel}>Weeks Strong</Text>
@@ -60,7 +55,8 @@ export const MyQuestView: React.FC = () => {
         <View style={styles.streakInfo}>
           <Text style={styles.infoTitle}>Next Reward</Text>
           <Text style={styles.infoDescription}>
-            Mystery reward unlocks every 3 weeks! Keep your streak to find out what's waiting for you.
+            Mystery reward unlocks every 3 weeks! Keep your streak to find out what's waiting for
+            you.
           </Text>
         </View>
       </View>
@@ -79,16 +75,10 @@ export const MyQuestView: React.FC = () => {
           Complete tasks to maintain your streak and earn points
         </Text>
 
-        {tasks.map(task => (
-          <Pressable
-            key={task.id}
-            style={styles.taskItem}
-            onPress={() => toggleTask(task.id)}
-          >
+        {tasks.map((task) => (
+          <Pressable key={task.id} style={styles.taskItem} onPress={() => toggleTask(task.id)}>
             <View style={[styles.checkbox, task.completed && styles.checkboxChecked]}>
-              {task.completed && (
-                <Icon name="check" size={14} color={theme.colors.white} />
-              )}
+              {task.completed && <Icon name="check" size={14} color={theme.colors.white} />}
             </View>
             <Text style={[styles.taskText, task.completed && styles.taskTextCompleted]}>
               {task.text}
@@ -108,11 +98,10 @@ export const MyQuestView: React.FC = () => {
         >
           <Text style={styles.progressTitle}>Progress Summary</Text>
           <Text style={styles.progressText}>
-            You've earned <Text style={styles.progressHighlight}>{completedPoints} points</Text> this week
+            You've earned <Text style={styles.progressHighlight}>{completedPoints} points</Text>{' '}
+            this week
           </Text>
-          <Text style={styles.progressText}>
-            from completed tasks!
-          </Text>
+          <Text style={styles.progressText}>from completed tasks!</Text>
         </LinearGradient>
       </View>
 
@@ -122,173 +111,173 @@ export const MyQuestView: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9F9F9',
-    paddingTop: scaleHeight(20),
-  },
-  streakCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: scaleWidth(27),
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    padding: scaleWidth(20),
-    marginBottom: scaleHeight(16),
-    marginHorizontal: scaleWidth(16),
-  },
   cardTitle: {
-    fontSize: scaleFont(16),
-    fontWeight: '600' as any,
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
-    marginBottom: scaleHeight(20),
-  },
-  streakDisplay: {
-    alignItems: 'center',
-    marginBottom: scaleHeight(24),
-  },
-  streakNumber: {
-    fontSize: scaleFont(48),
-    fontWeight: '700' as any,
-    color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.heading,
-    lineHeight: scaleFont(52),
-  },
-  streakLabel: {
     fontSize: scaleFont(16),
-    color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.body,
-    marginTop: scaleHeight(4),
-  },
-  streakInfo: {
-    backgroundColor: 'rgba(226, 72, 73, 0.05)',
-    borderRadius: scaleWidth(27),
-    borderWidth: 1,
-    borderColor: theme.colors.primary.main,
-    padding: scaleWidth(16),
-    marginBottom: scaleHeight(12),
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: scaleHeight(4),
-  },
-  infoTitle: {
-    fontSize: scaleFont(14),
     fontWeight: '600' as any,
-    color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  infoPoints: {
-    fontSize: scaleFont(12),
-    color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.body,
-    fontWeight: '600' as any,
-  },
-  infoDescription: {
-    fontSize: scaleFont(13),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    lineHeight: scaleFont(18),
-  },
-  tasksCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: scaleWidth(27),
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    padding: scaleWidth(20),
-    marginBottom: scaleHeight(16),
-    marginHorizontal: scaleWidth(16),
-  },
-  tasksHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: scaleHeight(8),
-  },
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: scaleWidth(4),
-  },
-  editText: {
-    fontSize: scaleFont(12),
-    color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  tasksSubtitle: {
-    fontSize: scaleFont(13),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
     marginBottom: scaleHeight(20),
-  },
-  taskItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: scaleHeight(12),
-    paddingHorizontal: scaleWidth(16),
-    backgroundColor: '#FAFAFA',
-    borderRadius: scaleWidth(27),
-    borderWidth: 1,
-    borderColor: theme.colors.primary.main,
-    marginBottom: scaleHeight(12),
   },
   checkbox: {
-    width: scaleWidth(20),
-    height: scaleWidth(20),
+    alignItems: 'center',
+    borderColor: theme.colors.primary.main,
     borderRadius: scaleWidth(4),
     borderWidth: 2,
-    borderColor: theme.colors.primary.main,
-    alignItems: 'center',
+    height: scaleWidth(20),
     justifyContent: 'center',
     marginRight: scaleWidth(12),
+    width: scaleWidth(20),
   },
   checkboxChecked: {
     backgroundColor: theme.colors.primary.main,
     borderColor: theme.colors.primary.main,
   },
-  taskText: {
+  container: {
+    backgroundColor: '#F9F9F9',
     flex: 1,
-    fontSize: scaleFont(14),
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
+    paddingTop: scaleHeight(20),
   },
-  taskTextCompleted: {
-    textDecorationLine: 'line-through',
-    color: theme.colors.text.secondary,
+  editButton: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: scaleWidth(4),
   },
-  taskPoints: {
-    fontSize: scaleFont(13),
+  editText: {
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
+  },
+  infoDescription: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
+    lineHeight: scaleFont(18),
+  },
+  infoPoints: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
+    fontWeight: '600' as any,
+  },
+  infoRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: scaleHeight(4),
+  },
+  infoTitle: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '600' as any,
+  },
+  progressHighlight: {
+    color: theme.colors.text.primary,
+    fontWeight: '700' as any,
+  },
+  progressSummary: {
+    alignItems: 'center',
+    borderRadius: scaleWidth(27),
+    marginTop: scaleHeight(8),
+    padding: scaleWidth(16),
+  },
+  progressText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
+    lineHeight: scaleFont(18),
+    textAlign: 'center',
+  },
+  progressTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '600' as any,
+    marginBottom: scaleHeight(8),
+  },
+  streakCard: {
+    backgroundColor: theme.colors.white,
+    borderColor: '#E5E5E5',
+    borderRadius: scaleWidth(27),
+    borderWidth: 1,
+    marginBottom: scaleHeight(16),
+    marginHorizontal: scaleWidth(16),
+    padding: scaleWidth(20),
+  },
+  streakDisplay: {
+    alignItems: 'center',
+    marginBottom: scaleHeight(24),
+  },
+  streakInfo: {
+    backgroundColor: 'rgba(226, 72, 73, 0.05)',
+    borderColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(27),
+    borderWidth: 1,
+    marginBottom: scaleHeight(12),
+    padding: scaleWidth(16),
+  },
+  streakLabel: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    marginTop: scaleHeight(4),
+  },
+  streakNumber: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.heading,
+    fontSize: scaleFont(48),
+    fontWeight: '700' as any,
+    lineHeight: scaleFont(52),
+  },
+  taskItem: {
+    alignItems: 'center',
+    backgroundColor: '#FAFAFA',
+    borderColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(27),
+    borderWidth: 1,
+    flexDirection: 'row',
+    marginBottom: scaleHeight(12),
+    paddingHorizontal: scaleWidth(16),
+    paddingVertical: scaleHeight(12),
+  },
+  taskPoints: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
     fontWeight: '600' as any,
   },
   taskPointsCompleted: {
     color: theme.colors.text.secondary,
   },
-  progressSummary: {
-    borderRadius: scaleWidth(27),
-    padding: scaleWidth(16),
-    marginTop: scaleHeight(8),
-    alignItems: 'center',
-  },
-  progressTitle: {
-    fontSize: scaleFont(14),
-    fontWeight: '600' as any,
+  taskText: {
     color: theme.colors.text.primary,
+    flex: 1,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+  },
+  taskTextCompleted: {
+    color: theme.colors.text.secondary,
+    textDecorationLine: 'line-through',
+  },
+  tasksCard: {
+    backgroundColor: theme.colors.white,
+    borderColor: '#E5E5E5',
+    borderRadius: scaleWidth(27),
+    borderWidth: 1,
+    marginBottom: scaleHeight(16),
+    marginHorizontal: scaleWidth(16),
+    padding: scaleWidth(20),
+  },
+  tasksHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: scaleHeight(8),
   },
-  progressText: {
-    fontSize: scaleFont(13),
+  tasksSubtitle: {
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
-    textAlign: 'center',
-    lineHeight: scaleFont(18),
-  },
-  progressHighlight: {
-    fontWeight: '700' as any,
-    color: theme.colors.text.primary,
+    fontSize: scaleFont(13),
+    marginBottom: scaleHeight(20),
   },
 });

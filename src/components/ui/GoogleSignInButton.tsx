@@ -1,3 +1,5 @@
+import { AntDesign } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import React, { memo } from 'react';
 import {
   Pressable,
@@ -8,9 +10,8 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import * as Haptics from 'expo-haptics';
-import { AntDesign } from '@expo/vector-icons';
-import { theme, designTokens } from '@/theme';
+
+import { theme } from '@/theme';
 
 interface GoogleSignInButtonProps {
   onPress: () => void;
@@ -21,84 +22,88 @@ interface GoogleSignInButtonProps {
   iconType?: 'image' | 'vector'; // Choose between image URL or vector icon
 }
 
-export const GoogleSignInButton = memo<GoogleSignInButtonProps>(({
-  onPress,
-  loading = false,
-  disabled = false,
-  fullWidth = true,
-  variant = 'light',
-  iconType = 'vector',
-}) => {
-  const handlePress = () => {
-    if (disabled || loading) return;
-    
-    if (Platform.OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    
-    onPress();
-  };
+export const GoogleSignInButton = memo<GoogleSignInButtonProps>(
+  ({
+    onPress,
+    loading = false,
+    disabled = false,
+    fullWidth = true,
+    variant = 'light',
+    iconType = 'vector',
+  }) => {
+    const handlePress = () => {
+      if (disabled || loading) return;
 
-  const isDisabled = disabled || loading;
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
 
-  return (
-    <Pressable
-      onPress={handlePress}
-      disabled={isDisabled}
-      style={({ pressed }) => [
-        styles.button,
-        variant === 'dark' && styles.buttonDark,
-        fullWidth && styles.fullWidth,
-        pressed && styles.pressed,
-        isDisabled && styles.disabled,
-      ]}
-      accessibilityRole="button"
-      accessibilityLabel="Sign in with Google"
-      accessibilityState={{ disabled: isDisabled, busy: loading }}
-    >
-      <View style={styles.content}>
-        {loading ? (
-          <ActivityIndicator size="small" color={theme.colors.gray['3']} />
-        ) : (
-          <>
-            {iconType === 'vector' ? (
-              <AntDesign 
-                name="google" 
-                size={20} 
-                color={variant === 'dark' ? theme.colors.white : '#4285F4'}
-              />
-            ) : (
-              <Image
-                source={{ uri: 'https://developers.google.com/identity/images/g-logo.png' }}
-                style={styles.googleLogo}
-                resizeMode="contain"
-              />
-            )}
-            <Text style={[
-              styles.text,
-              variant === 'dark' && styles.textDark,
-              isDisabled && styles.textDisabled,
-            ]}>
-              Sign in with Google
-            </Text>
-          </>
-        )}
-      </View>
-    </Pressable>
-  );
-});
+      onPress();
+    };
+
+    const isDisabled = disabled || loading;
+
+    return (
+      <Pressable
+        onPress={handlePress}
+        disabled={isDisabled}
+        style={({ pressed }) => [
+          styles.button,
+          variant === 'dark' && styles.buttonDark,
+          fullWidth && styles.fullWidth,
+          pressed && styles.pressed,
+          isDisabled && styles.disabled,
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel="Sign in with Google"
+        accessibilityState={{ disabled: isDisabled, busy: loading }}
+      >
+        <View style={styles.content}>
+          {loading ? (
+            <ActivityIndicator size="small" color={theme.colors.gray['3']} />
+          ) : (
+            <>
+              {iconType === 'vector' ? (
+                <AntDesign
+                  name="google"
+                  size={20}
+                  color={variant === 'dark' ? theme.colors.white : '#4285F4'}
+                />
+              ) : (
+                <Image
+                  source={{ uri: 'https://developers.google.com/identity/images/g-logo.png' }}
+                  style={styles.googleLogo}
+                  resizeMode="contain"
+                />
+              )}
+              <Text
+                style={[
+                  styles.text,
+                  variant === 'dark' && styles.textDark,
+                  isDisabled && styles.textDisabled,
+                ]}
+              >
+                Sign in with Google
+              </Text>
+            </>
+          )}
+        </View>
+      </Pressable>
+    );
+  }
+);
 
 GoogleSignInButton.displayName = 'GoogleSignInButton';
 
 const styles = StyleSheet.create({
   button: {
-    height: 48,
     backgroundColor: theme.colors.white,
+    borderColor: theme.colors.gray['1'],
     borderRadius: theme.borderRadius.md,
     borderWidth: 1,
-    borderColor: theme.colors.gray['1'],
-    paddingHorizontal: theme.spacing.lg,
+    height: 48,
     justifyContent: 'center',
+    paddingHorizontal: theme.spacing.lg,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -115,36 +120,36 @@ const styles = StyleSheet.create({
     backgroundColor: '#4285F4',
     borderColor: '#4285F4',
   },
+  content: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'center',
+  },
+  disabled: {
+    opacity: 0.6,
+  },
   fullWidth: {
     width: '100%',
   },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
   googleLogo: {
-    width: 20,
     height: 20,
+    width: 20,
+  },
+  pressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
   },
   text: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.medium,
     color: theme.colors.gray['4'],
     fontFamily: theme.typography.fontFamily.medium,
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   textDark: {
     color: theme.colors.white,
   },
   textDisabled: {
     color: theme.colors.gray['2'],
-  },
-  pressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }],
-  },
-  disabled: {
-    opacity: 0.6,
   },
 });

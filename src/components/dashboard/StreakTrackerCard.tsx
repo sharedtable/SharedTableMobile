@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -22,12 +23,12 @@ export const StreakTrackerCard: React.FC<StreakTrackerCardProps> = ({
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Streak Tracker</Text>
-      
+
       <View style={styles.streakDisplay}>
         <Text style={styles.streakNumber}>{weeksCount}</Text>
         <Text style={styles.streakLabel}>Weeks Strong</Text>
       </View>
-      
+
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Weekly Points</Text>
@@ -35,7 +36,7 @@ export const StreakTrackerCard: React.FC<StreakTrackerCardProps> = ({
         </View>
         <Text style={styles.sectionDescription}>{weeklyPoints.description}</Text>
       </View>
-      
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Next Reward</Text>
         <Text style={styles.sectionDescription}>{nextReward.description}</Text>
@@ -47,65 +48,65 @@ export const StreakTrackerCard: React.FC<StreakTrackerCardProps> = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.colors.white,
+    borderColor: '#E5E5E5',
     borderRadius: scaleWidth(27),
     borderWidth: 1,
-    borderColor: '#E5E5E5',
     padding: scaleWidth(20),
   },
-  title: {
-    fontSize: scaleFont(16),
-    fontWeight: '600' as any,
-    color: theme.colors.text.primary,
+  pointsValue: {
+    color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
-    marginBottom: scaleHeight(20),
+    fontSize: scaleFont(12),
+    fontWeight: '600' as any,
+  },
+  section: {
+    backgroundColor: 'rgba(226, 72, 73, 0.05)',
+    borderColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(27),
+    borderWidth: 1,
+    marginBottom: scaleHeight(12),
+    padding: scaleWidth(16),
+  },
+  sectionDescription: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
+    lineHeight: scaleFont(18),
+  },
+  sectionHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: scaleHeight(4),
+  },
+  sectionTitle: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '600' as any,
   },
   streakDisplay: {
     alignItems: 'center',
     marginBottom: scaleHeight(24),
   },
-  streakNumber: {
-    fontSize: scaleFont(48),
-    fontWeight: '700' as any,
-    color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.heading,
-    lineHeight: scaleFont(52),
-  },
   streakLabel: {
-    fontSize: scaleFont(16),
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
     marginTop: scaleHeight(4),
   },
-  section: {
-    backgroundColor: 'rgba(226, 72, 73, 0.05)',
-    borderRadius: scaleWidth(27),
-    borderWidth: 1,
-    borderColor: theme.colors.primary.main,
-    padding: scaleWidth(16),
-    marginBottom: scaleHeight(12),
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: scaleHeight(4),
-  },
-  sectionTitle: {
-    fontSize: scaleFont(14),
-    fontWeight: '600' as any,
+  streakNumber: {
     color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.body,
+    fontFamily: theme.typography.fontFamily.heading,
+    fontSize: scaleFont(48),
+    fontWeight: '700' as any,
+    lineHeight: scaleFont(52),
   },
-  pointsValue: {
-    fontSize: scaleFont(12),
-    color: theme.colors.primary.main,
+  title: {
+    color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
     fontWeight: '600' as any,
-  },
-  sectionDescription: {
-    fontSize: scaleFont(13),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    lineHeight: scaleFont(18),
+    marginBottom: scaleHeight(20),
   },
 });

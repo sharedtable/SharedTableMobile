@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
 import { View, Alert, StyleSheet, Text, Pressable } from 'react-native';
-import { scaleHeight, scaleWidth, scaleFont } from '@/utils/responsive';
-import { theme } from '@/theme';
+
 import { Icon } from '@/components/base/Icon';
-import {
-  OnboardingLayout,
-  OnboardingTitle,
-  OnboardingButton,
-} from '@/components/onboarding';
+import { OnboardingLayout, OnboardingTitle, OnboardingButton } from '@/components/onboarding';
+import { theme } from '@/theme';
+import { scaleHeight, scaleWidth, scaleFont } from '@/utils/responsive';
 
 interface OnboardingInterestsScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
@@ -37,9 +34,9 @@ export const OnboardingInterestsScreen: React.FC<OnboardingInterestsScreenProps>
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
   const toggleInterest = (interest: string) => {
-    setSelectedInterests(prev => {
+    setSelectedInterests((prev) => {
       if (prev.includes(interest)) {
-        return prev.filter(i => i !== interest);
+        return prev.filter((i) => i !== interest);
       }
       return [...prev, interest];
     });
@@ -77,14 +74,16 @@ export const OnboardingInterestsScreen: React.FC<OnboardingInterestsScreenProps>
               key={interest}
               style={[
                 styles.interestCard,
-                selectedInterests.includes(interest) && styles.interestCardSelected
+                selectedInterests.includes(interest) && styles.interestCardSelected,
               ]}
               onPress={() => toggleInterest(interest)}
             >
-              <Text style={[
-                styles.interestText,
-                selectedInterests.includes(interest) && styles.interestTextSelected
-              ]}>
+              <Text
+                style={[
+                  styles.interestText,
+                  selectedInterests.includes(interest) && styles.interestTextSelected,
+                ]}
+              >
                 {interest}
               </Text>
               {selectedInterests.includes(interest) && (
@@ -109,44 +108,44 @@ export const OnboardingInterestsScreen: React.FC<OnboardingInterestsScreenProps>
 };
 
 const styles = StyleSheet.create({
+  bottomContainer: {
+    paddingBottom: scaleHeight(40),
+    paddingTop: scaleHeight(20),
+  },
   container: {
     flex: 1,
   },
-  optionsContainer: {
-    gap: scaleHeight(12),
-  },
   interestCard: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: scaleHeight(16),
-    paddingHorizontal: scaleWidth(20),
     backgroundColor: 'rgba(226, 72, 73, 0.1)', // 10% of brand color
+    borderColor: 'transparent',
     borderRadius: scaleWidth(12),
     borderWidth: 2,
-    borderColor: 'transparent',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: scaleWidth(20),
+    paddingVertical: scaleHeight(16),
   },
   interestCardSelected: {
-    borderColor: theme.colors.primary.main,
-    backgroundColor: 'rgba(226, 72, 73, 0.3)', // 30% of brand color
+    backgroundColor: 'rgba(226, 72, 73, 0.3)',
+    borderColor: theme.colors.primary.main, // 30% of brand color
   },
   interestText: {
+    color: theme.colors.text.primary,
+    flex: 1,
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
     fontWeight: '500' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    flex: 1,
   },
   interestTextSelected: {
     color: theme.colors.primary.main,
     fontWeight: '600' as any,
   },
+  optionsContainer: {
+    gap: scaleHeight(12),
+  },
   spacer: {
     flex: 1,
     minHeight: scaleHeight(40),
-  },
-  bottomContainer: {
-    paddingBottom: scaleHeight(40),
-    paddingTop: scaleHeight(20),
   },
 });

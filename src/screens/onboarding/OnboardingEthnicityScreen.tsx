@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { View, Alert, StyleSheet } from 'react-native';
-import { scaleHeight } from '@/utils/responsive';
+
 import {
   OnboardingLayout,
   OnboardingTitle,
   SelectionCard,
   OnboardingButton,
 } from '@/components/onboarding';
+import { scaleHeight } from '@/utils/responsive';
 
 interface OnboardingEthnicityScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
@@ -23,7 +24,7 @@ const ethnicityOptions = [
   'Hispanic / LatinX',
   'Asian Pacific Islander',
   'Native American',
-  'Other'
+  'Other',
 ];
 
 export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps> = ({
@@ -75,11 +76,7 @@ export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps>
         <View style={styles.spacer} />
 
         <View style={styles.bottomContainer}>
-          <OnboardingButton
-            onPress={handleNext}
-            label="Next"
-            disabled={!selectedEthnicity}
-          />
+          <OnboardingButton onPress={handleNext} label="Next" disabled={!selectedEthnicity} />
         </View>
       </View>
     </OnboardingLayout>
@@ -87,6 +84,9 @@ export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps>
 };
 
 const styles = StyleSheet.create({
+  bottomContainer: {
+    paddingBottom: scaleHeight(40),
+  },
   container: {
     flex: 1,
   },
@@ -95,8 +95,5 @@ const styles = StyleSheet.create({
   },
   spacer: {
     height: scaleHeight(40),
-  },
-  bottomContainer: {
-    paddingBottom: scaleHeight(40),
   },
 });

@@ -1,18 +1,18 @@
 /**
  * API Service for SharedTable Mobile
- * 
+ *
  * This service connects to the SharedTableWeb Next.js backend.
  * All business logic remains on the backend - this is just a thin client.
  */
 
 import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
-import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
+import * as SecureStore from 'expo-secure-store';
 
 // Get API URL from app.json config
-const API_BASE_URL = __DEV__ 
-  ? (Constants.expoConfig?.extra?.apiUrl || 'http://localhost:3000/api')
-  : (Constants.expoConfig?.extra?.productionApiUrl || 'https://sharedtable.vercel.app/api');
+const API_BASE_URL = __DEV__
+  ? Constants.expoConfig?.extra?.apiUrl || 'http://localhost:3000/api'
+  : Constants.expoConfig?.extra?.productionApiUrl || 'https://sharedtable.vercel.app/api';
 
 // Storage keys
 const AUTH_TOKEN_KEY = 'auth_token';
@@ -65,12 +65,12 @@ class ApiService {
         } catch (error) {
           console.error('Error getting auth token:', error);
         }
-        
+
         // Log requests in development
         if (__DEV__) {
           console.log(`📡 API Request: ${config.method?.toUpperCase()} ${config.url}`);
         }
-        
+
         return config;
       },
       (error) => {
@@ -143,28 +143,31 @@ class ApiService {
     name: string;
   }): Promise<ApiResponse<{ user: User; token: string }>> {
     const response = await this.client.post('/auth/create-account', data);
-    
+
     // Store token if provided
     if (response.data.data?.token) {
       await this.setAuthToken(response.data.data.token);
     }
-    
+
     return response.data;
   }
 
-  async login(email: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> {
+  async login(
+    email: string,
+    password: string
+  ): Promise<ApiResponse<{ user: User; token: string }>> {
     // Note: NextAuth might handle this differently
     // You may need to adjust based on your auth setup
-    const response = await this.client.post('/auth/login', { 
-      email, 
-      password 
+    const response = await this.client.post('/auth/login', {
+      email,
+      password,
     });
-    
+
     // Store token if provided
     if (response.data.data?.token) {
       await this.setAuthToken(response.data.data.token);
     }
-    
+
     return response.data;
   }
 
@@ -197,7 +200,7 @@ class ApiService {
 
   async uploadProfilePhoto(uri: string): Promise<ApiResponse<{ url: string }>> {
     const formData = new FormData();
-    
+
     // React Native specific way to append file
     formData.append('photo', {
       uri,
@@ -210,7 +213,7 @@ class ApiService {
         'Content-Type': 'multipart/form-data',
       },
     });
-    
+
     return response.data;
   }
 
@@ -289,19 +292,21 @@ class ApiService {
   // Payment Endpoints (Stripe)
   // ============================================================================
 
-  async createPaymentIntent(amount: number): Promise<ApiResponse<{
-    clientSecret: string;
-    paymentIntentId: string;
-  }>> {
-    const response = await this.client.post('/stripe/create-payment-intent', { 
-      amount 
+  async createPaymentIntent(amount: number): Promise<
+    ApiResponse<{
+      clientSecret: string;
+      paymentIntentId: string;
+    }>
+  > {
+    const response = await this.client.post('/stripe/create-payment-intent', {
+      amount,
     });
     return response.data;
   }
 
   async confirmPayment(paymentIntentId: string): Promise<ApiResponse<void>> {
-    const response = await this.client.post('/stripe/confirm-payment', { 
-      paymentIntentId 
+    const response = await this.client.post('/stripe/confirm-payment', {
+      paymentIntentId,
     });
     return response.data;
   }

@@ -12,18 +12,19 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { Icon } from '@/components/base/Icon';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
-import { Icon } from '@/components/base/Icon';
 
 interface ConfirmationCodeScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
   email?: string;
 }
 
-export const ConfirmationCodeScreen: React.FC<ConfirmationCodeScreenProps> = ({ 
+export const ConfirmationCodeScreen: React.FC<ConfirmationCodeScreenProps> = ({
   onNavigate,
-  email = 'dose@email.com' 
+  email = 'dose@email.com',
 }) => {
   const [code, setCode] = useState(['', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -74,8 +75,8 @@ export const ConfirmationCodeScreen: React.FC<ConfirmationCodeScreenProps> = ({
     setLoading(true);
     try {
       // Simulate verification
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       // Navigate directly without showing success message
       onNavigate?.('home');
     } catch (error) {
@@ -96,84 +97,84 @@ export const ConfirmationCodeScreen: React.FC<ConfirmationCodeScreenProps> = ({
     onNavigate?.('welcome');
   };
 
-  const isCodeComplete = code.every(digit => digit !== '');
+  const isCodeComplete = code.every((digit) => digit !== '');
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.content}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Pressable onPress={handleBack} style={styles.headerButton}>
-            <Icon name="chevron-left" size={24} color={theme.colors.text.primary} />
-          </Pressable>
-          <View style={styles.headerSpacer} />
-        </View>
-
-        {/* Title */}
-        <Text style={styles.title}>Enter confirmation code</Text>
-
-        {/* Subtitle */}
-        <Text style={styles.subtitle}>
-          A 4-digit code was sent to{'\n'}
-          <Text style={styles.email}>{email}</Text>
-        </Text>
-
-        {/* Code Input */}
-        <View style={styles.codeContainer}>
-          {code.map((digit, index) => (
-            <View key={index} style={styles.inputWrapper}>
-              <TextInput
-                ref={ref => inputRefs.current[index] = ref}
-                style={[
-                  styles.codeInput,
-                  focusedIndex === index && styles.codeInputFocused,
-                  digit && styles.codeInputFilled
-                ]}
-                value={digit}
-                onChangeText={(value) => handleCodeChange(value, index)}
-                onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
-                onFocus={() => setFocusedIndex(index)}
-                onBlur={() => setFocusedIndex(-1)}
-                keyboardType="number-pad"
-                maxLength={1}
-                selectTextOnFocus
-                textAlign="center"
-                autoComplete="off"
-              />
+            {/* Header */}
+            <View style={styles.header}>
+              <Pressable onPress={handleBack} style={styles.headerButton}>
+                <Icon name="chevron-left" size={24} color={theme.colors.text.primary} />
+              </Pressable>
+              <View style={styles.headerSpacer} />
             </View>
-          ))}
-        </View>
 
-        {/* Resend Code */}
-        <Pressable onPress={handleResend} style={styles.resendButton}>
-          <Text style={styles.resendText}>Resend code</Text>
-        </Pressable>
+            {/* Title */}
+            <Text style={styles.title}>Enter confirmation code</Text>
 
-        {/* Continue Button */}
-        <View style={styles.bottomContainer}>
-          <Pressable
-            style={[
-              styles.continueButton,
-              (!isCodeComplete || loading) && styles.continueButtonDisabled
-            ]}
-            onPress={handleContinue}
-            disabled={!isCodeComplete || loading}
-          >
-            <Text style={styles.continueButtonText}>
-              {loading ? 'Verifying...' : 'Continue'}
+            {/* Subtitle */}
+            <Text style={styles.subtitle}>
+              A 4-digit code was sent to{'\n'}
+              <Text style={styles.email}>{email}</Text>
             </Text>
-          </Pressable>
-        </View>
+
+            {/* Code Input */}
+            <View style={styles.codeContainer}>
+              {code.map((digit, index) => (
+                <View key={index} style={styles.inputWrapper}>
+                  <TextInput
+                    ref={(ref) => (inputRefs.current[index] = ref)}
+                    style={[
+                      styles.codeInput,
+                      focusedIndex === index && styles.codeInputFocused,
+                      digit && styles.codeInputFilled,
+                    ]}
+                    value={digit}
+                    onChangeText={(value) => handleCodeChange(value, index)}
+                    onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
+                    onFocus={() => setFocusedIndex(index)}
+                    onBlur={() => setFocusedIndex(-1)}
+                    keyboardType="number-pad"
+                    maxLength={1}
+                    selectTextOnFocus
+                    textAlign="center"
+                    autoComplete="off"
+                  />
+                </View>
+              ))}
+            </View>
+
+            {/* Resend Code */}
+            <Pressable onPress={handleResend} style={styles.resendButton}>
+              <Text style={styles.resendText}>Resend code</Text>
+            </Pressable>
+
+            {/* Continue Button */}
+            <View style={styles.bottomContainer}>
+              <Pressable
+                style={[
+                  styles.continueButton,
+                  (!isCodeComplete || loading) && styles.continueButtonDisabled,
+                ]}
+                onPress={handleContinue}
+                disabled={!isCodeComplete || loading}
+              >
+                <Text style={styles.continueButtonText}>
+                  {loading ? 'Verifying...' : 'Continue'}
+                </Text>
+              </Pressable>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -182,26 +183,69 @@ export const ConfirmationCodeScreen: React.FC<ConfirmationCodeScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
+  bottomContainer: {
     flex: 1,
+    justifyContent: 'flex-end',
+    paddingBottom: scaleHeight(40),
+  },
+  codeContainer: {
+    flexDirection: 'row',
+    gap: scaleWidth(16),
+    justifyContent: 'center',
+    marginBottom: scaleHeight(32),
+  },
+  codeInput: {
     backgroundColor: theme.colors.white,
+    borderColor: theme.colors.gray['1'],
+    borderRadius: scaleWidth(12),
+    borderWidth: 1.5,
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(24),
+    fontWeight: '600' as any,
+    height: scaleHeight(60),
   },
-  keyboardView: {
+  codeInputFilled: {
+    backgroundColor: '#F9FAFB',
+  },
+  codeInputFocused: {
+    borderColor: theme.colors.primary.main,
+    borderWidth: 2,
+  },
+  container: {
+    backgroundColor: theme.colors.white,
     flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
   },
   content: {
     flex: 1,
     paddingHorizontal: scaleWidth(24),
   },
-  header: {
-    flexDirection: 'row',
+  continueButton: {
     alignItems: 'center',
-    paddingTop: scaleHeight(12),
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(12),
+    height: scaleHeight(52),
+    justifyContent: 'center',
+  },
+  continueButtonDisabled: {
+    opacity: 0.5,
+  },
+  continueButtonText: {
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(18),
+    fontWeight: '600' as any,
+  },
+  email: {
+    color: theme.colors.text.primary,
+    fontWeight: '500' as any,
+  },
+  header: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginHorizontal: -scaleWidth(4),
     paddingBottom: scaleHeight(20),
-    marginHorizontal: -scaleWidth(4), // Compensate for back button padding
+    paddingTop: scaleHeight(12), // Compensate for back button padding
   },
   headerButton: {
     padding: scaleWidth(4),
@@ -209,85 +253,42 @@ const styles = StyleSheet.create({
   headerSpacer: {
     flex: 1,
   },
-  title: {
-    fontSize: scaleFont(32),
-    fontWeight: '700' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.heading,
-    textAlign: 'center',
-    marginBottom: scaleHeight(8),
-  },
-  subtitle: {
-    fontSize: scaleFont(16),
-    color: theme.colors.text.secondary,
-    textAlign: 'center',
-    marginBottom: scaleHeight(40),
-    fontFamily: theme.typography.fontFamily.body,
-    lineHeight: scaleHeight(22),
-  },
-  email: {
-    color: theme.colors.text.primary,
-    fontWeight: '500' as any,
-  },
-  codeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: scaleWidth(16),
-    marginBottom: scaleHeight(32),
-  },
   inputWrapper: {
     flex: 1,
     maxWidth: scaleWidth(65),
   },
-  codeInput: {
-    height: scaleHeight(60),
-    borderWidth: 1.5,
-    borderColor: theme.colors.gray['1'],
-    borderRadius: scaleWidth(12),
-    fontSize: scaleFont(24),
-    fontWeight: '600' as any,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    backgroundColor: theme.colors.white,
-  },
-  codeInputFocused: {
-    borderColor: theme.colors.primary.main,
-    borderWidth: 2,
-  },
-  codeInputFilled: {
-    backgroundColor: '#F9FAFB',
+  keyboardView: {
+    flex: 1,
   },
   resendButton: {
     alignSelf: 'center',
-    paddingVertical: scaleHeight(8),
     paddingHorizontal: scaleWidth(16),
+    paddingVertical: scaleHeight(8),
   },
   resendText: {
-    fontSize: scaleFont(14),
     color: theme.colors.primary.main,
-    fontWeight: '500' as any,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '500' as any,
     textDecorationLine: 'underline',
   },
-  bottomContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    paddingBottom: scaleHeight(40),
+  scrollContent: {
+    flexGrow: 1,
   },
-  continueButton: {
-    height: scaleHeight(52),
-    backgroundColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(12),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  continueButtonDisabled: {
-    opacity: 0.5,
-  },
-  continueButtonText: {
-    fontSize: scaleFont(18),
-    fontWeight: '600' as any,
-    color: theme.colors.white,
+  subtitle: {
+    color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    lineHeight: scaleHeight(22),
+    marginBottom: scaleHeight(40),
+    textAlign: 'center',
+  },
+  title: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.heading,
+    fontSize: scaleFont(32),
+    fontWeight: '700' as any,
+    marginBottom: scaleHeight(8),
+    textAlign: 'center',
   },
 });

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { View, Alert, StyleSheet } from 'react-native';
-import { scaleHeight } from '@/utils/responsive';
+
 import {
   OnboardingLayout,
   OnboardingTitle,
   SelectionCard,
   OnboardingButton,
 } from '@/components/onboarding';
+import { scaleHeight } from '@/utils/responsive';
 
 interface OnboardingDependentsScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
@@ -40,11 +41,7 @@ export const OnboardingDependentsScreen: React.FC<OnboardingDependentsScreenProp
   };
 
   return (
-    <OnboardingLayout
-      onBack={handleBack}
-      currentStep={currentStep}
-      totalSteps={totalSteps}
-    >
+    <OnboardingLayout onBack={handleBack} currentStep={currentStep} totalSteps={totalSteps}>
       <View style={styles.container}>
         <OnboardingTitle>Do you have any{'\n'}dependents?</OnboardingTitle>
 
@@ -54,7 +51,7 @@ export const OnboardingDependentsScreen: React.FC<OnboardingDependentsScreenProp
             selected={hasDependents === 'yes'}
             onPress={() => setHasDependents('yes')}
           />
-          
+
           <SelectionCard
             label="No!"
             selected={hasDependents === 'no'}
@@ -65,11 +62,7 @@ export const OnboardingDependentsScreen: React.FC<OnboardingDependentsScreenProp
         <View style={styles.spacer} />
 
         <View style={styles.bottomContainer}>
-          <OnboardingButton
-            onPress={handleNext}
-            label="Next"
-            disabled={!hasDependents}
-          />
+          <OnboardingButton onPress={handleNext} label="Next" disabled={!hasDependents} />
         </View>
       </View>
     </OnboardingLayout>
@@ -77,6 +70,9 @@ export const OnboardingDependentsScreen: React.FC<OnboardingDependentsScreenProp
 };
 
 const styles = StyleSheet.create({
+  bottomContainer: {
+    paddingBottom: scaleHeight(40),
+  },
   container: {
     flex: 1,
   },
@@ -85,8 +81,5 @@ const styles = StyleSheet.create({
   },
   spacer: {
     flex: 1,
-  },
-  bottomContainer: {
-    paddingBottom: scaleHeight(40),
   },
 });
