@@ -1,0 +1,81 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+
+jobs:
+  deploy-preview:
+    name: Deploy Preview
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build and publish preview
+        run: |
+          npx eas update --branch preview --message "${{ github.event.head_commit.message }}"
+        env:
+          EXPO_PUBLIC_API_URL: ${{ secrets.STAGING_API_URL }}
+          EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_TEST_KEY }}
+
+  deploy-production:
+    name: Deploy Production
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build for iOS
+        run: |
+          npx eas build --platform ios --profile production --non-interactive
+        env:
+          EXPO_PUBLIC_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+          EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_LIVE_KEY }}
+      
+      - name: Build for Android
+        run: |
+          npx eas build --platform android --profile production --non-interactive
+        env:
+          EXPO_PUBLIC_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+          EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_LIVE_KEY }}
+      
+      - name: Submit to App Store
+        run: |
+          npx eas submit --platform ios --latest --non-interactive
+      
+      - name: Submit to Google Play
+        run: |
+          npx eas submit --platform android --latest --non-interactive

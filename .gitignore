@@ -1,0 +1,90 @@
+# OSX
+.DS_Store
+
+# Xcode
+build/
+*.pbxuser
+\!default.pbxuser
+*.mode1v3
+\!default.mode1v3
+*.mode2v3
+\!default.mode2v3
+*.perspectivev3
+\!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+project.xcworkspace
+ios/Pods/
+
+# Android/IntelliJ
+build/
+.idea
+.gradle
+local.properties
+*.iml
+*.hprof
+android/app/debug
+android/app/release
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+.yarn/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# BUCK
+buck-out/
+\.buckd/
+*.keystore
+\!debug.keystore
+
+# Bundle artifacts
+*.jsbundle
+
+# Expo
+.expo/
+dist/
+web-build/
+*.orig.*
+
+# Testing
+coverage/
+.nyc_output
+
+# Temporary files
+*.log
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/
+*.swp
+*.swo
+*~
+
+# EAS Build
+eas-build-*
+
+# Metro
+.metro-health-check*
+
+# TypeScript
+*.tsbuildinfo
+
+# Misc
+.eslintcache
+.prettierignore
+.husky/_
+EOF < /dev/null
