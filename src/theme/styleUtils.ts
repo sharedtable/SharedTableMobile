@@ -9,7 +9,7 @@ export const createShadow = (elevation: keyof typeof theme.shadows) => {
   return Platform.select({
     ios: theme.shadows[elevation],
     android: {
-      elevation: theme.shadows[elevation].elevation,
+      elevation: (theme.shadows[elevation] as any).elevation || 0,
     },
   });
 };

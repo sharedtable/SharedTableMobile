@@ -64,7 +64,7 @@ export const storage = {
     }
   },
 
-  async getAllKeys(): Promise<string[]> {
+  async getAllKeys(): Promise<readonly string[]> {
     try {
       return await AsyncStorage.getAllKeys();
     } catch (error) {
@@ -73,26 +73,26 @@ export const storage = {
     }
   },
 
-  async multiGet(keys: string[]): Promise<[string, string | null][]> {
+  async multiGet(keys: readonly string[]): Promise<readonly [string, string | null][]> {
     try {
-      return await AsyncStorage.multiGet(keys);
+      return await AsyncStorage.multiGet(keys as string[]);
     } catch (error) {
       console.error('Error getting multiple items:', error);
       return [];
     }
   },
 
-  async multiSet(keyValuePairs: [string, string][]): Promise<void> {
+  async multiSet(keyValuePairs: readonly [string, string][]): Promise<void> {
     try {
-      await AsyncStorage.multiSet(keyValuePairs);
+      await AsyncStorage.multiSet(keyValuePairs as [string, string][]);
     } catch (error) {
       console.error('Error setting multiple items:', error);
     }
   },
 
-  async multiRemove(keys: string[]): Promise<void> {
+  async multiRemove(keys: readonly string[]): Promise<void> {
     try {
-      await AsyncStorage.multiRemove(keys);
+      await AsyncStorage.multiRemove(keys as string[]);
     } catch (error) {
       console.error('Error removing multiple items:', error);
     }

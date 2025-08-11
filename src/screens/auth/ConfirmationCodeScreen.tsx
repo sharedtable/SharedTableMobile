@@ -134,7 +134,9 @@ export const ConfirmationCodeScreen: React.FC<ConfirmationCodeScreenProps> = ({
               {code.map((digit, index) => (
                 <View key={index} style={styles.inputWrapper}>
                   <TextInput
-                    ref={(ref) => (inputRefs.current[index] = ref)}
+                    ref={(ref) => {
+                      inputRefs.current[index] = ref;
+                    }}
                     style={[
                       styles.codeInput,
                       focusedIndex === index && styles.codeInputFocused,

@@ -42,7 +42,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({ activeTab, onTabPres
             >
               <View style={styles.iconContainer}>
                 <Icon
-                  name={tab.icon}
+                  name={tab.icon as any}
                   size={24}
                   color={isActive ? theme.colors.white : 'rgba(255, 255, 255, 0.6)'}
                 />

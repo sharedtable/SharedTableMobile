@@ -10,8 +10,8 @@ interface BackgroundImageProps {
   overlayColor?: string;
   overlayOpacity?: number;
   gradient?: boolean;
-  gradientColors?: string[];
-  gradientLocations?: number[];
+  gradientColors?: readonly [string, string, ...string[]];
+  gradientLocations?: readonly [number, number, ...number[]];
   style?: ViewStyle;
   children?: React.ReactNode;
 }

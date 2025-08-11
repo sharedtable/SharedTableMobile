@@ -83,12 +83,12 @@ const colorMap = {
   primary: theme.colors.text.primary,
   secondary: theme.colors.text.secondary,
   disabled: theme.colors.text.disabled,
-  inverse: theme.colors.text.inverse,
+  inverse: theme.colors.white, // Use white as inverse text color
   brand: theme.colors.brand.primary,
   error: theme.colors.error.main,
   success: theme.colors.success.main,
   warning: theme.colors.warning.main,
-  info: theme.colors.info.main,
+  info: theme.colors.state.info, // Use state.info instead of info.main
 };
 
 const baseStyles = StyleSheet.create({
