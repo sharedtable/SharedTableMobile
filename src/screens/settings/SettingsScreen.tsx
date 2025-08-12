@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar, Modal } from 
 
 import { Icon } from '@/components/base/Icon';
 import { TopBar } from '@/components/navigation/TopBar';
+import { useAuth } from '@/lib/auth';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -31,6 +32,7 @@ const settingsItems: SettingsItem[] = [
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate }) => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { signOut, user } = useAuth();
 
   const handleBack = () => {
     onNavigate?.('profile');
@@ -44,10 +46,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate }) =>
     }
   };
 
-  const handleLogout = () => {
-    setShowLogoutModal(false);
-    // Handle logout - would clear auth tokens in production
-    onNavigate?.('welcome');
+  const handleLogout = async () => {
+    try {
+      setShowLogoutModal(false);
+      await signOut();
+      // Navigation will be handled by AuthWrapper/App based on auth state
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still close modal and let auth state handle navigation
+    }
   };
 
   const handleCancelLogout = () => {
@@ -72,8 +79,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate }) =>
               <Icon name="edit" size={12} color={theme.colors.white} />
             </View>
           </View>
-          <Text style={styles.userName}>John Doe</Text>
-          <Text style={styles.userHandle}>@Johndoe</Text>
+          <Text style={styles.userName}>
+            {user?.user_metadata?.full_name ||
+              user?.user_metadata?.name ||
+              user?.email?.split('@')[0] ||
+              'User'}
+          </Text>
+          <Text style={styles.userHandle}>{user?.email || ''}</Text>
         </View>
 
         {/* Settings Items */}
@@ -112,7 +124,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate }) =>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Log out</Text>
             <Text style={styles.modalMessage}>
-              Are you sure you want to log out? You'll need to login again to use the app.
+              Are you sure you want to log out? You&apos;ll need to login again to use the app.
             </Text>
             <View style={styles.modalButtons}>
               <Pressable

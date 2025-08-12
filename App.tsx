@@ -12,6 +12,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { AuthProvider, useAuth } from '@/lib/auth';
+import { AuthWrapper } from '@/lib/auth/components/AuthWrapper';
 import { ConfirmationCodeScreen } from '@/screens/auth/ConfirmationCodeScreen';
 import { WelcomeScreen } from '@/screens/auth/WelcomeScreen';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
@@ -38,8 +40,9 @@ import { SettingsScreen } from '@/screens/settings/SettingsScreen';
 // Hide the native splash screen immediately
 SplashScreen.hideAsync();
 
-export default function App() {
-  const [isLoading, setIsLoading] = useState(true);
+// Inner component that uses auth context
+function AppContent() {
+  const { user } = useAuth();
   const [currentScreen, setCurrentScreen] = useState<
     | 'welcome'
     | 'confirmation'
@@ -69,9 +72,24 @@ export default function App() {
     | 'filter'
     | 'review'
   >('welcome');
+
+  const [isLoading, setIsLoading] = useState(true);
   const [userEmail, setUserEmail] = useState<string>('');
+  const [isNewUser] = useState<boolean>(false);
   const [userData, setUserData] = useState<Record<string, unknown>>({});
-  const [isNewUser] = useState<boolean>(true); // This would be determined by backend
+
+  // Listen to auth state changes
+  useEffect(() => {
+    if (!user) {
+      // User is logged out, navigate to welcome screen
+      console.log('🔄 [App] User logged out, navigating to welcome screen');
+      setCurrentScreen('welcome');
+    } else {
+      // User is logged in, check if they need onboarding
+      console.log('🔄 [App] User logged in:', user.email);
+      // You can add logic here to determine where to navigate based on user state
+    }
+  }, [user]);
 
   // Load Keania One and Inter fonts
   const [interLoaded] = useInterFonts({
@@ -239,7 +257,7 @@ export default function App() {
           <View style={styles.completeContainer}>
             <Text style={styles.completeTitle}>Welcome to SharedTable!</Text>
             <Text style={styles.completeSubtitle}>
-              Your profile is complete. Let's find you some amazing dining experiences!
+              Your profile is complete. Let&apos;s find you some amazing dining experiences!
             </Text>
             <Pressable onPress={() => handleNavigate('home')} style={styles.completeButton}>
               <Text style={styles.completeButtonText}>Get Started</Text>
@@ -269,39 +287,30 @@ export default function App() {
       case 'onboarding-location':
         // Placeholder for location screen
         return (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <View style={styles.temporaryContainer}>
             <Text>Location Setup (Coming Soon)</Text>
-            <Pressable
-              onPress={() => handleNavigate('home')}
-              style={{ marginTop: 20, padding: 10, backgroundColor: '#C17B5C', borderRadius: 8 }}
-            >
-              <Text style={{ color: 'white' }}>Skip to Home</Text>
+            <Pressable onPress={() => handleNavigate('home')} style={styles.temporaryButton}>
+              <Text style={styles.temporaryButtonText}>Skip to Home</Text>
             </Pressable>
           </View>
         );
       case 'onboarding-preferences':
         // Placeholder for preferences screen
         return (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <View style={styles.temporaryContainer}>
             <Text>Preferences Setup (Coming Soon)</Text>
-            <Pressable
-              onPress={() => handleNavigate('home')}
-              style={{ marginTop: 20, padding: 10, backgroundColor: '#C17B5C', borderRadius: 8 }}
-            >
-              <Text style={{ color: 'white' }}>Skip to Home</Text>
+            <Pressable onPress={() => handleNavigate('home')} style={styles.temporaryButton}>
+              <Text style={styles.temporaryButtonText}>Skip to Home</Text>
             </Pressable>
           </View>
         );
       case 'onboarding-profile':
         // Placeholder for next onboarding steps
         return (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <View style={styles.temporaryContainer}>
             <Text>Profile Setup (Coming Soon)</Text>
-            <Pressable
-              onPress={() => handleNavigate('home')}
-              style={{ marginTop: 20, padding: 10, backgroundColor: '#C17B5C', borderRadius: 8 }}
-            >
-              <Text style={{ color: 'white' }}>Skip to Home</Text>
+            <Pressable onPress={() => handleNavigate('home')} style={styles.temporaryButton}>
+              <Text style={styles.temporaryButtonText}>Skip to Home</Text>
             </Pressable>
           </View>
         );
@@ -332,6 +341,16 @@ export default function App() {
       <StatusBar style="dark" />
       {renderScreen()}
     </SafeAreaProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AuthWrapper>
+        <AppContent />
+      </AuthWrapper>
+    </AuthProvider>
   );
 }
 
@@ -376,5 +395,19 @@ const styles = StyleSheet.create({
   },
   skipButtonText: {
     color: '#FFFFFF',
+  },
+  temporaryButton: {
+    backgroundColor: '#C17B5C',
+    borderRadius: 8,
+    marginTop: 20,
+    padding: 10,
+  },
+  temporaryButtonText: {
+    color: 'white',
+  },
+  temporaryContainer: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
   },
 });

@@ -1,18 +1,21 @@
-import * as SecureStore from 'expo-secure-store';
+import { User, Session } from '@supabase/supabase-js';
 import { create } from 'zustand';
 
-import { api, User } from '@/services/api';
+import { AuthService } from '@/lib/supabase/auth';
+import { supabase } from '@/lib/supabase/client';
 
 interface AuthState {
   // State
   user: User | null;
+  session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
 
   // Actions
   initializeAuth: () => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
+  sendOtp: (email: string, isSignUp?: boolean) => Promise<void>;
+  verifyOtp: (email: string, token: string) => Promise<void>;
   signUp: (data: SignUpData) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (user: Partial<User>) => void;
@@ -21,15 +24,15 @@ interface AuthState {
 
 interface SignUpData {
   email: string;
-  password: string;
-  name: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
 }
-
-const USER_KEY = 'user_data';
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   // Initial state
   user: null,
+  session: null,
   isAuthenticated: false,
   isLoading: true,
   error: null,
@@ -39,76 +42,117 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ isLoading: true });
 
-      // Check for stored user
-      const storedUser = await SecureStore.getItemAsync(USER_KEY);
+      // Get current session from Supabase
+      const { data, error } = await AuthService.getSession();
 
-      if (storedUser) {
-        const _user = JSON.parse(storedUser);
-
-        // Verify session with backend
-        try {
-          const response = await api.getSession();
-          if (response.success && response.data) {
-            set({
-              user: response.data,
-              isAuthenticated: true,
-              isLoading: false,
-            });
-            // Update stored user
-            await SecureStore.setItemAsync(USER_KEY, JSON.stringify(response.data));
-          } else {
-            // Session invalid
-            await SecureStore.deleteItemAsync(USER_KEY);
-            set({
-              user: null,
-              isAuthenticated: false,
-              isLoading: false,
-            });
-          }
-        } catch (error) {
-          // Session check failed
-          await SecureStore.deleteItemAsync(USER_KEY);
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-          });
-        }
-      } else {
-        set({ isLoading: false });
-      }
-    } catch (error) {
-      console.error('Auth initialization error:', error);
-      set({ isLoading: false });
-    }
-  },
-
-  // Login
-  login: async (email: string, password: string) => {
-    try {
-      set({ isLoading: true, error: null });
-
-      const response = await api.login(email, password);
-
-      if (response.success && response.data) {
-        const { user } = response.data;
-
-        // Store user data
-        await SecureStore.setItemAsync(USER_KEY, JSON.stringify(user));
-
+      if (error) {
+        console.error('Auth initialization error:', error);
         set({
-          user,
+          user: null,
+          session: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+        return;
+      }
+
+      if (data.session?.user) {
+        set({
+          user: data.session.user,
+          session: data.session,
           isAuthenticated: true,
           isLoading: false,
           error: null,
         });
       } else {
-        throw new Error(response.error || 'Login failed');
+        set({
+          user: null,
+          session: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+      }
+
+      // Set up auth state listener
+      supabase.auth.onAuthStateChange((event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+
+        if (session?.user) {
+          set({
+            user: session.user,
+            session,
+            isAuthenticated: true,
+            error: null,
+          });
+        } else {
+          set({
+            user: null,
+            session: null,
+            isAuthenticated: false,
+            error: null,
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Auth initialization error:', error);
+      set({
+        user: null,
+        session: null,
+        isAuthenticated: false,
+        isLoading: false,
+      });
+    }
+  },
+
+  // Send OTP for login/signup
+  sendOtp: async (email: string, _isSignUp: boolean = false) => {
+    try {
+      set({ isLoading: true, error: null });
+
+      const { error } = await AuthService.signIn({ email });
+
+      if (error) {
+        throw new Error(AuthService.getAuthErrorMessage(error));
+      }
+
+      set({
+        isLoading: false,
+        error: null,
+      });
+    } catch (error: any) {
+      set({
+        error: error.message || 'Failed to send verification code',
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Verify OTP and complete login
+  verifyOtp: async (email: string, token: string) => {
+    try {
+      set({ isLoading: true, error: null });
+
+      const { user, session, error } = await AuthService.verifyOtp(email, token);
+
+      if (error) {
+        throw new Error(AuthService.getAuthErrorMessage(error));
+      }
+
+      if (user && session) {
+        set({
+          user,
+          session,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        });
+      } else {
+        throw new Error('Invalid verification code');
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.message || 'Login failed';
       set({
-        error: errorMessage,
+        error: error.message || 'Verification failed',
         isLoading: false,
       });
       throw error;
@@ -120,27 +164,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const response = await api.createAccount(data);
+      const { error } = await AuthService.signUp(data);
 
-      if (response.success && response.data) {
-        const { user } = response.data;
-
-        // Store user data
-        await SecureStore.setItemAsync(USER_KEY, JSON.stringify(user));
-
-        set({
-          user,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-        });
-      } else {
-        throw new Error(response.error || 'Sign up failed');
+      if (error) {
+        throw new Error(AuthService.getAuthErrorMessage(error));
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.message || 'Sign up failed';
+
       set({
-        error: errorMessage,
+        isLoading: false,
+        error: null,
+      });
+    } catch (error: any) {
+      set({
+        error: error.message || 'Sign up failed',
         isLoading: false,
       });
       throw error;
@@ -152,27 +188,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ isLoading: true });
 
-      // Call logout API
-      await api.logout();
+      // Sign out from Supabase
+      const { error } = await AuthService.signOut();
 
-      // Clear stored data
-      await SecureStore.deleteItemAsync(USER_KEY);
+      if (error) {
+        console.error('Logout error:', error);
+      }
 
+      // Clear state regardless of API result
       set({
         user: null,
+        session: null,
         isAuthenticated: false,
         isLoading: false,
         error: null,
       });
     } catch (error) {
       console.error('Logout error:', error);
-      // Even if API call fails, clear local data
-      await SecureStore.deleteItemAsync(USER_KEY);
-
+      // Ensure state is cleared even if something goes wrong
       set({
         user: null,
+        session: null,
         isAuthenticated: false,
         isLoading: false,
+        error: null,
       });
     }
   },
@@ -183,9 +222,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (currentUser) {
       const updatedUser = { ...currentUser, ...userData };
       set({ user: updatedUser });
-
-      // Update stored data
-      SecureStore.setItemAsync(USER_KEY, JSON.stringify(updatedUser));
     }
   },
 

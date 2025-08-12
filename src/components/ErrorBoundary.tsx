@@ -75,7 +75,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <ScrollView contentContainerStyle={styles.content}>
             <Text style={styles.title}>Oops! Something went wrong</Text>
             <Text style={styles.message}>
-              We're sorry for the inconvenience. Please try restarting the app.
+              We&apos;re sorry for the inconvenience. Please try restarting the app.
             </Text>
 
             {env.IS_DEV && this.state.error && (

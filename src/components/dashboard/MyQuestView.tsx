@@ -55,8 +55,8 @@ export const MyQuestView: React.FC = () => {
         <View style={styles.streakInfo}>
           <Text style={styles.infoTitle}>Next Reward</Text>
           <Text style={styles.infoDescription}>
-            Mystery reward unlocks every 3 weeks! Keep your streak to find out what's waiting for
-            you.
+            Mystery reward unlocks every 3 weeks! Keep your streak to find out what&apos;s waiting
+            for you.
           </Text>
         </View>
       </View>
@@ -98,8 +98,8 @@ export const MyQuestView: React.FC = () => {
         >
           <Text style={styles.progressTitle}>Progress Summary</Text>
           <Text style={styles.progressText}>
-            You've earned <Text style={styles.progressHighlight}>{completedPoints} points</Text>{' '}
-            this week
+            You&apos;ve earned{' '}
+            <Text style={styles.progressHighlight}>{completedPoints} points</Text> this week
           </Text>
           <Text style={styles.progressText}>from completed tasks!</Text>
         </LinearGradient>

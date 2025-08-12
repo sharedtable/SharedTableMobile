@@ -1,8 +1,7 @@
 import React, { memo, useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated, StatusBar, Text as RNText } from 'react-native';
+import { View, StyleSheet, Animated, StatusBar, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// import { Logo } from '@/components/base/Logo';
 import { theme } from '@/theme';
 
 interface LoadingScreenProps {
@@ -57,11 +56,12 @@ export const LoadingScreen = memo<LoadingScreenProps>(({ onLoadingComplete, dura
           },
         ]}
       >
-        {/* Use actual logo if available, otherwise show TT */}
-        {/* <Logo size="xlarge" variant="full" /> */}
-        <View style={styles.logoWrapper}>
-          <RNText style={styles.logoText}>TT</RNText>
-        </View>
+        {/* SharedTable Logo */}
+        <Image
+          source={require('@/assets/images/logo/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
       </Animated.View>
     </View>
   );
@@ -76,21 +76,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
+  logo: {
+    height: 240,
+    tintColor: theme.colors.white, // Make the logo white
+    width: 240,
+  },
   logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  logoText: {
-    color: theme.colors.white,
-    fontFamily: theme.typography.fontFamily.heading, // Keania One
-    fontSize: 72, // Large TT letters
-    fontWeight: 'bold',
-    letterSpacing: -2,
-  },
-  logoWrapper: {
-    alignItems: 'center',
-    height: 141, // Based on Figma 141x141 aspect ratio
-    justifyContent: 'center',
-    width: 141,
   },
 });

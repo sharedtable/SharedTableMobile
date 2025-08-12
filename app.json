@@ -6,14 +6,13 @@
     "orientation": "portrait",
     "icon": "./src/assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "sharedtable",
     "splash": {
       "image": "./src/assets/splash.png",
       "resizeMode": "cover",
       "backgroundColor": "#E24849"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "edu.stanford.sharedtable",
@@ -25,7 +24,8 @@
         "NSCameraUsageDescription": "SharedTable needs access to your camera to take profile photos.",
         "NSPhotoLibraryUsageDescription": "SharedTable needs access to your photo library to select profile photos.",
         "NSLocationWhenInUseUsageDescription": "SharedTable uses your location to show nearby dining events."
-      }
+      },
+      "associatedDomains": ["applinks:sxrvesdqhcovajaqnqcw.supabase.co"]
     },
     "android": {
       "adaptiveIcon": {
@@ -40,6 +40,18 @@
         "WRITE_EXTERNAL_STORAGE",
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "sharedtable",
+              "host": "auth-callback"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     "web": {
@@ -49,6 +61,7 @@
       "expo-camera",
       "expo-image-picker",
       "expo-secure-store",
+      "expo-apple-authentication",
       [
         "expo-notifications",
         {
@@ -62,6 +75,8 @@
     "extra": {
       "apiUrl": "http://localhost:3000/api",
       "productionApiUrl": "https://sharedtable.vercel.app/api",
+      "supabaseUrl": "https://sxrvesdqhcovajaqnqcw.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN4cnZlc2RxaGNvdmFqYXFucWN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4NzgxNzAsImV4cCI6MjA3MDQ1NDE3MH0.IVjirwF3tEjKJ9j70lLMPobf9Zez914bEFZd2JdAeMY",
       "eas": {
         "projectId": "your-project-id-here"
       }

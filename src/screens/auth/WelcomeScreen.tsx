@@ -1,5 +1,4 @@
-import * as AppleAuthentication from 'expo-apple-authentication';
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,12 +12,17 @@ import {
   ScrollView,
   Keyboard,
   TouchableWithoutFeedback,
+  ActivityIndicator,
 } from 'react-native';
 
 import { AppleIcon } from '@/components/icons/AppleIcon';
 import { GoogleIcon } from '@/components/icons/GoogleIcon';
+import { useAuth } from '@/lib/auth';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
+import { testOtpSending } from '@/utils/testAuth';
+
+import { OtpVerificationScreen } from './OtpVerificationScreen';
 
 interface WelcomeScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
@@ -26,55 +30,117 @@ interface WelcomeScreenProps {
 
 export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
   const [email, setEmail] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [showOtpScreen, setShowOtpScreen] = useState(false);
 
-  const handleEmailContinue = () => {
+  const { signIn, signUp, signInWithGoogle, signInWithApple, loading, user, isNewUser } = useAuth();
+
+  // Handle navigation after successful authentication
+  useEffect(() => {
+    if (user && onNavigate) {
+      console.log('🚀 [WelcomeScreen] User authenticated, checking if new user...');
+      console.log('🚀 [WelcomeScreen] User:', user.email, 'isNewUser:', isNewUser);
+
+      if (isNewUser) {
+        console.log('🚀 [WelcomeScreen] New user detected, navigating to onboarding');
+        onNavigate('onboarding-name');
+      } else {
+        console.log('🚀 [WelcomeScreen] Existing user detected, navigating to home');
+        onNavigate('home');
+      }
+    }
+  }, [user, isNewUser, onNavigate]);
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleEmailAuth = async () => {
     if (!email) {
       Alert.alert('Email Required', 'Please enter your email address');
       return;
     }
 
-    if (!email.includes('@')) {
+    if (!validateEmail(email)) {
       Alert.alert('Invalid Email', 'Please enter a valid email address');
       return;
     }
 
-    // Dismiss keyboard before navigating
+    // For sign up, validate name fields
+    if (isSignUp && (!firstName || !lastName)) {
+      Alert.alert('Name Required', 'Please enter your first and last name');
+      return;
+    }
+
+    // Dismiss keyboard before processing
     Keyboard.dismiss();
 
-    // Navigate directly to confirmation code screen with email
-    if (onNavigate) {
-      onNavigate('confirmation', { email });
+    let success = false;
+
+    if (isSignUp) {
+      success = await signUp({
+        email,
+        firstName,
+        lastName,
+      });
+    } else {
+      success = await signIn({
+        email,
+      });
+    }
+
+    if (success) {
+      // Show OTP verification screen
+      setShowOtpScreen(true);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    console.log('🚀 [WelcomeScreen] Google sign in button clicked');
+
+    try {
+      const success = await signInWithGoogle();
+      console.log('🚀 [WelcomeScreen] Google sign in result:', success);
+
+      if (success) {
+        console.log(
+          '🚀 [WelcomeScreen] Google sign in successful, waiting for auth state update...'
+        );
+        // Navigation will be handled by useEffect when user state updates
+      } else {
+        console.log('🚀 [WelcomeScreen] Google sign in failed or cancelled');
+      }
+    } catch (error) {
+      console.error('❌ [WelcomeScreen] Google sign in error:', error);
     }
   };
 
   const handleAppleSignIn = async () => {
-    if (Platform.OS === 'ios') {
-      try {
-        const credential = await AppleAuthentication.signInAsync({
-          requestedScopes: [
-            AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-            AppleAuthentication.AppleAuthenticationScope.EMAIL,
-          ],
-        });
-        // Handle successful sign in
-        console.log('Apple Sign In:', credential);
-        if (onNavigate) {
-          onNavigate('confirmation', { email: credential.email });
-        }
-      } catch (e: any) {
-        if (e.code !== 'ERR_CANCELED') {
-          Alert.alert('Error', 'Apple sign in failed');
-        }
-      }
-    } else {
+    if (Platform.OS !== 'ios') {
       Alert.alert('Not Available', 'Apple Sign In is only available on iOS');
+      return;
+    }
+
+    const success = await signInWithApple();
+    if (success && onNavigate) {
+      onNavigate('home');
     }
   };
 
-  const handleGoogleSignIn = () => {
-    Alert.alert('Google Sign In', 'Google sign in coming soon!');
-    // Will navigate to confirmation after implementation
-  };
+  // Show OTP screen if needed
+  if (showOtpScreen) {
+    return (
+      <OtpVerificationScreen
+        email={email}
+        isSignUp={isSignUp}
+        onNavigate={onNavigate}
+        onBack={() => setShowOtpScreen(false)}
+      />
+    );
+  }
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -94,34 +160,76 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
               {/* Title */}
               <View style={styles.titleSection}>
                 <Text style={styles.title}>Welcome to SharedTable</Text>
-                <Text style={styles.subtitle}>Enter your email to get started</Text>
+                <Text style={styles.subtitle}>
+                  {isSignUp ? 'Create your account' : 'Sign in to continue'}
+                </Text>
               </View>
 
-              {/* Email Input Section */}
+              {/* Auth Form Section */}
               <View style={styles.inputSection}>
-                <View style={styles.inputContainer}>
+                <View style={styles.formContainer}>
+                  {/* Name fields for sign up */}
+                  {isSignUp && (
+                    <View style={styles.nameRow}>
+                      <TextInput
+                        style={[styles.input, styles.halfInput]}
+                        placeholder="First name"
+                        placeholderTextColor={theme.colors.text.secondary}
+                        value={firstName}
+                        onChangeText={setFirstName}
+                        autoCapitalize="words"
+                        returnKeyType="next"
+                      />
+                      <TextInput
+                        style={[styles.input, styles.halfInput]}
+                        placeholder="Last name"
+                        placeholderTextColor={theme.colors.text.secondary}
+                        value={lastName}
+                        onChangeText={setLastName}
+                        autoCapitalize="words"
+                        returnKeyType="next"
+                      />
+                    </View>
+                  )}
+
+                  {/* Email Input */}
                   <TextInput
-                    style={styles.emailInput}
-                    placeholder="Enter your email"
+                    style={styles.input}
+                    placeholder="Email address"
                     placeholderTextColor={theme.colors.text.secondary}
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoComplete="email"
-                    returnKeyType="done"
-                    onSubmitEditing={handleEmailContinue}
+                    returnKeyType="next"
                   />
+
+                  {/* Submit Button */}
                   <Pressable
                     style={({ pressed }) => [
-                      styles.continueButton,
-                      !email && styles.continueButtonDisabled,
+                      styles.authButton,
+                      (!email || (isSignUp && (!firstName || !lastName))) &&
+                        styles.authButtonDisabled,
                       pressed && styles.buttonPressed,
                     ]}
-                    onPress={handleEmailContinue}
-                    disabled={!email}
+                    onPress={handleEmailAuth}
+                    disabled={loading || !email || (isSignUp && (!firstName || !lastName))}
                   >
-                    <Text style={styles.continueButtonText}>Continue</Text>
+                    {loading ? (
+                      <ActivityIndicator color="#FFFFFF" size="small" />
+                    ) : (
+                      <Text style={styles.authButtonText}>
+                        {isSignUp ? 'Send Verification Code' : 'Send Login Code'}
+                      </Text>
+                    )}
+                  </Pressable>
+
+                  {/* Toggle Sign Up/Sign In */}
+                  <Pressable onPress={() => setIsSignUp(!isSignUp)} style={styles.toggleButton}>
+                    <Text style={styles.toggleButtonText}>
+                      {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
+                    </Text>
                   </Pressable>
                 </View>
 
@@ -163,6 +271,21 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
                   )}
                 </View>
 
+                {/* Debug OTP Test Button - FOR TESTING ONLY */}
+                <Pressable
+                  style={styles.skipButton}
+                  onPress={async () => {
+                    if (!email || !validateEmail(email)) {
+                      Alert.alert('Email Required', 'Please enter a valid email address first');
+                      return;
+                    }
+                    const result = await testOtpSending(email);
+                    Alert.alert('OTP Test', `Check console logs. Success: ${result.success}`);
+                  }}
+                >
+                  <Text style={styles.skipButtonText}>[DEBUG] Test OTP Sending</Text>
+                </Pressable>
+
                 {/* Temporary Skip to Home Button - FOR TESTING ONLY */}
                 <Pressable style={styles.skipButton} onPress={() => onNavigate?.('home')}>
                   <Text style={styles.skipButtonText}>[DEV] Skip to Home</Text>
@@ -190,6 +313,23 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
     fontWeight: '500' as any,
+  },
+  authButton: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(12),
+    height: scaleHeight(52),
+    justifyContent: 'center',
+    marginBottom: scaleHeight(16),
+  },
+  authButtonDisabled: {
+    opacity: 0.5,
+  },
+  authButtonText: {
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(18),
+    fontWeight: '600' as any,
   },
   bottomSpacer: {
     height: scaleHeight(40),
@@ -234,6 +374,10 @@ const styles = StyleSheet.create({
     marginBottom: scaleHeight(16),
     paddingHorizontal: scaleWidth(16),
   },
+  // New styles for auth form
+  formContainer: {
+    marginBottom: scaleHeight(24),
+  },
   googleButton: {
     backgroundColor: theme.colors.white,
     borderColor: theme.colors.gray['1'],
@@ -245,6 +389,21 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(16),
     fontWeight: '500' as any,
   },
+  halfInput: {
+    flex: 1,
+  },
+  input: {
+    backgroundColor: theme.colors.white,
+    borderColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(12),
+    borderWidth: 1,
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    height: scaleHeight(52),
+    marginBottom: scaleHeight(16),
+    paddingHorizontal: scaleWidth(16),
+  },
   inputContainer: {
     marginBottom: scaleHeight(24),
   },
@@ -253,6 +412,11 @@ const styles = StyleSheet.create({
   },
   keyboardView: {
     flex: 1,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    gap: scaleWidth(12),
+    marginBottom: scaleHeight(16),
   },
   orContainer: {
     alignItems: 'center',
@@ -319,5 +483,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: scaleHeight(40),
     paddingTop: scaleHeight(80),
+  },
+  toggleButton: {
+    alignItems: 'center',
+    paddingVertical: scaleHeight(8),
+  },
+  toggleButtonText: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    fontWeight: '500' as any,
   },
 });
