@@ -49,7 +49,7 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
 
       if (success) {
         console.log('✅ [OnboardingGenderScreen] Gender saved successfully');
-        onNavigate?.('onboarding-interests', genderData);
+        onNavigate?.('onboarding-dependents', genderData);
       } else {
         // Handle step errors from context
         if (Object.keys(stepErrors).length > 0) {

@@ -178,37 +178,81 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
                 stepData.gender = profile.gender;
               }
 
-              if (profile.major) {
-                stepData.major = profile.major;
+              if (profile.field_of_study) {
+                stepData.major = profile.field_of_study;
               }
 
-              if (profile.university_year) {
-                stepData.universityYear = profile.university_year;
-              }
+              // Note: university_year doesn't map exactly, would need separate handling
+              // if (profile.university_year) {
+              //   stepData.universityYear = profile.university_year;
+              // }
 
               if (profile.interests) {
                 stepData.interests = profile.interests;
               }
 
-              if (profile.personality_traits) {
-                stepData.personalityTraits = profile.personality_traits;
+              // Map from proper database columns
+              if (profile.has_children !== undefined) {
+                stepData.hasDependents = profile.has_children ? 'yes' : 'no';
+              }
+
+              if (profile.occupation) {
+                stepData.lineOfWork = profile.occupation;
+              }
+
+              if (profile.ethnicities && profile.ethnicities.length > 0) {
+                stepData.ethnicity = profile.ethnicities[0]; // Take first ethnicity
+              }
+
+              if (profile.relationship_status) {
+                stepData.relationshipType = profile.relationship_status;
+              }
+
+              if (profile.wants_children) {
+                stepData.wantChildren = profile.wants_children as 'Yes' | 'No' | 'Maybe';
+              }
+
+              if (profile.smoking_habits) {
+                stepData.smokingHabit = profile.smoking_habits as 'Rarely' | 'Sometimes' | 'Always';
+              }
+
+              // Extract remaining fields from bio metadata
+              if (profile.bio && profile.bio.includes('__METADATA__:')) {
+                const metadataMatch = profile.bio.match(/__METADATA__:(.+)/);
+                if (metadataMatch) {
+                  try {
+                    const metadata = JSON.parse(metadataMatch[1]);
+                    if (metadata.timeSinceLastRelationship) {
+                      stepData.timeSinceLastRelationship = metadata.timeSinceLastRelationship;
+                    }
+                    if (metadata.personalityTraits) {
+                      stepData.personalityTraits = metadata.personalityTraits;
+                    }
+                    if (metadata.avatarUrl) {
+                      stepData.avatarUrl = metadata.avatarUrl;
+                    }
+                  } catch (error) {
+                    console.warn('Failed to parse metadata from bio:', error);
+                  }
+                }
               }
 
               if (profile.bio !== undefined) {
                 stepData.bio = profile.bio;
               }
 
-              if (profile.dietary_restrictions) {
-                stepData.dietaryRestrictions = profile.dietary_restrictions;
+              if (profile.dietary_preferences) {
+                stepData.dietaryRestrictions = profile.dietary_preferences;
               }
 
-              if (profile.location !== undefined) {
-                stepData.location = profile.location;
+              if (profile.current_location !== undefined) {
+                stepData.location = profile.current_location;
               }
 
-              if (profile.avatar_url !== undefined) {
-                stepData.avatarUrl = profile.avatar_url;
-              }
+              // avatar_url column doesn't exist - we get it from metadata above
+              // if (profile.avatar_url !== undefined) {
+              //   stepData.avatarUrl = profile.avatar_url;
+              // }
 
               dispatch({ type: 'SET_STEP_DATA', payload: stepData });
             }

@@ -1,8 +1,9 @@
 import * as ImagePicker from 'expo-image-picker';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, Image, Alert } from 'react-native';
 
 import { OnboardingLayout, OnboardingTitle, OnboardingButton } from '@/components/onboarding';
+import { useOnboarding, validateOnboardingStep } from '@/lib/onboarding';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -10,17 +11,24 @@ interface OnboardingPhotoScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
   currentStep?: number;
   totalSteps?: number;
-  userData?: any;
 }
 
 export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
   onNavigate,
-  currentStep = 10,
-  totalSteps = 10,
-  userData = {},
+  currentStep = 11,
+  totalSteps = 11,
 }) => {
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [_loading, _setLoading] = useState(false);
+  const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
+
+  const [profileImage, setProfileImage] = useState<string | null>(
+    currentStepData.avatarUrl || null
+  );
+  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    // Clear errors when component mounts
+    clearErrors();
+  }, [clearErrors]);
 
   const handleTakePhoto = async () => {
     // Request camera permissions
@@ -36,7 +44,7 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
 
     // Launch camera
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'], // Use string array format to avoid deprecation warning
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
@@ -62,7 +70,7 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
 
     // Launch image picker
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'], // Use string array format to avoid deprecation warning
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
@@ -96,12 +104,38 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
     navigateToComplete();
   };
 
-  const navigateToComplete = () => {
-    // Navigate to completion screen
-    onNavigate?.('onboarding-complete', {
-      ...userData,
-      profileImage,
-    });
+  const navigateToComplete = async () => {
+    try {
+      setLocalErrors({});
+      clearErrors();
+
+      const photoData = { avatarUrl: profileImage };
+
+      // Validate locally first
+      const validation = validateOnboardingStep('photo', photoData);
+      if (!validation.success) {
+        setLocalErrors(validation.errors || {});
+        return;
+      }
+
+      // Save to database
+      const success = await saveStep('photo', photoData);
+
+      if (success) {
+        console.log('✅ [OnboardingPhotoScreen] Photo saved successfully');
+        onNavigate?.('onboarding-complete', photoData);
+      } else {
+        // Handle step errors from context
+        if (Object.keys(stepErrors).length > 0) {
+          setLocalErrors(stepErrors);
+        } else {
+          Alert.alert('Error', 'Failed to save your photo. Please try again.');
+        }
+      }
+    } catch (error) {
+      console.error('❌ [OnboardingPhotoScreen] Error saving photo:', error);
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+    }
   };
 
   const handleBack = () => {
@@ -125,6 +159,10 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
     ]);
   };
 
+  const hasError = Object.keys(localErrors).length > 0 || Object.keys(stepErrors).length > 0;
+  const errorMessage =
+    localErrors.avatarUrl || stepErrors.avatarUrl || localErrors.general || stepErrors.general;
+
   return (
     <OnboardingLayout onBack={handleBack} currentStep={currentStep} totalSteps={totalSteps}>
       <View style={styles.container}>
@@ -134,6 +172,12 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
           showcase your radiance{'\n'}
           with a selfie!
         </OnboardingTitle>
+
+        {hasError && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          </View>
+        )}
 
         {/* Photo Circle */}
         <View style={styles.photoContainer}>
@@ -165,7 +209,12 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
 
         {/* Next Button */}
         <View style={styles.bottomContainer}>
-          <OnboardingButton onPress={handleContinue} label="Next" />
+          <OnboardingButton
+            onPress={handleContinue}
+            label={saving ? 'Saving...' : 'Next'}
+            disabled={saving}
+            loading={saving}
+          />
         </View>
       </View>
     </OnboardingLayout>
@@ -179,6 +228,19 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  errorContainer: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#FCA5A5',
+    borderRadius: scaleWidth(8),
+    borderWidth: 1,
+    marginBottom: scaleHeight(16),
+    padding: scaleWidth(12),
+  },
+  errorText: {
+    color: '#DC2626',
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
   },
   photoCircleInner: {
     alignItems: 'center',

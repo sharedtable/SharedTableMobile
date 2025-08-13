@@ -42,7 +42,7 @@ SplashScreen.hideAsync();
 
 // Inner component that uses auth context
 function AppContent() {
-  const { user } = useAuth();
+  const { user, isNewUser, initializing, completeOnboarding } = useAuth();
   const [currentScreen, setCurrentScreen] = useState<
     | 'welcome'
     | 'onboarding-name'
@@ -73,9 +73,6 @@ function AppContent() {
   >('welcome');
 
   const [isLoading, setIsLoading] = useState(true);
-  const [userEmail, setUserEmail] = useState<string>('');
-  const [isNewUser] = useState<boolean>(false);
-  const [userData, setUserData] = useState<Record<string, unknown>>({});
 
   // Listen to auth state changes
   useEffect(() => {
@@ -85,10 +82,19 @@ function AppContent() {
       setCurrentScreen('welcome');
     } else {
       // User is logged in, check if they need onboarding
-      console.log('🔄 [App] User logged in:', user.email);
-      // You can add logic here to determine where to navigate based on user state
+      console.log('🔄 [App] User logged in:', user.email, 'isNewUser:', isNewUser);
+
+      if (isNewUser) {
+        // User needs to complete onboarding
+        console.log('🔄 [App] User needs onboarding, navigating to onboarding flow');
+        setCurrentScreen('onboarding-name');
+      } else {
+        // User has completed onboarding, navigate to home
+        console.log('🔄 [App] User onboarding complete, navigating to home');
+        setCurrentScreen('home');
+      }
     }
-  }, [user]);
+  }, [user, isNewUser]);
 
   // Load Keania One and Inter fonts
   const [interLoaded] = useInterFonts({
@@ -115,7 +121,7 @@ function AppContent() {
     }
   }, [fontsLoaded]);
 
-  if (isLoading || !fontsLoaded) {
+  if (isLoading || !fontsLoaded || initializing) {
     return (
       <SafeAreaProvider>
         <StatusBar style="light" />
@@ -126,31 +132,23 @@ function AppContent() {
 
   // Handle navigation with email data
   const handleNavigate = (screen: string, data?: Record<string, unknown>) => {
-    // Navigation debug logging - remove in production
-
-    if (data?.email) {
-      setUserEmail(data.email as string);
-      setUserData((prevData) => ({ ...prevData, email: data.email }));
-    }
-
-    // Store user data throughout onboarding
-    if (data) {
-      setUserData((prevData) => ({ ...prevData, ...data }));
-    }
-
-    // Check if new user when navigating to home
-    if (screen === 'home') {
-      // For demo: if email ends with 'new', treat as new user
-      if (isNewUser || userEmail.includes('new')) {
-        setCurrentScreen('onboarding-name');
-        return;
-      }
-      // Existing users go directly to home
-      setCurrentScreen('home');
-      return;
-    }
+    console.log('🔄 [App] Navigation request:', screen, data);
 
     setCurrentScreen(screen as typeof currentScreen);
+  };
+
+  // Handle completing onboarding
+  const handleCompleteOnboarding = async () => {
+    try {
+      console.log('🎯 [App] Completing onboarding...');
+      await completeOnboarding();
+      console.log('✅ [App] Onboarding completed successfully');
+      // The useEffect will automatically navigate to home when isNewUser becomes false
+    } catch (error) {
+      console.error('❌ [App] Failed to complete onboarding:', error);
+      // Still navigate to home to avoid getting stuck
+      setCurrentScreen('home');
+    }
   };
 
   // Render the appropriate screen based on currentScreen state
@@ -168,30 +166,13 @@ function AppContent() {
         );
       case 'onboarding-dependents':
         return (
-          <OnboardingDependentsScreen
-            onNavigate={handleNavigate}
-            currentStep={4}
-            totalSteps={11}
-            userData={userData}
-          />
+          <OnboardingDependentsScreen onNavigate={handleNavigate} currentStep={4} totalSteps={11} />
         );
       case 'onboarding-work':
-        return (
-          <OnboardingWorkScreen
-            onNavigate={handleNavigate}
-            currentStep={5}
-            totalSteps={11}
-            userData={userData}
-          />
-        );
+        return <OnboardingWorkScreen onNavigate={handleNavigate} currentStep={5} totalSteps={11} />;
       case 'onboarding-ethnicity':
         return (
-          <OnboardingEthnicityScreen
-            onNavigate={handleNavigate}
-            currentStep={6}
-            totalSteps={11}
-            userData={userData}
-          />
+          <OnboardingEthnicityScreen onNavigate={handleNavigate} currentStep={6} totalSteps={11} />
         );
       case 'onboarding-relationship':
         return (
@@ -199,21 +180,15 @@ function AppContent() {
             onNavigate={handleNavigate}
             currentStep={7}
             totalSteps={11}
-            userData={userData}
           />
         );
       case 'onboarding-lifestyle':
         return (
-          <OnboardingLifestyleScreen
-            onNavigate={handleNavigate}
-            currentStep={8}
-            totalSteps={11}
-            userData={userData}
-          />
+          <OnboardingLifestyleScreen onNavigate={handleNavigate} currentStep={8} totalSteps={11} />
         );
       case 'onboarding-interests':
         return (
-          <OnboardingInterestsScreen onNavigate={handleNavigate} currentStep={5} totalSteps={8} />
+          <OnboardingInterestsScreen onNavigate={handleNavigate} currentStep={9} totalSteps={11} />
         );
       case 'onboarding-personality':
         return (
@@ -221,17 +196,11 @@ function AppContent() {
             onNavigate={handleNavigate}
             currentStep={10}
             totalSteps={11}
-            userData={userData}
           />
         );
       case 'onboarding-photo':
         return (
-          <OnboardingPhotoScreen
-            onNavigate={handleNavigate}
-            currentStep={11}
-            totalSteps={11}
-            userData={userData}
-          />
+          <OnboardingPhotoScreen onNavigate={handleNavigate} currentStep={11} totalSteps={11} />
         );
       case 'onboarding-complete':
         // Final onboarding complete screen
@@ -241,7 +210,7 @@ function AppContent() {
             <Text style={styles.completeSubtitle}>
               Your profile is complete. Let&apos;s find you some amazing dining experiences!
             </Text>
-            <Pressable onPress={() => handleNavigate('home')} style={styles.completeButton}>
+            <Pressable onPress={handleCompleteOnboarding} style={styles.completeButton}>
               <Text style={styles.completeButtonText}>Get Started</Text>
             </Pressable>
           </View>

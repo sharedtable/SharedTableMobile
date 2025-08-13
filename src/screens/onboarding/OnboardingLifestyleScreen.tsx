@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Alert, StyleSheet, Text } from 'react-native';
 
 import {
@@ -7,14 +7,14 @@ import {
   SelectionCard,
   OnboardingButton,
 } from '@/components/onboarding';
+import { useOnboarding, validateOnboardingStep } from '@/lib/onboarding';
 import { theme } from '@/theme';
-import { scaleHeight, scaleFont } from '@/utils/responsive';
+import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface OnboardingLifestyleScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
   currentStep?: number;
   totalSteps?: number;
-  userData?: any;
 }
 
 const childrenOptions = ['Yes', 'No', 'Maybe'];
@@ -23,33 +23,72 @@ const smokingOptions = ['Rarely', 'Sometimes', 'Always'];
 export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps> = ({
   onNavigate,
   currentStep = 8,
-  totalSteps = 10,
-  userData = {},
+  totalSteps = 11,
 }) => {
-  const [wantChildren, setWantChildren] = useState<string | null>(null);
-  const [smokingHabit, setSmokingHabit] = useState<string | null>(null);
+  const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
 
-  const handleNext = () => {
-    if (!wantChildren) {
-      Alert.alert('Required', 'Please select if you want children');
-      return;
+  const [wantChildren, setWantChildren] = useState<string | null>(
+    currentStepData.wantChildren || null
+  );
+  const [smokingHabit, setSmokingHabit] = useState<string | null>(
+    currentStepData.smokingHabit || null
+  );
+  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    // Clear errors when component mounts
+    clearErrors();
+  }, [clearErrors]);
+
+  const handleNext = async () => {
+    try {
+      setLocalErrors({});
+      clearErrors();
+
+      const lifestyleData = {
+        wantChildren,
+        smokingHabit,
+      };
+
+      // Validate locally first
+      const validation = validateOnboardingStep('lifestyle', lifestyleData);
+      if (!validation.success) {
+        setLocalErrors(validation.errors || {});
+        return;
+      }
+
+      // Save to database
+      const success = await saveStep('lifestyle', lifestyleData);
+
+      if (success) {
+        console.log('✅ [OnboardingLifestyleScreen] Lifestyle saved successfully');
+        onNavigate?.('onboarding-interests', lifestyleData);
+      } else {
+        // Handle step errors from context
+        if (Object.keys(stepErrors).length > 0) {
+          setLocalErrors(stepErrors);
+        } else {
+          Alert.alert('Error', 'Failed to save your lifestyle preferences. Please try again.');
+        }
+      }
+    } catch (error) {
+      console.error('❌ [OnboardingLifestyleScreen] Error saving lifestyle:', error);
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
     }
-
-    if (!smokingHabit) {
-      Alert.alert('Required', 'Please select your smoking/vaping habits');
-      return;
-    }
-
-    onNavigate?.('onboarding-interests', {
-      ...userData,
-      wantChildren,
-      smokingHabit,
-    });
   };
 
   const handleBack = () => {
     onNavigate?.('onboarding-relationship');
   };
+
+  const hasError = Object.keys(localErrors).length > 0 || Object.keys(stepErrors).length > 0;
+  const errorMessage =
+    localErrors.wantChildren ||
+    stepErrors.wantChildren ||
+    localErrors.smokingHabit ||
+    stepErrors.smokingHabit ||
+    localErrors.general ||
+    stepErrors.general;
 
   return (
     <OnboardingLayout
@@ -61,13 +100,25 @@ export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps>
       <View style={styles.container}>
         <OnboardingTitle>Do you want children?</OnboardingTitle>
 
+        {hasError && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          </View>
+        )}
+
         <View style={styles.optionsContainer}>
           {childrenOptions.map((option) => (
             <SelectionCard
               key={option}
               label={option}
               selected={wantChildren === option}
-              onPress={() => setWantChildren(option)}
+              onPress={() => {
+                setWantChildren(option);
+                if (localErrors.wantChildren || stepErrors.wantChildren) {
+                  setLocalErrors((prev) => ({ ...prev, wantChildren: '' }));
+                  clearErrors();
+                }
+              }}
               compact
             />
           ))}
@@ -81,7 +132,13 @@ export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps>
               key={option}
               label={option}
               selected={smokingHabit === option}
-              onPress={() => setSmokingHabit(option)}
+              onPress={() => {
+                setSmokingHabit(option);
+                if (localErrors.smokingHabit || stepErrors.smokingHabit) {
+                  setLocalErrors((prev) => ({ ...prev, smokingHabit: '' }));
+                  clearErrors();
+                }
+              }}
               compact
             />
           ))}
@@ -92,8 +149,9 @@ export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps>
         <View style={styles.bottomContainer}>
           <OnboardingButton
             onPress={handleNext}
-            label="Next"
-            disabled={!wantChildren || !smokingHabit}
+            label={saving ? 'Saving...' : 'Next'}
+            disabled={!wantChildren || !smokingHabit || saving}
+            loading={saving}
           />
         </View>
       </View>
@@ -108,6 +166,19 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  errorContainer: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#FCA5A5',
+    borderRadius: scaleWidth(8),
+    borderWidth: 1,
+    marginBottom: scaleHeight(16),
+    padding: scaleWidth(12),
+  },
+  errorText: {
+    color: '#DC2626',
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
   },
   optionsContainer: {
     gap: scaleHeight(12),

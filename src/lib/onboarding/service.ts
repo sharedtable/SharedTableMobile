@@ -33,10 +33,13 @@ export class OnboardingService {
     'name',
     'birthday',
     'gender',
-    'academic',
+    'dependents',
+    'work',
+    'ethnicity',
+    'relationship',
+    'lifestyle',
     'interests',
     'personality',
-    'lifestyle',
     'photo',
   ] as const;
 
@@ -151,18 +154,45 @@ export class OnboardingService {
     stepData: Partial<CompleteOnboardingData>
   ): Promise<void> {
     try {
-      // First ensure user record exists
+      // Prepare user update data
+      const userUpdateData: any = {
+        updated_at: new Date().toISOString(),
+      };
+
+      // Only update first/last name if they exist in step data
+      if (stepData.firstName) {
+        userUpdateData.first_name = stepData.firstName;
+      }
+      if (stepData.lastName) {
+        userUpdateData.last_name = stepData.lastName;
+      }
+      if (stepData.firstName && stepData.lastName) {
+        userUpdateData.display_name = `${stepData.firstName} ${stepData.lastName}`;
+      }
+
+      // Ensure user record exists and is updated
       const { error: userError } = await supabase
         .from('users')
-        .update({
-          updated_at: new Date().toISOString(),
-        })
+        .update(userUpdateData)
         .eq('id', userId);
 
       if (userError) {
+        console.error('❌ [OnboardingService] User update error:', userError);
         throw new OnboardingError('Failed to update user record', 'USER_UPDATE_FAILED', {
           userError,
         });
+      }
+
+      // Check if profile exists first - use user_id since 'id' column doesn't exist
+      const { data: existingProfile, error: profileCheckError } = await supabase
+        .from('user_profiles')
+        .select('user_id')
+        .eq('user_id', userId)
+        .single();
+
+      // Ignore "not found" errors - profile just doesn't exist yet
+      if (profileCheckError && profileCheckError.code !== 'PGRST116') {
+        console.error('❌ [OnboardingService] Profile check error:', profileCheckError);
       }
 
       // Prepare profile data for database
@@ -170,6 +200,11 @@ export class OnboardingService {
         user_id: userId,
         updated_at: new Date().toISOString(),
       };
+
+      // Only set created_at for new profiles
+      if (!existingProfile) {
+        profileData.created_at = new Date().toISOString();
+      }
 
       // Map onboarding data to database fields
       if (stepData.birthDate) {
@@ -181,49 +216,145 @@ export class OnboardingService {
       }
 
       if (stepData.major) {
-        profileData.major = stepData.major;
+        profileData.field_of_study = stepData.major;
       }
 
       if (stepData.universityYear) {
-        profileData.university_year = stepData.universityYear;
+        // Store university year in bio metadata since we don't have exact mapping
+        // profileData.university_year = stepData.universityYear;
       }
 
       if (stepData.interests) {
         profileData.interests = stepData.interests;
       }
 
-      if (stepData.personalityTraits) {
-        profileData.personality_traits = stepData.personalityTraits;
-      }
+      // Note: personality_traits column doesn't exist in database yet
+      // We'll store it in additionalData instead
+      // if (stepData.personalityTraits) {
+      //   profileData.personality_traits = stepData.personalityTraits;
+      // }
 
       if (stepData.bio !== undefined) {
         profileData.bio = stepData.bio;
       }
 
       if (stepData.dietaryRestrictions !== undefined) {
-        profileData.dietary_restrictions = stepData.dietaryRestrictions;
+        profileData.dietary_preferences = stepData.dietaryRestrictions;
       }
 
       if (stepData.location !== undefined) {
-        profileData.location = stepData.location;
+        profileData.current_location = stepData.location;
+      }
+
+      // Note: avatar_url column doesn't exist in database yet
+      // Store it in additionalData instead
+      // if (stepData.avatarUrl !== undefined) {
+      //   profileData.avatar_url = stepData.avatarUrl;
+      // }
+
+      // Map onboarding data to proper database columns
+      if (stepData.hasDependents !== undefined) {
+        profileData.has_children = stepData.hasDependents === 'yes';
+        console.log(
+          '🔍 [OnboardingService] Mapping hasDependents:',
+          stepData.hasDependents,
+          '→',
+          profileData.has_children
+        );
+      }
+
+      if (stepData.lineOfWork !== undefined) {
+        profileData.occupation = stepData.lineOfWork;
+        console.log(
+          '🔍 [OnboardingService] Mapping lineOfWork:',
+          stepData.lineOfWork,
+          '→',
+          profileData.occupation
+        );
+      }
+
+      if (stepData.ethnicity !== undefined) {
+        profileData.ethnicities = [stepData.ethnicity]; // Array field
+        console.log(
+          '🔍 [OnboardingService] Mapping ethnicity:',
+          stepData.ethnicity,
+          '→',
+          profileData.ethnicities
+        );
+      }
+
+      if (stepData.relationshipType !== undefined) {
+        // Map user-friendly values to database enum values
+        const relationshipTypeMap: Record<string, string> = {
+          Single: 'single',
+          'In relationship': 'in_relationship',
+          Married: 'married',
+          Divorced: 'divorced',
+          Other: 'single', // Default to single for Other
+        };
+
+        profileData.relationship_status =
+          relationshipTypeMap[stepData.relationshipType] || 'single';
+        console.log(
+          '🔍 [OnboardingService] Mapping relationshipType:',
+          stepData.relationshipType,
+          '→',
+          profileData.relationship_status
+        );
+      }
+
+      if (stepData.wantChildren !== undefined) {
+        profileData.wants_children = stepData.wantChildren;
+      }
+
+      if (stepData.smokingHabit !== undefined) {
+        profileData.smoking_habits = stepData.smokingHabit;
+      }
+
+      // Store additional fields that don't have dedicated database columns yet
+      const additionalData: Record<string, unknown> = {};
+
+      if (stepData.timeSinceLastRelationship !== undefined) {
+        additionalData.timeSinceLastRelationship = stepData.timeSinceLastRelationship;
+      }
+
+      if (stepData.personalityTraits !== undefined) {
+        additionalData.personalityTraits = stepData.personalityTraits;
       }
 
       if (stepData.avatarUrl !== undefined) {
-        profileData.avatar_url = stepData.avatarUrl;
+        additionalData.avatarUrl = stepData.avatarUrl;
+      }
+
+      // Store additional data in bio field temporarily (or create a metadata field)
+      if (Object.keys(additionalData).length > 0) {
+        const existingBio = profileData.bio || '';
+        const metadataString = `\n__METADATA__:${JSON.stringify(additionalData)}`;
+        profileData.bio = existingBio + metadataString;
       }
 
       // Upsert profile data
-      const { error: profileError } = await supabase
+      console.log(
+        '🔍 [OnboardingService] Attempting to save profile data:',
+        JSON.stringify(profileData, null, 2)
+      );
+
+      const { error: profileError, data } = await supabase
         .from('user_profiles')
         .upsert(profileData as UserProfileInsert, {
           onConflict: 'user_id',
-        });
+        })
+        .select();
 
       if (profileError) {
+        console.error('❌ [OnboardingService] Database error:', profileError);
         throw new OnboardingError('Failed to save profile data', 'PROFILE_SAVE_FAILED', {
           profileError,
+          profileData,
         });
       }
+
+      console.log('✅ [OnboardingService] Profile data saved successfully:', data);
 
       console.log('✅ [OnboardingService] Step saved successfully:', Object.keys(stepData));
     } catch (error) {
@@ -273,21 +404,34 @@ export class OnboardingService {
       }
 
       // Save complete profile data
-      const profileData: UserProfileInsert = {
+      // Note: Some fields like personality_traits and avatar_url don't exist in the actual database
+      // Store them in bio field as JSON metadata for now
+      const additionalData: Record<string, unknown> = {};
+      if (validatedData.personalityTraits) {
+        additionalData.personalityTraits = validatedData.personalityTraits;
+      }
+      if (validatedData.avatarUrl) {
+        additionalData.avatarUrl = validatedData.avatarUrl;
+      }
+
+      let finalBio = validatedData.bio || '';
+      if (Object.keys(additionalData).length > 0) {
+        const metadataString = `\n__METADATA__:${JSON.stringify(additionalData)}`;
+        finalBio = finalBio + metadataString;
+      }
+
+      const profileData = {
         user_id: userId,
-        bio: validatedData.bio,
-        avatar_url: validatedData.avatarUrl,
+        bio: finalBio,
         birth_date: validatedData.birthDate.toISOString().split('T')[0],
         gender: validatedData.gender,
-        dietary_restrictions: validatedData.dietaryRestrictions,
+        dietary_preferences: validatedData.dietaryRestrictions,
         interests: validatedData.interests,
-        location: validatedData.location,
-        university_year: validatedData.universityYear,
-        major: validatedData.major,
-        personality_traits: validatedData.personalityTraits,
+        current_location: validatedData.location,
+        field_of_study: validatedData.major,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      };
+      } as UserProfileInsert;
 
       const { error: profileError } = await supabase.from('user_profiles').upsert(profileData, {
         onConflict: 'user_id',

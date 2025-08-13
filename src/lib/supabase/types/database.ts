@@ -77,73 +77,102 @@ export interface Database {
       };
       user_profiles: {
         Row: {
-          id: string;
           user_id: string;
-          bio: string | null;
-          avatar_url: string | null;
           birth_date: string | null;
+          age_years: number | null;
           gender: 'male' | 'female' | 'non_binary' | 'prefer_not_to_say' | null;
-          dietary_restrictions: string[] | null;
+          nationality: string | null;
+          ethnicities: string[] | null;
+          languages_spoken: string[] | null;
+          education_level: string | null;
+          field_of_study: string | null;
+          university: string | null;
+          graduation_year: number | null;
+          occupation: string | null;
+          employer: string | null;
+          income_range: string | null;
+          relationship_status: string | null;
+          looking_for: string | null;
+          interested_in_genders: string[] | null;
+          age_preference_range: string | null;
+          wants_children: string | null;
+          has_children: boolean | null;
+          height_cm: number | null;
+          body_type: string | null;
+          smoking_habits: string | null;
+          drinking_habits: string | null;
+          exercise_frequency: string | null;
+          dietary_preferences: string[] | null;
+          religion: string | null;
+          political_views: string | null;
+          mbti_type: string | null;
+          enneagram_type: string | null;
+          love_languages: string[] | null;
+          hobbies: string[] | null;
           interests: string[] | null;
-          location: string | null;
-          university_year:
-            | 'freshman'
-            | 'sophomore'
-            | 'junior'
-            | 'senior'
-            | 'graduate'
-            | 'other'
-            | null;
-          major: string | null;
-          personality_traits: string[] | null;
+          favorite_cuisines: string[] | null;
+          music_genres: string[] | null;
+          movie_genres: string[] | null;
+          current_location: string | null;
+          preferred_locations: string[] | null;
+          max_distance_km: number | null;
+          social_links: Record<string, any> | null;
+          bio: string | null;
+          what_makes_me_unique: string | null;
+          ideal_first_date: string | null;
+          life_goals: string | null;
+          personality_vector: number[] | null;
+          interests_vector: number[] | null;
+          bio_embedding: number[] | null;
+          profile_completion_score: number;
+          profile_views_count: number;
+          last_profile_update: string;
           created_at: string;
           updated_at: string;
         };
         Insert: {
-          id?: string;
           user_id: string;
-          bio?: string | null;
-          avatar_url?: string | null;
           birth_date?: string | null;
+          age_years?: number | null;
           gender?: 'male' | 'female' | 'non_binary' | 'prefer_not_to_say' | null;
-          dietary_restrictions?: string[] | null;
+          nationality?: string | null;
+          ethnicities?: string[] | null;
+          field_of_study?: string | null;
+          university?: string | null;
+          occupation?: string | null;
+          relationship_status?: string | null;
+          wants_children?: string | null;
+          has_children?: boolean | null;
+          smoking_habits?: string | null;
+          dietary_preferences?: string[] | null;
           interests?: string[] | null;
-          location?: string | null;
-          university_year?:
-            | 'freshman'
-            | 'sophomore'
-            | 'junior'
-            | 'senior'
-            | 'graduate'
-            | 'other'
-            | null;
-          major?: string | null;
-          personality_traits?: string[] | null;
+          current_location?: string | null;
+          bio?: string | null;
           created_at?: string;
           updated_at?: string;
+          // ... other fields available but not essential for type checking
         };
         Update: {
-          id?: string;
           user_id?: string;
-          bio?: string | null;
-          avatar_url?: string | null;
           birth_date?: string | null;
+          age_years?: number | null;
           gender?: 'male' | 'female' | 'non_binary' | 'prefer_not_to_say' | null;
-          dietary_restrictions?: string[] | null;
+          nationality?: string | null;
+          ethnicities?: string[] | null;
+          field_of_study?: string | null;
+          university?: string | null;
+          occupation?: string | null;
+          relationship_status?: string | null;
+          wants_children?: string | null;
+          has_children?: boolean | null;
+          smoking_habits?: string | null;
+          dietary_preferences?: string[] | null;
           interests?: string[] | null;
-          location?: string | null;
-          university_year?:
-            | 'freshman'
-            | 'sophomore'
-            | 'junior'
-            | 'senior'
-            | 'graduate'
-            | 'other'
-            | null;
-          major?: string | null;
-          personality_traits?: string[] | null;
+          current_location?: string | null;
+          bio?: string | null;
           created_at?: string;
           updated_at?: string;
+          // ... other fields available but not essential for type checking
         };
       };
       events: {

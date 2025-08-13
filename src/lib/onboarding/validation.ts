@@ -42,6 +42,38 @@ export const genderSchema = z.object({
   }),
 });
 
+// Additional Personal Information
+export const dependentsSchema = z.object({
+  hasDependents: z.enum(['yes', 'no'], {
+    errorMap: () => ({ message: 'Please select whether you have dependents' }),
+  }),
+});
+
+export const workSchema = z.object({
+  lineOfWork: z
+    .string()
+    .min(1, 'Please select your line of work')
+    .max(100, 'Line of work must be less than 100 characters'),
+});
+
+export const ethnicitySchema = z.object({
+  ethnicity: z
+    .string()
+    .min(1, 'Please select your ethnicity')
+    .max(100, 'Ethnicity must be less than 100 characters'),
+});
+
+export const relationshipSchema = z.object({
+  relationshipType: z
+    .string()
+    .min(1, 'Please select relationship type')
+    .max(100, 'Relationship type must be less than 100 characters'),
+  timeSinceLastRelationship: z
+    .string()
+    .min(1, 'Please select time since last relationship')
+    .max(50, 'Time since must be less than 50 characters'),
+});
+
 // Academic Information
 export const academicSchema = z.object({
   major: z.string().min(1, 'Major is required').max(100, 'Major must be less than 100 characters'),
@@ -62,15 +94,33 @@ export const interestsSchema = z.object({
     ),
 });
 
+// Personality traits from sliders (each trait is a key-value pair stored as string)
 export const personalitySchema = z.object({
   personalityTraits: z
     .array(z.string())
-    .min(1, 'Please select at least 1 personality trait')
-    .max(5, 'Please select no more than 5 personality traits'),
+    .min(1, 'Please complete the personality assessment')
+    .refine(
+      (traits) => traits.length <= 10, // Max 8 sliders but allow some flexibility
+      'Too many personality traits provided'
+    )
+    .refine(
+      (traits) => traits.every((trait) => trait.includes(': ') && trait.split(': ').length === 2),
+      'Invalid personality trait format'
+    ),
 });
 
-// Lifestyle and Preferences
+// Lifestyle and Preferences (matching the actual screen)
 export const lifestyleSchema = z.object({
+  wantChildren: z.enum(['Yes', 'No', 'Maybe'], {
+    errorMap: () => ({ message: 'Please select if you want children' }),
+  }),
+  smokingHabit: z.enum(['Rarely', 'Sometimes', 'Always'], {
+    errorMap: () => ({ message: 'Please select your smoking/vaping habits' }),
+  }),
+});
+
+// Additional lifestyle info for future use
+export const additionalLifestyleSchema = z.object({
   bio: z
     .string()
     .max(500, 'Bio must be less than 500 characters')
@@ -101,21 +151,29 @@ export const photoSchema = z.object({
 export const completeOnboardingSchema = nameSchema
   .merge(birthdaySchema)
   .merge(genderSchema)
+  .merge(dependentsSchema)
+  .merge(workSchema)
+  .merge(ethnicitySchema)
+  .merge(relationshipSchema)
   .merge(academicSchema)
+  .merge(lifestyleSchema)
   .merge(interestsSchema)
   .merge(personalitySchema)
-  .merge(lifestyleSchema)
-  .merge(photoSchema);
+  .merge(photoSchema)
+  .merge(additionalLifestyleSchema);
 
 // Individual step validation schemas
 export const onboardingStepSchemas = {
   name: nameSchema,
   birthday: birthdaySchema,
   gender: genderSchema,
-  academic: academicSchema,
+  dependents: dependentsSchema,
+  work: workSchema,
+  ethnicity: ethnicitySchema,
+  relationship: relationshipSchema,
+  lifestyle: lifestyleSchema,
   interests: interestsSchema,
   personality: personalitySchema,
-  lifestyle: lifestyleSchema,
   photo: photoSchema,
 } as const;
 
@@ -123,10 +181,14 @@ export const onboardingStepSchemas = {
 export type NameData = z.infer<typeof nameSchema>;
 export type BirthdayData = z.infer<typeof birthdaySchema>;
 export type GenderData = z.infer<typeof genderSchema>;
+export type DependentsData = z.infer<typeof dependentsSchema>;
+export type WorkData = z.infer<typeof workSchema>;
+export type EthnicityData = z.infer<typeof ethnicitySchema>;
+export type RelationshipData = z.infer<typeof relationshipSchema>;
 export type AcademicData = z.infer<typeof academicSchema>;
+export type LifestyleData = z.infer<typeof lifestyleSchema>;
 export type InterestsData = z.infer<typeof interestsSchema>;
 export type PersonalityData = z.infer<typeof personalitySchema>;
-export type LifestyleData = z.infer<typeof lifestyleSchema>;
 export type PhotoData = z.infer<typeof photoSchema>;
 
 export type CompleteOnboardingData = z.infer<typeof completeOnboardingSchema>;

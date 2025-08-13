@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Alert, StyleSheet, Text } from 'react-native';
 
 import {
@@ -7,50 +7,95 @@ import {
   SelectionCard,
   OnboardingButton,
 } from '@/components/onboarding';
+import { useOnboarding, validateOnboardingStep } from '@/lib/onboarding';
 import { theme } from '@/theme';
-import { scaleHeight, scaleFont } from '@/utils/responsive';
+import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface OnboardingRelationshipScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
   currentStep?: number;
   totalSteps?: number;
-  userData?: any;
 }
 
-const relationshipTypes = ['Long term', 'Short term', 'Polyamorous', 'Open relationship', 'Other'];
+const relationshipTypes = ['Single', 'In relationship', 'Married', 'Divorced', 'Other'];
 
 const timeSinceOptions = ['0 - 3 months', '3 - 12 months', '> 12 months'];
 
 export const OnboardingRelationshipScreen: React.FC<OnboardingRelationshipScreenProps> = ({
   onNavigate,
   currentStep = 7,
-  totalSteps = 10,
-  userData = {},
+  totalSteps = 11,
 }) => {
-  const [selectedRelationshipType, setSelectedRelationshipType] = useState<string | null>(null);
-  const [selectedTimeSince, setSelectedTimeSince] = useState<string | null>(null);
+  const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
 
-  const handleNext = () => {
-    if (!selectedRelationshipType) {
-      Alert.alert('Required', 'Please select what kind of relationship you are looking for');
-      return;
+  const [selectedRelationshipType, setSelectedRelationshipType] = useState<string | null>(
+    currentStepData.relationshipType || null
+  );
+  const [selectedTimeSince, setSelectedTimeSince] = useState<string | null>(
+    currentStepData.timeSinceLastRelationship || null
+  );
+  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    // Clear errors when component mounts
+    clearErrors();
+  }, [clearErrors]);
+
+  const handleNext = async () => {
+    try {
+      setLocalErrors({});
+      clearErrors();
+
+      const relationshipData = {
+        relationshipType: selectedRelationshipType,
+        timeSinceLastRelationship: selectedTimeSince,
+      };
+
+      console.log('🔍 [OnboardingRelationshipScreen] Attempting to save:', relationshipData);
+
+      // Validate locally first
+      const validation = validateOnboardingStep('relationship', relationshipData);
+      if (!validation.success) {
+        console.log('❌ [OnboardingRelationshipScreen] Validation failed:', validation.errors);
+        setLocalErrors(validation.errors || {});
+        return;
+      }
+
+      console.log('✅ [OnboardingRelationshipScreen] Validation passed, saving to database...');
+
+      // Save to database
+      const success = await saveStep('relationship', relationshipData);
+
+      if (success) {
+        console.log('✅ [OnboardingRelationshipScreen] Relationship saved successfully');
+        onNavigate?.('onboarding-lifestyle', relationshipData);
+      } else {
+        console.log('❌ [OnboardingRelationshipScreen] Save failed, stepErrors:', stepErrors);
+        // Handle step errors from context
+        if (Object.keys(stepErrors).length > 0) {
+          setLocalErrors(stepErrors);
+        } else {
+          Alert.alert('Error', 'Failed to save your relationship preferences. Please try again.');
+        }
+      }
+    } catch (error) {
+      console.error('❌ [OnboardingRelationshipScreen] Error saving relationship:', error);
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
     }
-
-    if (!selectedTimeSince) {
-      Alert.alert('Required', 'Please select how long it has been since your last relationship');
-      return;
-    }
-
-    onNavigate?.('onboarding-lifestyle', {
-      ...userData,
-      relationshipType: selectedRelationshipType,
-      timeSinceLastRelationship: selectedTimeSince,
-    });
   };
 
   const handleBack = () => {
     onNavigate?.('onboarding-ethnicity');
   };
+
+  const hasError = Object.keys(localErrors).length > 0 || Object.keys(stepErrors).length > 0;
+  const errorMessage =
+    localErrors.relationshipType ||
+    stepErrors.relationshipType ||
+    localErrors.timeSinceLastRelationship ||
+    stepErrors.timeSinceLastRelationship ||
+    localErrors.general ||
+    stepErrors.general;
 
   return (
     <OnboardingLayout
@@ -62,13 +107,25 @@ export const OnboardingRelationshipScreen: React.FC<OnboardingRelationshipScreen
       <View style={styles.container}>
         <OnboardingTitle>What kind of relationship are you looking for?</OnboardingTitle>
 
+        {hasError && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          </View>
+        )}
+
         <View style={styles.optionsContainer}>
           {relationshipTypes.map((option) => (
             <SelectionCard
               key={option}
               label={option}
               selected={selectedRelationshipType === option}
-              onPress={() => setSelectedRelationshipType(option)}
+              onPress={() => {
+                setSelectedRelationshipType(option);
+                if (localErrors.relationshipType || stepErrors.relationshipType) {
+                  setLocalErrors((prev) => ({ ...prev, relationshipType: '' }));
+                  clearErrors();
+                }
+              }}
               compact
             />
           ))}
@@ -82,7 +139,13 @@ export const OnboardingRelationshipScreen: React.FC<OnboardingRelationshipScreen
               key={option}
               label={option}
               selected={selectedTimeSince === option}
-              onPress={() => setSelectedTimeSince(option)}
+              onPress={() => {
+                setSelectedTimeSince(option);
+                if (localErrors.timeSinceLastRelationship || stepErrors.timeSinceLastRelationship) {
+                  setLocalErrors((prev) => ({ ...prev, timeSinceLastRelationship: '' }));
+                  clearErrors();
+                }
+              }}
               compact
             />
           ))}
@@ -93,8 +156,9 @@ export const OnboardingRelationshipScreen: React.FC<OnboardingRelationshipScreen
         <View style={styles.bottomContainer}>
           <OnboardingButton
             onPress={handleNext}
-            label="Next"
-            disabled={!selectedRelationshipType || !selectedTimeSince}
+            label={saving ? 'Saving...' : 'Next'}
+            disabled={!selectedRelationshipType || !selectedTimeSince || saving}
+            loading={saving}
           />
         </View>
       </View>
@@ -109,6 +173,19 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  errorContainer: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#FCA5A5',
+    borderRadius: scaleWidth(8),
+    borderWidth: 1,
+    marginBottom: scaleHeight(16),
+    padding: scaleWidth(12),
+  },
+  errorText: {
+    color: '#DC2626',
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
   },
   optionsContainer: {
     gap: scaleHeight(12),

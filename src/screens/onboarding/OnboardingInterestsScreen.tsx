@@ -93,7 +93,7 @@ export const OnboardingInterestsScreen: React.FC<OnboardingInterestsScreenProps>
   };
 
   const handleBack = () => {
-    onNavigate?.('onboarding-gender');
+    onNavigate?.('onboarding-lifestyle');
   };
 
   return (
