@@ -156,6 +156,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       isMounted = false;
       subscription.unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch user data from database or create if doesn't exist
@@ -177,7 +178,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       }
 
-      console.log('✅ [AuthContext] User found in database:', data);
+      console.log('✅ [AuthContext] User data loaded from database');
       setDbUser(data);
     } catch (error) {
       console.error('❌ [AuthContext] Error fetching user data:', error);
@@ -271,13 +272,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Mark onboarding as complete
   const completeOnboarding = async () => {
-    if (!dbUser) {
-      console.error('❌ [AuthContext] No database user to update onboarding status');
+    if (!dbUser && !user) {
+      console.error('❌ [AuthContext] Cannot complete onboarding: No user data available');
+      return;
+    }
+
+    // Use the authenticated user ID if dbUser is null
+    const userId = dbUser?.id || user?.id;
+    if (!userId) {
+      console.error('❌ [AuthContext] Cannot complete onboarding: No user ID available');
       return;
     }
 
     try {
-      console.log('🎯 [AuthContext] Marking onboarding as complete for user:', dbUser.id);
+      console.log('🎯 [AuthContext] Completing onboarding for user:', userId);
+
+      // If dbUser is null, try to fetch it first
+      if (!dbUser) {
+        console.log('🔄 [AuthContext] Fetching user data before completion...');
+        await fetchDbUser(userId);
+
+        if (!dbUser) {
+          console.error('❌ [AuthContext] Failed to fetch user data for onboarding completion');
+          return;
+        }
+      }
 
       const { data, error } = await supabase
         .from('users')
@@ -285,7 +304,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           onboarding_completed_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
-        .eq('id', dbUser.id)
+        .eq('id', userId)
         .select()
         .single();
 
@@ -294,7 +313,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
-      console.log('✅ [AuthContext] Onboarding marked as complete');
+      console.log('✅ [AuthContext] Onboarding completed successfully');
       setDbUser(data);
     } catch (error) {
       console.error('❌ [AuthContext] Error completing onboarding:', error);
@@ -515,6 +534,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Computed values
   const isEmailVerified = AuthService.isEmailVerified(user);
   const isNewUser = dbUser ? !dbUser.onboarding_completed_at : true; // New user if no onboarding completion date
+
+  // Production logging for onboarding status (only log significant state changes)
+  useEffect(() => {
+    if (user && dbUser) {
+      console.log('✅ [AuthContext] User state loaded:', {
+        userId: user.id,
+        onboardingComplete: !!dbUser.onboarding_completed_at,
+      });
+    }
+  }, [user, dbUser]);
+
+  // Auto-fix: If we have a user but no dbUser, fetch it
+  useEffect(() => {
+    if (user && !dbUser && !initializing) {
+      console.log('⚠️ [AuthContext] User exists but dbUser is null, fetching...');
+      fetchDbUser(user.id);
+    }
+    // Note: fetchDbUser is omitted from deps to prevent infinite loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, dbUser, initializing]);
 
   const value: AuthContextType = {
     // State

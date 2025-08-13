@@ -74,23 +74,14 @@ function AppContent() {
 
   const [isLoading, setIsLoading] = useState(true);
 
-  // Listen to auth state changes
+  // Handle navigation based on auth state
   useEffect(() => {
     if (!user) {
-      // User is logged out, navigate to welcome screen
-      console.log('🔄 [App] User logged out, navigating to welcome screen');
       setCurrentScreen('welcome');
     } else {
-      // User is logged in, check if they need onboarding
-      console.log('🔄 [App] User logged in:', user.email, 'isNewUser:', isNewUser);
-
       if (isNewUser) {
-        // User needs to complete onboarding
-        console.log('🔄 [App] User needs onboarding, navigating to onboarding flow');
         setCurrentScreen('onboarding-name');
       } else {
-        // User has completed onboarding, navigate to home
-        console.log('🔄 [App] User onboarding complete, navigating to home');
         setCurrentScreen('home');
       }
     }
@@ -130,23 +121,19 @@ function AppContent() {
     );
   }
 
-  // Handle navigation with email data
-  const handleNavigate = (screen: string, data?: Record<string, unknown>) => {
-    console.log('🔄 [App] Navigation request:', screen, data);
-
+  // Handle navigation between screens
+  const handleNavigate = (screen: string, _data?: Record<string, unknown>) => {
     setCurrentScreen(screen as typeof currentScreen);
   };
 
   // Handle completing onboarding
   const handleCompleteOnboarding = async () => {
     try {
-      console.log('🎯 [App] Completing onboarding...');
       await completeOnboarding();
-      console.log('✅ [App] Onboarding completed successfully');
-      // The useEffect will automatically navigate to home when isNewUser becomes false
+      // Navigation will happen automatically via useEffect when isNewUser becomes false
     } catch (error) {
       console.error('❌ [App] Failed to complete onboarding:', error);
-      // Still navigate to home to avoid getting stuck
+      // Fallback navigation to prevent user from getting stuck
       setCurrentScreen('home');
     }
   };

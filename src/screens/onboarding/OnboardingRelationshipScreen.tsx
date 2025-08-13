@@ -51,26 +51,19 @@ export const OnboardingRelationshipScreen: React.FC<OnboardingRelationshipScreen
         timeSinceLastRelationship: selectedTimeSince,
       };
 
-      console.log('🔍 [OnboardingRelationshipScreen] Attempting to save:', relationshipData);
-
       // Validate locally first
       const validation = validateOnboardingStep('relationship', relationshipData);
       if (!validation.success) {
-        console.log('❌ [OnboardingRelationshipScreen] Validation failed:', validation.errors);
         setLocalErrors(validation.errors || {});
         return;
       }
-
-      console.log('✅ [OnboardingRelationshipScreen] Validation passed, saving to database...');
 
       // Save to database
       const success = await saveStep('relationship', relationshipData);
 
       if (success) {
-        console.log('✅ [OnboardingRelationshipScreen] Relationship saved successfully');
         onNavigate?.('onboarding-lifestyle', relationshipData);
       } else {
-        console.log('❌ [OnboardingRelationshipScreen] Save failed, stepErrors:', stepErrors);
         // Handle step errors from context
         if (Object.keys(stepErrors).length > 0) {
           setLocalErrors(stepErrors);

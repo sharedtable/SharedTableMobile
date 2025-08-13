@@ -293,14 +293,24 @@ export class OnboardingService {
           Other: 'single', // Default to single for Other
         };
 
-        profileData.relationship_status =
-          relationshipTypeMap[stepData.relationshipType] || 'single';
-        console.log(
-          '🔍 [OnboardingService] Mapping relationshipType:',
-          stepData.relationshipType,
-          '→',
-          profileData.relationship_status
-        );
+        const mappedValue = relationshipTypeMap[stepData.relationshipType];
+
+        if (!mappedValue) {
+          console.error(
+            '❌ [OnboardingService] Unknown relationshipType:',
+            stepData.relationshipType
+          );
+          console.error(
+            '❌ [OnboardingService] Available mappings:',
+            Object.keys(relationshipTypeMap)
+          );
+          throw new OnboardingError(
+            `Invalid relationship type: ${stepData.relationshipType}`,
+            'INVALID_RELATIONSHIP_TYPE'
+          );
+        }
+
+        profileData.relationship_status = mappedValue;
       }
 
       if (stepData.wantChildren !== undefined) {
@@ -334,12 +344,7 @@ export class OnboardingService {
       }
 
       // Upsert profile data
-      console.log(
-        '🔍 [OnboardingService] Attempting to save profile data:',
-        JSON.stringify(profileData, null, 2)
-      );
-
-      const { error: profileError, data } = await supabase
+      const { error: profileError } = await supabase
         .from('user_profiles')
         .upsert(profileData as UserProfileInsert, {
           onConflict: 'user_id',
@@ -348,15 +353,37 @@ export class OnboardingService {
 
       if (profileError) {
         console.error('❌ [OnboardingService] Database error:', profileError);
+
+        // Handle specific database constraint errors
+        if (
+          profileError.code === '22P02' &&
+          profileError.message?.includes('relationship_status')
+        ) {
+          const relationshipValue = profileData.relationship_status;
+          console.error(
+            `❌ [OnboardingService] Invalid relationship_status value: "${relationshipValue}"`
+          );
+          console.error(
+            '❌ [OnboardingService] Valid values should be: single, in_relationship, married, divorced'
+          );
+          throw new OnboardingError(
+            `Invalid relationship status. Please select a valid option.`,
+            'INVALID_RELATIONSHIP_STATUS',
+            {
+              invalidValue: relationshipValue,
+              validValues: ['single', 'in_relationship', 'married', 'divorced'],
+              originalError: profileError,
+            }
+          );
+        }
+
         throw new OnboardingError('Failed to save profile data', 'PROFILE_SAVE_FAILED', {
           profileError,
           profileData,
         });
       }
 
-      console.log('✅ [OnboardingService] Profile data saved successfully:', data);
-
-      console.log('✅ [OnboardingService] Step saved successfully:', Object.keys(stepData));
+      console.log('✅ [OnboardingService] Step saved successfully');
     } catch (error) {
       if (error instanceof OnboardingError) throw error;
 

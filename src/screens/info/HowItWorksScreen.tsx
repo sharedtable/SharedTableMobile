@@ -43,7 +43,7 @@ const steps = [
   },
   {
     number: '5',
-    title: 'Create Your Profile',
+    title: 'Rate Your Experience',
     description:
       'Your feedback helps us fine-tune your future matches. The more you go, the better it gets.',
   },
@@ -79,9 +79,11 @@ export const HowItWorksScreen: React.FC<HowItWorksScreenProps> = ({ onNavigate }
         <View style={styles.stepsContainer}>
           {steps.map((step, index) => (
             <View key={index} style={styles.stepCardWrapper}>
+              {/* Number circle - positioned absolutely over the card */}
               <View style={styles.stepNumber}>
                 <Text style={styles.stepNumberText}>{step.number}</Text>
               </View>
+              {/* Main card content */}
               <View style={styles.stepCard}>
                 <View style={styles.stepContent}>
                   <Text style={styles.stepTitle}>{step.title}</Text>
@@ -144,6 +146,7 @@ const styles = StyleSheet.create({
   },
   stepCardWrapper: {
     marginBottom: scaleHeight(14),
+    overflow: 'visible',
     position: 'relative',
   },
   stepContent: {
@@ -161,19 +164,28 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.white,
     borderRadius: scaleWidth(18),
     borderWidth: 3,
-    elevation: 1,
+    elevation: 5,
     height: scaleWidth(36),
     justifyContent: 'center',
     left: scaleWidth(20),
     position: 'absolute',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
     top: scaleHeight(16),
-    width: scaleWidth(36), // For Android
+    width: scaleWidth(36),
+    zIndex: 10,
   },
   stepNumberText: {
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.heading,
-    fontSize: scaleFont(22),
+    fontSize: scaleFont(18),
     fontWeight: '700' as any,
+    textAlign: 'center',
   },
   stepTitle: {
     color: theme.colors.text.primary,
@@ -183,6 +195,7 @@ const styles = StyleSheet.create({
     marginBottom: scaleHeight(3),
   },
   stepsContainer: {
+    overflow: 'visible',
     paddingHorizontal: scaleWidth(20),
   },
   titleContainer: {
