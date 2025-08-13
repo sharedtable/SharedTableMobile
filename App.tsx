@@ -14,6 +14,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { AuthWrapper } from '@/lib/auth/components/AuthWrapper';
+import { OnboardingProvider } from '@/lib/onboarding';
 import { WelcomeScreen } from '@/screens/auth/WelcomeScreen';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { FilterScreen } from '@/screens/filter/FilterScreen';
@@ -159,21 +160,11 @@ function AppContent() {
         return <OnboardingNameScreen onNavigate={handleNavigate} currentStep={1} totalSteps={11} />;
       case 'onboarding-birthday':
         return (
-          <OnboardingBirthdayScreen
-            onNavigate={handleNavigate}
-            currentStep={2}
-            totalSteps={11}
-            userData={userData}
-          />
+          <OnboardingBirthdayScreen onNavigate={handleNavigate} currentStep={2} totalSteps={11} />
         );
       case 'onboarding-gender':
         return (
-          <OnboardingGenderScreen
-            onNavigate={handleNavigate}
-            currentStep={3}
-            totalSteps={11}
-            userData={userData}
-          />
+          <OnboardingGenderScreen onNavigate={handleNavigate} currentStep={3} totalSteps={11} />
         );
       case 'onboarding-dependents':
         return (
@@ -222,12 +213,7 @@ function AppContent() {
         );
       case 'onboarding-interests':
         return (
-          <OnboardingInterestsScreen
-            onNavigate={handleNavigate}
-            currentStep={9}
-            totalSteps={11}
-            userData={userData}
-          />
+          <OnboardingInterestsScreen onNavigate={handleNavigate} currentStep={5} totalSteps={8} />
         );
       case 'onboarding-personality':
         return (
@@ -343,9 +329,11 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AuthWrapper>
-        <AppContent />
-      </AuthWrapper>
+      <OnboardingProvider>
+        <AuthWrapper>
+          <AppContent />
+        </AuthWrapper>
+      </OnboardingProvider>
     </AuthProvider>
   );
 }

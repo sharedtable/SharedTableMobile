@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 
-import { Icon } from '@/components/base/Icon';
+import { OnboardingLayout, OnboardingTitle, OnboardingButton } from '@/components/onboarding';
+import { useOnboarding, validateOnboardingStep } from '@/lib/onboarding';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -10,7 +10,6 @@ interface OnboardingBirthdayScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
   currentStep?: number;
   totalSteps?: number;
-  userData?: any;
 }
 
 const MONTHS = [
@@ -36,15 +35,24 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
   onNavigate,
   currentStep = 2,
   totalSteps = 10,
-  userData = {},
 }) => {
+  const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth();
   const currentDay = new Date().getDate();
 
-  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
-  const [selectedDay, setSelectedDay] = useState(currentDay);
-  const [selectedYear, setSelectedYear] = useState(currentYear - 25); // Default to 25 years ago
+  // Initialize from existing data or defaults
+  const existingDate = currentStepData.birthDate;
+  const [selectedMonth, setSelectedMonth] = useState(
+    existingDate ? existingDate.getMonth() : currentMonth
+  );
+  const [selectedDay, setSelectedDay] = useState(
+    existingDate ? existingDate.getDate() : currentDay
+  );
+  const [selectedYear, setSelectedYear] = useState(
+    existingDate ? existingDate.getFullYear() : currentYear - 25
+  );
+  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   const monthScrollRef = useRef<ScrollView>(null);
   const dayScrollRef = useRef<ScrollView>(null);
@@ -54,23 +62,44 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
   const years = Array.from({ length: 120 }, (_, i) => currentYear - i); // 120 years range
 
-  const handleNext = () => {
-    const birthday = new Date(selectedYear, selectedMonth, selectedDay);
+  useEffect(() => {
+    // Clear errors when component mounts
+    clearErrors();
+  }, [clearErrors]);
 
-    // Validate age (must be at least 18)
-    const age = Math.floor(
-      (new Date().getTime() - birthday.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
-    );
-    if (age < 18) {
-      Alert.alert('Age Requirement', 'You must be at least 18 years old to use SharedTable');
-      return;
+  const handleNext = async () => {
+    try {
+      setLocalErrors({});
+      clearErrors();
+
+      const birthDate = new Date(selectedYear, selectedMonth, selectedDay);
+      const birthdayData = { birthDate };
+
+      // Validate locally first
+      const validation = validateOnboardingStep('birthday', birthdayData);
+      if (!validation.success) {
+        setLocalErrors(validation.errors || {});
+        return;
+      }
+
+      // Save to database
+      const success = await saveStep('birthday', birthdayData);
+
+      if (success) {
+        console.log('✅ [OnboardingBirthdayScreen] Birthday saved successfully');
+        onNavigate?.('onboarding-gender', birthdayData);
+      } else {
+        // Handle step errors from context
+        if (Object.keys(stepErrors).length > 0) {
+          setLocalErrors(stepErrors);
+        } else {
+          Alert.alert('Error', 'Failed to save your birthday. Please try again.');
+        }
+      }
+    } catch (error) {
+      console.error('❌ [OnboardingBirthdayScreen] Error saving birthday:', error);
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
     }
-
-    onNavigate?.('onboarding-gender', {
-      ...userData,
-      birthday: birthday.toISOString(),
-      age,
-    });
   };
 
   const handleBack = () => {
@@ -136,145 +165,119 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
     );
   };
 
-  // Calculate progress percentage
-  const progress = (currentStep / totalSteps) * 100;
+  const hasError = Object.keys(localErrors).length > 0 || Object.keys(stepErrors).length > 0;
+  const errorMessage =
+    localErrors.birthDate || stepErrors.birthDate || localErrors.general || stepErrors.general;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.scrollContent}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Pressable onPress={handleBack} style={styles.headerButton}>
-              <Icon name="chevron-left" size={24} color={theme.colors.text.primary} />
-            </Pressable>
-            <View style={styles.headerSpacer} />
+    <OnboardingLayout
+      onBack={handleBack}
+      currentStep={currentStep}
+      totalSteps={totalSteps}
+      keyboardAvoiding
+    >
+      <View style={styles.container}>
+        <OnboardingTitle>What's your birthday?</OnboardingTitle>
+
+        {hasError && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          </View>
+        )}
+
+        {/* Date Pickers */}
+        <View style={styles.pickersContainer}>
+          {/* Month Picker */}
+          <View style={styles.pickerWrapper}>
+            <ScrollView
+              ref={monthScrollRef}
+              style={styles.picker}
+              showsVerticalScrollIndicator={false}
+              snapToInterval={ITEM_HEIGHT}
+              decelerationRate="fast"
+              onMomentumScrollEnd={(e) => handleScroll(e, 'month')}
+              contentContainerStyle={styles.pickerContent}
+            >
+              <View style={{ height: ITEM_HEIGHT }} />
+              {MONTHS.map((month, index) => renderPickerItem(month, index, selectedMonth))}
+              <View style={{ height: ITEM_HEIGHT }} />
+            </ScrollView>
           </View>
 
-          {/* Progress Bar */}
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBackground}>
-              <View style={[styles.progressFill, { width: `${progress}%` }]} />
-            </View>
+          {/* Day Picker */}
+          <View style={styles.pickerWrapper}>
+            <ScrollView
+              ref={dayScrollRef}
+              style={styles.picker}
+              showsVerticalScrollIndicator={false}
+              snapToInterval={ITEM_HEIGHT}
+              decelerationRate="fast"
+              onMomentumScrollEnd={(e) => handleScroll(e, 'day')}
+              contentContainerStyle={styles.pickerContent}
+            >
+              <View style={{ height: ITEM_HEIGHT }} />
+              {days.map((day, index) => renderPickerItem(day, index, selectedDay - 1))}
+              <View style={{ height: ITEM_HEIGHT }} />
+            </ScrollView>
           </View>
 
-          {/* Title */}
-          <Text style={styles.title}>What's your birthday?</Text>
-
-          {/* Date Pickers */}
-          <View style={styles.pickersContainer}>
-            {/* Month Picker */}
-            <View style={styles.pickerWrapper}>
-              <ScrollView
-                ref={monthScrollRef}
-                style={styles.picker}
-                showsVerticalScrollIndicator={false}
-                snapToInterval={ITEM_HEIGHT}
-                decelerationRate="fast"
-                onMomentumScrollEnd={(e) => handleScroll(e, 'month')}
-                contentContainerStyle={styles.pickerContent}
-              >
-                <View style={{ height: ITEM_HEIGHT }} />
-                {MONTHS.map((month, index) => renderPickerItem(month, index, selectedMonth))}
-                <View style={{ height: ITEM_HEIGHT }} />
-              </ScrollView>
-            </View>
-
-            {/* Day Picker */}
-            <View style={styles.pickerWrapper}>
-              <ScrollView
-                ref={dayScrollRef}
-                style={styles.picker}
-                showsVerticalScrollIndicator={false}
-                snapToInterval={ITEM_HEIGHT}
-                decelerationRate="fast"
-                onMomentumScrollEnd={(e) => handleScroll(e, 'day')}
-                contentContainerStyle={styles.pickerContent}
-              >
-                <View style={{ height: ITEM_HEIGHT }} />
-                {days.map((day, index) => renderPickerItem(day, index, selectedDay - 1))}
-                <View style={{ height: ITEM_HEIGHT }} />
-              </ScrollView>
-            </View>
-
-            {/* Year Picker */}
-            <View style={styles.pickerWrapper}>
-              <ScrollView
-                ref={yearScrollRef}
-                style={styles.picker}
-                showsVerticalScrollIndicator={false}
-                snapToInterval={ITEM_HEIGHT}
-                decelerationRate="fast"
-                onMomentumScrollEnd={(e) => handleScroll(e, 'year')}
-                contentContainerStyle={styles.pickerContent}
-              >
-                <View style={{ height: ITEM_HEIGHT * 2 }} />
-                {years.map((year, index) =>
-                  renderPickerItem(year, index, years.indexOf(selectedYear))
-                )}
-                <View style={{ height: ITEM_HEIGHT * 2 }} />
-              </ScrollView>
-            </View>
-
-            {/* Selection Highlight */}
-            <View style={styles.selectionHighlight} pointerEvents="none" />
+          {/* Year Picker */}
+          <View style={styles.pickerWrapper}>
+            <ScrollView
+              ref={yearScrollRef}
+              style={styles.picker}
+              showsVerticalScrollIndicator={false}
+              snapToInterval={ITEM_HEIGHT}
+              decelerationRate="fast"
+              onMomentumScrollEnd={(e) => handleScroll(e, 'year')}
+              contentContainerStyle={styles.pickerContent}
+            >
+              <View style={{ height: ITEM_HEIGHT * 2 }} />
+              {years.map((year, index) =>
+                renderPickerItem(year, index, years.indexOf(selectedYear))
+              )}
+              <View style={{ height: ITEM_HEIGHT * 2 }} />
+            </ScrollView>
           </View>
+
+          {/* Selection Highlight */}
+          <View style={styles.selectionHighlight} pointerEvents="none" />
         </View>
 
-        {/* Bottom Button - Fixed Position */}
+        <View style={styles.spacer} />
+
         <View style={styles.bottomContainer}>
-          <Pressable style={styles.nextButton} onPress={handleNext}>
-            <Text style={styles.nextButtonText}>Next</Text>
-          </Pressable>
+          <OnboardingButton
+            onPress={handleNext}
+            label={saving ? 'Saving...' : 'Next'}
+            disabled={saving}
+            loading={saving}
+          />
         </View>
       </View>
-    </SafeAreaView>
+    </OnboardingLayout>
   );
 };
 
 const styles = StyleSheet.create({
   bottomContainer: {
-    backgroundColor: theme.colors.white,
-    bottom: 0,
-    left: scaleWidth(24),
     paddingBottom: scaleHeight(40),
-    paddingTop: scaleHeight(20),
-    position: 'absolute',
-    right: scaleWidth(24),
   },
   container: {
-    backgroundColor: theme.colors.white,
     flex: 1,
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: scaleWidth(24),
+  errorContainer: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#FCA5A5',
+    borderRadius: scaleWidth(8),
+    borderWidth: 1,
+    marginBottom: scaleHeight(16),
+    padding: scaleWidth(12),
   },
-  header: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    marginHorizontal: -scaleWidth(4),
-    paddingBottom: scaleHeight(20),
-    paddingTop: scaleHeight(12),
-  },
-  headerButton: {
-    padding: scaleWidth(4),
-  },
-  headerSpacer: {
-    flex: 1,
-  },
-  nextButton: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(12),
-    height: scaleHeight(52),
-    justifyContent: 'center',
-  },
-  nextButtonText: {
-    color: theme.colors.white,
+  errorText: {
+    color: '#DC2626',
     fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(18),
-    fontWeight: '600' as any,
+    fontSize: scaleFont(14),
   },
   picker: {
     height: PICKER_HEIGHT,
@@ -311,23 +314,6 @@ const styles = StyleSheet.create({
     marginTop: scaleHeight(40),
     position: 'relative',
   },
-  progressBackground: {
-    backgroundColor: '#F0F0F0',
-    borderRadius: scaleHeight(2),
-    height: scaleHeight(4),
-    overflow: 'hidden',
-  },
-  progressContainer: {
-    marginBottom: scaleHeight(32),
-  },
-  progressFill: {
-    backgroundColor: theme.colors.primary.main,
-    borderRadius: scaleHeight(2),
-    height: '100%',
-  },
-  scrollContent: {
-    flex: 1,
-  },
   selectionHighlight: {
     backgroundColor: 'rgba(226, 72, 73, 0.1)', // 30% opacity of #E24849 (primary color)
     borderRadius: scaleWidth(8),
@@ -337,11 +323,7 @@ const styles = StyleSheet.create({
     right: 0,
     top: ITEM_HEIGHT, // Center selection for 3 visible items
   },
-  title: {
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.heading,
-    fontSize: scaleFont(32),
-    fontWeight: '700' as any,
-    marginBottom: scaleHeight(40),
+  spacer: {
+    flex: 1,
   },
 });

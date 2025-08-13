@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, Text, StyleSheet } from 'react-native';
+import { Pressable, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
 
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
@@ -9,6 +9,7 @@ interface OnboardingButtonProps {
   label: string;
   variant?: 'primary' | 'secondary' | 'outline';
   disabled?: boolean;
+  loading?: boolean;
   style?: any;
 }
 
@@ -17,6 +18,7 @@ export const OnboardingButton: React.FC<OnboardingButtonProps> = ({
   label,
   variant = 'primary',
   disabled = false,
+  loading = false,
   style,
 }) => {
   return (
@@ -26,23 +28,33 @@ export const OnboardingButton: React.FC<OnboardingButtonProps> = ({
         variant === 'primary' && styles.primaryButton,
         variant === 'secondary' && styles.secondaryButton,
         variant === 'outline' && styles.outlineButton,
-        disabled && styles.disabled,
-        pressed && !disabled && styles.pressed,
+        (disabled || loading) && styles.disabled,
+        pressed && !disabled && !loading && styles.pressed,
         style,
       ]}
       onPress={onPress}
-      disabled={disabled}
+      disabled={disabled || loading}
     >
-      <Text
-        style={[
-          styles.buttonText,
-          variant === 'primary' && styles.primaryButtonText,
-          variant === 'secondary' && styles.secondaryButtonText,
-          variant === 'outline' && styles.outlineButtonText,
-        ]}
-      >
-        {label}
-      </Text>
+      <View style={styles.buttonContent}>
+        {loading && (
+          <ActivityIndicator
+            size="small"
+            color={variant === 'primary' ? theme.colors.white : theme.colors.primary.main}
+            style={styles.loadingIndicator}
+          />
+        )}
+        <Text
+          style={[
+            styles.buttonText,
+            variant === 'primary' && styles.primaryButtonText,
+            variant === 'secondary' && styles.secondaryButtonText,
+            variant === 'outline' && styles.outlineButtonText,
+            loading && styles.loadingText,
+          ]}
+        >
+          {label}
+        </Text>
+      </View>
     </Pressable>
   );
 };
@@ -55,6 +67,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: scaleWidth(24),
   },
+  buttonContent: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
   buttonText: {
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(18),
@@ -62,6 +79,12 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.5,
+  },
+  loadingIndicator: {
+    marginRight: scaleWidth(8),
+  },
+  loadingText: {
+    opacity: 0.8,
   },
   outlineButton: {
     backgroundColor: 'transparent',

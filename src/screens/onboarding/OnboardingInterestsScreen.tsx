@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Alert, StyleSheet, Text, Pressable } from 'react-native';
 
 import { Icon } from '@/components/base/Icon';
 import { OnboardingLayout, OnboardingTitle, OnboardingButton } from '@/components/onboarding';
+import { useOnboarding, validateOnboardingStep } from '@/lib/onboarding';
 import { theme } from '@/theme';
 import { scaleHeight, scaleWidth, scaleFont } from '@/utils/responsive';
 
@@ -10,7 +11,6 @@ interface OnboardingInterestsScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
   currentStep?: number;
   totalSteps?: number;
-  userData?: any;
 }
 
 const interestOptions = [
@@ -27,35 +27,73 @@ const interestOptions = [
 
 export const OnboardingInterestsScreen: React.FC<OnboardingInterestsScreenProps> = ({
   onNavigate,
-  currentStep = 9,
-  totalSteps = 10,
-  userData = {},
+  currentStep = 5,
+  totalSteps = 8,
 }) => {
-  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
+
+  const [selectedInterests, setSelectedInterests] = useState<string[]>(
+    currentStepData.interests || []
+  );
+  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    // Clear errors when component mounts
+    clearErrors();
+  }, [clearErrors]);
 
   const toggleInterest = (interest: string) => {
     setSelectedInterests((prev) => {
-      if (prev.includes(interest)) {
-        return prev.filter((i) => i !== interest);
+      const newInterests = prev.includes(interest)
+        ? prev.filter((i) => i !== interest)
+        : [...prev, interest];
+
+      // Clear errors when user makes selection
+      if (localErrors.interests || stepErrors.interests) {
+        setLocalErrors((prevErrors) => ({ ...prevErrors, interests: '' }));
+        clearErrors();
       }
-      return [...prev, interest];
+
+      return newInterests;
     });
   };
 
-  const handleNext = () => {
-    if (selectedInterests.length === 0) {
-      Alert.alert('Required', 'Please select at least one interest');
-      return;
-    }
+  const handleNext = async () => {
+    try {
+      setLocalErrors({});
+      clearErrors();
 
-    onNavigate?.('onboarding-personality', {
-      ...userData,
-      interests: selectedInterests,
-    });
+      const interestsData = { interests: selectedInterests };
+
+      // Validate locally first
+      const validation = validateOnboardingStep('interests', interestsData);
+      if (!validation.success) {
+        setLocalErrors(validation.errors || {});
+        return;
+      }
+
+      // Save to database
+      const success = await saveStep('interests', interestsData);
+
+      if (success) {
+        console.log('✅ [OnboardingInterestsScreen] Interests saved successfully');
+        onNavigate?.('onboarding-personality', interestsData);
+      } else {
+        // Handle step errors from context
+        if (Object.keys(stepErrors).length > 0) {
+          setLocalErrors(stepErrors);
+        } else {
+          Alert.alert('Error', 'Failed to save your interests. Please try again.');
+        }
+      }
+    } catch (error) {
+      console.error('❌ [OnboardingInterestsScreen] Error saving interests:', error);
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+    }
   };
 
   const handleBack = () => {
-    onNavigate?.('onboarding-lifestyle');
+    onNavigate?.('onboarding-gender');
   };
 
   return (
@@ -67,6 +105,17 @@ export const OnboardingInterestsScreen: React.FC<OnboardingInterestsScreenProps>
     >
       <View style={styles.container}>
         <OnboardingTitle>Choose your interests.</OnboardingTitle>
+
+        {(Object.keys(localErrors).length > 0 || Object.keys(stepErrors).length > 0) && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>
+              {localErrors.interests ||
+                stepErrors.interests ||
+                localErrors.general ||
+                stepErrors.general}
+            </Text>
+          </View>
+        )}
 
         <View style={styles.optionsContainer}>
           {interestOptions.map((interest) => (
@@ -98,8 +147,9 @@ export const OnboardingInterestsScreen: React.FC<OnboardingInterestsScreenProps>
         <View style={styles.bottomContainer}>
           <OnboardingButton
             onPress={handleNext}
-            label="Next"
-            disabled={selectedInterests.length === 0}
+            label={saving ? 'Saving...' : 'Next'}
+            disabled={selectedInterests.length === 0 || saving}
+            loading={saving}
           />
         </View>
       </View>
@@ -114,6 +164,19 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  errorContainer: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#FCA5A5',
+    borderRadius: scaleWidth(8),
+    borderWidth: 1,
+    marginBottom: scaleHeight(16),
+    padding: scaleWidth(12),
+  },
+  errorText: {
+    color: '#DC2626',
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
   },
   interestCard: {
     alignItems: 'center',
