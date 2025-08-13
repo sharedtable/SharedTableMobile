@@ -2,9 +2,14 @@ import { User, Session } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { Alert } from 'react-native';
 
-import { AuthService, SignUpData, SignInData } from '../../supabase/auth';
-import { supabase } from '../../supabase/client';
+import { AuthService, EmailAuthData } from '../../supabase/auth';
+import { supabase, authMonitoring } from '../../supabase/client';
 import { User as DatabaseUser } from '../../supabase/types/database';
+import {
+  BiometricAuthService,
+  BiometricAuthResult,
+  BiometricCapabilities,
+} from '../services/biometricAuth';
 
 interface AuthContextType {
   // State
@@ -14,14 +19,23 @@ interface AuthContextType {
   loading: boolean;
   initializing: boolean;
 
+  // Biometric state
+  biometricCapabilities: BiometricCapabilities | null;
+  isBiometricEnabled: boolean;
+
   // Actions
-  signIn: (data: SignInData) => Promise<boolean>;
-  signUp: (data: SignUpData) => Promise<boolean>;
+  sendEmailOtp: (data: EmailAuthData) => Promise<boolean>;
   signInWithGoogle: () => Promise<boolean>;
   signInWithApple: () => Promise<boolean>;
   signOut: () => Promise<void>;
   verifyOtp: (email: string, token: string, type?: 'email') => Promise<boolean>;
   resendOtp: (email: string) => Promise<boolean>;
+
+  // Biometric actions
+  enableBiometric: () => Promise<BiometricAuthResult>;
+  disableBiometric: () => Promise<void>;
+  authenticateWithBiometric: (promptMessage?: string) => Promise<BiometricAuthResult>;
+  checkBiometricCapabilities: () => Promise<BiometricCapabilities>;
 
   // Helpers
   isEmailVerified: boolean;
@@ -43,22 +57,59 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
 
+  // Biometric state
+  const [biometricCapabilities, setBiometricCapabilities] = useState<BiometricCapabilities | null>(
+    null
+  );
+  const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
+
   // Initialize auth state
   useEffect(() => {
     let isMounted = true;
 
-    // Get initial session
-    AuthService.getSession().then(({ data, error }) => {
-      if (isMounted) {
-        if (error) {
-          console.error('Error getting session:', error);
-        } else {
-          setSession(data.session);
-          setUser(data.session?.user ?? null);
+    const initializeAuth = async () => {
+      try {
+        // Initialize biometric capabilities
+        const capabilities = await BiometricAuthService.getCapabilities();
+        if (isMounted) {
+          setBiometricCapabilities(capabilities);
         }
-        setInitializing(false);
+
+        // Get initial session
+        const { data, error } = await AuthService.getSession();
+        if (isMounted) {
+          if (error) {
+            console.error('Error getting session:', error);
+            authMonitoring.logAuthEvent('session_init_error', { error: error.message });
+          } else {
+            setSession(data.session);
+            setUser(data.session?.user ?? null);
+
+            // Check biometric status for this user
+            if (data.session?.user) {
+              const biometricEnabled = await BiometricAuthService.isBiometricEnabled(
+                data.session.user.id
+              );
+              setIsBiometricEnabled(biometricEnabled);
+            }
+
+            authMonitoring.logAuthEvent('session_restored', {
+              hasUser: !!data.session?.user,
+              userId: data.session?.user?.id,
+            });
+          }
+          setInitializing(false);
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error('Auth initialization error:', error);
+          authMonitoring.logSecurityEvent('auth_init_failed', 'medium', { error });
+          setInitializing(false);
+        }
       }
-    });
+    };
+
+    initializeAuth();
 
     // Listen for auth changes
     const {
@@ -160,26 +211,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       };
 
-      // Extract user data from Supabase auth user
+      // Extract minimal user data from Supabase auth user
+      // All personal details will be collected during onboarding
       const userData = {
         id: userId,
         email: userToUse.email || '',
         // Don't include email_normalized - it's a generated column
         auth_provider: getAuthProvider(userToUse.app_metadata?.provider || 'credentials'),
         external_auth_id: userToUse.id,
-        first_name:
-          userToUse.user_metadata?.first_name ||
-          userToUse.user_metadata?.full_name?.split(' ')[0] ||
-          '',
-        last_name:
-          userToUse.user_metadata?.last_name ||
-          userToUse.user_metadata?.full_name?.split(' ').slice(1).join(' ') ||
-          '',
-        display_name: userToUse.user_metadata?.full_name || userToUse.user_metadata?.name || '',
+        // Don't pre-fill names - let onboarding collect this for consistent UX
+        first_name: '',
+        last_name: '',
+        display_name: '',
         status: 'active' as const,
         role: 'user' as const,
         // Don't include phone or phone_normalized for now since they might also be generated
         // Don't include created_at and updated_at - let the database set these with defaults
+        // Explicitly don't set onboarding_completed_at - all users must go through onboarding
       };
 
       console.log('👤 [AuthContext] User data to upsert:', userData);
@@ -207,7 +255,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Refresh current user
+  // Refresh current user (validates JWT and gets fresh user data)
   const refreshUser = async () => {
     const { data, error } = await AuthService.getCurrentUser();
     if (error) {
@@ -253,44 +301,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Send OTP for sign in
-  const signIn = async (data: SignInData): Promise<boolean> => {
+  // Send OTP via email (unified sign in/sign up)
+  const sendEmailOtp = async (data: EmailAuthData): Promise<boolean> => {
     setLoading(true);
     try {
-      const result = await AuthService.signIn(data);
+      const result = await AuthService.sendEmailOtp(data);
 
       if (result.error) {
-        Alert.alert('Sign In Error', AuthService.getAuthErrorMessage(result.error));
+        Alert.alert('Authentication Error', AuthService.getAuthErrorMessage(result.error));
         return false;
       }
 
-      // Show success message for OTP sent
-      Alert.alert(
-        'Check Your Email',
-        'We sent you a verification code. Please check your email and enter the code.'
-      );
-      return true;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Send OTP for sign up
-  const signUp = async (data: SignUpData): Promise<boolean> => {
-    setLoading(true);
-    try {
-      const result = await AuthService.signUp(data);
-
-      if (result.error) {
-        Alert.alert('Sign Up Error', AuthService.getAuthErrorMessage(result.error));
-        return false;
-      }
-
-      // Show success message for OTP sent
-      Alert.alert(
-        'Check Your Email',
-        'We sent you a verification code. Please check your email and enter the code to complete your registration.'
-      );
+      // OTP sent successfully - no alert needed as user is navigating to OTP screen
       return true;
     } finally {
       setLoading(false);
@@ -356,6 +378,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (error) {
         Alert.alert('Sign Out Error', AuthService.getAuthErrorMessage(error));
       }
+
+      // Clear biometric data on logout
+      await BiometricAuthService.clearBiometricData();
+      setIsBiometricEnabled(false);
+
+      authMonitoring.logAuthEvent('sign_out', { userId: user?.id });
     } finally {
       setLoading(false);
     }
@@ -394,11 +422,94 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return false;
       }
 
-      Alert.alert('Verification Code Sent', 'A new verification code has been sent to your email.');
+      // Verification code resent successfully - no alert needed
       return true;
     } finally {
       setLoading(false);
     }
+  };
+
+  // Biometric authentication methods
+  const enableBiometric = async (): Promise<BiometricAuthResult> => {
+    if (!user || !session) {
+      return {
+        success: false,
+        error: 'User must be authenticated to enable biometric authentication',
+      };
+    }
+
+    try {
+      const result = await BiometricAuthService.enableBiometric(user.id, session.access_token);
+
+      if (result.success) {
+        setIsBiometricEnabled(true);
+        authMonitoring.logAuthEvent('biometric_enabled', { userId: user.id });
+      } else {
+        authMonitoring.logSecurityEvent('biometric_enable_failed', 'low', {
+          userId: user.id,
+          error: result.error,
+        });
+      }
+
+      return result;
+    } catch (error) {
+      authMonitoring.logSecurityEvent('biometric_enable_error', 'medium', {
+        userId: user.id,
+        error,
+      });
+      return {
+        success: false,
+        error: 'Failed to enable biometric authentication',
+      };
+    }
+  };
+
+  const disableBiometric = async (): Promise<void> => {
+    try {
+      await BiometricAuthService.disableBiometric();
+      setIsBiometricEnabled(false);
+
+      if (user) {
+        authMonitoring.logAuthEvent('biometric_disabled', { userId: user.id });
+      }
+    } catch (error) {
+      console.error('Failed to disable biometric authentication:', error);
+      authMonitoring.logSecurityEvent('biometric_disable_error', 'low', { error });
+    }
+  };
+
+  const authenticateWithBiometric = async (
+    promptMessage?: string
+  ): Promise<BiometricAuthResult> => {
+    try {
+      const result = await BiometricAuthService.authenticate(promptMessage);
+
+      if (result.success) {
+        authMonitoring.logAuthEvent('biometric_auth_success', { userId: user?.id });
+      } else {
+        authMonitoring.logSecurityEvent('biometric_auth_failed', 'low', {
+          userId: user?.id,
+          error: result.error,
+        });
+      }
+
+      return result;
+    } catch (error) {
+      authMonitoring.logSecurityEvent('biometric_auth_error', 'medium', {
+        userId: user?.id,
+        error,
+      });
+      return {
+        success: false,
+        error: 'Biometric authentication failed',
+      };
+    }
+  };
+
+  const checkBiometricCapabilities = async (): Promise<BiometricCapabilities> => {
+    const capabilities = await BiometricAuthService.getCapabilities();
+    setBiometricCapabilities(capabilities);
+    return capabilities;
   };
 
   // Computed values
@@ -413,14 +524,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loading,
     initializing,
 
+    // Biometric state
+    biometricCapabilities,
+    isBiometricEnabled,
+
     // Actions
-    signIn,
-    signUp,
+    sendEmailOtp,
     signInWithGoogle,
     signInWithApple,
     signOut,
     verifyOtp,
     resendOtp,
+
+    // Biometric actions
+    enableBiometric,
+    disableBiometric,
+    authenticateWithBiometric,
+    checkBiometricCapabilities,
 
     // Helpers
     isEmailVerified,

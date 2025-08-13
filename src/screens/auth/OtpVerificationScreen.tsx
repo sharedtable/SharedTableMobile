@@ -20,13 +20,12 @@ import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface OtpVerificationScreenProps {
   email: string;
-  isSignUp?: boolean;
   onNavigate?: (screen: string, data?: any) => void;
   onBack?: () => void;
 }
 
 export const OtpVerificationScreen = memo<OtpVerificationScreenProps>(
-  ({ email, isSignUp = false, onNavigate, onBack }) => {
+  ({ email, onNavigate, onBack }) => {
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [resendTimer, setResendTimer] = useState(60);
     const [canResend, setCanResend] = useState(false);
@@ -176,9 +175,7 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>(
                     {loading ? (
                       <ActivityIndicator color="#FFFFFF" size="small" />
                     ) : (
-                      <Text style={styles.verifyButtonText}>
-                        {isSignUp ? 'Create Account' : 'Verify & Sign In'}
-                      </Text>
+                      <Text style={styles.verifyButtonText}>Verify & Continue</Text>
                     )}
                   </Pressable>
 

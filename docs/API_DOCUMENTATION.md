@@ -5,11 +5,13 @@ Complete API reference for SharedTable mobile application connecting to SharedTa
 ## Base Configuration
 
 ### Development
+
 ```
 Base URL: http://localhost:3000/api
 ```
 
 ### Production
+
 ```
 Base URL: https://sharedtable.vercel.app/api
 ```
@@ -17,6 +19,7 @@ Base URL: https://sharedtable.vercel.app/api
 ## Authentication
 
 All authenticated endpoints require the `Authorization` header:
+
 ```
 Authorization: Bearer <token>
 ```
@@ -26,6 +29,7 @@ Authorization: Bearer <token>
 ### 1. Authentication
 
 #### 1.1 Create Account
+
 ```http
 POST /auth/create-account
 Content-Type: application/json
@@ -59,6 +63,7 @@ Error Response: 400 Bad Request
 ```
 
 #### 1.2 Login
+
 ```http
 POST /auth/login
 Content-Type: application/json
@@ -83,6 +88,7 @@ Response: 200 OK
 ```
 
 #### 1.3 Logout
+
 ```http
 POST /auth/logout
 Authorization: Bearer <token>
@@ -95,6 +101,7 @@ Response: 200 OK
 ```
 
 #### 1.4 Get Session
+
 ```http
 GET /auth/session
 Authorization: Bearer <token>
@@ -112,6 +119,7 @@ Response: 200 OK
 ```
 
 #### 1.5 Request Password Reset
+
 ```http
 POST /auth/forgot-password
 Content-Type: application/json
@@ -130,6 +138,7 @@ Response: 200 OK
 ### 2. User Profile
 
 #### 2.1 Get User Profile
+
 ```http
 GET /user/profile
 Authorization: Bearer <token>
@@ -165,6 +174,7 @@ Response: 200 OK
 ```
 
 #### 2.2 Update Profile
+
 ```http
 PUT /user/profile
 Authorization: Bearer <token>
@@ -193,6 +203,7 @@ Response: 200 OK
 ```
 
 #### 2.3 Upload Profile Photo
+
 ```http
 POST /user/profile-photo
 Authorization: Bearer <token>
@@ -212,6 +223,7 @@ Response: 200 OK
 ### 3. Events & Reservations
 
 #### 3.1 Get Available Events
+
 ```http
 GET /reservations/available?type=friends&date=2024-01-15
 Authorization: Bearer <token>
@@ -254,6 +266,7 @@ Response: 200 OK
 ```
 
 #### 3.2 Get Event Details
+
 ```http
 GET /reservations/event/:eventId
 Authorization: Bearer <token>
@@ -281,6 +294,7 @@ Response: 200 OK
 ```
 
 #### 3.3 Book Event
+
 ```http
 POST /reservations/book
 Authorization: Bearer <token>
@@ -310,6 +324,7 @@ Response: 200 OK
 ### 4. Bookings
 
 #### 4.1 Get My Bookings
+
 ```http
 GET /bookings/my-bookings?status=upcoming
 Authorization: Bearer <token>
@@ -345,6 +360,7 @@ Response: 200 OK
 ```
 
 #### 4.2 Get Booking Details
+
 ```http
 GET /bookings/:bookingId
 Authorization: Bearer <token>
@@ -369,6 +385,7 @@ Response: 200 OK
 ```
 
 #### 4.3 Cancel Booking
+
 ```http
 DELETE /bookings/:bookingId
 Authorization: Bearer <token>
@@ -390,6 +407,7 @@ Response: 200 OK
 ### 5. Notifications
 
 #### 5.1 Get Notifications
+
 ```http
 GET /notifications?limit=20&unreadOnly=false
 Authorization: Bearer <token>
@@ -425,6 +443,7 @@ Response: 200 OK
 ```
 
 #### 5.2 Mark Notification as Read
+
 ```http
 PUT /notifications/:notificationId/read
 Authorization: Bearer <token>
@@ -439,6 +458,7 @@ Response: 200 OK
 ```
 
 #### 5.3 Mark All as Read
+
 ```http
 PUT /notifications/mark-all-read
 Authorization: Bearer <token>
@@ -454,6 +474,7 @@ Response: 200 OK
 ```
 
 #### 5.4 Get Unread Count
+
 ```http
 GET /notifications/unread-count
 Authorization: Bearer <token>
@@ -468,6 +489,7 @@ Response: 200 OK
 ```
 
 #### 5.5 Register Push Token
+
 ```http
 POST /notifications/register-token
 Authorization: Bearer <token>
@@ -490,6 +512,7 @@ Response: 200 OK
 ### 6. Payments (Stripe)
 
 #### 6.1 Create Payment Intent
+
 ```http
 POST /stripe/create-payment-intent
 Authorization: Bearer <token>
@@ -516,6 +539,7 @@ Response: 200 OK
 ```
 
 #### 6.2 Confirm Payment
+
 ```http
 POST /stripe/confirm-payment
 Authorization: Bearer <token>
@@ -537,6 +561,7 @@ Response: 200 OK
 ```
 
 #### 6.3 Get Payment Methods
+
 ```http
 GET /stripe/payment-methods
 Authorization: Bearer <token>
@@ -563,6 +588,7 @@ Response: 200 OK
 ### 7. Search & Discovery
 
 #### 7.1 Search Events
+
 ```http
 GET /search/events?q=dinner&filters=vegetarian
 Authorization: Bearer <token>
@@ -595,6 +621,7 @@ Response: 200 OK
 ```
 
 #### 7.2 Get Recommendations
+
 ```http
 GET /recommendations/events
 Authorization: Bearer <token>
@@ -632,15 +659,15 @@ All error responses follow this format:
 
 ### Common Error Codes
 
-| Code | Status | Description |
-|------|--------|------------|
-| `UNAUTHORIZED` | 401 | Missing or invalid authentication |
-| `FORBIDDEN` | 403 | Insufficient permissions |
-| `NOT_FOUND` | 404 | Resource not found |
-| `VALIDATION_ERROR` | 400 | Input validation failed |
-| `RATE_LIMITED` | 429 | Too many requests |
-| `SERVER_ERROR` | 500 | Internal server error |
-| `PAYMENT_REQUIRED` | 402 | Payment failed or required |
+| Code               | Status | Description                       |
+| ------------------ | ------ | --------------------------------- |
+| `UNAUTHORIZED`     | 401    | Missing or invalid authentication |
+| `FORBIDDEN`        | 403    | Insufficient permissions          |
+| `NOT_FOUND`        | 404    | Resource not found                |
+| `VALIDATION_ERROR` | 400    | Input validation failed           |
+| `RATE_LIMITED`     | 429    | Too many requests                 |
+| `SERVER_ERROR`     | 500    | Internal server error             |
+| `PAYMENT_REQUIRED` | 402    | Payment failed or required        |
 
 ## Rate Limiting
 
@@ -650,6 +677,7 @@ The API implements rate limiting:
 - **Unauthenticated requests**: 20 requests per minute
 
 Rate limit headers:
+
 ```
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 95
@@ -665,6 +693,7 @@ GET /api/events?limit=20&offset=40
 ```
 
 Response includes pagination metadata:
+
 ```json
 {
   "data": [...],
@@ -682,6 +711,7 @@ Response includes pagination metadata:
 The backend sends webhooks for certain events (configured separately):
 
 ### Event Types
+
 - `booking.confirmed`
 - `booking.cancelled`
 - `payment.succeeded`
@@ -691,6 +721,7 @@ The backend sends webhooks for certain events (configured separately):
 ## API Versioning
 
 Currently using v1 (implicit). Future versions will use:
+
 ```
 /api/v2/endpoint
 ```
@@ -698,6 +729,7 @@ Currently using v1 (implicit). Future versions will use:
 ## Testing
 
 ### Test Endpoints (Development Only)
+
 ```http
 GET /health
 Response: { "status": "ok", "timestamp": "..." }

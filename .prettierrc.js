@@ -16,16 +16,9 @@ module.exports = {
   insertPragma: false,
   htmlWhitespaceSensitivity: 'css',
   embeddedLanguageFormatting: 'auto',
-  
+
   // Import order configuration (with prettier-plugin-sort-imports)
-  importOrder: [
-    '^react$',
-    '^react-native$',
-    '^expo',
-    '^@react-navigation',
-    '^@',
-    '^[./]'
-  ],
+  importOrder: ['^react$', '^react-native$', '^expo', '^@react-navigation', '^@', '^[./]'],
   importOrderSeparation: true,
   importOrderSortSpecifiers: true,
 };

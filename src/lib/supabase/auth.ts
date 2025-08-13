@@ -3,16 +3,12 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 
-import { supabase, authConfig } from './client';
+import { RateLimitService } from '../auth/services/rateLimitService';
+import { RetryService, CircuitBreaker } from '../auth/services/retryService';
 
-export interface SignUpData {
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-}
+import { supabase, authConfig, authMonitoring, securityUtils } from './client';
 
-export interface SignInData {
+export interface EmailAuthData {
   email: string;
 }
 
@@ -29,195 +25,297 @@ export interface AuthResponse {
 }
 
 export class AuthService {
+  private static circuitBreaker = new CircuitBreaker(5, 60000); // 5 failures, 1 minute timeout
+
   /**
-   * Basic email validation
+   * Enhanced email validation with security checks
    */
   static isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return securityUtils.validateEmail(email);
   }
 
   /**
-   * Send OTP to email for sign up
+   * Stanford email validation
    */
-  static async signUp({
+  static isStanfordEmail(email: string): boolean {
+    return securityUtils.validateStanfordEmail(email);
+  }
+
+  /**
+   * Validate and sanitize email input
+   */
+  private static async validateEmailInput(
+    email: string
+  ): Promise<{ isValid: boolean; sanitized?: string; error?: string }> {
+    try {
+      // Basic validation
+      if (!email || typeof email !== 'string') {
+        return { isValid: false, error: 'Email is required' };
+      }
+
+      // Sanitize input
+      const sanitized = email.toLowerCase().trim();
+
+      // Length check
+      if (sanitized.length < 3 || sanitized.length > 254) {
+        return { isValid: false, error: 'Email length is invalid' };
+      }
+
+      // Format validation
+      if (!this.isValidEmail(sanitized)) {
+        return { isValid: false, error: 'Email format is invalid' };
+      }
+
+      // Check for suspicious patterns
+      const suspiciousPatterns = [
+        /[<>]/, // HTML injection
+        /'|"/, // SQL injection attempts
+        /\s{2,}/, // Multiple spaces
+        /[^\x20-\x7E]/, // Non-ASCII characters (except in domain)
+      ];
+
+      if (suspiciousPatterns.some((pattern) => pattern.test(sanitized))) {
+        authMonitoring.logSecurityEvent('suspicious_email_pattern', 'high', { email: sanitized });
+        return { isValid: false, error: 'Email contains invalid characters' };
+      }
+
+      return { isValid: true, sanitized };
+    } catch (error) {
+      authMonitoring.logSecurityEvent('email_validation_error', 'medium', { error });
+      return { isValid: false, error: 'Email validation failed' };
+    }
+  }
+
+  /**
+   * Send OTP to email (unified sign in/sign up flow)
+   * Supabase will automatically create user if they don't exist
+   */
+  static async sendEmailOtp({
     email,
-    firstName,
-    lastName,
-    phone,
-  }: SignUpData): Promise<{ error?: AuthError | Error | null }> {
+  }: EmailAuthData): Promise<{ error?: AuthError | Error | null }> {
     try {
-      // Validate email format
-      if (!this.isValidEmail(email)) {
-        throw new Error('Please enter a valid email address');
+      // Validate and sanitize email
+      const emailValidation = await this.validateEmailInput(email);
+      if (!emailValidation.isValid) {
+        authMonitoring.logSecurityEvent('invalid_email_auth', 'low', {
+          email,
+          error: emailValidation.error,
+        });
+        throw new Error(emailValidation.error || 'Invalid email address');
       }
 
-      console.log('📧 Sending signup OTP to:', email);
+      const sanitizedEmail = emailValidation.sanitized!;
 
-      // Send OTP for sign up
-      const { data, error } = await supabase.auth.signInWithOtp({
-        email: email.toLowerCase().trim(),
-        options: {
-          shouldCreateUser: true, // Explicitly allow user creation
-          data: {
-            first_name: firstName.trim(),
-            last_name: lastName.trim(),
-            phone: phone?.trim() || null,
+      // Check rate limiting
+      const rateLimitResult = await RateLimitService.checkRateLimit('otp_request', sanitizedEmail);
+      if (!rateLimitResult.allowed) {
+        const errorMessage = rateLimitResult.isBlocked
+          ? `Too many attempts. Please try again later.`
+          : `Rate limit exceeded. ${rateLimitResult.remainingAttempts} attempts remaining.`;
+
+        authMonitoring.logSecurityEvent('email_otp_rate_limited', 'medium', {
+          email: sanitizedEmail,
+          isBlocked: rateLimitResult.isBlocked,
+          remainingAttempts: rateLimitResult.remainingAttempts,
+        });
+
+        throw new Error(errorMessage);
+      }
+
+      authMonitoring.logAuthEvent('email_otp_request', { email: sanitizedEmail });
+
+      // Record rate limit attempt
+      await RateLimitService.recordAttempt('otp_request', sanitizedEmail);
+
+      // Send OTP with retry logic - Supabase handles user creation automatically
+      const result = await RetryService.withRetry(
+        async () => {
+          return await supabase.auth.signInWithOtp({
+            email: sanitizedEmail,
+            options: {
+              shouldCreateUser: true, // Auto-create user if doesn't exist
+              emailRedirectTo: undefined, // Force OTP instead of magic link
+              // No user metadata here - will be collected in onboarding
+            },
+          });
+        },
+        {
+          maxAttempts: 3,
+          onRetry: (attempt, error) => {
+            authMonitoring.logAuthEvent('email_otp_retry', {
+              email: sanitizedEmail,
+              attempt,
+              error: error.message,
+            });
           },
-        },
-      });
+        }
+      );
 
-      console.log('📧 Signup OTP response:', { data, error });
-
-      if (error) {
-        console.error('❌ Signup OTP error:', error);
-        throw error;
+      if (result.error) {
+        authMonitoring.logSecurityEvent('email_otp_failed', 'medium', {
+          email: sanitizedEmail,
+          error: result.error.message,
+        });
+        throw result.error;
       }
 
-      console.log('✅ Signup OTP sent successfully');
+      // Clear rate limit on success
+      await RateLimitService.clearAttempts('otp_request', sanitizedEmail);
+
+      authMonitoring.logAuthEvent('email_otp_sent', { email: sanitizedEmail });
       return { error: null };
     } catch (error) {
-      console.error('❌ Signup OTP catch error:', error);
+      authMonitoring.logSecurityEvent('email_otp_error', 'medium', {
+        email,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return { error: error as AuthError };
     }
   }
 
   /**
-   * Send OTP to email for sign in
+   * @deprecated Use sendEmailOtp instead - unified flow
    */
-  static async signIn({ email }: SignInData): Promise<{ error?: AuthError | Error | null }> {
-    try {
-      console.log('📧 Sending signin OTP to:', email);
-
-      const { data, error } = await supabase.auth.signInWithOtp({
-        email: email.toLowerCase().trim(),
-        options: {
-          shouldCreateUser: false, // Only existing users for sign in
-        },
-      });
-
-      console.log('📧 Signin OTP response:', { data, error });
-
-      if (error) {
-        console.error('❌ Signin OTP error:', error);
-        throw error;
-      }
-
-      console.log('✅ Signin OTP sent successfully');
-      return { error: null };
-    } catch (error) {
-      console.error('❌ Signin OTP catch error:', error);
-      return { error: error as AuthError };
-    }
+  static async signIn({ email }: EmailAuthData): Promise<{ error?: AuthError | Error | null }> {
+    return this.sendEmailOtp({ email });
   }
 
   /**
-   * Sign in with Google OAuth
+   * @deprecated Use sendEmailOtp instead - unified flow
+   */
+  static async signUp({ email }: EmailAuthData): Promise<{ error?: AuthError | Error | null }> {
+    return this.sendEmailOtp({ email });
+  }
+
+  /**
+   * Sign in with Google OAuth with enhanced error handling
    */
   static async signInWithGoogle(): Promise<AuthResponse> {
     try {
-      console.log('🔄 [AuthService] Starting Google OAuth...');
+      authMonitoring.logAuthEvent('google_oauth_start');
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: authConfig.redirectUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'select_account', // Force account selection
-          },
-          skipBrowserRedirect: true, // Handle redirect manually
-        },
-      });
+      return await this.circuitBreaker.execute(async () => {
+        return await RetryService.withRetry(
+          async () => {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+              provider: 'google',
+              options: {
+                redirectTo: authConfig.redirectUrl,
+                queryParams: {
+                  access_type: 'offline',
+                  prompt: 'select_account',
+                },
+                skipBrowserRedirect: true,
+              },
+            });
 
-      console.log('🔄 [AuthService] Google OAuth response:', {
-        hasData: !!data,
-        hasError: !!error,
-        dataKeys: data ? Object.keys(data) : [],
-        error: error?.message,
-      });
+            if (error) {
+              authMonitoring.logSecurityEvent('google_oauth_init_failed', 'medium', {
+                error: error.message,
+              });
+              throw error;
+            }
 
-      if (error) {
-        console.error('❌ [AuthService] Google OAuth error:', error);
-        throw error;
-      }
+            if (!data?.url) {
+              throw new Error('No OAuth URL received from Supabase');
+            }
 
-      // Check if we got a URL to open in browser
-      if (data?.url) {
-        console.log('🌐 [AuthService] Opening browser for Google OAuth:', data.url);
+            authMonitoring.logAuthEvent('google_oauth_browser_open', { url: data.url });
 
-        // Open browser for OAuth with proper redirect handling
-        WebBrowser.maybeCompleteAuthSession();
+            // Enhanced browser session handling
+            WebBrowser.maybeCompleteAuthSession();
 
-        const result = await WebBrowser.openAuthSessionAsync(data.url, authConfig.redirectUrl, {
-          showInRecents: false,
-        });
+            const result = await WebBrowser.openAuthSessionAsync(data.url, authConfig.redirectUrl, {
+              showInRecents: false,
+              preferEphemeralSession: true, // Enhanced privacy
+            });
 
-        console.log('🌐 [AuthService] Browser result:', result);
+            authMonitoring.logAuthEvent('google_oauth_browser_result', {
+              type: result.type,
+              hasUrl: !!(result as any).url,
+            });
 
-        if (result.type === 'success' && result.url) {
-          console.log('🌐 [AuthService] Browser redirect successful:', result.url);
+            if (result.type === 'success' && (result as any).url) {
+              const redirectUrl = (result as any).url;
 
-          // Handle the redirect URL manually
-          const url = new URL(result.url);
-          const code = url.searchParams.get('code');
-          const error_description = url.searchParams.get('error_description');
+              // Validate redirect URL security
+              if (!redirectUrl.startsWith(authConfig.redirectUrl)) {
+                authMonitoring.logSecurityEvent('invalid_oauth_redirect', 'high', {
+                  expected: authConfig.redirectUrl,
+                  received: redirectUrl,
+                });
+                throw new Error('Invalid OAuth redirect URL');
+              }
 
-          if (error_description) {
-            throw new Error(error_description);
-          }
+              const url = new URL(redirectUrl);
+              const code = url.searchParams.get('code');
+              const error_description = url.searchParams.get('error_description');
 
-          if (code) {
-            console.log('🔑 [AuthService] Got auth code, exchanging for session...');
+              if (error_description) {
+                authMonitoring.logSecurityEvent('oauth_callback_error', 'medium', {
+                  error: error_description,
+                });
+                throw new Error(error_description);
+              }
 
-            try {
-              // Exchange code for session using Supabase
-              const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+              if (!code) {
+                authMonitoring.logSecurityEvent('missing_oauth_code', 'high', { url: redirectUrl });
+                throw new Error('No authorization code received');
+              }
 
-              console.log('🔑 [AuthService] Code exchange result:', {
-                hasSession: !!data?.session,
-                hasUser: !!data?.user,
-                error: error?.message,
+              // Exchange code for session with validation
+              const { data: sessionData, error: sessionError } =
+                await supabase.auth.exchangeCodeForSession(code);
+
+              if (sessionError) {
+                authMonitoring.logSecurityEvent('oauth_code_exchange_failed', 'high', {
+                  error: sessionError.message,
+                });
+                throw sessionError;
+              }
+
+              if (!sessionData?.session) {
+                throw new Error('No session created from OAuth code');
+              }
+
+              authMonitoring.logAuthEvent('google_oauth_success', {
+                userId: sessionData.user?.id,
               });
 
-              if (error) {
-                console.error('❌ [AuthService] Error exchanging code:', error);
-                throw error;
-              }
-
-              if (data?.session) {
-                console.log('✅ [AuthService] Session created successfully!');
-                return {
-                  user: data.user,
-                  session: data.session,
-                  error: null,
-                };
-              }
-            } catch (exchangeError) {
-              console.error('❌ [AuthService] Code exchange failed:', exchangeError);
-              throw exchangeError;
+              return {
+                user: sessionData.user,
+                session: sessionData.session,
+                error: null,
+              };
+            } else if (result.type === 'cancel') {
+              authMonitoring.logAuthEvent('google_oauth_cancelled');
+              return {
+                user: null,
+                session: null,
+                error: new Error('Authentication cancelled by user'),
+              };
+            } else {
+              authMonitoring.logSecurityEvent('google_oauth_unexpected_result', 'medium', {
+                type: result.type,
+              });
+              throw new Error('Unexpected OAuth result');
             }
+          },
+          {
+            maxAttempts: 2, // Limit retries for OAuth
+            onRetry: (attempt, error) => {
+              authMonitoring.logAuthEvent('google_oauth_retry', {
+                attempt,
+                error: error.message,
+              });
+            },
           }
-        } else {
-          console.log('🚫 [AuthService] Browser session cancelled or failed');
-          return {
-            user: null,
-            session: null,
-            error: new Error('Authentication cancelled'),
-          };
-        }
-      } else {
-        console.log('📍 [AuthService] No URL in response, checking for direct session...');
-      }
-
-      console.log('✅ [AuthService] Google OAuth flow completed');
-      return {
-        user: null,
-        session: null,
-        error: null,
-      };
+        );
+      });
     } catch (error) {
-      console.error('❌ [AuthService] Google OAuth catch error:', error);
+      authMonitoring.logSecurityEvent('google_oauth_failed', 'medium', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return {
         user: null,
         session: null,
@@ -313,6 +411,7 @@ export class AuthService {
 
   /**
    * Get current user session
+   * Note: getSession() returns cached data, use getUser() for fresh user validation
    */
   static async getSession(): Promise<{
     data: { session: Session | null };
@@ -332,7 +431,8 @@ export class AuthService {
   }
 
   /**
-   * Get current user
+   * Get current user (recommended approach)
+   * getUser() validates the JWT and ensures user is still valid
    */
   static async getCurrentUser(): Promise<{
     data: { user: User | null };
@@ -393,6 +493,9 @@ export class AuthService {
 
       const { error } = await supabase.auth.signInWithOtp({
         email: email.toLowerCase().trim(),
+        options: {
+          emailRedirectTo: undefined, // Force OTP instead of magic link
+        },
       });
 
       if (error) throw error;

@@ -30,12 +30,9 @@ interface WelcomeScreenProps {
 
 export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
   const [email, setEmail] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
   const [showOtpScreen, setShowOtpScreen] = useState(false);
 
-  const { signIn, signUp, signInWithGoogle, signInWithApple, loading, user, isNewUser } = useAuth();
+  const { sendEmailOtp, signInWithGoogle, signInWithApple, loading, user, isNewUser } = useAuth();
 
   // Handle navigation after successful authentication
   useEffect(() => {
@@ -69,28 +66,10 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
       return;
     }
 
-    // For sign up, validate name fields
-    if (isSignUp && (!firstName || !lastName)) {
-      Alert.alert('Name Required', 'Please enter your first and last name');
-      return;
-    }
-
     // Dismiss keyboard before processing
     Keyboard.dismiss();
 
-    let success = false;
-
-    if (isSignUp) {
-      success = await signUp({
-        email,
-        firstName,
-        lastName,
-      });
-    } else {
-      success = await signIn({
-        email,
-      });
-    }
+    const success = await sendEmailOtp({ email });
 
     if (success) {
       // Show OTP verification screen
@@ -135,7 +114,6 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
     return (
       <OtpVerificationScreen
         email={email}
-        isSignUp={isSignUp}
         onNavigate={onNavigate}
         onBack={() => setShowOtpScreen(false)}
       />
@@ -160,38 +138,12 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
               {/* Title */}
               <View style={styles.titleSection}>
                 <Text style={styles.title}>Welcome to SharedTable</Text>
-                <Text style={styles.subtitle}>
-                  {isSignUp ? 'Create your account' : 'Sign in to continue'}
-                </Text>
+                <Text style={styles.subtitle}>Enter your email to continue</Text>
               </View>
 
               {/* Auth Form Section */}
               <View style={styles.inputSection}>
                 <View style={styles.formContainer}>
-                  {/* Name fields for sign up */}
-                  {isSignUp && (
-                    <View style={styles.nameRow}>
-                      <TextInput
-                        style={[styles.input, styles.halfInput]}
-                        placeholder="First name"
-                        placeholderTextColor={theme.colors.text.secondary}
-                        value={firstName}
-                        onChangeText={setFirstName}
-                        autoCapitalize="words"
-                        returnKeyType="next"
-                      />
-                      <TextInput
-                        style={[styles.input, styles.halfInput]}
-                        placeholder="Last name"
-                        placeholderTextColor={theme.colors.text.secondary}
-                        value={lastName}
-                        onChangeText={setLastName}
-                        autoCapitalize="words"
-                        returnKeyType="next"
-                      />
-                    </View>
-                  )}
-
                   {/* Email Input */}
                   <TextInput
                     style={styles.input}
@@ -202,34 +154,25 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoComplete="email"
-                    returnKeyType="next"
+                    returnKeyType="done"
+                    onSubmitEditing={handleEmailAuth}
                   />
 
                   {/* Submit Button */}
                   <Pressable
                     style={({ pressed }) => [
                       styles.authButton,
-                      (!email || (isSignUp && (!firstName || !lastName))) &&
-                        styles.authButtonDisabled,
+                      !email && styles.authButtonDisabled,
                       pressed && styles.buttonPressed,
                     ]}
                     onPress={handleEmailAuth}
-                    disabled={loading || !email || (isSignUp && (!firstName || !lastName))}
+                    disabled={loading || !email}
                   >
                     {loading ? (
                       <ActivityIndicator color="#FFFFFF" size="small" />
                     ) : (
-                      <Text style={styles.authButtonText}>
-                        {isSignUp ? 'Send Verification Code' : 'Send Login Code'}
-                      </Text>
+                      <Text style={styles.authButtonText}>Continue with Email</Text>
                     )}
-                  </Pressable>
-
-                  {/* Toggle Sign Up/Sign In */}
-                  <Pressable onPress={() => setIsSignUp(!isSignUp)} style={styles.toggleButton}>
-                    <Text style={styles.toggleButtonText}>
-                      {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
-                    </Text>
                   </Pressable>
                 </View>
 
@@ -272,24 +215,28 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
                 </View>
 
                 {/* Debug OTP Test Button - FOR TESTING ONLY */}
-                <Pressable
-                  style={styles.skipButton}
-                  onPress={async () => {
-                    if (!email || !validateEmail(email)) {
-                      Alert.alert('Email Required', 'Please enter a valid email address first');
-                      return;
-                    }
-                    const result = await testOtpSending(email);
-                    Alert.alert('OTP Test', `Check console logs. Success: ${result.success}`);
-                  }}
-                >
-                  <Text style={styles.skipButtonText}>[DEBUG] Test OTP Sending</Text>
-                </Pressable>
+                {/* Debug buttons for development */}
+                {__DEV__ && (
+                  <>
+                    <Pressable
+                      style={styles.skipButton}
+                      onPress={async () => {
+                        if (!email || !validateEmail(email)) {
+                          Alert.alert('Email Required', 'Please enter a valid email address first');
+                          return;
+                        }
+                        const result = await testOtpSending(email);
+                        Alert.alert('OTP Test', `Check console logs. Success: ${result.success}`);
+                      }}
+                    >
+                      <Text style={styles.skipButtonText}>[DEBUG] Test OTP Sending</Text>
+                    </Pressable>
 
-                {/* Temporary Skip to Home Button - FOR TESTING ONLY */}
-                <Pressable style={styles.skipButton} onPress={() => onNavigate?.('home')}>
-                  <Text style={styles.skipButtonText}>[DEV] Skip to Home</Text>
-                </Pressable>
+                    <Pressable style={styles.skipButton} onPress={() => onNavigate?.('home')}>
+                      <Text style={styles.skipButtonText}>[DEV] Skip to Home</Text>
+                    </Pressable>
+                  </>
+                )}
 
                 {/* Bottom spacing to ensure buttons are visible */}
                 <View style={styles.bottomSpacer} />

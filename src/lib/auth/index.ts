@@ -2,4 +2,30 @@
 export { AuthProvider, useAuth } from './context/AuthContext';
 export { useProtectedRoute } from './hooks/useProtectedRoute';
 export { AuthService } from '../supabase/auth';
-export type { SignUpData, SignInData } from '../supabase/auth';
+export type { EmailAuthData } from '../supabase/auth';
+
+// Export authentication services
+export { BiometricAuthService } from './services/biometricAuth';
+export { RateLimitService } from './services/rateLimitService';
+export { SessionService } from './services/sessionService';
+export { RetryService } from './services/retryService';
+export { DeepLinkSecurityService } from './services/deepLinkSecurity';
+
+// Export testing utilities
+export { AuthFlowTestRunner } from './tests/authFlowTest';
+
+// Export components
+export { BiometricSettings } from '../../components/auth/BiometricSettings';
+export { AuthMonitoringDashboard } from '../../components/auth/AuthMonitoringDashboard';
+
+// Export types
+export type {
+  BiometricAuthResult,
+  BiometricCapabilities,
+  BiometricType,
+} from './services/biometricAuth';
+export type { RateLimitResult, RateLimitConfig } from './services/rateLimitService';
+export type { SecureSession, SessionValidationResult } from './services/sessionService';
+export type { RetryOptions } from './services/retryService';
+export type { DeepLinkValidationResult, PendingAuthRequest } from './services/deepLinkSecurity';
+export type { TestResult, TestSuite } from './tests/authFlowTest';

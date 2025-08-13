@@ -330,8 +330,8 @@ AuthService.signInWithApple(); // ✅ Apple Sign In with credential handling
 
 // Session Management ✅
 AuthService.signOut(); // ✅ Clears Supabase session and secure storage
-AuthService.getSession(); // ✅ Returns current session from Supabase
-AuthService.getCurrentUser(); // ✅ Returns current authenticated user
+AuthService.getSession(); // ✅ Returns cached session data
+AuthService.getCurrentUser(); // ✅ Returns current authenticated user (recommended - validates JWT)
 
 // OTP Management ✅
 AuthService.resendOtp(email); // ✅ Resends verification code

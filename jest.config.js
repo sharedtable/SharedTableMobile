@@ -37,26 +37,10 @@ module.exports = {
     '^@assets/(.*)$': '<rootDir>/src/assets/$1',
     '^@config/(.*)$': '<rootDir>/src/config/$1',
   },
-  setupFilesAfterEnv: [
-    '<rootDir>/jest.setup.js',
-    '@testing-library/jest-native/extend-expect',
-  ],
-  testMatch: [
-    '**/__tests__/**/*.test.ts',
-    '**/__tests__/**/*.test.tsx',
-  ],
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    '/.expo/',
-  ],
-  moduleFileExtensions: [
-    'ts',
-    'tsx',
-    'js',
-    'jsx',
-    'json',
-    'node',
-  ],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js', '@testing-library/jest-native/extend-expect'],
+  testMatch: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx'],
+  testPathIgnorePatterns: ['/node_modules/', '/.expo/'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   globals: {
     __DEV__: true,
   },

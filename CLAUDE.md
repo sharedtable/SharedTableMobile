@@ -130,11 +130,11 @@ useInfiniteQuery → Pagination
 
 ```typescript
 // Sensitive data in SecureStore
-SecureStore.setItemAsync('auth_token', token)  // Encrypted storage
-SecureStore.getItemAsync('auth_token')         // Secure retrieval
+SecureStore.setItemAsync('auth_token', token); // Encrypted storage
+SecureStore.getItemAsync('auth_token'); // Secure retrieval
 
 // Non-sensitive data in AsyncStorage
-AsyncStorage.setItem('preferences', JSON.stringify(prefs))
+AsyncStorage.setItem('preferences', JSON.stringify(prefs));
 ```
 
 ## 📐 MOBILE ARCHITECTURAL STANDARDS
@@ -157,11 +157,11 @@ const fetchUserProfile = async (): Promise<UserProfile> => {
     // - Error transformation
     // - Response caching
     const response = await api.getUserProfile();
-    
+
     if (!response.success) {
       throw new ApiError(response.error);
     }
-    
+
     return response.data;
   } catch (error) {
     // Proper error handling
@@ -172,7 +172,7 @@ const fetchUserProfile = async (): Promise<UserProfile> => {
       }
       throw error;
     }
-    
+
     // Log to crash analytics
     crashlytics().recordError(error);
     throw new UnexpectedError('Failed to fetch profile');
@@ -203,13 +203,13 @@ interface EventCardProps {
   testID?: string;
 }
 
-export const EventCard = memo<EventCardProps>(({ 
-  eventId, 
+export const EventCard = memo<EventCardProps>(({
+  eventId,
   onPress,
-  testID 
+  testID
 }) => {
   const insets = useSafeAreaInsets();
-  
+
   // Optimized data fetching
   const { data: event, isLoading } = useQuery({
     queryKey: ['event', eventId],
@@ -219,7 +219,7 @@ export const EventCard = memo<EventCardProps>(({
   });
 
   // Memoized styles
-  const styles = useMemo(() => 
+  const styles = useMemo(() =>
     createStyles(insets), [insets]
   );
 
@@ -229,7 +229,7 @@ export const EventCard = memo<EventCardProps>(({
     if (Platform.OS === 'ios') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    
+
     onPress?.(eventId);
   }, [eventId, onPress]);
 
@@ -265,7 +265,7 @@ export const EventCard = memo<EventCardProps>(({
   );
 });
 
-const createStyles = (insets: EdgeInsets) => 
+const createStyles = (insets: EdgeInsets) =>
   StyleSheet.create({
     container: {
       backgroundColor: '#fff',
@@ -304,13 +304,16 @@ type Navigation = NavigationProp<MainStackParamList>;
 
 const MyScreen = () => {
   const navigation = useNavigation<Navigation>();
-  
-  const navigateToEvent = useCallback((eventId: string) => {
-    navigation.navigate('EventDetails', { 
-      eventId,
-      timestamp: Date.now() // For analytics
-    });
-  }, [navigation]);
+
+  const navigateToEvent = useCallback(
+    (eventId: string) => {
+      navigation.navigate('EventDetails', {
+        eventId,
+        timestamp: Date.now(), // For analytics
+      });
+    },
+    [navigation]
+  );
 };
 ```
 
@@ -326,7 +329,7 @@ const EventsList = () => {
   ), []);
 
   const keyExtractor = useCallback(
-    (item) => item.id, 
+    (item) => item.id,
     []
   );
 
@@ -349,6 +352,7 @@ const EventsList = () => {
 ## Critical File Structure
 
 ### Authentication Flow
+
 1. `src/screens/auth/WelcomeScreen.tsx` - Entry point
 2. `src/screens/auth/LoginScreen.tsx` - Login form
 3. `src/store/authStore.ts` - Auth state management
@@ -356,6 +360,7 @@ const EventsList = () => {
 5. `src/navigation/RootNavigator.tsx` - Auth routing
 
 ### Data Flow
+
 1. `src/services/api.ts` - API client
 2. `src/hooks/useApi.ts` - API hooks
 3. `src/store/*` - Global state stores
@@ -424,6 +429,7 @@ useEffect(() => {
 ## 🧪 MOBILE TESTING REQUIREMENTS
 
 ### Unit Tests
+
 ```typescript
 describe('EventCard', () => {
   it('should render correctly', () => {
@@ -445,21 +451,22 @@ describe('EventCard', () => {
 ```
 
 ### Integration Tests
+
 ```typescript
 describe('Authentication Flow', () => {
   it('should login and navigate to home', async () => {
     const { getByTestId } = render(<App />);
-    
+
     fireEvent.changeText(
-      getByTestId('email-input'), 
+      getByTestId('email-input'),
       'test@stanford.edu'
     );
     fireEvent.changeText(
-      getByTestId('password-input'), 
+      getByTestId('password-input'),
       'password'
     );
     fireEvent.press(getByTestId('login-button'));
-    
+
     await waitFor(() => {
       expect(getByTestId('home-screen')).toBeTruthy();
     });
@@ -495,12 +502,14 @@ crashlytics.recordError(error, {
 ## Platform-Specific Considerations
 
 ### iOS
+
 - Handle Safe Area insets
 - Implement proper keyboard avoidance
 - Support Dynamic Type
 - Handle App Tracking Transparency
 
 ### Android
+
 - Handle back button properly
 - Support different screen densities
 - Implement proper status bar handling
@@ -512,11 +521,11 @@ crashlytics.recordError(error, {
 // Register for push notifications
 const registerForPushNotifications = async () => {
   const { status } = await Notifications.requestPermissionsAsync();
-  
+
   if (status !== 'granted') {
     return;
   }
-  
+
   const token = await Notifications.getExpoPushTokenAsync();
   await api.registerPushToken(token.data);
 };
@@ -590,18 +599,21 @@ The mobile app reads API configuration from `app.json`:
 ## Build & Deployment
 
 ### Development Build
+
 ```bash
 expo run:ios
 expo run:android
 ```
 
 ### Production Build
+
 ```bash
 eas build --platform ios --profile production
 eas build --platform android --profile production
 ```
 
 ### OTA Updates
+
 ```bash
 expo publish --release-channel production
 ```
@@ -609,11 +621,13 @@ expo publish --release-channel production
 ## Current Mobile-Specific Issues
 
 ### Performance
+
 - Image caching not implemented
 - No offline support yet
 - Bundle size not optimized
 
 ### Features Needed
+
 - Biometric authentication
 - Push notifications
 - Deep linking

@@ -44,12 +44,14 @@ SharedTableMobile (this repo)     SharedTableWeb
 ## Installation
 
 1. Clone the repository:
+
 ```bash
 git clone [repository-url]
 cd SharedTableMobile
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 # or
@@ -57,6 +59,7 @@ yarn install
 ```
 
 3. Create environment configuration:
+
 ```bash
 # Update app.json with your API URL
 # Development: http://localhost:3000/api
@@ -66,6 +69,7 @@ yarn install
 ## Development
 
 ### Start the backend first:
+
 ```bash
 # In SharedTableWeb directory
 cd ../SharedTableWeb
@@ -73,6 +77,7 @@ npm run dev
 ```
 
 ### Then start the mobile app:
+
 ```bash
 # In SharedTableMobile directory
 npm start
@@ -81,6 +86,7 @@ expo start
 ```
 
 ### Run on specific platform:
+
 ```bash
 npm run ios     # iOS Simulator
 npm run android # Android Emulator
@@ -110,43 +116,51 @@ src/
 The app connects to the SharedTableWeb API endpoints:
 
 ### Authentication
+
 - `POST /api/auth/create-account` - Sign up
 - `POST /api/auth/login` - Sign in
 - `GET /api/auth/session` - Get session
 - `POST /api/auth/logout` - Sign out
 
 ### Reservations
+
 - `GET /api/reservations/available` - List events
 - `POST /api/reservations/book` - Book event
 - `GET /api/bookings/my-bookings` - User's bookings
 
 ### Notifications
+
 - `GET /api/notifications` - Get notifications
 - `PUT /api/notifications/:id/read` - Mark as read
 
 ## Key Features
 
 ### 🔐 Authentication
+
 - Stanford email validation
 - Secure token storage
 - Auto-refresh tokens
 
 ### 📅 Event Booking
+
 - Browse available dinners
 - Filter by type (friends/singles)
 - Real-time availability
 
 ### 💬 Notifications
+
 - Push notifications
 - In-app notification center
 - Unread badges
 
 ### 👤 Profile Management
+
 - Photo upload
 - Preferences
 - Dietary restrictions
 
 ### 💳 Payments
+
 - Stripe integration
 - $10 deposit handling
 - Secure payment flow
@@ -154,17 +168,20 @@ The app connects to the SharedTableWeb API endpoints:
 ## Development Guidelines
 
 ### Code Style
+
 - TypeScript strict mode
 - Functional components
 - React hooks
 - Consistent formatting (Prettier)
 
 ### State Management
+
 - Zustand for global state
 - React Query for server state
 - Local state for UI
 
 ### Error Handling
+
 - API error interceptors
 - User-friendly messages
 - Offline support
@@ -188,6 +205,7 @@ npm run format
 ## Building for Production
 
 ### iOS
+
 ```bash
 expo build:ios
 # or with EAS
@@ -195,6 +213,7 @@ eas build --platform ios
 ```
 
 ### Android
+
 ```bash
 expo build:android
 # or with EAS
@@ -225,11 +244,13 @@ Configure in `app.json`:
 ## Troubleshooting
 
 ### Connection Issues
+
 - Ensure backend is running
 - Check API URL configuration
 - Verify network connectivity
 
 ### Build Issues
+
 - Clear cache: `expo start -c`
 - Reinstall dependencies: `rm -rf node_modules && npm install`
 - Reset Metro: `npx react-native start --reset-cache`
