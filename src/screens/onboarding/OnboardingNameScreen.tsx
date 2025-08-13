@@ -37,7 +37,7 @@ export const OnboardingNameScreen: React.FC<OnboardingNameScreenProps> = ({
   };
 
   const handleBack = () => {
-    onNavigate?.('confirmation');
+    onNavigate?.('welcome');
   };
 
   return (

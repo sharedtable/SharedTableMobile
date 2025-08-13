@@ -14,7 +14,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { AuthWrapper } from '@/lib/auth/components/AuthWrapper';
-import { ConfirmationCodeScreen } from '@/screens/auth/ConfirmationCodeScreen';
 import { WelcomeScreen } from '@/screens/auth/WelcomeScreen';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { FilterScreen } from '@/screens/filter/FilterScreen';
@@ -45,7 +44,6 @@ function AppContent() {
   const { user } = useAuth();
   const [currentScreen, setCurrentScreen] = useState<
     | 'welcome'
-    | 'confirmation'
     | 'onboarding-name'
     | 'onboarding-birthday'
     | 'onboarding-gender'
@@ -139,8 +137,8 @@ function AppContent() {
       setUserData((prevData) => ({ ...prevData, ...data }));
     }
 
-    // After confirmation, check if new user
-    if (screen === 'home' && currentScreen === 'confirmation') {
+    // Check if new user when navigating to home
+    if (screen === 'home') {
       // For demo: if email ends with 'new', treat as new user
       if (isNewUser || userEmail.includes('new')) {
         setCurrentScreen('onboarding-name');
@@ -157,8 +155,6 @@ function AppContent() {
   // Render the appropriate screen based on currentScreen state
   const renderScreen = () => {
     switch (currentScreen) {
-      case 'confirmation':
-        return <ConfirmationCodeScreen onNavigate={handleNavigate} email={userEmail} />;
       case 'onboarding-name':
         return <OnboardingNameScreen onNavigate={handleNavigate} currentStep={1} totalSteps={11} />;
       case 'onboarding-birthday':
