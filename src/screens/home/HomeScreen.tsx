@@ -9,12 +9,16 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 
 import { Icon } from '@/components/base/Icon';
 import { EventCard } from '@/components/home/EventCard';
 import { InviteFriendsSection } from '@/components/home/InviteFriendsSection';
 import { BottomTabBar, TabName } from '@/components/navigation/BottomTabBar';
+import { useEvents } from '@/hooks/useEvents';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -22,21 +26,76 @@ interface HomeScreenProps {
   onNavigate?: (screen: string, data?: any) => void;
 }
 
-const regularDinners = [
-  { id: '1', date: 'Tuesday, August 12', time: '7:00 PM' },
-  { id: '2', date: 'Tuesday, August 12', time: '7:00 PM' },
-  { id: '3', date: 'Tuesday, August 12', time: '7:00 PM' },
-];
-
-const singlesDinners = [{ id: '4', date: 'Tuesday, August 12', time: '7:00 PM' }];
-
 export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
-  const [selectedEvent, setSelectedEvent] = useState<string>('1');
+  const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabName>('home');
+  const [bookingLoading, setBookingLoading] = useState(false);
 
-  const handleGrabSpot = () => {
-    // Navigate to booking or payment
-    console.log('Grab a spot for event:', selectedEvent);
+  // Use events hook for real data
+  const { regularDinners, singlesDinners, loading, error, refreshing, refreshEvents, bookEvent } =
+    useEvents();
+
+  // Select first available event by default
+  React.useEffect(() => {
+    if (!selectedEvent && regularDinners.length > 0) {
+      setSelectedEvent(regularDinners[0].id);
+    } else if (!selectedEvent && singlesDinners.length > 0) {
+      setSelectedEvent(singlesDinners[0].id);
+    }
+  }, [regularDinners, singlesDinners, selectedEvent]);
+
+  const handleGrabSpot = async () => {
+    if (!selectedEvent) {
+      Alert.alert('No Event Selected', 'Please select an event first.');
+      return;
+    }
+
+    // Find the selected event to check if it's bookable
+    const event = [...regularDinners, ...singlesDinners].find((e) => e.id === selectedEvent);
+
+    if (!event) {
+      Alert.alert('Error', 'Selected event not found.');
+      return;
+    }
+
+    if (!event.canBook) {
+      let message = 'This event is not available for booking.';
+      if (event.isFullyBooked) {
+        message = 'This event is fully booked.';
+      } else if (event.status !== 'published') {
+        message = 'This event is not yet open for booking.';
+      }
+
+      Alert.alert('Cannot Book Event', message);
+      return;
+    }
+
+    try {
+      setBookingLoading(true);
+      const result = await bookEvent(selectedEvent);
+
+      if (result.success) {
+        Alert.alert('Booking Successful! 🎉', result.message, [{ text: 'OK', style: 'default' }]);
+      } else {
+        Alert.alert('Booking Failed', result.message, [
+          { text: 'OK', style: 'default' },
+          ...(result.waitlisted
+            ? [
+                {
+                  text: 'Join Waitlist',
+                  style: 'default' as const,
+                  onPress: () => console.log('Join waitlist'),
+                },
+              ]
+            : []),
+        ]);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      console.error('❌ [HomeScreen] Booking error:', error);
+    } finally {
+      setBookingLoading(false);
+    }
   };
 
   const handleInviteFriend = (email: string) => {
@@ -70,6 +129,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refreshEvents} />}
         >
           {/* Hero Section with Background */}
           <View style={styles.heroSection}>
@@ -91,43 +151,125 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
               <Text style={styles.heroSubtitle}>MEET BETTER. EAT BETTER.</Text>
             </View>
 
+            {/* Loading State */}
+            {loading && (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={theme.colors.primary.main} />
+                <Text style={styles.loadingText}>Loading events...</Text>
+              </View>
+            )}
+
+            {/* Error State */}
+            {error && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>Failed to load events</Text>
+                <Text style={styles.errorSubtext}>{error}</Text>
+                <Pressable style={styles.retryButton} onPress={refreshEvents}>
+                  <Text style={styles.retryButtonText}>Try Again</Text>
+                </Pressable>
+              </View>
+            )}
+
             {/* Events Section */}
-            <View style={styles.eventsSection}>
-              {/* Regular Dinners */}
-              <View style={styles.eventCategory}>
-                <Text style={styles.categoryTitle}>Regular Dinners</Text>
-                {regularDinners.map((dinner) => (
-                  <EventCard
-                    key={dinner.id}
-                    date={dinner.date}
-                    time={dinner.time}
-                    isSelected={selectedEvent === dinner.id}
-                    onPress={() => setSelectedEvent(dinner.id)}
-                  />
-                ))}
-              </View>
+            {!loading && !error && (
+              <View style={styles.eventsSection}>
+                {/* Regular Dinners */}
+                {regularDinners.length > 0 && (
+                  <View style={styles.eventCategory}>
+                    <Text style={styles.categoryTitle}>Regular Dinners</Text>
+                    {regularDinners.map((event) => {
+                      return (
+                        <EventCard
+                          key={event.id}
+                          date={event.formattedDate}
+                          time={event.formattedTime}
+                          isSelected={selectedEvent === event.id}
+                          onPress={() => {
+                            console.log(
+                              '🔸 [HomeScreen] Selecting regular dinner:',
+                              event.title,
+                              event.id
+                            );
+                            setSelectedEvent(event.id);
+                          }}
+                          disabled={false}
+                        />
+                      );
+                    })}
+                  </View>
+                )}
 
-              {/* Singles Dinners */}
-              <View style={styles.eventCategory}>
-                <Text style={styles.categoryTitle}>Singles Dinners</Text>
-                {singlesDinners.map((dinner) => (
-                  <EventCard
-                    key={dinner.id}
-                    date={dinner.date}
-                    time={dinner.time}
-                    isSelected={selectedEvent === dinner.id}
-                    onPress={() => setSelectedEvent(dinner.id)}
-                    disabled={true}
-                  />
-                ))}
-              </View>
+                {/* Singles Dinners */}
+                {singlesDinners.length > 0 && (
+                  <View style={styles.eventCategory}>
+                    <Text style={styles.categoryTitle}>Singles Dinners</Text>
+                    {singlesDinners.map((event) => {
+                      return (
+                        <EventCard
+                          key={event.id}
+                          date={event.formattedDate}
+                          time={event.formattedTime}
+                          isSelected={selectedEvent === event.id}
+                          onPress={() => {
+                            console.log(
+                              '🔸 [HomeScreen] Selecting singles dinner:',
+                              event.title,
+                              event.id
+                            );
+                            setSelectedEvent(event.id);
+                          }}
+                          disabled={false}
+                        />
+                      );
+                    })}
+                  </View>
+                )}
 
-              {/* Grab a Spot Button */}
-              <Pressable style={styles.grabSpotButton} onPress={handleGrabSpot}>
-                <Text style={styles.grabSpotText}>Grab a Spot</Text>
-                <Icon name="chevron-right" size={20} color={theme.colors.white} />
-              </Pressable>
-            </View>
+                {/* No Events State */}
+                {regularDinners.length === 0 && singlesDinners.length === 0 && (
+                  <View style={styles.noEventsContainer}>
+                    <Text style={styles.noEventsText}>No events available</Text>
+                    <Text style={styles.noEventsSubtext}>
+                      Check back later for new dining experiences!
+                    </Text>
+                  </View>
+                )}
+
+                {/* Grab a Spot Button */}
+                {(regularDinners.length > 0 || singlesDinners.length > 0) && (
+                  <Pressable
+                    style={[
+                      styles.grabSpotButton,
+                      (!selectedEvent || bookingLoading) && styles.grabSpotButtonDisabled,
+                    ]}
+                    onPress={handleGrabSpot}
+                    disabled={!selectedEvent || bookingLoading}
+                  >
+                    {bookingLoading ? (
+                      <ActivityIndicator size="small" color={theme.colors.white} />
+                    ) : (
+                      <>
+                        {selectedEvent ? (
+                          (() => {
+                            const event = [...regularDinners, ...singlesDinners].find(
+                              (e) => e.id === selectedEvent
+                            );
+                            return (
+                              <Text style={styles.grabSpotText}>
+                                {event?.canBook ? 'Grab a Spot' : 'View Event Details'}
+                              </Text>
+                            );
+                          })()
+                        ) : (
+                          <Text style={styles.grabSpotText}>Select an Event</Text>
+                        )}
+                        <Icon name="chevron-right" size={20} color={theme.colors.white} />
+                      </>
+                    )}
+                  </Pressable>
+                )}
+              </View>
+            )}
 
             {/* Invite Friends Section */}
             <InviteFriendsSection onInvite={handleInviteFriend} />
@@ -174,6 +316,26 @@ const styles = StyleSheet.create({
     minHeight: scaleHeight(600),
     paddingTop: scaleHeight(24),
   },
+  errorContainer: {
+    alignItems: 'center',
+    paddingHorizontal: scaleWidth(24),
+    paddingVertical: scaleHeight(40),
+  },
+  errorSubtext: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    marginBottom: scaleHeight(24),
+    textAlign: 'center',
+  },
+  errorText: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(18),
+    fontWeight: '600' as any,
+    marginBottom: scaleHeight(8),
+    textAlign: 'center',
+  },
   eventCategory: {
     marginBottom: scaleHeight(24),
   },
@@ -206,6 +368,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleWidth(24),
     paddingVertical: scaleHeight(14),
   },
+  grabSpotButtonDisabled: {
+    backgroundColor: theme.colors.text.disabled,
+    opacity: 0.6,
+  },
   grabSpotText: {
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.body,
@@ -236,8 +402,19 @@ const styles = StyleSheet.create({
     marginBottom: scaleHeight(8),
     textAlign: 'center',
   },
+  // Loading & Error States
   keyboardView: {
     flex: 1,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: scaleHeight(60),
+  },
+  loadingText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    marginTop: scaleHeight(16),
   },
   locationContainer: {
     alignItems: 'center',
@@ -252,6 +429,36 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginLeft: scaleWidth(4),
     textDecorationLine: 'underline',
+  },
+  noEventsContainer: {
+    alignItems: 'center',
+    paddingVertical: scaleHeight(60),
+  },
+  noEventsSubtext: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    textAlign: 'center',
+  },
+  noEventsText: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(18),
+    fontWeight: '600' as any,
+    marginBottom: scaleHeight(8),
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(8),
+    paddingHorizontal: scaleWidth(24),
+    paddingVertical: scaleHeight(12),
+  },
+  retryButtonText: {
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    fontWeight: '600' as any,
   },
   scrollContent: {
     flexGrow: 1,

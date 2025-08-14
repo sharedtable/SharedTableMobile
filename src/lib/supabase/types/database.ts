@@ -179,39 +179,299 @@ export interface Database {
         Row: {
           id: string;
           title: string;
+          slug: string;
           description: string | null;
-          location: string;
-          date_time: string;
-          max_participants: number;
-          current_participants: number;
-          created_by: string;
-          status: 'active' | 'cancelled' | 'completed';
+          event_type: string | null;
+          event_date: string;
+          start_time: string;
+          end_time: string | null;
+          timezone: string | null;
+          venue_id: string | null;
+          venue_details: any | null;
+          min_capacity: number;
+          max_capacity: number;
+          current_capacity: number;
+          price_cents: number | null;
+          deposit_cents: number | null;
+          target_age_range: any | null;
+          target_genders: string[] | null;
+          target_interests: string[] | null;
+          target_relationship_goals: string[] | null;
+          status: string;
+          booking_opens_at: string | null;
+          booking_closes_at: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          cancelled_at: string | null;
+          cancellation_reason: string | null;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          slug?: string;
+          description?: string | null;
+          event_type?: string | null;
+          event_date: string;
+          start_time: string;
+          end_time?: string | null;
+          timezone?: string | null;
+          venue_id?: string | null;
+          venue_details?: any | null;
+          min_capacity: number;
+          max_capacity: number;
+          current_capacity?: number;
+          price_cents?: number | null;
+          deposit_cents?: number | null;
+          target_age_range?: any | null;
+          target_genders?: string[] | null;
+          target_interests?: string[] | null;
+          target_relationship_goals?: string[] | null;
+          status?: string;
+          booking_opens_at?: string | null;
+          booking_closes_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          cancelled_at?: string | null;
+          cancellation_reason?: string | null;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          slug?: string;
+          description?: string | null;
+          event_type?: string | null;
+          event_date?: string;
+          start_time?: string;
+          end_time?: string | null;
+          timezone?: string | null;
+          venue_id?: string | null;
+          venue_details?: any | null;
+          min_capacity?: number;
+          max_capacity?: number;
+          current_capacity?: number;
+          price_cents?: number | null;
+          deposit_cents?: number | null;
+          target_age_range?: any | null;
+          target_genders?: string[] | null;
+          target_interests?: string[] | null;
+          target_relationship_goals?: string[] | null;
+          status?: string;
+          booking_opens_at?: string | null;
+          booking_closes_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          cancelled_at?: string | null;
+          cancellation_reason?: string | null;
+        };
+      };
+      bookings: {
+        Row: {
+          id: string;
+          event_id: string;
+          user_id: string;
+          status: string; // booking_status enum
+          payment_intent_id: string | null;
+          payment_status: string; // payment_status enum
+          amount_paid_cents: number | null;
+          refund_amount_cents: number | null;
+          checked_in_at: string | null;
+          no_show_reported_at: string | null;
+          dietary_restrictions: string[] | null;
+          accessibility_needs: string[] | null;
+          special_requests: string | null;
+          booking_source: string | null;
+          booking_ip: string | null;
+          confirmation_code: string | null;
+          created_at: string;
+          updated_at: string;
+          cancelled_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          user_id: string;
+          status?: string;
+          payment_intent_id?: string | null;
+          payment_status?: string;
+          amount_paid_cents?: number | null;
+          refund_amount_cents?: number | null;
+          checked_in_at?: string | null;
+          no_show_reported_at?: string | null;
+          dietary_restrictions?: string[] | null;
+          accessibility_needs?: string[] | null;
+          special_requests?: string | null;
+          booking_source?: string | null;
+          booking_ip?: string | null;
+          confirmation_code?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          cancelled_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          event_id?: string;
+          user_id?: string;
+          status?: string;
+          payment_intent_id?: string | null;
+          payment_status?: string;
+          amount_paid_cents?: number | null;
+          refund_amount_cents?: number | null;
+          checked_in_at?: string | null;
+          no_show_reported_at?: string | null;
+          dietary_restrictions?: string[] | null;
+          accessibility_needs?: string[] | null;
+          special_requests?: string | null;
+          booking_source?: string | null;
+          booking_ip?: string | null;
+          confirmation_code?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          cancelled_at?: string | null;
+        };
+      };
+      restaurants: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          cuisine_type: string | null;
+          address: string;
+          phone: string | null;
+          email: string | null;
+          website: string | null;
+          rating: number | null;
+          price_range: number | null;
+          capacity: number | null;
+          features: string[] | null;
+          dietary_options: string[] | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
-          title: string;
+          name: string;
           description?: string | null;
-          location: string;
-          date_time: string;
-          max_participants: number;
-          current_participants?: number;
-          created_by: string;
-          status?: 'active' | 'cancelled' | 'completed';
+          cuisine_type?: string | null;
+          address: string;
+          phone?: string | null;
+          email?: string | null;
+          website?: string | null;
+          rating?: number | null;
+          price_range?: number | null;
+          capacity?: number | null;
+          features?: string[] | null;
+          dietary_options?: string[] | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
-          title?: string;
+          name?: string;
           description?: string | null;
-          location?: string;
-          date_time?: string;
-          max_participants?: number;
-          current_participants?: number;
-          created_by?: string;
-          status?: 'active' | 'cancelled' | 'completed';
+          cuisine_type?: string | null;
+          address?: string;
+          phone?: string | null;
+          email?: string | null;
+          website?: string | null;
+          rating?: number | null;
+          price_range?: number | null;
+          capacity?: number | null;
+          features?: string[] | null;
+          dietary_options?: string[] | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      reviews: {
+        Row: {
+          id: string;
+          user_id: string;
+          event_id: string | null;
+          restaurant_id: string | null;
+          rating: number;
+          title: string | null;
+          content: string | null;
+          food_rating: number | null;
+          service_rating: number | null;
+          ambiance_rating: number | null;
+          would_recommend: boolean | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          event_id?: string | null;
+          restaurant_id?: string | null;
+          rating: number;
+          title?: string | null;
+          content?: string | null;
+          food_rating?: number | null;
+          service_rating?: number | null;
+          ambiance_rating?: number | null;
+          would_recommend?: boolean | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          event_id?: string | null;
+          restaurant_id?: string | null;
+          rating?: number;
+          title?: string | null;
+          content?: string | null;
+          food_rating?: number | null;
+          service_rating?: number | null;
+          ambiance_rating?: number | null;
+          would_recommend?: boolean | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      user_preferences: {
+        Row: {
+          id: string;
+          user_id: string;
+          preferred_cuisines: string[] | null;
+          dietary_restrictions: string[] | null;
+          preferred_price_range: number[] | null;
+          preferred_times: string[] | null;
+          preferred_days: string[] | null;
+          max_travel_distance: number | null;
+          group_size_preference: string | null;
+          notification_preferences: any | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          preferred_cuisines?: string[] | null;
+          dietary_restrictions?: string[] | null;
+          preferred_price_range?: number[] | null;
+          preferred_times?: string[] | null;
+          preferred_days?: string[] | null;
+          max_travel_distance?: number | null;
+          group_size_preference?: string | null;
+          notification_preferences?: any | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          preferred_cuisines?: string[] | null;
+          dietary_restrictions?: string[] | null;
+          preferred_price_range?: number[] | null;
+          preferred_times?: string[] | null;
+          preferred_days?: string[] | null;
+          max_travel_distance?: number | null;
+          group_size_preference?: string | null;
+          notification_preferences?: any | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -235,14 +495,34 @@ export interface Database {
 // Auth types
 export type User = Database['public']['Tables']['users']['Row'];
 export type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
-export type Event = Database['public']['Tables']['events']['Row'];
 
-// Insert types
+// Event types
+export type Event = Database['public']['Tables']['events']['Row'];
+export type EventInsert = Database['public']['Tables']['events']['Insert'];
+export type EventUpdate = Database['public']['Tables']['events']['Update'];
+
+// Booking types
+export type Booking = Database['public']['Tables']['bookings']['Row'];
+export type BookingInsert = Database['public']['Tables']['bookings']['Insert'];
+export type BookingUpdate = Database['public']['Tables']['bookings']['Update'];
+
+// Restaurant types
+export type Restaurant = Database['public']['Tables']['restaurants']['Row'];
+export type RestaurantInsert = Database['public']['Tables']['restaurants']['Insert'];
+export type RestaurantUpdate = Database['public']['Tables']['restaurants']['Update'];
+
+// Review types
+export type Review = Database['public']['Tables']['reviews']['Row'];
+export type ReviewInsert = Database['public']['Tables']['reviews']['Insert'];
+export type ReviewUpdate = Database['public']['Tables']['reviews']['Update'];
+
+// User Preferences types
+export type UserPreferences = Database['public']['Tables']['user_preferences']['Row'];
+export type UserPreferencesInsert = Database['public']['Tables']['user_preferences']['Insert'];
+export type UserPreferencesUpdate = Database['public']['Tables']['user_preferences']['Update'];
+
+// Legacy Insert/Update types (keep for compatibility)
 export type UserInsert = Database['public']['Tables']['users']['Insert'];
 export type UserProfileInsert = Database['public']['Tables']['user_profiles']['Insert'];
-export type EventInsert = Database['public']['Tables']['events']['Insert'];
-
-// Update types
 export type UserUpdate = Database['public']['Tables']['users']['Update'];
 export type UserProfileUpdate = Database['public']['Tables']['user_profiles']['Update'];
-export type EventUpdate = Database['public']['Tables']['events']['Update'];
