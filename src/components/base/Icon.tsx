@@ -98,14 +98,24 @@ export type IconName =
   | 'eye-off'
   | 'logo-google'
   | 'logo-apple'
-  | 'checkmark';
+  | 'checkmark'
+
+  // Settings & Security
+  | 'lock'
+  | 'shield'
+  | 'smartphone'
+  | 'download'
+  | 'globe'
+  | 'help-circle'
+  | 'sun'
+  | 'moon';
 
 interface IconProps {
   name: IconName;
   size?: number;
   color?: string;
   strokeWidth?: number;
-  style?: any;
+  style?: object;
   withPadding?: boolean;
 }
 
@@ -193,6 +203,16 @@ const iconMap: Record<IconName, { library: string; name: string }> = {
   'logo-google': { library: 'Ionicons', name: 'logo-google' },
   'logo-apple': { library: 'Ionicons', name: 'logo-apple' },
   checkmark: { library: 'Ionicons', name: 'checkmark' },
+
+  // Settings & Security
+  lock: { library: 'Feather', name: 'lock' },
+  shield: { library: 'Feather', name: 'shield' },
+  smartphone: { library: 'Feather', name: 'smartphone' },
+  download: { library: 'Feather', name: 'download' },
+  globe: { library: 'Feather', name: 'globe' },
+  'help-circle': { library: 'Feather', name: 'help-circle' },
+  sun: { library: 'Feather', name: 'sun' },
+  moon: { library: 'Feather', name: 'moon' },
 };
 
 export const Icon = memo<IconProps>(
@@ -207,13 +227,13 @@ export const Icon = memo<IconProps>(
     const iconConfig = iconMap[name];
 
     if (!iconConfig) {
-      console.warn(`Icon "${name}" not found in icon map`);
-      return null;
+      // Icon not found in icon map - return fallback
+      return <Ionicons name="help-outline" size={size} color={color} style={style} />;
     }
 
     const iconElement = (() => {
       const baseProps = {
-        name: iconConfig.name as any,
+        name: iconConfig.name as never,
         size,
         color,
         style,

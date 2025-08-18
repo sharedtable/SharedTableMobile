@@ -20,13 +20,13 @@ interface SettingsItem {
 }
 
 const settingsItems: SettingsItem[] = [
-  { id: 'refer', title: 'Refer a Friend', showArrow: true },
-  { id: 'website1', title: 'wwwwww', showArrow: true },
-  { id: 'website2', title: 'wwwwww', showArrow: true },
+  { id: 'account', title: 'Account', showArrow: true },
   { id: 'notifications', title: 'Notifications', showArrow: true },
   { id: 'appearance', title: 'Appearance', showArrow: true },
-  { id: 'language', title: 'Language', showArrow: true },
   { id: 'privacy', title: 'Privacy & Security', showArrow: true },
+  { id: 'language', title: 'Language', showArrow: true },
+  { id: 'refer', title: 'Refer a Friend', showArrow: true },
+  { id: 'about', title: 'About', showArrow: true },
   { id: 'logout', title: 'Log Out', showArrow: true },
 ];
 
@@ -41,8 +41,18 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate }) =>
   const handleSettingPress = (item: SettingsItem) => {
     if (item.id === 'logout') {
       setShowLogoutModal(true);
+    } else if (item.id === 'notifications') {
+      onNavigate?.('notifications');
+    } else if (item.id === 'privacy') {
+      onNavigate?.('privacy-security');
+    } else if (item.id === 'appearance') {
+      onNavigate?.('appearance');
+    } else if (item.id === 'account') {
+      onNavigate?.('account');
+    } else if (item.id === 'about') {
+      onNavigate?.('about');
     } else {
-      // Navigate to settings item
+      // Navigate to other settings items
     }
   };
 
@@ -52,7 +62,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate }) =>
       await signOut();
       // Navigation will be handled by AuthWrapper/App based on auth state
     } catch (error) {
-      console.error('Logout error:', error);
       // Still close modal and let auth state handle navigation
     }
   };
@@ -166,7 +175,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   container: {
     backgroundColor: '#F9F9F9',
@@ -195,7 +204,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   logoutText: {
     color: theme.colors.primary.main,
@@ -236,7 +245,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: scaleFont(20),
-    fontWeight: '700' as any,
+    fontWeight: '700',
     marginBottom: scaleHeight(12),
     textAlign: 'center',
   },
@@ -284,7 +293,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(20),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     marginBottom: scaleHeight(4),
   },
 });

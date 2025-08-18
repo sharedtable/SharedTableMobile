@@ -33,9 +33,14 @@ import { OnboardingPersonalityScreen } from '@/screens/onboarding/OnboardingPers
 import { OnboardingPhotoScreen } from '@/screens/onboarding/OnboardingPhotoScreen';
 import { OnboardingRelationshipScreen } from '@/screens/onboarding/OnboardingRelationshipScreen';
 import { OnboardingWorkScreen } from '@/screens/onboarding/OnboardingWorkScreen';
-import { ProfileScreen } from '@/screens/profile/ProfileScreen';
 import { ReviewScreen } from '@/screens/review/ReviewScreen';
+import { AboutScreen } from '@/screens/settings/AboutScreen';
+import { AccountScreen } from '@/screens/settings/AccountScreen';
+import { AppearanceScreen } from '@/screens/settings/AppearanceScreen';
+import { NotificationsScreen } from '@/screens/settings/NotificationsScreen';
+import { PrivacySecurityScreen } from '@/screens/settings/PrivacySecurityScreen';
 import { SettingsScreen } from '@/screens/settings/SettingsScreen';
+import { theme } from '@/theme';
 
 // Hide the native splash screen immediately
 SplashScreen.hideAsync();
@@ -68,6 +73,11 @@ function AppContent() {
     | 'dashboard'
     | 'profile'
     | 'settings'
+    | 'notifications'
+    | 'privacy-security'
+    | 'appearance'
+    | 'account'
+    | 'about'
     | 'filter'
     | 'review'
   >('welcome');
@@ -132,7 +142,6 @@ function AppContent() {
       await completeOnboarding();
       // Navigation will happen automatically via useEffect when isNewUser becomes false
     } catch (error) {
-      console.error('❌ [App] Failed to complete onboarding:', error);
       // Fallback navigation to prevent user from getting stuck
       setCurrentScreen('home');
     }
@@ -261,9 +270,19 @@ function AppContent() {
       case 'dashboard':
         return <DashboardScreen onNavigate={handleNavigate} />;
       case 'profile':
-        return <ProfileScreen onNavigate={handleNavigate} />;
+        return <DashboardScreen onNavigate={handleNavigate} />;
       case 'settings':
         return <SettingsScreen onNavigate={handleNavigate} />;
+      case 'notifications':
+        return <NotificationsScreen onNavigate={handleNavigate} />;
+      case 'privacy-security':
+        return <PrivacySecurityScreen onNavigate={handleNavigate} />;
+      case 'appearance':
+        return <AppearanceScreen onNavigate={handleNavigate} />;
+      case 'account':
+        return <AccountScreen onNavigate={handleNavigate} />;
+      case 'about':
+        return <AboutScreen onNavigate={handleNavigate} />;
       case 'filter':
         return <FilterScreen onNavigate={handleNavigate} />;
       case 'review':
@@ -301,13 +320,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   completeButton: {
-    backgroundColor: '#E24849',
+    backgroundColor: theme.colors.primary.main,
     borderRadius: 8,
     padding: 15,
     paddingHorizontal: 40,
   },
   completeButtonText: {
-    color: '#FFFFFF',
+    color: theme.colors.white,
     fontSize: 18,
     fontWeight: '600',
   },
@@ -328,22 +347,22 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   skipButton: {
-    backgroundColor: '#C17B5C',
+    backgroundColor: theme.colors.primary.light,
     borderRadius: 8,
     marginTop: 20,
     padding: 10,
   },
   skipButtonText: {
-    color: '#FFFFFF',
+    color: theme.colors.white,
   },
   temporaryButton: {
-    backgroundColor: '#C17B5C',
+    backgroundColor: theme.colors.primary.light,
     borderRadius: 8,
     marginTop: 20,
     padding: 10,
   },
   temporaryButtonText: {
-    color: 'white',
+    color: theme.colors.white,
   },
   temporaryContainer: {
     alignItems: 'center',

@@ -9,6 +9,7 @@ export const colors = {
   // Primary (alias for brand)
   primary: {
     main: '#E24849',
+    light: '#FF6B6B',
     contrast: '#FFFFFF',
   },
 

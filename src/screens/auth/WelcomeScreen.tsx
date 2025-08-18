@@ -20,12 +20,11 @@ import { GoogleIcon } from '@/components/icons/GoogleIcon';
 import { useAuth } from '@/lib/auth';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
-import { testOtpSending } from '@/utils/testAuth';
 
 import { OtpVerificationScreen } from './OtpVerificationScreen';
 
 interface WelcomeScreenProps {
-  onNavigate?: (screen: string, data?: any) => void;
+  onNavigate?: (screen: string, data?: Record<string, unknown>) => void;
 }
 
 export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
@@ -37,14 +36,9 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
   // Handle navigation after successful authentication
   useEffect(() => {
     if (user && onNavigate) {
-      console.log('🚀 [WelcomeScreen] User authenticated, checking if new user...');
-      console.log('🚀 [WelcomeScreen] User:', user.email, 'isNewUser:', isNewUser);
-
       if (isNewUser) {
-        console.log('🚀 [WelcomeScreen] New user detected, navigating to onboarding');
         onNavigate('onboarding-name');
       } else {
-        console.log('🚀 [WelcomeScreen] Existing user detected, navigating to home');
         onNavigate('home');
       }
     }
@@ -78,22 +72,11 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
   };
 
   const handleGoogleSignIn = async () => {
-    console.log('🚀 [WelcomeScreen] Google sign in button clicked');
-
     try {
-      const success = await signInWithGoogle();
-      console.log('🚀 [WelcomeScreen] Google sign in result:', success);
-
-      if (success) {
-        console.log(
-          '🚀 [WelcomeScreen] Google sign in successful, waiting for auth state update...'
-        );
-        // Navigation will be handled by useEffect when user state updates
-      } else {
-        console.log('🚀 [WelcomeScreen] Google sign in failed or cancelled');
-      }
+      await signInWithGoogle();
+      // Navigation will be handled by useEffect when user state updates
     } catch (error) {
-      console.error('❌ [WelcomeScreen] Google sign in error:', error);
+      // Sign in failed - error handling already handled by auth service
     }
   };
 
@@ -214,30 +197,6 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
                   )}
                 </View>
 
-                {/* Debug OTP Test Button - FOR TESTING ONLY */}
-                {/* Debug buttons for development */}
-                {__DEV__ && (
-                  <>
-                    <Pressable
-                      style={styles.skipButton}
-                      onPress={async () => {
-                        if (!email || !validateEmail(email)) {
-                          Alert.alert('Email Required', 'Please enter a valid email address first');
-                          return;
-                        }
-                        const result = await testOtpSending(email);
-                        Alert.alert('OTP Test', `Check console logs. Success: ${result.success}`);
-                      }}
-                    >
-                      <Text style={styles.skipButtonText}>[DEBUG] Test OTP Sending</Text>
-                    </Pressable>
-
-                    <Pressable style={styles.skipButton} onPress={() => onNavigate?.('home')}>
-                      <Text style={styles.skipButtonText}>[DEV] Skip to Home</Text>
-                    </Pressable>
-                  </>
-                )}
-
                 {/* Bottom spacing to ensure buttons are visible */}
                 <View style={styles.bottomSpacer} />
               </View>
@@ -259,7 +218,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '500' as any,
+    fontWeight: '500',
   },
   authButton: {
     alignItems: 'center',
@@ -276,7 +235,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(18),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   bottomSpacer: {
     height: scaleHeight(40),
@@ -307,7 +266,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(18),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   emailInput: {
     backgroundColor: theme.colors.white,
@@ -334,7 +293,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '500' as any,
+    fontWeight: '500',
   },
   halfInput: {
     flex: 1,
@@ -384,23 +343,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
   },
-  skipButton: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(226, 72, 73, 0.1)',
-    borderColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(12),
-    borderStyle: 'dashed' as any,
-    borderWidth: 1,
-    marginTop: scaleHeight(24),
-    paddingHorizontal: scaleWidth(24),
-    paddingVertical: scaleHeight(12),
-  },
-  skipButtonText: {
-    color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
-    fontWeight: '600' as any,
-  },
   socialButton: {
     alignItems: 'center',
     borderRadius: scaleWidth(12),
@@ -422,7 +364,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(32),
-    fontWeight: '700' as any,
+    fontWeight: '700',
     marginBottom: scaleHeight(8),
     textAlign: 'center',
   },
@@ -439,6 +381,6 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '500' as any,
+    fontWeight: '500',
   },
 });
