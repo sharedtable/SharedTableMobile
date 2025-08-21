@@ -2,6 +2,7 @@ import { usePrivy, useLoginWithEmail, useLoginWithOAuth, useEmbeddedWallet } fro
 import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useState } from 'react';
 
+import { UserSyncService } from '@/services/userSyncService';
 import { __DEV__, devLog, logError } from '@/utils/env';
 
 interface PrivyUser {
@@ -90,9 +91,10 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
       }
     : null;
 
-  // Store user session securely
+  // Store user session securely and sync with Supabase
   useEffect(() => {
     if (authenticated && user) {
+      // Store session locally
       SecureStore.setItemAsync(
         'privy_user_session',
         JSON.stringify({
@@ -106,6 +108,37 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
           console.error('Failed to store session:', error);
         }
       });
+
+      // Sync user with Supabase database
+      const syncUser = async () => {
+        try {
+          const authProvider = privyUser?.linked_accounts?.find(
+            (account) => account.type === 'google_oauth'
+          )
+            ? 'google'
+            : privyUser?.linked_accounts?.find((account) => account.type === 'apple_oauth')
+              ? 'apple'
+              : 'email';
+
+          const result = await UserSyncService.syncPrivyUser({
+            id: user.id,
+            email: user.email,
+            walletAddress: user.walletAddress,
+            name: user.name,
+            authProvider: authProvider as 'email' | 'google' | 'apple',
+          });
+
+          if (!result.success) {
+            logError('Failed to sync user with database', result.error);
+          } else if (__DEV__) {
+            devLog('User synced with database:', result.userId);
+          }
+        } catch (error) {
+          logError('User sync error', error);
+        }
+      };
+
+      syncUser();
     } else {
       SecureStore.deleteItemAsync('privy_user_session').catch((error) => {
         if (__DEV__) {
@@ -113,7 +146,7 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
         }
       });
     }
-  }, [authenticated, user]);
+  }, [authenticated, user, privyUser]);
 
   // Auto-create wallet for users without one
   useEffect(() => {
@@ -138,6 +171,16 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
             await embeddedWallet.create();
             if (__DEV__) {
               devLog('Embedded wallet created successfully');
+            }
+
+            // Sync wallet with database after creation
+            if ('address' in embeddedWallet && embeddedWallet.address && user?.email) {
+              await UserSyncService.syncPrivyUser({
+                id: user.id,
+                email: user.email,
+                walletAddress: embeddedWallet.address as string,
+                name: user.name,
+              });
             }
           } catch (error) {
             const errorMessage = (error as Error)?.message || '';

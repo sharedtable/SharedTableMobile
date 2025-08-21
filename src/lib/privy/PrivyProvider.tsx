@@ -20,8 +20,6 @@ export const PrivyProvider: React.FC<PrivyProviderProps> = ({ children }) => {
         embedded: {
           ethereum: {
             createOnLogin: 'users-without-wallets', // Create wallet for users who don't have one
-            requireUserPasswordOnCreate: false, // Don't require password for wallet creation
-            showWalletUIs: true, // Show wallet UI components
           },
         },
       }}

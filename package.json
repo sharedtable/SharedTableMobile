@@ -22,7 +22,6 @@
     "pre-commit": "lint-staged"
   },
   "dependencies": {
-    "@coinbase/waas-sdk-react-native": "^2.0.3",
     "@craftzdog/react-native-buffer": "^6.1.0",
     "@expo-google-fonts/inter": "^0.4.1",
     "@expo-google-fonts/keania-one": "^0.4.0",

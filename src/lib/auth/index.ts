@@ -9,9 +9,7 @@ export { SessionService } from './services/sessionService';
 export { RetryService } from './services/retryService';
 export { DeepLinkSecurityService } from './services/deepLinkSecurity';
 
-// Export components
-export { BiometricSettings } from '../../components/auth/BiometricSettings';
-export { AuthMonitoringDashboard } from '../../components/auth/AuthMonitoringDashboard';
+// Export components (removed - not compatible with current auth setup)
 
 // Export types
 export type {

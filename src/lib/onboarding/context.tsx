@@ -6,6 +6,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 
 import { useAuth } from '@/lib/auth';
+import { UserSyncService } from '@/services/userSyncService';
 
 import { OnboardingService, OnboardingError, type OnboardingProgress } from './service';
 import type { CompleteOnboardingData, OnboardingStep } from './validation';
@@ -28,6 +29,9 @@ interface OnboardingState {
 
   // Completion status
   isCompleted: boolean;
+
+  // User ID mapping
+  supabaseUserId: string | null;
 }
 
 // Action types
@@ -42,6 +46,7 @@ type OnboardingAction =
   | { type: 'SET_STEP_ERRORS'; payload: Record<string, string> }
   | { type: 'CLEAR_STEP_ERRORS' }
   | { type: 'SET_COMPLETED'; payload: boolean }
+  | { type: 'SET_SUPABASE_USER_ID'; payload: string | null }
   | { type: 'RESET_STATE' };
 
 // Context actions interface
@@ -83,6 +88,7 @@ const initialState: OnboardingState = {
   error: null,
   stepErrors: {},
   isCompleted: false,
+  supabaseUserId: null,
 };
 
 // Reducer
@@ -121,6 +127,9 @@ function onboardingReducer(state: OnboardingState, action: OnboardingAction): On
     case 'SET_COMPLETED':
       return { ...state, isCompleted: action.payload };
 
+    case 'SET_SUPABASE_USER_ID':
+      return { ...state, supabaseUserId: action.payload };
+
     case 'RESET_STATE':
       return { ...initialState, initializing: false };
 
@@ -154,14 +163,63 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
       try {
         dispatch({ type: 'SET_INITIALIZING', payload: true });
 
-        // Check if onboarding is completed
-        const isCompleted = await OnboardingService.hasCompletedOnboarding(user.id);
+        // First, ensure the Privy user is synced to Supabase
+        // This creates/updates the user record with the proper ID mapping
+        console.log('[OnboardingProvider] Syncing Privy user to Supabase...');
+
+        // Check if user has email (required for sync)
+        if (!user.email) {
+          console.log('[OnboardingProvider] User has no email, skipping onboarding check');
+          dispatch({ type: 'SET_INITIALIZING', payload: false });
+          dispatch({ type: 'SET_COMPLETED', payload: false });
+          return;
+        }
+
+        console.log('[OnboardingProvider] User object:', {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        });
+
+        const syncResult = await UserSyncService.syncPrivyUser({
+          id: user.id,
+          email: user.email,
+          name: user.name || undefined,
+        });
+
+        if (!syncResult.success) {
+          console.error('[OnboardingProvider] Failed to sync user:', syncResult.error);
+          // Don't throw error here, just log it
+          // User might not be synced yet but we can still check onboarding
+          console.log('[OnboardingProvider] Continuing without sync...');
+        }
+
+        const supabaseUserId = syncResult?.userId;
+        if (!supabaseUserId && syncResult?.success === false) {
+          // If sync failed completely, we can't check onboarding
+          console.log('[OnboardingProvider] No Supabase user ID, cannot check onboarding');
+          dispatch({ type: 'SET_INITIALIZING', payload: false });
+          return;
+        }
+
+        if (supabaseUserId) {
+          console.log('[OnboardingProvider] User synced, Supabase ID:', supabaseUserId);
+          dispatch({ type: 'SET_SUPABASE_USER_ID', payload: supabaseUserId });
+        }
+
+        // Use the Supabase user ID for onboarding checks if available, otherwise fallback to Privy ID
+        const userIdForChecks = supabaseUserId || user.id;
+
+        // Now check if onboarding is completed
+        console.log('[OnboardingProvider] Checking onboarding for user ID:', userIdForChecks);
+        const isCompleted = await OnboardingService.hasCompletedOnboarding(userIdForChecks);
+        console.log('[OnboardingProvider] Onboarding completed:', isCompleted);
         dispatch({ type: 'SET_COMPLETED', payload: isCompleted });
 
         if (!isCompleted) {
-          // Get progress and current profile data
-          const progress = await OnboardingService.getOnboardingProgress(user.id);
-          const profile = await OnboardingService.getUserProfile(user.id);
+          // Get progress and current profile data using the correct ID
+          const progress = await OnboardingService.getOnboardingProgress(userIdForChecks);
+          const profile = await OnboardingService.getUserProfile(userIdForChecks);
 
           if (isMounted) {
             dispatch({ type: 'SET_PROGRESS', payload: progress });
@@ -288,6 +346,9 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
     async (step: OnboardingStep, data: any): Promise<boolean> => {
       if (!user) return false;
 
+      // Use Supabase user ID if available, otherwise use Privy ID
+      const userIdForSave = state.supabaseUserId || user.id;
+
       try {
         dispatch({ type: 'SET_SAVING', payload: true });
         dispatch({ type: 'CLEAR_STEP_ERRORS' });
@@ -299,14 +360,14 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
           return false;
         }
 
-        // Save to database
-        await OnboardingService.saveOnboardingStep(user.id, validation.data!);
+        // Save to database using the correct user ID
+        await OnboardingService.saveOnboardingStep(userIdForSave, validation.data!);
 
         // Update local state
         dispatch({ type: 'MERGE_STEP_DATA', payload: validation.data! });
 
         // Refresh progress
-        const progress = await OnboardingService.getOnboardingProgress(user.id);
+        const progress = await OnboardingService.getOnboardingProgress(userIdForSave);
         dispatch({ type: 'SET_PROGRESS', payload: progress });
 
         console.log('✅ [OnboardingProvider] Step saved:', step);
@@ -325,7 +386,7 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
         dispatch({ type: 'SET_SAVING', payload: false });
       }
     },
-    [user]
+    [user, state.supabaseUserId]
   );
 
   const validateStep = useCallback((step: OnboardingStep, data: any) => {
@@ -349,13 +410,15 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
   const completeOnboarding = useCallback(async (): Promise<boolean> => {
     if (!user) return false;
 
+    const userIdForComplete = state.supabaseUserId || user.id;
+
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'CLEAR_STEP_ERRORS' });
 
       // Complete onboarding with current data
       await OnboardingService.completeOnboarding(
-        user.id,
+        userIdForComplete,
         state.currentStepData as CompleteOnboardingData
       );
 
@@ -377,14 +440,16 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [user, state.currentStepData]);
+  }, [user, state.currentStepData, state.supabaseUserId]);
 
   const refreshProgress = useCallback(async () => {
     if (!user) return;
 
+    const userIdForRefresh = state.supabaseUserId || user.id;
+
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      const progress = await OnboardingService.getOnboardingProgress(user.id);
+      const progress = await OnboardingService.getOnboardingProgress(userIdForRefresh);
       dispatch({ type: 'SET_PROGRESS', payload: progress });
     } catch (error) {
       console.error('❌ [OnboardingProvider] Failed to refresh progress:', error);
@@ -398,18 +463,20 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [user]);
+  }, [user, state.supabaseUserId]);
 
   const resetOnboarding = useCallback(async () => {
     if (!user) return;
 
+    const userIdForReset = state.supabaseUserId || user.id;
+
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      await OnboardingService.resetOnboardingProgress(user.id);
+      await OnboardingService.resetOnboardingProgress(userIdForReset);
       dispatch({ type: 'RESET_STATE' });
 
       // Re-initialize after reset
-      const progress = await OnboardingService.getOnboardingProgress(user.id);
+      const progress = await OnboardingService.getOnboardingProgress(userIdForReset);
       dispatch({ type: 'SET_PROGRESS', payload: progress });
       dispatch({ type: 'SET_COMPLETED', payload: false });
 
@@ -426,7 +493,7 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [user]);
+  }, [user, state.supabaseUserId]);
 
   const clearErrors = useCallback(() => {
     dispatch({ type: 'SET_ERROR', payload: null });
@@ -437,8 +504,10 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
     async (imageUri: string): Promise<string | null> => {
       if (!user) return null;
 
+      const userIdForUpload = state.supabaseUserId || user.id;
+
       try {
-        const uploadedUrl = await OnboardingService.uploadProfilePhoto(user.id, imageUri);
+        const uploadedUrl = await OnboardingService.uploadProfilePhoto(userIdForUpload, imageUri);
 
         // Update step data with new photo URL
         dispatch({ type: 'MERGE_STEP_DATA', payload: { avatarUrl: uploadedUrl } });
@@ -456,7 +525,7 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
         return null;
       }
     },
-    [user]
+    [user, state.supabaseUserId]
   );
 
   const contextValue: OnboardingContextType = {

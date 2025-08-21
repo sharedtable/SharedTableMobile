@@ -5,9 +5,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
+import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { BookingsService, type BookingRequest, type BookingResponse } from '@/lib/api/bookings';
 import { EventsService, type EventWithAvailability } from '@/lib/api/events';
-import { useAuth } from '@/lib/auth';
 
 interface UseEventsReturn {
   // State
@@ -26,7 +26,7 @@ interface UseEventsReturn {
 }
 
 export const useEvents = (): UseEventsReturn => {
-  const { user } = useAuth();
+  const { user } = usePrivyAuth();
 
   // State
   const [regularDinners, setRegularDinners] = useState<EventWithAvailability[]>([]);
@@ -101,7 +101,7 @@ export const useEvents = (): UseEventsReturn => {
       try {
         const bookingRequest: BookingRequest = {
           eventId,
-          userId: user.id,
+          userEmail: user.email!, // Use email from Privy auth
           specialRequests,
         };
 
@@ -137,7 +137,7 @@ export const useEvents = (): UseEventsReturn => {
       }
 
       try {
-        const response = await BookingsService.cancelBooking(eventId, user.id);
+        const response = await BookingsService.cancelBooking(eventId, user.email!);
 
         if (response.success) {
           // Refresh events to update participant counts
@@ -164,7 +164,7 @@ export const useEvents = (): UseEventsReturn => {
       if (!user) return false;
 
       try {
-        return await BookingsService.isEventBooked(eventId, user.id);
+        return await BookingsService.isEventBooked(eventId, user.email!);
       } catch (error) {
         console.error('❌ [useEvents] Failed to check booking status:', error);
         return false;

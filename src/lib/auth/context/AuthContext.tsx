@@ -10,11 +10,23 @@ interface AuthContextType {
   loading: boolean;
   initializing: boolean;
   error: string | null;
+  isEmailVerified?: boolean;
+  biometricCapabilities?: {
+    available: boolean;
+    faceId: boolean;
+    touchId: boolean;
+    biometrics: boolean;
+  };
+  isBiometricEnabled?: boolean;
 
   // Methods
   logout: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  completeOnboarding: () => Promise<void>;
+  enableBiometric?: () => Promise<void>;
+  disableBiometric?: () => Promise<void>;
+  checkBiometricCapabilities?: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -74,6 +86,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await initializeAuth();
   };
 
+  const completeOnboarding = async (): Promise<void> => {
+    // Mark onboarding as complete
+    console.log('Completing onboarding');
+    // This would typically update the user's onboarding status in the database
+  };
+
   // Use store user as the source of truth
   const currentUser = storePrivyUser || privyUser;
 
@@ -83,9 +101,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loading: storeLoading || privyLoading,
     initializing: storeLoading,
     error,
+    isEmailVerified: !!currentUser?.email,
     logout,
     signOut,
     refreshUser,
+    completeOnboarding,
   };
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;

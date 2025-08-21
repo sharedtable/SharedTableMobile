@@ -15,7 +15,7 @@ import {
 
 import { Icon } from '@/components/base/Icon';
 import { TopBar } from '@/components/navigation/TopBar';
-import { useAuth } from '@/lib/auth';
+import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -33,7 +33,7 @@ interface AccountField {
 }
 
 export const AccountScreen: React.FC<AccountScreenProps> = ({ onNavigate }) => {
-  const { user } = useAuth();
+  const { user } = usePrivyAuth();
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingField, setEditingField] = useState<AccountField | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -241,16 +241,11 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onNavigate }) => {
   };
 
   const getUserDisplayName = () => {
-    return (
-      user?.user_metadata?.full_name ||
-      user?.user_metadata?.name ||
-      user?.email?.split('@')[0] ||
-      'User'
-    );
+    return user?.name || user?.email?.split('@')[0] || 'User';
   };
 
   const getUserAvatar = () => {
-    return user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+    return user?.avatar;
   };
 
   return (
@@ -277,7 +272,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onNavigate }) => {
           <Text style={styles.displayName}>{getUserDisplayName()}</Text>
           <Text style={styles.memberSince}>
             Member since{' '}
-            {new Date(user?.created_at || Date.now()).toLocaleDateString('en-US', {
+            {new Date(Date.now()).toLocaleDateString('en-US', {
               month: 'long',
               year: 'numeric',
             })}

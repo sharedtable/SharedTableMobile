@@ -1,14 +1,17 @@
 /**
  * Bookings API service
  * Handles event reservations and spot management
+ * Updated to work with Privy authentication
  */
+
+import { UserSyncService } from '@/services/userSyncService';
 
 import { supabase } from '../supabase/client';
 import type { Event } from '../supabase/types/database';
 
 export interface BookingRequest {
   eventId: string;
-  userId: string;
+  userEmail: string; // Changed from userId to userEmail for Privy
   specialRequests?: string;
 }
 
@@ -34,16 +37,20 @@ export class BookingsService {
    */
   static async bookEvent(booking: BookingRequest): Promise<BookingResponse> {
     try {
-      // Verify user authentication
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
-
-      if (authError || !user) {
+      // Get user from database using email (from Privy auth)
+      if (!booking.userEmail) {
         return {
           success: false,
-          message: 'Authentication required to book an event',
+          message: 'User email is required to book an event',
+        };
+      }
+
+      const user = await UserSyncService.getUserByEmail(booking.userEmail);
+
+      if (!user) {
+        return {
+          success: false,
+          message: 'User account not found. Please try logging in again.',
         };
       }
 
@@ -81,7 +88,7 @@ export class BookingsService {
 
       // Create booking record with proper enum values based on defaults
       const bookingData = {
-        user_id: user.id, // Use authenticated user ID directly
+        user_id: user.id, // Use Supabase user ID from synced data
         event_id: booking.eventId,
         status: 'pending', // Default value from schema
         payment_status: 'pending', // Default value from schema
@@ -137,13 +144,23 @@ export class BookingsService {
   /**
    * Cancel a booking
    */
-  static async cancelBooking(eventId: string, userId: string): Promise<BookingResponse> {
+  static async cancelBooking(eventId: string, userEmail: string): Promise<BookingResponse> {
     try {
+      // Get user from database
+      const user = await UserSyncService.getUserByEmail(userEmail);
+
+      if (!user) {
+        return {
+          success: false,
+          message: 'User account not found',
+        };
+      }
+
       // First, find the booking
       const { data: booking, error: bookingError } = await supabase
         .from('bookings')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user.id)
         .eq('event_id', eventId)
         .eq('status', 'confirmed')
         .single();
@@ -214,8 +231,15 @@ export class BookingsService {
   /**
    * Get user's bookings
    */
-  static async getUserBookings(userId: string): Promise<UserBooking[]> {
+  static async getUserBookings(userEmail: string): Promise<UserBooking[]> {
     try {
+      // Get user from database
+      const user = await UserSyncService.getUserByEmail(userEmail);
+
+      if (!user) {
+        return [];
+      }
+
       const { data: bookings, error } = await supabase
         .from('bookings')
         .select(
@@ -227,7 +251,7 @@ export class BookingsService {
           events (*)
         `
         )
-        .eq('user_id', userId)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -258,12 +282,19 @@ export class BookingsService {
   /**
    * Check if user has already booked an event
    */
-  static async isEventBooked(eventId: string, userId: string): Promise<boolean> {
+  static async isEventBooked(eventId: string, userEmail: string): Promise<boolean> {
     try {
+      // Get user from database
+      const user = await UserSyncService.getUserByEmail(userEmail);
+
+      if (!user) {
+        return false;
+      }
+
       const { data: booking, error } = await supabase
         .from('bookings')
         .select('id')
-        .eq('user_id', userId)
+        .eq('user_id', user.id)
         .eq('event_id', eventId)
         .eq('status', 'confirmed')
         .single();

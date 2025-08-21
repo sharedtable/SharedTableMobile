@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
 
-import { useAuth } from '@/lib/auth';
+import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { supabase } from '@/lib/supabase/client';
 import { UserPreferences } from '@/lib/supabase/types/database';
+import { UserSyncService } from '@/services/userSyncService';
 
 interface UserPreferencesData {
   preferences: UserPreferences | null;
@@ -44,20 +45,21 @@ const PREFERENCE_STORAGE: Record<string, 'local' | 'database'> = {
 };
 
 export const useUserPreferences = (): UserPreferencesData => {
-  const { user } = useAuth();
+  const { user } = usePrivyAuth();
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [localPreferences, setLocalPreferences] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dbUserId, setDbUserId] = useState<string | null>(null);
 
   // Load preferences from database and local storage
   useEffect(() => {
     loadPreferences();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.email]);
 
   const loadPreferences = async () => {
-    if (!user?.id) {
+    if (!user?.email) {
       setLoading(false);
       return;
     }
@@ -66,11 +68,20 @@ export const useUserPreferences = (): UserPreferencesData => {
       setLoading(true);
       setError(null);
 
+      // Get user from database using Privy email
+      const dbUser = await UserSyncService.getUserByEmail(user.email);
+      if (!dbUser) {
+        setError('User not found in database');
+        setLoading(false);
+        return;
+      }
+      setDbUserId(dbUser.id);
+
       // Load database preferences
       const { data: dbPreferences, error: dbError } = await supabase
         .from('user_preferences')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', dbUser.id)
         .single();
 
       if (dbError && dbError.code !== 'PGRST116') {
@@ -107,8 +118,8 @@ export const useUserPreferences = (): UserPreferencesData => {
   };
 
   const updatePreference = async (key: string, value: any): Promise<boolean> => {
-    if (!user?.id) {
-      console.error('No user ID available for preference update');
+    if (!user?.email || !dbUserId) {
+      console.error('No user available for preference update');
       return false;
     }
 
@@ -136,7 +147,7 @@ export const useUserPreferences = (): UserPreferencesData => {
               ...updateData,
               updated_at: new Date().toISOString(),
             })
-            .eq('user_id', user.id);
+            .eq('user_id', dbUserId);
 
           if (error) {
             console.error('Error updating database preferences:', error);
@@ -145,7 +156,7 @@ export const useUserPreferences = (): UserPreferencesData => {
         } else {
           // Create new preferences record
           const { error } = await supabase.from('user_preferences').insert({
-            user_id: user.id,
+            user_id: dbUserId,
             ...updateData,
           });
 

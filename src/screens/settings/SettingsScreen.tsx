@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar, Modal } from 
 
 import { Icon } from '@/components/base/Icon';
 import { TopBar } from '@/components/navigation/TopBar';
-import { useAuth } from '@/lib/auth';
+import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -32,7 +32,7 @@ const settingsItems: SettingsItem[] = [
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate }) => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const { signOut, user } = useAuth();
+  const { logout, user } = usePrivyAuth();
 
   const handleBack = () => {
     onNavigate?.('profile');
@@ -59,7 +59,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate }) =>
   const handleLogout = async () => {
     try {
       setShowLogoutModal(false);
-      await signOut();
+      await logout();
       // Navigation will be handled by AuthWrapper/App based on auth state
     } catch (error) {
       // Still close modal and let auth state handle navigation

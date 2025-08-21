@@ -48,16 +48,40 @@ export class OnboardingService {
    */
   static async getOnboardingProgress(userId: string): Promise<OnboardingProgress> {
     try {
-      // Check user completion status
-      const { data: user, error: userError } = await supabase
+      // First try to find user by external_auth_id (Privy ID), then by ID
+      let { data: user, error: userError } = await supabase
         .from('users')
-        .select('onboarding_completed_at')
-        .eq('id', userId)
+        .select('id, onboarding_completed_at')
+        .eq('external_auth_id', userId)
         .single();
+
+      // If not found by external_auth_id, try by ID
+      if (userError && userError.code === 'PGRST116') {
+        const result = await supabase
+          .from('users')
+          .select('id, onboarding_completed_at')
+          .eq('id', userId)
+          .single();
+        user = result.data;
+        userError = result.error;
+      }
+
+      // If user not found, return initial progress
+      if (userError && userError.code === 'PGRST116') {
+        return {
+          currentStep: 0,
+          totalSteps: this.ONBOARDING_STEPS.length,
+          completedSteps: [],
+          nextStep: this.ONBOARDING_STEPS[0],
+        };
+      }
 
       if (userError) {
         throw new OnboardingError('Failed to fetch user data', 'USER_FETCH_FAILED', { userError });
       }
+
+      // Use the Supabase user ID for the rest of the queries
+      const supabaseUserId = user?.id || userId;
 
       if (user?.onboarding_completed_at) {
         return {
@@ -67,11 +91,11 @@ export class OnboardingService {
         };
       }
 
-      // Check profile completion status
+      // Check profile completion status using the Supabase user ID
       const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', supabaseUserId)
         .single();
 
       if (profileError && profileError.code !== 'PGRST116') {
@@ -486,10 +510,37 @@ export class OnboardingService {
    */
   static async getUserProfile(userId: string): Promise<UserProfileInsert | null> {
     try {
+      // First find the Supabase user ID
+      let { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('external_auth_id', userId)
+        .single();
+
+      if (userError && userError.code === 'PGRST116') {
+        const result = await supabase.from('users').select('id').eq('id', userId).single();
+        user = result.data;
+        userError = result.error;
+      }
+
+      // If user not found, return null
+      if (userError && userError.code === 'PGRST116') {
+        return null;
+      }
+
+      if (userError) {
+        throw new OnboardingError('Failed to fetch user', 'USER_FETCH_FAILED', {
+          error: userError,
+        });
+      }
+
+      const supabaseUserId = user?.id || userId;
+
+      // Now fetch the profile
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', supabaseUserId)
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -537,16 +588,54 @@ export class OnboardingService {
    */
   static async hasCompletedOnboarding(userId: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase
+      console.log('[OnboardingService] Checking onboarding status for userId:', userId);
+
+      // First try to find user by external_auth_id (Privy ID)
+      let { data, error } = await supabase
         .from('users')
-        .select('onboarding_completed_at')
-        .eq('id', userId)
+        .select('id, onboarding_completed_at')
+        .eq('external_auth_id', userId)
         .single();
 
+      console.log('[OnboardingService] Query by external_auth_id result:', {
+        data,
+        error: error?.message,
+        code: error?.code,
+      });
+
+      // If not found by external_auth_id, try by ID (in case it's already a Supabase ID)
+      if (error && error.code === 'PGRST116') {
+        console.log('[OnboardingService] Trying by ID instead...');
+        const result = await supabase
+          .from('users')
+          .select('id, onboarding_completed_at')
+          .eq('id', userId)
+          .single();
+        data = result.data;
+        error = result.error;
+        console.log('[OnboardingService] Query by ID result:', {
+          data,
+          error: error?.message,
+          code: error?.code,
+        });
+      }
+
+      // If still not found, user doesn't exist yet - return false
+      if (error && error.code === 'PGRST116') {
+        console.log('[OnboardingService] User not found in database, onboarding not completed');
+        return false;
+      }
+
       if (error) {
+        console.error('[OnboardingService] Database error:', error);
         throw new OnboardingError('Failed to check onboarding status', 'STATUS_CHECK_FAILED', {
           error,
         });
+      }
+
+      // Store the Supabase user ID for later use if we found the user
+      if (data && data.id !== userId) {
+        (this as any).supabaseUserId = data.id;
       }
 
       return !!data?.onboarding_completed_at;
