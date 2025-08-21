@@ -2,19 +2,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
 
-// Tab Screens - Not implemented yet
-// import { BookingsScreen } from '@/screens/main/BookingsScreen';
-// import { EventsScreen } from '@/screens/main/EventsScreen';
-// import { HomeScreen } from '@/screens/main/HomeScreen';
-// import { ProfileScreen } from '@/screens/main/ProfileScreen';
-// import { useNotificationStore } from '@/store/notificationStore';
+import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { HomeScreen } from '@/screens/home/HomeScreen';
+import { EventsScreen } from '@/screens/main/EventsScreen';
 import { ProfileScreen } from '@/screens/profile/ProfileScreen';
+import { theme } from '@/theme';
 
 export type MainTabParamList = {
   Home: undefined;
   Events: undefined;
-  Bookings: undefined;
+  Dashboard: undefined;
   Profile: undefined;
 };
 
@@ -33,8 +30,8 @@ export function MainTabNavigator() {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Events') {
             iconName = focused ? 'calendar' : 'calendar-outline';
-          } else if (route.name === 'Bookings') {
-            iconName = focused ? 'bookmark' : 'bookmark-outline';
+          } else if (route.name === 'Dashboard') {
+            iconName = focused ? 'stats-chart' : 'stats-chart-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
           } else {
@@ -43,15 +40,9 @@ export function MainTabNavigator() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#10B981', // Emerald color
-        tabBarInactiveTintColor: 'gray',
-        headerStyle: {
-          backgroundColor: '#10B981',
-        },
-        headerTintColor: '#fff',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
+        tabBarActiveTintColor: theme.colors.primary.main,
+        tabBarInactiveTintColor: theme.colors.text.secondary,
+        headerShown: false,
       })}
     >
       <Tab.Screen
@@ -62,7 +53,7 @@ export function MainTabNavigator() {
           tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
         }}
       />
-      {/* <Tab.Screen
+      <Tab.Screen
         name="Events"
         component={EventsScreen}
         options={{
@@ -70,12 +61,12 @@ export function MainTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Bookings"
-        component={BookingsScreen}
+        name="Dashboard"
+        component={DashboardScreen}
         options={{
-          title: 'My Bookings',
+          title: 'Dashboard',
         }}
-      /> */}
+      />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}

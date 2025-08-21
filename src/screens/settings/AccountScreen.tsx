@@ -86,14 +86,14 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onNavigate }) => {
             case 'full_name':
               return {
                 ...field,
-                value: user.user_metadata?.full_name || user.user_metadata?.name || '',
+                value: user.name || '',
               };
             case 'email':
               return { ...field, value: user.email || '' };
             case 'phone':
-              return { ...field, value: user.user_metadata?.phone || user.phone || '' };
+              return { ...field, value: '' }; // Phone not available in Privy user
             case 'username':
-              return { ...field, value: user.user_metadata?.username || '' };
+              return { ...field, value: user.email?.split('@')[0] || '' };
             default:
               return field;
           }

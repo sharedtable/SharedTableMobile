@@ -15,7 +15,7 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "edu.stanford.sharedtable",
+      "bundleIdentifier": "com.sharedtable.app",
       "buildNumber": "1",
       "config": {
         "usesNonExemptEncryption": false
@@ -32,7 +32,7 @@
         "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#E24849"
       },
-      "package": "edu.stanford.sharedtable",
+      "package": "com.sharedtable.app",
       "versionCode": 1,
       "permissions": [
         "CAMERA",
@@ -78,6 +78,7 @@
       "productionApiUrl": "https://sharedtable.vercel.app/api",
       "supabaseUrl": "https://sxrvesdqhcovajaqnqcw.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN4cnZlc2RxaGNvdmFqYXFucWN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4NzgxNzAsImV4cCI6MjA3MDQ1NDE3MH0.IVjirwF3tEjKJ9j70lLMPobf9Zez914bEFZd2JdAeMY",
+      "privyAppId": "cmej9f9cp00xbl10b8zwjifec",
       "eas": {
         "projectId": "your-project-id-here"
       }

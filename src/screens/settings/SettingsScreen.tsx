@@ -88,12 +88,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate }) =>
               <Icon name="edit" size={12} color={theme.colors.white} />
             </View>
           </View>
-          <Text style={styles.userName}>
-            {user?.user_metadata?.full_name ||
-              user?.user_metadata?.name ||
-              user?.email?.split('@')[0] ||
-              'User'}
-          </Text>
+          <Text style={styles.userName}>{user?.name || user?.email?.split('@')[0] || 'User'}</Text>
           <Text style={styles.userHandle}>{user?.email || ''}</Text>
         </View>
 

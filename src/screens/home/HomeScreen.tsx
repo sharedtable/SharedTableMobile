@@ -23,10 +23,16 @@ import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface HomeScreenProps {
+  navigation?: any;
+  route?: any;
   onNavigate?: (screen: string, data?: any) => void;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({
+  navigation,
+  route: _route,
+  onNavigate,
+}) => {
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabName>('home');
   const [bookingLoading, setBookingLoading] = useState(false);
@@ -103,14 +109,31 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
   };
 
   const handleTabPress = (tab: TabName) => {
-    if (tab === 'dashboard') {
-      onNavigate?.('dashboard');
-    } else if (tab === 'profile') {
-      onNavigate?.('profile');
-    } else if (tab !== 'home') {
-      setActiveTab(tab);
-      console.log('Navigate to:', tab);
+    // Use React Navigation if available (when in MainTabNavigator)
+    if (navigation?.navigate) {
+      if (tab === 'profile') {
+        navigation.navigate('Profile');
+      } else if (tab === 'events') {
+        navigation.navigate('Events');
+      } else if (tab === 'dashboard') {
+        navigation.navigate('Dashboard');
+      } else {
+        setActiveTab(tab);
+      }
+    }
+    // Otherwise use the onNavigate prop (when in App.tsx)
+    else if (onNavigate) {
+      if (tab === 'profile') {
+        onNavigate('profile');
+      } else if (tab === 'events') {
+        onNavigate('events');
+      } else if (tab === 'dashboard') {
+        onNavigate('dashboard');
+      } else {
+        setActiveTab(tab);
+      }
     } else {
+      console.warn('No navigation method available');
       setActiveTab(tab);
     }
   };
@@ -284,8 +307,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
               </Pressable>
             </View>
 
-            {/* Bottom Padding for Tab Bar */}
-            <View style={{ height: scaleHeight(100) }} />
+            {/* Bottom Padding */}
+            <View style={{ height: scaleHeight(20) }} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

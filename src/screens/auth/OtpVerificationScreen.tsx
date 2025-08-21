@@ -16,326 +16,330 @@ import {
   Alert,
 } from 'react-native';
 
-import { useAuth } from '@/lib/auth';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface OtpVerificationScreenProps {
   email: string;
-  onNavigate?: (screen: string, data?: any) => void;
+  onNavigate?: (screen: string, data?: Record<string, unknown>) => void;
   onBack?: () => void;
+  privyVerifyCode: (code: string) => Promise<void>;
+  privySendCode: (email: string) => Promise<void>;
 }
 
-export const OtpVerificationScreen = memo<OtpVerificationScreenProps>(
-  ({ email, onNavigate, onBack }) => {
-    const [otp, setOtp] = useState(['', '', '', '', '', '']);
-    const [resendTimer, setResendTimer] = useState(60);
-    const [canResend, setCanResend] = useState(false);
-    const [isVerifying, setIsVerifying] = useState(false);
+export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) => {
+  const { email, onNavigate: _onNavigate, onBack, privyVerifyCode, privySendCode } = props;
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [resendTimer, setResendTimer] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
-    const { verifyOtp, resendOtp, loading } = useAuth();
-    const inputRefs = useRef<(TextInput | null)[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const inputRefs = useRef<(TextInput | null)[]>([]);
 
-    // Start countdown timer
-    useEffect(() => {
-      const timer = setInterval(() => {
-        setResendTimer((prev) => {
-          if (prev <= 1) {
-            setCanResend(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+  // Start countdown timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setResendTimer((prev) => {
+        if (prev <= 1) {
+          setCanResend(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
-      return () => clearInterval(timer);
-    }, []);
+    return () => clearInterval(timer);
+  }, []);
 
-    // Auto-focus first input and check clipboard
-    useEffect(() => {
-      const initializeOtpInput = async () => {
-        // Focus first input
-        setTimeout(() => {
-          inputRefs.current[0]?.focus();
-        }, 100);
+  // Auto-focus first input and check clipboard
+  useEffect(() => {
+    const initializeOtpInput = async () => {
+      // Focus first input
+      setTimeout(() => {
+        inputRefs.current[0]?.focus();
+      }, 100);
 
-        // Check if there's a potential OTP in clipboard
-        try {
-          const clipboardText = await Clipboard.getStringAsync();
-          const otpMatch = clipboardText.match(/\b\d{6}\b/);
+      // Check if there's a potential OTP in clipboard
+      try {
+        const clipboardText = await Clipboard.getStringAsync();
+        const otpMatch = clipboardText.match(/\b\d{6}\b/);
 
-          if (otpMatch) {
-            // Ask user if they want to use clipboard OTP
-            Alert.alert(
-              'Use Copied Code?',
-              `We found a 6-digit code "${otpMatch[0]}" in your clipboard. Would you like to use it?`,
-              [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Use Code',
-                  onPress: () => {
-                    const digits = otpMatch[0].split('');
-                    setOtp(digits);
-                    // Auto-verify after a short delay
-                    setTimeout(() => {
-                      handleVerifyOtp(otpMatch[0]);
-                    }, 500);
-                  },
+        if (otpMatch) {
+          // Ask user if they want to use clipboard OTP
+          Alert.alert(
+            'Use Copied Code?',
+            `We found a 6-digit code "${otpMatch[0]}" in your clipboard. Would you like to use it?`,
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Use Code',
+                onPress: () => {
+                  const digits = otpMatch[0].split('');
+                  setOtp(digits);
+                  // Auto-verify after a short delay
+                  setTimeout(() => {
+                    handleVerifyOtp(otpMatch[0]);
+                  }, 500);
                 },
-              ]
-            );
-          }
-        } catch (error) {
-          // Clipboard access failed, continue normally
-          console.log('Clipboard access failed:', error);
+              },
+            ]
+          );
         }
-      };
-
-      initializeOtpInput();
-    }, []);
-
-    const handleOtpChange = (text: string, index: number) => {
-      // Only allow numeric input
-      const numericText = text.replace(/[^0-9]/g, '');
-
-      // Handle pasted multi-digit input
-      if (numericText.length > 1) {
-        // User pasted multiple digits
-        const pastedDigits = numericText.slice(0, 6).split('');
-        const newOtp = [...otp];
-
-        // Fill in digits starting from current index
-        for (let i = 0; i < pastedDigits.length && index + i < 6; i++) {
-          newOtp[index + i] = pastedDigits[i];
-        }
-
-        setOtp(newOtp);
-
-        // Focus the next empty input or last input
-        const nextEmptyIndex = newOtp.findIndex((digit, i) => i > index && digit === '');
-        if (nextEmptyIndex !== -1) {
-          inputRefs.current[nextEmptyIndex]?.focus();
-        } else {
-          inputRefs.current[5]?.focus();
-        }
-
-        // Auto-verify if complete
-        if (newOtp.every((digit) => digit !== '')) {
-          setTimeout(() => {
-            handleVerifyOtp(newOtp.join(''));
-          }, 300);
-        }
-
-        return;
-      }
-
-      // Handle single digit input
-      if (numericText.length <= 1) {
-        const newOtp = [...otp];
-        newOtp[index] = numericText;
-        setOtp(newOtp);
-
-        // Auto-focus next input
-        if (numericText && index < 5) {
-          inputRefs.current[index + 1]?.focus();
-        }
-
-        // Auto-verify when all digits are entered
-        if (index === 5 && numericText) {
-          const completeOtp = newOtp.join('');
-          if (completeOtp.length === 6) {
-            setTimeout(() => {
-              handleVerifyOtp(completeOtp);
-            }, 300);
-          }
-        }
+      } catch (error) {
+        // Clipboard access failed, continue normally
+        console.log('Clipboard access failed:', error);
       }
     };
 
-    const handleKeyPress = (e: any, index: number) => {
-      if (e.nativeEvent.key === 'Backspace') {
-        if (!otp[index] && index > 0) {
-          // Current field is empty, go back and clear previous
-          const newOtp = [...otp];
-          newOtp[index - 1] = '';
-          setOtp(newOtp);
-          inputRefs.current[index - 1]?.focus();
-        } else if (otp[index]) {
-          // Current field has content, clear it (handled by onChangeText)
-          // The TextInput will handle clearing the current field
-        }
-      }
-    };
+    initializeOtpInput();
+  }, []);
 
-    // Handle focus on OTP container tap
-    const handleContainerPress = () => {
-      // Find first empty input or focus last one
-      const firstEmptyIndex = otp.findIndex((digit) => digit === '');
-      if (firstEmptyIndex !== -1) {
-        inputRefs.current[firstEmptyIndex]?.focus();
+  const handleOtpChange = (text: string, index: number) => {
+    // Only allow numeric input
+    const numericText = text.replace(/[^0-9]/g, '');
+
+    // Handle pasted multi-digit input
+    if (numericText.length > 1) {
+      // User pasted multiple digits
+      const pastedDigits = numericText.slice(0, 6).split('');
+      const newOtp = [...otp];
+
+      // Fill in digits starting from current index
+      for (let i = 0; i < pastedDigits.length && index + i < 6; i++) {
+        newOtp[index + i] = pastedDigits[i];
+      }
+
+      setOtp(newOtp);
+
+      // Focus the next empty input or last input
+      const nextEmptyIndex = newOtp.findIndex((digit, i) => i > index && digit === '');
+      if (nextEmptyIndex !== -1) {
+        inputRefs.current[nextEmptyIndex]?.focus();
       } else {
         inputRefs.current[5]?.focus();
       }
-    };
 
-    // Add function to clear all OTP
-    const clearOtp = () => {
-      setOtp(['', '', '', '', '', '']);
-      inputRefs.current[0]?.focus();
-    };
-
-    const handleVerifyOtp = async (otpCode?: string) => {
-      const code = otpCode || otp.join('');
-
-      if (code.length !== 6 || isVerifying) {
-        return;
+      // Auto-verify if complete
+      if (newOtp.every((digit) => digit !== '')) {
+        setTimeout(() => {
+          handleVerifyOtp(newOtp.join(''));
+        }, 300);
       }
 
-      setIsVerifying(true);
-      Keyboard.dismiss();
+      return;
+    }
 
-      try {
-        const success = await verifyOtp(email, code);
+    // Handle single digit input
+    if (numericText.length <= 1) {
+      const newOtp = [...otp];
+      newOtp[index] = numericText;
+      setOtp(newOtp);
 
-        if (success && onNavigate) {
-          // Navigate to main app
-          onNavigate('home');
-        } else {
-          // Verification failed, clear OTP and show feedback
-          clearOtp();
+      // Auto-focus next input
+      if (numericText && index < 5) {
+        inputRefs.current[index + 1]?.focus();
+      }
+
+      // Auto-verify when all digits are entered
+      if (index === 5 && numericText) {
+        const completeOtp = newOtp.join('');
+        if (completeOtp.length === 6) {
+          setTimeout(() => {
+            handleVerifyOtp(completeOtp);
+          }, 300);
         }
-      } catch (error) {
-        console.error('OTP verification error:', error);
-        clearOtp();
-      } finally {
-        setIsVerifying(false);
       }
-    };
+    }
+  };
 
-    const handleResendOtp = async () => {
-      if (!canResend || loading) return;
-
-      const success = await resendOtp(email);
-
-      if (success) {
-        // Reset timer and clear OTP
-        setResendTimer(60);
-        setCanResend(false);
-        clearOtp();
-
-        // Show feedback
-        Alert.alert('Code Sent', 'A new verification code has been sent to your email.', [
-          { text: 'OK' },
-        ]);
+  const handleKeyPress = (e: any, index: number) => {
+    if (e.nativeEvent.key === 'Backspace') {
+      if (!otp[index] && index > 0) {
+        // Current field is empty, go back and clear previous
+        const newOtp = [...otp];
+        newOtp[index - 1] = '';
+        setOtp(newOtp);
+        inputRefs.current[index - 1]?.focus();
+      } else if (otp[index]) {
+        // Current field has content, clear it (handled by onChangeText)
+        // The TextInput will handle clearing the current field
       }
-    };
+    }
+  };
 
-    const isOtpComplete = otp.every((digit) => digit !== '');
+  // Handle focus on OTP container tap
+  const handleContainerPress = () => {
+    // Find first empty input or focus last one
+    const firstEmptyIndex = otp.findIndex((digit) => digit === '');
+    if (firstEmptyIndex !== -1) {
+      inputRefs.current[firstEmptyIndex]?.focus();
+    } else {
+      inputRefs.current[5]?.focus();
+    }
+  };
 
-    return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <SafeAreaView style={styles.container}>
-          <KeyboardAvoidingView
-            style={styles.keyboardView}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+  // Add function to clear all OTP
+  const clearOtp = () => {
+    setOtp(['', '', '', '', '', '']);
+    inputRefs.current[0]?.focus();
+  };
+
+  const handleVerifyOtp = async (otpCode?: string) => {
+    const code = otpCode || otp.join('');
+
+    if (code.length !== 6 || isVerifying) {
+      return;
+    }
+
+    setIsVerifying(true);
+    Keyboard.dismiss();
+
+    try {
+      setIsLoading(true);
+      // Use Privy verification passed from parent
+      await privyVerifyCode(code);
+      // Navigation will be handled by parent component via Privy auth state changes
+    } catch (error) {
+      console.error('OTP verification error:', error);
+      clearOtp();
+      Alert.alert('Verification Failed', 'The code you entered is incorrect. Please try again.');
+    } finally {
+      setIsVerifying(false);
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!canResend || isLoading) return;
+
+    try {
+      setIsLoading(true);
+      // Use Privy resend passed from parent
+      await privySendCode(email);
+
+      // Reset timer and clear OTP
+      setResendTimer(60);
+      setCanResend(false);
+      clearOtp();
+
+      // Show feedback
+      Alert.alert('Code Sent', 'A new verification code has been sent to your email.', [
+        { text: 'OK' },
+      ]);
+    } catch (error) {
+      console.error('Resend OTP error:', error);
+      Alert.alert('Error', 'Failed to resend verification code. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const isOtpComplete = otp.every((digit) => digit !== '');
+
+  return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          style={styles.keyboardView}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            bounces={false}
           >
-            <ScrollView
-              contentContainerStyle={styles.scrollContent}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-              bounces={false}
-            >
-              <View style={styles.content}>
-                {/* Back Button */}
-                {onBack && (
-                  <Pressable style={styles.backButton} onPress={onBack}>
-                    <Text style={styles.backButtonText}>← Back</Text>
-                  </Pressable>
-                )}
+            <View style={styles.content}>
+              {/* Back Button */}
+              {onBack && (
+                <Pressable style={styles.backButton} onPress={onBack}>
+                  <Text style={styles.backButtonText}>← Back</Text>
+                </Pressable>
+              )}
 
-                {/* Title Section */}
-                <View style={styles.titleSection}>
-                  <Text style={styles.title}>Enter Verification Code</Text>
-                  <Text style={styles.subtitle}>We sent a 6-digit code to</Text>
-                  <Text style={styles.email}>{email}</Text>
-                </View>
-
-                {/* OTP Input Section */}
-                <View style={styles.otpSection}>
-                  <Pressable style={styles.otpContainer} onPress={handleContainerPress}>
-                    {otp.map((digit, index) => (
-                      <TextInput
-                        key={index}
-                        ref={(ref) => {
-                          inputRefs.current[index] = ref;
-                        }}
-                        style={[
-                          styles.otpInput,
-                          digit && styles.otpInputFilled,
-                          (isVerifying || loading) && styles.otpInputDisabled,
-                        ]}
-                        value={digit}
-                        onChangeText={(text) => handleOtpChange(text, index)}
-                        onKeyPress={(e) => handleKeyPress(e, index)}
-                        keyboardType="numeric"
-                        maxLength={6} // Allow pasting multiple digits
-                        textAlign="center"
-                        selectTextOnFocus
-                        autoComplete="one-time-code"
-                        autoFocus={index === 0}
-                        editable={!isVerifying && !loading}
-                        contextMenuHidden={false} // Allow paste
-                      />
-                    ))}
-                  </Pressable>
-
-                  {/* Paste hint */}
-                  <Text style={styles.pasteHint}>Tap to focus • Long press to paste</Text>
-
-                  {/* Verify Button */}
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.verifyButton,
-                      (!isOtpComplete || isVerifying || loading) && styles.verifyButtonDisabled,
-                      pressed && styles.buttonPressed,
-                    ]}
-                    onPress={() => handleVerifyOtp()}
-                    disabled={loading || !isOtpComplete || isVerifying}
-                  >
-                    {loading || isVerifying ? (
-                      <ActivityIndicator color="#FFFFFF" size="small" />
-                    ) : (
-                      <Text style={styles.verifyButtonText}>
-                        {isOtpComplete ? 'Verify & Continue' : 'Enter 6-digit code'}
-                      </Text>
-                    )}
-                  </Pressable>
-
-                  {/* Resend Section */}
-                  <View style={styles.resendSection}>
-                    <Text style={styles.resendText}>Didn't receive the code?</Text>
-
-                    {canResend ? (
-                      <Pressable onPress={handleResendOtp} disabled={loading}>
-                        <Text style={styles.resendButton}>Resend Code</Text>
-                      </Pressable>
-                    ) : (
-                      <Text style={styles.resendTimer}>Resend in {resendTimer}s</Text>
-                    )}
-                  </View>
-                </View>
-
-                {/* Bottom Spacing */}
-                <View style={styles.bottomSpacer} />
+              {/* Title Section */}
+              <View style={styles.titleSection}>
+                <Text style={styles.title}>Enter Verification Code</Text>
+                <Text style={styles.subtitle}>We sent a 6-digit code to</Text>
+                <Text style={styles.email}>{email}</Text>
               </View>
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </SafeAreaView>
-      </TouchableWithoutFeedback>
-    );
-  }
-);
+
+              {/* OTP Input Section */}
+              <View style={styles.otpSection}>
+                <Pressable style={styles.otpContainer} onPress={handleContainerPress}>
+                  {otp.map((digit, index) => (
+                    <TextInput
+                      key={index}
+                      ref={(ref) => {
+                        inputRefs.current[index] = ref;
+                      }}
+                      style={[
+                        styles.otpInput,
+                        digit && styles.otpInputFilled,
+                        (isVerifying || isLoading) && styles.otpInputDisabled,
+                      ]}
+                      value={digit}
+                      onChangeText={(text) => handleOtpChange(text, index)}
+                      onKeyPress={(e) => handleKeyPress(e, index)}
+                      keyboardType="numeric"
+                      maxLength={6} // Allow pasting multiple digits
+                      textAlign="center"
+                      selectTextOnFocus
+                      autoComplete="one-time-code"
+                      autoFocus={index === 0}
+                      editable={!isVerifying && !isLoading}
+                      contextMenuHidden={false} // Allow paste
+                    />
+                  ))}
+                </Pressable>
+
+                {/* Paste hint */}
+                <Text style={styles.pasteHint}>Tap to focus • Long press to paste</Text>
+
+                {/* Verify Button */}
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.verifyButton,
+                    (!isOtpComplete || isVerifying || isLoading) && styles.verifyButtonDisabled,
+                    pressed && styles.buttonPressed,
+                  ]}
+                  onPress={() => handleVerifyOtp()}
+                  disabled={isLoading || !isOtpComplete || isVerifying}
+                >
+                  {isLoading || isVerifying ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <Text style={styles.verifyButtonText}>
+                      {isOtpComplete ? 'Verify & Continue' : 'Enter 6-digit code'}
+                    </Text>
+                  )}
+                </Pressable>
+
+                {/* Resend Section */}
+                <View style={styles.resendSection}>
+                  <Text style={styles.resendText}>Didn't receive the code?</Text>
+
+                  {canResend ? (
+                    <Pressable onPress={handleResendOtp} disabled={isLoading}>
+                      <Text style={styles.resendButton}>Resend Code</Text>
+                    </Pressable>
+                  ) : (
+                    <Text style={styles.resendTimer}>Resend in {resendTimer}s</Text>
+                  )}
+                </View>
+              </View>
+
+              {/* Bottom Spacing */}
+              <View style={styles.bottomSpacer} />
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
+  );
+});
 
 OtpVerificationScreen.displayName = 'OtpVerificationScreen';
 

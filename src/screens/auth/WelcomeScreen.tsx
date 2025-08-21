@@ -17,7 +17,8 @@ import {
 
 import { AppleIcon } from '@/components/icons/AppleIcon';
 import { GoogleIcon } from '@/components/icons/GoogleIcon';
-import { useAuth } from '@/lib/auth';
+import { usePrivyAuth } from '@/hooks/usePrivyAuth';
+import { useAuthStore } from '@/store/authStore';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -27,22 +28,33 @@ interface WelcomeScreenProps {
   onNavigate?: (screen: string, data?: Record<string, unknown>) => void;
 }
 
-export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
+export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
+  const { onNavigate } = props;
   const [email, setEmail] = useState('');
   const [showOtpScreen, setShowOtpScreen] = useState(false);
 
-  const { sendEmailOtp, signInWithGoogle, signInWithApple, loading, user, isNewUser } = useAuth();
+  const {
+    user: privyUser,
+    isAuthenticated: privyAuthenticated,
+    sendEmailCode,
+    verifyEmailCode: privyVerifyCode,
+    loginWithGoogle: privyGoogleLogin,
+    loginWithApple: privyAppleLogin,
+    isLoading: privyLoading,
+  } = usePrivyAuth();
+  const { setPrivyUser } = useAuthStore();
 
-  // Handle navigation after successful authentication
+  // No longer needed - Privy ready state is handled internally
+
+  // Handle Privy authentication
   useEffect(() => {
-    if (user && onNavigate) {
-      if (isNewUser) {
-        onNavigate('onboarding-name');
-      } else {
-        onNavigate('home');
-      }
+    if (privyAuthenticated && privyUser && onNavigate) {
+      setPrivyUser(privyUser);
+      // For now, treat all Privy users as existing users
+      // You can implement logic to check if it's a new user based on your backend
+      onNavigate('home');
     }
-  }, [user, isNewUser, onNavigate]);
+  }, [privyAuthenticated, privyUser, onNavigate, setPrivyUser]);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -63,20 +75,31 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
     // Dismiss keyboard before processing
     Keyboard.dismiss();
 
-    const success = await sendEmailOtp({ email });
-
-    if (success) {
-      // Show OTP verification screen
+    try {
+      await sendEmailCode(email);
       setShowOtpScreen(true);
+      Alert.alert('Check your email', `We sent a verification code to ${email}`);
+    } catch (error) {
+      Alert.alert('Error', (error as Error).message || 'Failed to send verification code');
     }
   };
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle();
+      await privyGoogleLogin();
       // Navigation will be handled by useEffect when user state updates
     } catch (error) {
-      // Sign in failed - error handling already handled by auth service
+      // Check if user cancelled
+      const errorMessage = (error as Error).message || '';
+      const isCancellation =
+        errorMessage.toLowerCase().includes('cancel') ||
+        errorMessage.toLowerCase().includes('cancelled') ||
+        errorMessage.toLowerCase().includes('abort') ||
+        errorMessage.toLowerCase().includes('user closed');
+
+      if (!isCancellation) {
+        Alert.alert('Error', 'Failed to sign in with Google. Please try again.');
+      }
     }
   };
 
@@ -86,11 +109,15 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
       return;
     }
 
-    const success = await signInWithApple();
-    if (success && onNavigate) {
-      onNavigate('home');
+    try {
+      await privyAppleLogin();
+      // Navigation will be handled by useEffect when user state updates
+    } catch (error) {
+      Alert.alert('Error', 'Failed to sign in with Apple. Please try again.');
     }
   };
+
+  const isLoading = privyLoading;
 
   // Show OTP screen if needed
   if (showOtpScreen) {
@@ -99,6 +126,8 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
         email={email}
         onNavigate={onNavigate}
         onBack={() => setShowOtpScreen(false)}
+        privyVerifyCode={privyVerifyCode}
+        privySendCode={sendEmailCode}
       />
     );
   }
@@ -149,9 +178,9 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
                       pressed && styles.buttonPressed,
                     ]}
                     onPress={handleEmailAuth}
-                    disabled={loading || !email}
+                    disabled={isLoading || !email}
                   >
-                    {loading ? (
+                    {isLoading ? (
                       <ActivityIndicator color="#FFFFFF" size="small" />
                     ) : (
                       <Text style={styles.authButtonText}>Continue with Email</Text>
@@ -176,9 +205,16 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
                       pressed && styles.buttonPressed,
                     ]}
                     onPress={handleGoogleSignIn}
+                    disabled={isLoading}
                   >
-                    <GoogleIcon size={20} />
-                    <Text style={styles.googleButtonText}>Continue with Google</Text>
+                    {isLoading ? (
+                      <ActivityIndicator color="#000000" size="small" />
+                    ) : (
+                      <>
+                        <GoogleIcon size={20} />
+                        <Text style={styles.googleButtonText}>Continue with Google</Text>
+                      </>
+                    )}
                   </Pressable>
 
                   {/* Apple Button */}
@@ -190,9 +226,16 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(({ onNavigate }) => {
                         pressed && styles.buttonPressed,
                       ]}
                       onPress={handleAppleSignIn}
+                      disabled={isLoading}
                     >
-                      <AppleIcon size={20} color="#FFFFFF" />
-                      <Text style={styles.appleButtonText}>Continue with Apple</Text>
+                      {isLoading ? (
+                        <ActivityIndicator color="#FFFFFF" size="small" />
+                      ) : (
+                        <>
+                          <AppleIcon size={20} color="#FFFFFF" />
+                          <Text style={styles.appleButtonText}>Continue with Apple</Text>
+                        </>
+                      )}
                     </Pressable>
                   )}
                 </View>
@@ -372,15 +415,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: scaleHeight(40),
     paddingTop: scaleHeight(80),
-  },
-  toggleButton: {
-    alignItems: 'center',
-    paddingVertical: scaleHeight(8),
-  },
-  toggleButtonText: {
-    color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(16),
-    fontWeight: '500',
   },
 });

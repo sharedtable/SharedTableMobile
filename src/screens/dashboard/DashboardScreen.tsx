@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar } from 'react-native';
-// import { SafeAreaView } from 'react-native-safe-area-context';
 
-// import { Icon } from '@/components/base/Icon';
 import { GourmandProgressCard } from '@/components/dashboard/GourmandProgressCard';
 import { LeaderboardView } from '@/components/dashboard/LeaderboardView';
 import { LoyaltyShopView } from '@/components/dashboard/LoyaltyShopView';
@@ -16,22 +14,45 @@ import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface DashboardScreenProps {
+  navigation?: any;
+  route?: any;
   onNavigate?: (screen: string, data?: any) => void;
 }
 
 type DashboardTab = 'overview' | 'leaderboard' | 'quest' | 'loyalty';
 
-export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) => {
+export const DashboardScreen: React.FC<DashboardScreenProps> = ({
+  navigation,
+  route: _route,
+  onNavigate,
+}) => {
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
   const [activeNavTab, setActiveNavTab] = useState<TabName>('dashboard');
 
   const handleTabPress = (tab: TabName) => {
-    if (tab === 'home') {
-      onNavigate?.('home');
-    } else if (tab === 'profile') {
-      onNavigate?.('profile');
-    } else {
-      setActiveNavTab(tab);
+    // Use React Navigation if available
+    if (navigation?.navigate) {
+      if (tab === 'home') {
+        navigation.navigate('Home');
+      } else if (tab === 'profile') {
+        navigation.navigate('Profile');
+      } else if (tab === 'events') {
+        navigation.navigate('Events');
+      } else {
+        setActiveNavTab(tab);
+      }
+    }
+    // Otherwise use the onNavigate prop
+    else if (onNavigate) {
+      if (tab === 'home') {
+        onNavigate('home');
+      } else if (tab === 'profile') {
+        onNavigate('profile');
+      } else if (tab === 'events') {
+        onNavigate('events');
+      } else {
+        setActiveNavTab(tab);
+      }
     }
   };
 

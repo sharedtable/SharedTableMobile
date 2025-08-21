@@ -5,7 +5,6 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl } 
 import { useAuth } from '@/lib/auth';
 import { RateLimitService } from '@/lib/auth/services/rateLimitService';
 import { SessionService } from '@/lib/auth/services/sessionService';
-import { AuthFlowTestRunner } from '@/lib/auth/tests/authFlowTest';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -114,8 +113,8 @@ export const AuthMonitoringDashboard = memo<AuthMonitoringDashboardProps>(({ tes
   const runAuthTests = async () => {
     try {
       setLoading(true);
-      const suites = await AuthFlowTestRunner.runAllTests();
-      AuthFlowTestRunner.showTestResultsAlert(suites);
+      // Test functionality has been removed
+      Alert.alert('Info', 'Test functionality is currently disabled');
     } catch (error) {
       console.error('Test execution failed:', error);
       Alert.alert('Test Error', 'Failed to run authentication tests');

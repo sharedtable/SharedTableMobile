@@ -1,3 +1,6 @@
+// Import polyfills first - MUST be before any other imports
+import './global';
+
 import {
   useFonts as useInterFonts,
   Inter_400Regular,
@@ -15,6 +18,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { AuthWrapper } from '@/lib/auth/components/AuthWrapper';
 import { OnboardingProvider } from '@/lib/onboarding';
+import { PrivyProvider } from '@/lib/privy/PrivyProvider';
 import { WelcomeScreen } from '@/screens/auth/WelcomeScreen';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { FilterScreen } from '@/screens/filter/FilterScreen';
@@ -33,6 +37,7 @@ import { OnboardingPersonalityScreen } from '@/screens/onboarding/OnboardingPers
 import { OnboardingPhotoScreen } from '@/screens/onboarding/OnboardingPhotoScreen';
 import { OnboardingRelationshipScreen } from '@/screens/onboarding/OnboardingRelationshipScreen';
 import { OnboardingWorkScreen } from '@/screens/onboarding/OnboardingWorkScreen';
+import { ProfileScreen } from '@/screens/profile/ProfileScreen';
 import { ReviewScreen } from '@/screens/review/ReviewScreen';
 import { AboutScreen } from '@/screens/settings/AboutScreen';
 import { AccountScreen } from '@/screens/settings/AccountScreen';
@@ -270,7 +275,7 @@ function AppContent() {
       case 'dashboard':
         return <DashboardScreen onNavigate={handleNavigate} />;
       case 'profile':
-        return <DashboardScreen onNavigate={handleNavigate} />;
+        return <ProfileScreen onNavigate={handleNavigate} />;
       case 'settings':
         return <SettingsScreen onNavigate={handleNavigate} />;
       case 'notifications':
@@ -303,13 +308,15 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <OnboardingProvider>
-        <AuthWrapper>
-          <AppContent />
-        </AuthWrapper>
-      </OnboardingProvider>
-    </AuthProvider>
+    <PrivyProvider>
+      <AuthProvider>
+        <OnboardingProvider>
+          <AuthWrapper>
+            <AppContent />
+          </AuthWrapper>
+        </OnboardingProvider>
+      </AuthProvider>
+    </PrivyProvider>
   );
 }
 
