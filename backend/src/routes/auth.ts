@@ -281,6 +281,7 @@ router.post('/verify', async (req, res, next) => {
         },
       });
     } catch (error) {
+      logger.error('Token verification failed:', error);
       throw new AppError('Invalid or expired token', 401);
     }
   } catch (error) {

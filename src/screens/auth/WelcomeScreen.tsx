@@ -208,6 +208,7 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
       await privyAppleLogin();
       // Navigation will be handled by useEffect when user state updates
     } catch (error) {
+      console.error('Apple Sign In Error:', error);
       Alert.alert('Error', 'Failed to sign in with Apple. Please try again.');
     }
   };

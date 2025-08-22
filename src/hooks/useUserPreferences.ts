@@ -55,7 +55,6 @@ export const useUserPreferences = (): UserPreferencesData => {
   // Load preferences from database and local storage
   useEffect(() => {
     loadPreferences();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.email]);
 
   const loadPreferences = async () => {

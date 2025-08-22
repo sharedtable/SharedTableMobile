@@ -74,6 +74,7 @@ export class EventsService {
 
       return { regularDinners, singlesDinners };
     } catch (error) {
+      console.error('Error fetching events by type:', error);
       return { regularDinners: [], singlesDinners: [] };
     }
   }
@@ -121,6 +122,7 @@ export class EventsService {
       const dateTimeString = `${eventDate}T${startTime}`;
       return new Date(dateTimeString);
     } catch (error) {
+      console.error('Date parsing error:', error);
       return new Date();
     }
   }
@@ -150,6 +152,7 @@ export class EventsService {
 
       return { formattedDate, formattedTime, formattedDateTime };
     } catch (error) {
+      console.error('Date formatting error:', error);
       return {
         formattedDate: 'Invalid Date',
         formattedTime: 'Invalid Time',
@@ -224,6 +227,7 @@ export class EventsService {
 
       return true;
     } catch (error) {
+      console.error('Update event capacity error:', error);
       return false;
     }
   }
@@ -245,6 +249,7 @@ export class EventsService {
 
       return EventsService.transformEvent(event);
     } catch (error) {
+      console.error('Get event by ID error:', error);
       return null;
     }
   }
