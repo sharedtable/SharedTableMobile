@@ -369,21 +369,6 @@ git push heroku main
 - [ ] Test auth flow end-to-end
 - [ ] Verify database backups
 
-## Environment Variables
-
-Configure in `app.json`:
-
-```json
-{
-  "expo": {
-    "extra": {
-      "apiUrl": "http://localhost:3000/api",
-      "productionApiUrl": "https://sharedtable.vercel.app/api"
-    }
-  }
-}
-```
-
 ## Troubleshooting
 
 ### Backend Connection Issues
@@ -475,3 +460,259 @@ PRIVY_APP_SECRET=...          # From Privy settings
 ## Contact
 
 [Your Contact Info]
+
+# Jiashu's Notes
+
+1. Create your `.env` files
+
+```bash
+cp .env.example .env
+cp backend/.env.example backend/.env
+```
+
+2. Update both accordingly.
+
+`.env`:
+
+```bash
+EXPO_PUBLIC_SUPABASE_URL
+EXPO_PUBLIC_SUPABASE_ANON_KEY
+EXPO_PUBLIC_SUPABASE_SERVICE_KEY
+EXPO_PUBLIC_API_URL
+EXPO_PUBLIC_PRIVY_APP_ID
+EXPO_PUBLIC_STREAM_API_KEY
+```
+
+`backend/.env`:
+
+```bash
+SUPABASE_URL
+SUPABASE_ANON_KEY
+SUPABASE_SERVICE_KEY
+PRIVY_APP_ID
+PRIVY_APP_SECRET
+STREAM_API_KEY
+STREAM_API_SECRET
+```
+
+3. Install Dependencies
+
+```bash
+npm install
+cd backend
+npm install
+```
+
+You should be good to go at this point in terms of environment setup.
+
+## Developer flow
+
+You'll need two terminals. One for the frontend, one for the backend.
+
+frontend:
+
+```bash
+npx expo start --go
+a #open on android
+```
+
+backend:
+
+```bash
+cd backend
+npm run dev
+```
+
+### Helpful Command on Expo
+
+```bash
+r # reloads the app
+s # MAKE SURE YOU READ! Switches between Expo Go and dev build.
+```
+
+```
+npm run lint --fix
+```
+
+## Windows Android Emulator Setup:
+
+### Install the Android SDK
+
+- Install [Android Studios](https://developer.android.com/studio)
+  - Standard installation should be fine.
+
+#### Additional Configurations
+
+In Android Studio, under `Settings` (bottom left), go to `Language & Frameworks` > `Android SDK`
+
+Under `SDK Platforms`, I just have the latest. Should probably have a few other versions for additional testing.
+
+- Android 16.0 ("Baklava")
+
+Under `SDK Tools`, ensure you have the following at the minimum.
+
+- `Android SDK Build-Tools`
+- `Android SDK Command Line Tools`
+- `CMake`
+- `Android Emulator`
+- `Android Emulator hypervisor driver`
+- `Android SDK Platform-Tools`
+
+Take note of your SDK location, specified at the top of this window. This is your ANDROID_HOME.
+
+On Windows, add ANDROID_HOME to your environment variables:
+
+```bash
+ANDROID_HOME="C:\Users\<USER_NAME>\AppData\Local\Android\Sdk"
+```
+
+On Windows, add the following to your PATH variable:
+
+```bash
+$ANDROID_HOME\platform-tools
+$ANDROID_HOME\cmdline-tools\latest\bin
+$ANDROID_HOME\cmdline-tools\latest
+```
+
+#### Additional WSL (Windows Subsystem for Linux) Setup:
+
+On Windows, add ANDROID_HOME to your environment variables:
+
+```bash
+# This allows ANDROID_HOME access on WSL
+WSLENV="ANDROID_HOME/p"
+```
+
+Open WSL and add the following to your `.bashrc` file
+
+```bash
+export PATH=$PATH:$ANDROID_HOME/latest/cmdline-tools
+export PATH=$PATH:$ANDROID_HOME/latest/cmdline-tools/bin
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+```
+
+Ensure `$ANDROID_HOME` works in your WSL environment, without specifying it in `.bashrc`. If it doesn't work... google is your friend :D.
+
+##### Troubleshooting
+
+You might have to run the following since Windows executables have a `.exe` tag, which interfere's with expo and npm's usage of `adb`.
+
+```bash
+sudo cp /mnt/c/Users/<USER_NAME>\AppData/Local/Android/sdk/platform-tools/adb.exe /mnt/c/Users/<USER_NAME>\AppData/Local/Android/sdk/platform-tools/adb
+```
+
+### Set up your Android emulator
+
+It's very simple if you go through Android Studio:
+
+`Android Studio` > `Projects` > `More Actions` > `Virtual Device Manager`
+
+Feel free to create whatever Android Emulator you want. I just went with the `Pixel 9 Pro`.
+
+Once you've created your emulator, feel free to open it. Give it a few minutes to startup initially.
+
+You can verify your process:
+
+```bash
+username:~$ adb devices
+List of devices attached
+emulator-5554   device
+
+```
+
+#### Troubleshooting
+
+If your emulator doesn't show up, try killing your adb server and restarting it.
+
+```
+adb kill-server
+
+adb nodaemon server
+```
+
+Note: From my limited understanding, to develop on WSL while running the Android emulator on Windows, you need to use `adb no daemon server`.
+
+#### Expo Go
+
+Install [Expo Go](https://expo.dev/go) on your emulator or device.
+I simply downloaded the Android Emulator APK.
+
+<!-- 1. Ensure your environment is up to date.
+
+```bash
+sudo apt update
+sudo apt upgrade
+sudo apt install zip unzip
+```
+
+Add a folder for the sdk
+
+```bash
+mkdir ~/Android
+cd ~/Android
+```
+
+Go to [Android Studios](https://developer.android.com/studio) and scroll down to the `Command line tools only` section. Find and copy the latest version of the tools. -->
+<!--
+```bash
+# fileName="commandlinetools-linux-13114758_latest.zip"
+fileName="latest_file_name_here"
+wget https://dl.google.com/android/repository/${fileName}
+unzip ${fileName} -d cmdline-tools
+rm -rf ${fileName}
+```
+
+Install zlib and JAVA 21 (Note: 21 because it's the latest LTS version). Add JAVA_HOME environment variable and update path for Java.
+
+```bash
+sudo apt install lib32z1 openjdk-21-jdk
+```
+
+Add this to your .bashrc
+
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+export PATH=$PATH:$JAVA_HOME/bin
+
+export ANDROID_HOME=~/Android
+export PATH=$PATH:$ANDROID_HOME/latest/cmdline-tools
+export PATH=$PATH:$ANDROID_HOME/latest/cmdline-tools/bin
+```
+
+Don't forget to source!
+
+```bash
+. ~/.bashrc
+# or
+source ~/.bashrc
+```
+
+We want to move
+
+```bash
+cd ~/Android/cmdline-tools/
+mv cmdline-tools latest
+cd latest/bin
+./sdkmanager --list
+
+#Scroll through and find the latest
+
+# install_androidPlatforms="platforms;android-36-ext19"
+# install_buildTools="build-tools;36.0.0-rc5"
+# install_cmake="cmake;4.1.0"
+install_androidPlatforms="latest_android_platform_name_here"
+install_buildTools="latest_build_tools_name_here"
+install_cmake="latest_cmake_name_here"
+
+./sdkmanager --install "platform-tools" ${install_androidPlatforms} ${install_buildTools} ${install_cmake}
+```
+
+<!-- ```bash
+export ANDROID_HOME=~/Android
+export PATH=$PATH:$ANDROID_HOME/latest/cmdline-tools
+export PATH=$PATH:$ANDROID_HOME/latest/cmdline-tools/bin
+# export PATH=$PATH:$ANDROID_HOME/cmdline-tools/platform-tools
+``` -->
+
+<!-- https://docs.expo.dev/workflow/android-studio-emulator/#install-watchman-and-jdk -->
