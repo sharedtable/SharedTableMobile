@@ -62,6 +62,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate }) =>
       await logout();
       // Navigation will be handled by AuthWrapper/App based on auth state
     } catch (error) {
+      console.error('Logout failed:', error);
       // Still close modal and let auth state handle navigation
     }
   };

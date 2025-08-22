@@ -27,11 +27,11 @@
       "@config/*": ["src/config/*"]
     }
   },
-  "include": ["src/**/*", "App.tsx", "**/*.ts", "**/*.tsx"],
+  "include": ["src/**/*", "shared/**/*", "App.tsx", "**/*.ts", "**/*.tsx"],
   "exclude": [
     "node_modules",
     "babel.config.js",
-    "metro.config.js",
+    "metro.config.cjs",
     "jest.config.js",
     ".eslintrc.js"
   ]

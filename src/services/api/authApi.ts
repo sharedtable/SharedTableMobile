@@ -4,16 +4,15 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
-import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 
 import { __DEV__, logError } from '@/utils/env';
 
 // API configuration
 // Use your local IP address for development (not localhost)
-const API_BASE_URL = __DEV__
-  ? 'http://192.168.1.5:3001/api' // Replace with your computer's IP address
-  : Constants.expoConfig?.extra?.productionApiUrl || 'https://sharedtable-api.vercel.app/api';
+
+//'http://192.168.1.5:3001/api'
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
@@ -117,6 +116,34 @@ interface UpdateProfileResponse {
 }
 
 export class AuthAPI {
+  /**
+   * Fetches a Stream Chat user token for the authenticated user
+   */
+  static async getChatUserToken(): Promise<string> {
+    const token = await this.getAuthToken();
+    if (!token) {
+      console.error('getChatUserToken: Not authenticated, no token found');
+      throw new Error('Not authenticated');
+    }
+    const response = await apiClient.post<{ success: boolean; token: string }>(
+      '/chat/token',
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.data.success || !response.data.token) {
+      console.error('Failed to fetch chat user token:', response.data);
+      throw new Error('Failed to fetch chat user token');
+    }
+    console.log('Fetched Stream USER_TOKEN:', response.data.token);
+
+    return response.data.token;
+  }
+
   /**
    * Sync Privy user with backend database
    */

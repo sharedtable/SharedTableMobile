@@ -222,7 +222,7 @@ export const ReviewScreen: React.FC<ReviewScreenProps> = ({ onNavigate }) => {
           style={({ pressed }) => [
             styles.submitButton,
             pressed && styles.submitButtonPressed,
-            (!ratings.overall || !recommendToFriend === null || !wouldReturnSoon === null) &&
+            (!ratings.overall || !(recommendToFriend === null) || !(wouldReturnSoon === null)) &&
               styles.submitButtonDisabled,
           ]}
           onPress={handleSubmit}

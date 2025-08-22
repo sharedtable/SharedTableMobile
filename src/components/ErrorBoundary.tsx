@@ -51,7 +51,6 @@ export class ErrorBoundary extends Component<Props, State> {
 
   handleRestart = async () => {
     // @ts-expect-error - Updates.isAvailable is a property, not in namespace
-    // eslint-disable-next-line import/namespace
     if (Updates.isAvailable) {
       await Updates.reloadAsync();
     } else {
