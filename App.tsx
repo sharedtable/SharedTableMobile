@@ -9,98 +9,22 @@ import {
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
 import { useFonts as useKeaniaFonts, KeaniaOne_400Regular } from '@expo-google-fonts/keania-one';
+import { NavigationContainer } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { AuthProvider, useAuth } from '@/lib/auth';
-import { AuthWrapper } from '@/lib/auth/components/AuthWrapper';
-import { OnboardingProvider } from '@/lib/onboarding';
+import { AuthSyncProvider } from '@/components/AuthSyncProvider';
 import { PrivyProvider } from '@/lib/privy/PrivyProvider';
-import { WelcomeScreen } from '@/screens/auth/WelcomeScreen';
-import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
-import { FilterScreen } from '@/screens/filter/FilterScreen';
-import { HomeScreen } from '@/screens/home/HomeScreen';
-import { FAQsScreen } from '@/screens/info/FAQsScreen';
-import { HowItWorksScreen } from '@/screens/info/HowItWorksScreen';
-import { LoadingScreen } from '@/screens/LoadingScreen';
-import { OnboardingBirthdayScreen } from '@/screens/onboarding/OnboardingBirthdayScreen';
-import { OnboardingDependentsScreen } from '@/screens/onboarding/OnboardingDependentsScreen';
-import { OnboardingEthnicityScreen } from '@/screens/onboarding/OnboardingEthnicityScreen';
-import { OnboardingGenderScreen } from '@/screens/onboarding/OnboardingGenderScreen';
-import { OnboardingInterestsScreen } from '@/screens/onboarding/OnboardingInterestsScreen';
-import { OnboardingLifestyleScreen } from '@/screens/onboarding/OnboardingLifestyleScreen';
-import { OnboardingNameScreen } from '@/screens/onboarding/OnboardingNameScreen';
-import { OnboardingPersonalityScreen } from '@/screens/onboarding/OnboardingPersonalityScreen';
-import { OnboardingPhotoScreen } from '@/screens/onboarding/OnboardingPhotoScreen';
-import { OnboardingRelationshipScreen } from '@/screens/onboarding/OnboardingRelationshipScreen';
-import { OnboardingWorkScreen } from '@/screens/onboarding/OnboardingWorkScreen';
-import { ProfileScreen } from '@/screens/profile/ProfileScreen';
-import { ReviewScreen } from '@/screens/review/ReviewScreen';
-import { AboutScreen } from '@/screens/settings/AboutScreen';
-import { AccountScreen } from '@/screens/settings/AccountScreen';
-import { AppearanceScreen } from '@/screens/settings/AppearanceScreen';
-import { NotificationsScreen } from '@/screens/settings/NotificationsScreen';
-import { PrivacySecurityScreen } from '@/screens/settings/PrivacySecurityScreen';
-import { SettingsScreen } from '@/screens/settings/SettingsScreen';
-import { theme } from '@/theme';
+import { RootNavigator } from '@/navigation/RootNavigator';
+import { useAuthStore } from '@/store/authStore';
 
 // Hide the native splash screen immediately
 SplashScreen.hideAsync();
 
-// Inner component that uses auth context
-function AppContent() {
-  const { user, isNewUser, initializing, completeOnboarding } = useAuth();
-  const [currentScreen, setCurrentScreen] = useState<
-    | 'welcome'
-    | 'onboarding-name'
-    | 'onboarding-birthday'
-    | 'onboarding-gender'
-    | 'onboarding-dependents'
-    | 'onboarding-work'
-    | 'onboarding-ethnicity'
-    | 'onboarding-relationship'
-    | 'onboarding-lifestyle'
-    | 'onboarding-personality'
-    | 'onboarding-photo'
-    | 'onboarding-complete'
-    | 'onboarding-photos'
-    | 'onboarding-dietary'
-    | 'onboarding-interests'
-    | 'onboarding-location'
-    | 'onboarding-preferences'
-    | 'onboarding-profile'
-    | 'home'
-    | 'how-it-works'
-    | 'faqs'
-    | 'dashboard'
-    | 'profile'
-    | 'settings'
-    | 'notifications'
-    | 'privacy-security'
-    | 'appearance'
-    | 'account'
-    | 'about'
-    | 'filter'
-    | 'review'
-  >('welcome');
-
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Handle navigation based on auth state
-  useEffect(() => {
-    if (!user) {
-      setCurrentScreen('welcome');
-    } else {
-      if (isNewUser) {
-        setCurrentScreen('onboarding-name');
-      } else {
-        setCurrentScreen('home');
-      }
-    }
-  }, [user, isNewUser]);
+export default function App() {
+  const { initializeAuth } = useAuthStore();
 
   // Load Keania One and Inter fonts
   const [interLoaded] = useInterFonts({
@@ -116,264 +40,25 @@ function AppContent() {
 
   const fontsLoaded = interLoaded && keaniaLoaded;
 
+  // Initialize auth on app start
   useEffect(() => {
-    // If fonts are loaded, hide loading screen after a short delay
-    if (fontsLoaded) {
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-      }, 2000);
+    initializeAuth();
+  }, [initializeAuth]);
 
-      return () => clearTimeout(timer);
-    }
-  }, [fontsLoaded]);
-
-  if (isLoading || !fontsLoaded || initializing) {
-    return (
-      <SafeAreaProvider>
-        <StatusBar style="light" />
-        <LoadingScreen />
-      </SafeAreaProvider>
-    );
+  if (!fontsLoaded) {
+    return null;
   }
-
-  // Handle navigation between screens
-  const handleNavigate = (screen: string, _data?: Record<string, unknown>) => {
-    setCurrentScreen(screen as typeof currentScreen);
-  };
-
-  // Handle completing onboarding
-  const handleCompleteOnboarding = async () => {
-    try {
-      await completeOnboarding();
-      // Navigation will happen automatically via useEffect when isNewUser becomes false
-    } catch (error) {
-      // Fallback navigation to prevent user from getting stuck
-      setCurrentScreen('home');
-    }
-  };
-
-  // Render the appropriate screen based on currentScreen state
-  const renderScreen = () => {
-    switch (currentScreen) {
-      case 'onboarding-name':
-        return <OnboardingNameScreen onNavigate={handleNavigate} currentStep={1} totalSteps={11} />;
-      case 'onboarding-birthday':
-        return (
-          <OnboardingBirthdayScreen onNavigate={handleNavigate} currentStep={2} totalSteps={11} />
-        );
-      case 'onboarding-gender':
-        return (
-          <OnboardingGenderScreen onNavigate={handleNavigate} currentStep={3} totalSteps={11} />
-        );
-      case 'onboarding-dependents':
-        return (
-          <OnboardingDependentsScreen onNavigate={handleNavigate} currentStep={4} totalSteps={11} />
-        );
-      case 'onboarding-work':
-        return <OnboardingWorkScreen onNavigate={handleNavigate} currentStep={5} totalSteps={11} />;
-      case 'onboarding-ethnicity':
-        return (
-          <OnboardingEthnicityScreen onNavigate={handleNavigate} currentStep={6} totalSteps={11} />
-        );
-      case 'onboarding-relationship':
-        return (
-          <OnboardingRelationshipScreen
-            onNavigate={handleNavigate}
-            currentStep={7}
-            totalSteps={11}
-          />
-        );
-      case 'onboarding-lifestyle':
-        return (
-          <OnboardingLifestyleScreen onNavigate={handleNavigate} currentStep={8} totalSteps={11} />
-        );
-      case 'onboarding-interests':
-        return (
-          <OnboardingInterestsScreen onNavigate={handleNavigate} currentStep={9} totalSteps={11} />
-        );
-      case 'onboarding-personality':
-        return (
-          <OnboardingPersonalityScreen
-            onNavigate={handleNavigate}
-            currentStep={10}
-            totalSteps={11}
-          />
-        );
-      case 'onboarding-photo':
-        return (
-          <OnboardingPhotoScreen onNavigate={handleNavigate} currentStep={11} totalSteps={11} />
-        );
-      case 'onboarding-complete':
-        // Final onboarding complete screen
-        return (
-          <View style={styles.completeContainer}>
-            <Text style={styles.completeTitle}>Welcome to SharedTable!</Text>
-            <Text style={styles.completeSubtitle}>
-              Your profile is complete. Let&apos;s find you some amazing dining experiences!
-            </Text>
-            <Pressable onPress={handleCompleteOnboarding} style={styles.completeButton}>
-              <Text style={styles.completeButtonText}>Get Started</Text>
-            </Pressable>
-          </View>
-        );
-      case 'onboarding-photos':
-        // Placeholder for photos upload screen
-        return (
-          <View style={styles.centerContainer}>
-            <Text>Photos Upload (Coming Soon)</Text>
-            <Pressable onPress={() => handleNavigate('home')} style={styles.skipButton}>
-              <Text style={styles.skipButtonText}>Complete Onboarding</Text>
-            </Pressable>
-          </View>
-        );
-      case 'onboarding-dietary':
-        // Placeholder for dietary preferences screen
-        return (
-          <View style={styles.centerContainer}>
-            <Text>Dietary Preferences (Coming Soon)</Text>
-            <Pressable onPress={() => handleNavigate('home')} style={styles.skipButton}>
-              <Text style={styles.skipButtonText}>Skip to Home</Text>
-            </Pressable>
-          </View>
-        );
-      case 'onboarding-location':
-        // Placeholder for location screen
-        return (
-          <View style={styles.temporaryContainer}>
-            <Text>Location Setup (Coming Soon)</Text>
-            <Pressable onPress={() => handleNavigate('home')} style={styles.temporaryButton}>
-              <Text style={styles.temporaryButtonText}>Skip to Home</Text>
-            </Pressable>
-          </View>
-        );
-      case 'onboarding-preferences':
-        // Placeholder for preferences screen
-        return (
-          <View style={styles.temporaryContainer}>
-            <Text>Preferences Setup (Coming Soon)</Text>
-            <Pressable onPress={() => handleNavigate('home')} style={styles.temporaryButton}>
-              <Text style={styles.temporaryButtonText}>Skip to Home</Text>
-            </Pressable>
-          </View>
-        );
-      case 'onboarding-profile':
-        // Placeholder for next onboarding steps
-        return (
-          <View style={styles.temporaryContainer}>
-            <Text>Profile Setup (Coming Soon)</Text>
-            <Pressable onPress={() => handleNavigate('home')} style={styles.temporaryButton}>
-              <Text style={styles.temporaryButtonText}>Skip to Home</Text>
-            </Pressable>
-          </View>
-        );
-      case 'home':
-        return <HomeScreen onNavigate={handleNavigate} />;
-      case 'how-it-works':
-        return <HowItWorksScreen onNavigate={handleNavigate} />;
-      case 'faqs':
-        return <FAQsScreen onNavigate={handleNavigate} />;
-      case 'dashboard':
-        return <DashboardScreen onNavigate={handleNavigate} />;
-      case 'profile':
-        return <ProfileScreen onNavigate={handleNavigate} />;
-      case 'settings':
-        return <SettingsScreen onNavigate={handleNavigate} />;
-      case 'notifications':
-        return <NotificationsScreen onNavigate={handleNavigate} />;
-      case 'privacy-security':
-        return <PrivacySecurityScreen onNavigate={handleNavigate} />;
-      case 'appearance':
-        return <AppearanceScreen onNavigate={handleNavigate} />;
-      case 'account':
-        return <AccountScreen onNavigate={handleNavigate} />;
-      case 'about':
-        return <AboutScreen onNavigate={handleNavigate} />;
-      case 'filter':
-        return <FilterScreen onNavigate={handleNavigate} />;
-      case 'review':
-        return <ReviewScreen onNavigate={handleNavigate} />;
-      case 'welcome':
-      default:
-        return <WelcomeScreen onNavigate={handleNavigate} />;
-    }
-  };
 
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
-      {renderScreen()}
+      <PrivyProvider>
+        <AuthSyncProvider>
+          <NavigationContainer>
+            <RootNavigator />
+          </NavigationContainer>
+        </AuthSyncProvider>
+      </PrivyProvider>
     </SafeAreaProvider>
   );
 }
-
-export default function App() {
-  return (
-    <PrivyProvider>
-      <AuthProvider>
-        <OnboardingProvider>
-          <AuthWrapper>
-            <AppContent />
-          </AuthWrapper>
-        </OnboardingProvider>
-      </AuthProvider>
-    </PrivyProvider>
-  );
-}
-
-const styles = StyleSheet.create({
-  centerContainer: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-  },
-  completeButton: {
-    backgroundColor: theme.colors.primary.main,
-    borderRadius: 8,
-    padding: 15,
-    paddingHorizontal: 40,
-  },
-  completeButtonText: {
-    color: theme.colors.white,
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  completeContainer: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  completeSubtitle: {
-    fontSize: 16,
-    marginBottom: 40,
-    textAlign: 'center',
-  },
-  completeTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  skipButton: {
-    backgroundColor: theme.colors.primary.light,
-    borderRadius: 8,
-    marginTop: 20,
-    padding: 10,
-  },
-  skipButtonText: {
-    color: theme.colors.white,
-  },
-  temporaryButton: {
-    backgroundColor: theme.colors.primary.light,
-    borderRadius: 8,
-    marginTop: 20,
-    padding: 10,
-  },
-  temporaryButtonText: {
-    color: theme.colors.white,
-  },
-  temporaryContainer: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-  },
-});

@@ -8,7 +8,7 @@ import { MyQuestView } from '@/components/dashboard/MyQuestView';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { StreakTrackerCard } from '@/components/dashboard/StreakTrackerCard';
 import { TierProgressCard } from '@/components/dashboard/TierProgressCard';
-import { BottomTabBar, TabName } from '@/components/navigation/BottomTabBar';
+// Removed BottomTabBar - now using React Navigation's tab bar
 import { TopBar } from '@/components/navigation/TopBar';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
@@ -22,39 +22,12 @@ interface DashboardScreenProps {
 type DashboardTab = 'overview' | 'leaderboard' | 'quest' | 'loyalty';
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({
-  navigation,
+  navigation: _navigation,
   route: _route,
-  onNavigate,
+  onNavigate: _onNavigate,
 }) => {
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
-  const [activeNavTab, setActiveNavTab] = useState<TabName>('dashboard');
-
-  const handleTabPress = (tab: TabName) => {
-    // Use React Navigation if available
-    if (navigation?.navigate) {
-      if (tab === 'home') {
-        navigation.navigate('Home');
-      } else if (tab === 'profile') {
-        navigation.navigate('Profile');
-      } else if (tab === 'events') {
-        navigation.navigate('Events');
-      } else {
-        setActiveNavTab(tab);
-      }
-    }
-    // Otherwise use the onNavigate prop
-    else if (onNavigate) {
-      if (tab === 'home') {
-        onNavigate('home');
-      } else if (tab === 'profile') {
-        onNavigate('profile');
-      } else if (tab === 'events') {
-        onNavigate('events');
-      } else {
-        setActiveNavTab(tab);
-      }
-    }
-  };
+  // Removed activeNavTab - navigation is now handled by React Navigation's tab bar
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -192,7 +165,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       </ScrollView>
 
       {/* Bottom Tab Bar */}
-      <BottomTabBar activeTab={activeNavTab} onTabPress={handleTabPress} />
+      {/* Bottom Tab Bar removed - using React Navigation's tab bar */}
     </View>
   );
 };

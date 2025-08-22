@@ -36,5 +36,5 @@ export type {
 export { OnboardingService, OnboardingError } from './service';
 export type { OnboardingProgress } from './service';
 
-// Export context and provider
-export { OnboardingProvider, useOnboarding } from './context';
+// Export context and provider - using simplified version
+export { OnboardingProvider, useOnboarding } from './context-simple';

@@ -17,7 +17,7 @@ import {
 import { Icon } from '@/components/base/Icon';
 import { EventCard } from '@/components/home/EventCard';
 import { InviteFriendsSection } from '@/components/home/InviteFriendsSection';
-import { BottomTabBar, TabName } from '@/components/navigation/BottomTabBar';
+// Removed BottomTabBar - now using React Navigation's tab bar
 import { useEvents } from '@/hooks/useEvents';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
@@ -29,12 +29,11 @@ interface HomeScreenProps {
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
-  navigation,
+  navigation: _navigation,
   route: _route,
-  onNavigate,
+  onNavigate: _onNavigate,
 }) => {
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TabName>('home');
   const [bookingLoading, setBookingLoading] = useState(false);
 
   // Use events hook for real data
@@ -108,35 +107,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     console.log('Inviting friend:', email);
   };
 
-  const handleTabPress = (tab: TabName) => {
-    // Use React Navigation if available (when in MainTabNavigator)
-    if (navigation?.navigate) {
-      if (tab === 'profile') {
-        navigation.navigate('Profile');
-      } else if (tab === 'events') {
-        navigation.navigate('Events');
-      } else if (tab === 'dashboard') {
-        navigation.navigate('Dashboard');
-      } else {
-        setActiveTab(tab);
-      }
-    }
-    // Otherwise use the onNavigate prop (when in App.tsx)
-    else if (onNavigate) {
-      if (tab === 'profile') {
-        onNavigate('profile');
-      } else if (tab === 'events') {
-        onNavigate('events');
-      } else if (tab === 'dashboard') {
-        onNavigate('dashboard');
-      } else {
-        setActiveTab(tab);
-      }
-    } else {
-      console.warn('No navigation method available');
-      setActiveTab(tab);
-    }
-  };
+  // Navigation is now handled by React Navigation's tab bar
 
   return (
     <View style={styles.container}>
@@ -313,8 +284,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Bottom Tab Bar */}
-      <BottomTabBar activeTab={activeTab} onTabPress={handleTabPress} />
+      {/* Bottom Tab Bar removed - using React Navigation's tab bar */}
     </View>
   );
 };

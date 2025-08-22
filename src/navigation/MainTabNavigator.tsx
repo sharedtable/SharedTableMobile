@@ -40,8 +40,14 @@ export function MainTabNavigator() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: theme.colors.primary.main,
-        tabBarInactiveTintColor: theme.colors.text.secondary,
+        tabBarActiveTintColor: '#FFFFFF',
+        tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.6)',
+        tabBarStyle: {
+          backgroundColor: theme.colors.primary.main,
+          borderTopWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
         headerShown: false,
       })}
     >

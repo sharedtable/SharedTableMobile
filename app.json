@@ -23,7 +23,13 @@
       "infoPlist": {
         "NSCameraUsageDescription": "SharedTable needs access to your camera to take profile photos.",
         "NSPhotoLibraryUsageDescription": "SharedTable needs access to your photo library to select profile photos.",
-        "NSLocationWhenInUseUsageDescription": "SharedTable uses your location to show nearby dining events."
+        "NSLocationWhenInUseUsageDescription": "SharedTable uses your location to show nearby dining events.",
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": ["sharedtable"],
+            "CFBundleURLName": "com.sharedtable.app"
+          }
+        ]
       },
       "associatedDomains": ["applinks:sxrvesdqhcovajaqnqcw.supabase.co"]
     },
@@ -45,6 +51,10 @@
         {
           "action": "VIEW",
           "data": [
+            {
+              "scheme": "sharedtable",
+              "host": "privy-redirect"
+            },
             {
               "scheme": "sharedtable",
               "host": "auth-callback"

@@ -14,11 +14,13 @@ interface AuthState {
   privyUser: PrivyUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  needsOnboarding: boolean;
   error: string | null;
 
   // Actions
   initializeAuth: () => Promise<void>;
   setPrivyUser: (user: PrivyUser | null) => void;
+  setNeedsOnboarding: (needs: boolean) => void;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -28,6 +30,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   privyUser: null,
   isAuthenticated: false,
   isLoading: true,
+  needsOnboarding: false,
   error: null,
 
   // Initialize auth from stored data
@@ -90,14 +93,22 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         privyUser,
         isAuthenticated: true,
+        isLoading: false,
         error: null,
       });
     } else {
       set({
         privyUser: null,
         isAuthenticated: false,
+        isLoading: false,
+        needsOnboarding: false,
       });
     }
+  },
+
+  // Set onboarding status
+  setNeedsOnboarding: (needs: boolean) => {
+    set({ needsOnboarding: needs });
   },
 
   // Logout
@@ -108,6 +119,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       // Clear Privy session
       try {
         await SecureStore.deleteItemAsync('privy_user_session');
+        await SecureStore.deleteItemAsync('needs_onboarding');
       } catch (error) {
         console.warn('Error clearing Privy session:', error);
       }
@@ -117,6 +129,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         privyUser: null,
         isAuthenticated: false,
         isLoading: false,
+        needsOnboarding: false,
         error: null,
       });
     } catch (error) {
@@ -126,6 +139,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         privyUser: null,
         isAuthenticated: false,
         isLoading: false,
+        needsOnboarding: false,
         error: null,
       });
     }

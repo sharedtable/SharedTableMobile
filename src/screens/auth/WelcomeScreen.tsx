@@ -1,3 +1,4 @@
+import * as SecureStore from 'expo-secure-store';
 import React, { memo, useState, useEffect } from 'react';
 import {
   View,
@@ -48,12 +49,26 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
 
   // Handle Privy authentication
   useEffect(() => {
-    if (privyAuthenticated && privyUser && onNavigate) {
-      setPrivyUser(privyUser);
-      // For now, treat all Privy users as existing users
-      // You can implement logic to check if it's a new user based on your backend
-      onNavigate('home');
-    }
+    const handleAuthentication = async () => {
+      if (privyAuthenticated && privyUser && onNavigate) {
+        setPrivyUser(privyUser);
+
+        // Check if user needs onboarding
+        const needsOnboarding = await SecureStore.getItemAsync('needs_onboarding');
+
+        if (needsOnboarding === 'true') {
+          // Clear the flag
+          await SecureStore.deleteItemAsync('needs_onboarding');
+          // Navigate to onboarding
+          onNavigate('onboarding');
+        } else {
+          // Existing user, go to home
+          onNavigate('home');
+        }
+      }
+    };
+
+    handleAuthentication();
   }, [privyAuthenticated, privyUser, onNavigate, setPrivyUser]);
 
   const validateEmail = (email: string) => {
@@ -78,7 +93,6 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
     try {
       await sendEmailCode(email);
       setShowOtpScreen(true);
-      Alert.alert('Check your email', `We sent a verification code to ${email}`);
     } catch (error) {
       Alert.alert('Error', (error as Error).message || 'Failed to send verification code');
     }
@@ -91,14 +105,34 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
     } catch (error) {
       // Check if user cancelled
       const errorMessage = (error as Error).message || '';
+      const errorDetails = (error as any)?.details || '';
+
+      console.log('Google Sign In Error:', {
+        message: errorMessage,
+        details: errorDetails,
+        fullError: error,
+      });
+
       const isCancellation =
         errorMessage.toLowerCase().includes('cancel') ||
         errorMessage.toLowerCase().includes('cancelled') ||
         errorMessage.toLowerCase().includes('abort') ||
-        errorMessage.toLowerCase().includes('user closed');
+        errorMessage.toLowerCase().includes('user closed') ||
+        errorMessage.toLowerCase().includes('user denied');
 
       if (!isCancellation) {
-        Alert.alert('Error', 'Failed to sign in with Google. Please try again.');
+        // Provide more specific error message
+        let displayMessage = 'Failed to sign in with Google.';
+
+        if (errorMessage.includes('redirect') || errorMessage.includes('oauth')) {
+          displayMessage += ' OAuth configuration may need to be updated.';
+        } else if (errorMessage.includes('network')) {
+          displayMessage += ' Please check your internet connection.';
+        } else if (errorMessage.includes('not supported')) {
+          displayMessage += ' Google Sign In may not be supported in this environment.';
+        }
+
+        Alert.alert('Google Sign In Error', `${displayMessage}\n\nError: ${errorMessage}`);
       }
     }
   };

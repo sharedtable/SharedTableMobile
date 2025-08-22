@@ -1,8 +1,11 @@
 import { usePrivy, useLoginWithEmail, useLoginWithOAuth, useEmbeddedWallet } from '@privy-io/expo';
 import * as SecureStore from 'expo-secure-store';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
+import { Platform } from 'react-native';
 
+import { AuthAPI } from '@/services/api/authApi';
 import { UserSyncService } from '@/services/userSyncService';
+import { useAuthStore } from '@/store/authStore';
 import { __DEV__, devLog, logError } from '@/utils/env';
 
 interface PrivyUser {
@@ -40,9 +43,10 @@ interface UsePrivyAuthReturn {
 
 export const usePrivyAuth = (): UsePrivyAuthReturn => {
   const [isLoading, setIsLoading] = useState(false);
+  const { setNeedsOnboarding } = useAuthStore();
 
   // Core Privy hooks
-  const { user: privyUser, isReady, logout: privyLogout } = usePrivy();
+  const { user: privyUser, isReady, logout: privyLogout, getAccessToken } = usePrivy();
 
   const authenticated = !!privyUser;
 
@@ -61,10 +65,16 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
   });
 
   // OAuth login hook
-  const { login: oauthLogin } = useLoginWithOAuth({
+  const { login: oauthLogin, state: oauthState } = useLoginWithOAuth({
     onError: (error) => {
       if (__DEV__) {
         console.error('OAuth login error:', error);
+      }
+      setIsLoading(false);
+    },
+    onSuccess: (user) => {
+      if (__DEV__) {
+        devLog('OAuth login successful:', user.id);
       }
       setIsLoading(false);
     },
@@ -91,9 +101,17 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
       }
     : null;
 
-  // Store user session securely and sync with Supabase
+  // Use a ref to track if sync is in progress
+  const [syncInProgress, setSyncInProgress] = useState(false);
+  const lastSyncedUserId = useRef<string | null>(null);
+
+  // Store user session securely and sync with backend
   useEffect(() => {
-    if (authenticated && user) {
+    // Prevent duplicate syncs
+    if (authenticated && user && !syncInProgress && lastSyncedUserId.current !== user.id) {
+      setSyncInProgress(true);
+      lastSyncedUserId.current = user.id;
+
       // Store session locally
       SecureStore.setItemAsync(
         'privy_user_session',
@@ -109,7 +127,21 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
         }
       });
 
-      // Sync user with Supabase database
+      // Get and store Privy auth token for API calls
+      const storeAuthToken = async () => {
+        try {
+          const token = await getAccessToken();
+          if (token) {
+            await AuthAPI.storeAuthToken(token);
+          }
+        } catch (error) {
+          logError('Failed to store auth token', error);
+        }
+      };
+
+      storeAuthToken();
+
+      // Sync user with backend API (only once per user)
       const syncUser = async () => {
         try {
           const authProvider = privyUser?.linked_accounts?.find(
@@ -130,11 +162,25 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
 
           if (!result.success) {
             logError('Failed to sync user with database', result.error);
-          } else if (__DEV__) {
-            devLog('User synced with database:', result.userId);
+          } else {
+            if (__DEV__) {
+              devLog('User synced with database:', result.userId);
+            }
+
+            // Set onboarding status in the store (either new user or incomplete profile)
+            if (result.needsOnboarding) {
+              setNeedsOnboarding(true);
+              if (__DEV__) {
+                devLog('User needs onboarding - setting in store');
+              }
+            } else {
+              setNeedsOnboarding(false);
+            }
           }
         } catch (error) {
           logError('User sync error', error);
+        } finally {
+          setSyncInProgress(false);
         }
       };
 
@@ -146,12 +192,22 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
         }
       });
     }
-  }, [authenticated, user, privyUser]);
+  }, [authenticated, user, privyUser, syncInProgress, getAccessToken]);
+
+  // Track wallet creation state
+  const walletCreationAttempted = useRef(false);
 
   // Auto-create wallet for users without one
   useEffect(() => {
     const createWalletIfNeeded = async () => {
-      if (authenticated && privyUser && isReady && embeddedWallet) {
+      // Only attempt once per session
+      if (
+        authenticated &&
+        privyUser &&
+        isReady &&
+        embeddedWallet &&
+        !walletCreationAttempted.current
+      ) {
         // Check if user already has a wallet in their linked accounts
         const hasWallet = privyUser.linked_accounts?.some(
           (account) => account.type === 'wallet' || account.type === 'smart_wallet'
@@ -166,6 +222,7 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
         }
 
         if (!hasWallet && embeddedWallet.status === 'not-created') {
+          walletCreationAttempted.current = true;
           try {
             // Create wallet without recovery method (will use default)
             await embeddedWallet.create();
@@ -173,15 +230,7 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
               devLog('Embedded wallet created successfully');
             }
 
-            // Sync wallet with database after creation
-            if ('address' in embeddedWallet && embeddedWallet.address && user?.email) {
-              await UserSyncService.syncPrivyUser({
-                id: user.id,
-                email: user.email,
-                walletAddress: embeddedWallet.address as string,
-                name: user.name,
-              });
-            }
+            // Wallet sync is already handled in the main sync effect
           } catch (error) {
             const errorMessage = (error as Error)?.message || '';
             // Check if wallet already exists
@@ -205,6 +254,11 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
         throw new Error('Authentication system is initializing, please try again');
       }
 
+      // Check if already authenticated
+      if (authenticated) {
+        throw new Error('Already authenticated. Please logout first.');
+      }
+
       setIsLoading(true);
       try {
         await sendEmailCode({ email });
@@ -213,12 +267,17 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
         throw error;
       }
     },
-    [isReady, sendEmailCode]
+    [isReady, sendEmailCode, authenticated]
   );
 
   // Enhanced email verification with loading state
   const handleVerifyEmailCode = useCallback(
     async (code: string) => {
+      // Check if already authenticated
+      if (authenticated) {
+        throw new Error('Already authenticated. Please logout first.');
+      }
+
       setIsLoading(true);
       try {
         await verifyEmailCode({ code });
@@ -227,19 +286,40 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
         throw error;
       }
     },
-    [verifyEmailCode]
+    [verifyEmailCode, authenticated]
   );
 
   // Enhanced Google login
   const loginWithGoogle = useCallback(async () => {
+    if (__DEV__) {
+      devLog('Initiating Google OAuth login...');
+      devLog('OAuth state:', oauthState);
+      devLog('Platform:', Platform.OS);
+    }
+
     setIsLoading(true);
     try {
-      await oauthLogin({ provider: 'google' });
+      const result = await oauthLogin({
+        provider: 'google',
+      });
+      if (__DEV__) {
+        devLog('Google OAuth result:', result);
+      }
+      // Loading state will be cleared in onSuccess callback
     } catch (error) {
+      if (__DEV__) {
+        console.error('Google OAuth error details:', {
+          error,
+          message: (error as Error)?.message,
+          stack: (error as Error)?.stack,
+          code: (error as any)?.code,
+          details: (error as any)?.details,
+        });
+      }
       setIsLoading(false);
       throw error;
     }
-  }, [oauthLogin]);
+  }, [oauthLogin, oauthState]);
 
   // Enhanced Apple login
   const loginWithApple = useCallback(async () => {

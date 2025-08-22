@@ -65,11 +65,11 @@ export const Button = memo<ButtonProps>(
       (pressed: boolean): ViewStyle[] => {
         const baseStyle: (ViewStyle | false | undefined)[] = [
           styles.base,
-          variant === 'text' ? styles.textVariant : (styles as any)[variant],
-          (styles as any)[size],
+          variant === 'text' ? styles.textVariant : (styles as Record<string, ViewStyle>)[variant],
+          (styles as Record<string, ViewStyle>)[size],
           fullWidth && styles.fullWidth,
           isDisabled && styles.disabled,
-          isDisabled && (styles as any)[`${variant}Disabled`],
+          isDisabled && (styles as Record<string, ViewStyle>)[`${variant}Disabled`],
           pressed && styles.pressed,
           style,
         ];
@@ -82,8 +82,8 @@ export const Button = memo<ButtonProps>(
     const getTextStyle = useCallback((): TextStyle[] => {
       const textStyles: (TextStyle | false | undefined)[] = [
         styles.text,
-        (styles as any)[`${variant}Text`],
-        (styles as any)[`${size}Text`],
+        (styles as Record<string, TextStyle>)[`${variant}Text`],
+        (styles as Record<string, TextStyle>)[`${size}Text`],
         isDisabled && styles.disabledText,
         textStyle,
       ];

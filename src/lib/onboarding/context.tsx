@@ -5,8 +5,7 @@
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 
-import { useAuth } from '@/lib/auth';
-import { UserSyncService } from '@/services/userSyncService';
+import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 
 import { OnboardingService, OnboardingError, type OnboardingProgress } from './service';
 import type { CompleteOnboardingData, OnboardingStep } from './validation';
@@ -148,7 +147,7 @@ interface OnboardingProviderProps {
 
 export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(onboardingReducer, initialState);
-  const { user } = useAuth();
+  const { user } = usePrivyAuth();
 
   // Initialize onboarding state when user is available
   useEffect(() => {
@@ -163,11 +162,15 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
       try {
         dispatch({ type: 'SET_INITIALIZING', payload: true });
 
-        // First, ensure the Privy user is synced to Supabase
-        // This creates/updates the user record with the proper ID mapping
-        console.log('[OnboardingProvider] Syncing Privy user to Supabase...');
+        // User sync is already handled by usePrivyAuth hook
+        // We don't need to sync here - just check the user data
+        console.log('[OnboardingProvider] User available:', {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        });
 
-        // Check if user has email (required for sync)
+        // Check if user has email (required for onboarding)
         if (!user.email) {
           console.log('[OnboardingProvider] User has no email, skipping onboarding check');
           dispatch({ type: 'SET_INITIALIZING', payload: false });
@@ -175,29 +178,12 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
           return;
         }
 
-        console.log('[OnboardingProvider] User object:', {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        });
-
-        const syncResult = await UserSyncService.syncPrivyUser({
-          id: user.id,
-          email: user.email,
-          name: user.name || undefined,
-        });
-
-        if (!syncResult.success) {
-          console.error('[OnboardingProvider] Failed to sync user:', syncResult.error);
-          // Don't throw error here, just log it
-          // User might not be synced yet but we can still check onboarding
-          console.log('[OnboardingProvider] Continuing without sync...');
-        }
-
-        const supabaseUserId = syncResult?.userId;
-        if (!supabaseUserId && syncResult?.success === false) {
-          // If sync failed completely, we can't check onboarding
-          console.log('[OnboardingProvider] No Supabase user ID, cannot check onboarding');
+        // For now, we'll use the Privy user ID directly
+        // The actual Supabase user ID will be retrieved when needed
+        const supabaseUserId = user.id;
+        if (!supabaseUserId) {
+          // If no user ID, we can't check onboarding
+          console.log('[OnboardingProvider] No user ID, cannot check onboarding');
           dispatch({ type: 'SET_INITIALIZING', payload: false });
           return;
         }
