@@ -6,13 +6,11 @@
  */
 
 import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
-import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
+import AuthAPI from './api/authApi';
 
 // Get API URL from app.json config
-const API_BASE_URL = __DEV__
-  ? Constants.expoConfig?.extra?.apiUrl || 'http://localhost:3000/api'
-  : Constants.expoConfig?.extra?.productionApiUrl || 'https://sharedtable.vercel.app/api';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 // Storage keys
 const AUTH_TOKEN_KEY = 'auth_token';
@@ -68,7 +66,9 @@ class ApiService {
 
         // Log requests in development
         if (__DEV__) {
-          console.log(`📡 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+          console.log(
+            `📡 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`
+          );
         }
 
         return config;
@@ -88,7 +88,10 @@ class ApiService {
       },
       async (error: AxiosError) => {
         if (__DEV__) {
-          console.error(`❌ API Error: ${error.config?.url}`, error.response?.data);
+          console.error(
+            `❌ API Error: ${error.config?.baseURL}${error.config?.url}`,
+            error.response?.data
+          );
         }
 
         // Handle 401 Unauthorized
@@ -117,6 +120,7 @@ class ApiService {
   }
 
   async setAuthToken(token: string): Promise<void> {
+    console.log('Setting auth token:', token);
     try {
       await SecureStore.setItemAsync(AUTH_TOKEN_KEY, token);
     } catch (error) {
@@ -311,6 +315,32 @@ class ApiService {
     return response.data;
   }
 
+  // ==========================================================================
+  // Stream Chat Token Endpoint
+  // ==========================================================================
+
+  async getChatUserToken(): Promise<string> {
+    const token = await AuthAPI.getAuthToken();
+    if (!token) throw new Error('Not authenticated');
+    const response = await this.client.post<{ success: boolean; token: string }>(
+      '/chat/token',
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.data.success || !response.data.token) {
+      console.error('Failed to fetch chat user token:', response.data);
+      throw new Error('Failed to fetch chat user token');
+    }
+    console.log('Fetched Stream USER_TOKEN:', response.data.token);
+
+    return response.data.token;
+  }
+
   // ============================================================================
   // Utility Methods
   // ============================================================================
@@ -320,6 +350,7 @@ class ApiService {
       const response = await this.client.get('/health');
       return response.status === 200;
     } catch (error) {
+      console.error('Health check failed:', error);
       return false;
     }
   }

@@ -2,11 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Icon } from '@/components/base/Icon';
+import { Icon, IconName } from '@/components/base/Icon';
 import { theme } from '@/theme';
 import { scaleFont } from '@/utils/responsive';
 
-export type TabName = 'home' | 'events' | 'dashboard' | 'profile';
+export type TabName = 'home' | 'events' | 'dashboard' | 'profile' | 'chat';
 
 interface BottomTabBarProps {
   activeTab: TabName;
@@ -24,6 +24,7 @@ const tabs: TabItem[] = [
   { name: 'events', label: 'Events', icon: 'calendar' },
   { name: 'dashboard', label: 'Dashboard', icon: 'bar-chart-2' },
   { name: 'profile', label: 'Profile', icon: 'user' },
+  { name: 'chat', label: 'Chat', icon: 'chatbubble' },
 ];
 
 export const BottomTabBar: React.FC<BottomTabBarProps> = ({ activeTab, onTabPress }) => {
@@ -42,7 +43,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({ activeTab, onTabPres
             >
               <View style={styles.iconContainer}>
                 <Icon
-                  name={tab.icon as any}
+                  name={tab.icon as IconName}
                   size={24}
                   color={isActive ? theme.colors.white : 'rgba(255, 255, 255, 0.6)'}
                 />
@@ -95,11 +96,11 @@ const styles = StyleSheet.create({
   },
   labelActive: {
     color: theme.colors.white,
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   labelInactive: {
     color: 'rgba(255, 255, 255, 0.6)',
-    fontWeight: '400' as any,
+    fontWeight: '400',
   },
   tab: {
     alignItems: 'center',

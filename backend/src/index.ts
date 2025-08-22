@@ -7,10 +7,12 @@ import 'express-async-errors';
 
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
+import { logger } from './utils/logger';
+
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
 import walletRoutes from './routes/wallets';
-import { logger } from './utils/logger';
+import chatRoutes from './routes/chat';
 
 // Load environment variables
 dotenv.config();
@@ -73,6 +75,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/wallets', walletRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
@@ -82,4 +85,6 @@ app.listen(PORT, () => {
   logger.info(`🚀 Server running on port ${PORT}`);
   logger.info(`📱 Environment: ${process.env.NODE_ENV}`);
   logger.info(`🔐 Privy App ID: ${process.env.PRIVY_APP_ID}`);
+  logger.info(`💬 Stream API Key: ${process.env.STREAM_API_KEY}`);
+  logger.info(`💬 Stream API Secret: ${process.env.STREAM_API_SECRET ? '[set]' : '[missing]'}`);
 });
