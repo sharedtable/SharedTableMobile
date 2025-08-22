@@ -20,15 +20,25 @@ import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface OtpVerificationScreenProps {
-  email: string;
+  email?: string;
+  phoneNumber?: string;
+  verificationType: 'email' | 'sms';
   onNavigate?: (screen: string, data?: Record<string, unknown>) => void;
   onBack?: () => void;
   privyVerifyCode: (code: string) => Promise<void>;
-  privySendCode: (email: string) => Promise<void>;
+  privySendCode: (identifier: string) => Promise<void>;
 }
 
 export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) => {
-  const { email, onNavigate: _onNavigate, onBack, privyVerifyCode, privySendCode } = props;
+  const {
+    email,
+    phoneNumber,
+    verificationType,
+    onNavigate: _onNavigate,
+    onBack,
+    privyVerifyCode,
+    privySendCode,
+  } = props;
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [resendTimer, setResendTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
@@ -216,7 +226,8 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
     try {
       setIsLoading(true);
       // Use Privy resend passed from parent
-      await privySendCode(email);
+      const identifier = verificationType === 'email' ? email! : phoneNumber!;
+      await privySendCode(identifier);
 
       // Reset timer and clear OTP
       setResendTimer(60);
@@ -224,9 +235,11 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
       clearOtp();
 
       // Show feedback
-      Alert.alert('Code Sent', 'A new verification code has been sent to your email.', [
-        { text: 'OK' },
-      ]);
+      const message =
+        verificationType === 'email'
+          ? 'A new verification code has been sent to your email.'
+          : 'A new verification code has been sent to your phone.';
+      Alert.alert('Code Sent', message, [{ text: 'OK' }]);
     } catch (error) {
       console.error('Resend OTP error:', error);
       Alert.alert('Error', 'Failed to resend verification code. Please try again.');
@@ -262,8 +275,13 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
               {/* Title Section */}
               <View style={styles.titleSection}>
                 <Text style={styles.title}>Enter Verification Code</Text>
-                <Text style={styles.subtitle}>We sent a 6-digit code to</Text>
-                <Text style={styles.email}>{email}</Text>
+                <Text style={styles.subtitle}>
+                  We sent a 6-digit code to{' '}
+                  {verificationType === 'email' ? 'your email' : 'your phone'}
+                </Text>
+                <Text style={styles.email}>
+                  {verificationType === 'email' ? email : phoneNumber}
+                </Text>
               </View>
 
               {/* OTP Input Section */}

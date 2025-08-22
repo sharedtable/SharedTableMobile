@@ -36,9 +36,17 @@ export const verifyPrivyToken = async (req: AuthRequest, res: Response, next: Ne
       // Add user info to request
       req.userId = verifiedClaims.userId;
 
-      // Optionally fetch full user details from Privy
-      const user = await privyClient.getUser(verifiedClaims.userId);
-      req.user = user;
+      // Log for debugging
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug('Token verified for user:', verifiedClaims.userId);
+      }
+
+      // Store just the essential user info
+      req.user = {
+        id: verifiedClaims.userId,
+        email: undefined,
+        walletAddress: undefined,
+      };
 
       next();
     } catch (error) {
@@ -60,7 +68,7 @@ export const verifyPrivyToken = async (req: AuthRequest, res: Response, next: Ne
 /**
  * Optional middleware - allows authenticated or anonymous requests
  */
-export const optionalAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const optionalAuth = async (req: AuthRequest, _res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
   if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -70,8 +78,12 @@ export const optionalAuth = async (req: AuthRequest, res: Response, next: NextFu
       const verifiedClaims = await privyClient.verifyAuthToken(token);
       req.userId = verifiedClaims.userId;
 
-      const user = await privyClient.getUser(verifiedClaims.userId);
-      req.user = user;
+      // Store just the essential user info
+      req.user = {
+        id: verifiedClaims.userId,
+        email: undefined,
+        walletAddress: undefined,
+      };
     } catch (error) {
       // Token is invalid, but we allow the request to continue
       logger.debug('Optional auth: Invalid token provided');

@@ -29,23 +29,28 @@ interface WelcomeScreenProps {
   onNavigate?: (screen: string, data?: Record<string, unknown>) => void;
 }
 
+type AuthTab = 'email' | 'phone';
+
 export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
   const { onNavigate } = props;
+  const [activeTab, setActiveTab] = useState<AuthTab>('email');
   const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [showOtpScreen, setShowOtpScreen] = useState(false);
+  const [verificationType, setVerificationType] = useState<'email' | 'sms'>('email');
 
   const {
     user: privyUser,
     isAuthenticated: privyAuthenticated,
     sendEmailCode,
     verifyEmailCode: privyVerifyCode,
+    sendSMSCode,
+    verifySMSCode: privyVerifySMSCode,
     loginWithGoogle: privyGoogleLogin,
     loginWithApple: privyAppleLogin,
     isLoading: privyLoading,
   } = usePrivyAuth();
   const { setPrivyUser } = useAuthStore();
-
-  // No longer needed - Privy ready state is handled internally
 
   // Handle Privy authentication
   useEffect(() => {
@@ -76,6 +81,29 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
     return emailRegex.test(email);
   };
 
+  const validatePhoneNumber = (phone: string) => {
+    // Basic phone validation - accepts various formats
+    const phoneRegex =
+      /^[+]?[(]?[0-9]{1,3}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,4}[-\s.]?[0-9]{1,9}$/;
+    return phoneRegex.test(phone);
+  };
+
+  const formatPhoneNumber = (phone: string) => {
+    // Remove all non-digit characters except +
+    let formatted = phone.replace(/[^\d+]/g, '');
+
+    // If doesn't start with +, assume US number and add +1
+    if (!formatted.startsWith('+')) {
+      if (formatted.length === 10) {
+        formatted = `+1${formatted}`;
+      } else if (formatted.length === 11 && formatted.startsWith('1')) {
+        formatted = `+${formatted}`;
+      }
+    }
+
+    return formatted;
+  };
+
   const handleEmailAuth = async () => {
     if (!email) {
       Alert.alert('Email Required', 'Please enter your email address');
@@ -92,9 +120,42 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
 
     try {
       await sendEmailCode(email);
+      setVerificationType('email');
       setShowOtpScreen(true);
     } catch (error) {
       Alert.alert('Error', (error as Error).message || 'Failed to send verification code');
+    }
+  };
+
+  const handlePhoneAuth = async () => {
+    if (!phoneNumber) {
+      Alert.alert('Phone Number Required', 'Please enter your phone number');
+      return;
+    }
+
+    if (!validatePhoneNumber(phoneNumber)) {
+      Alert.alert('Invalid Phone Number', 'Please enter a valid phone number');
+      return;
+    }
+
+    // Dismiss keyboard before processing
+    Keyboard.dismiss();
+
+    try {
+      const formattedPhone = formatPhoneNumber(phoneNumber);
+      await sendSMSCode(formattedPhone);
+      setVerificationType('sms');
+      setShowOtpScreen(true);
+    } catch (error) {
+      Alert.alert('Error', (error as Error).message || 'Failed to send verification code');
+    }
+  };
+
+  const handleContinue = () => {
+    if (activeTab === 'email') {
+      handleEmailAuth();
+    } else {
+      handlePhoneAuth();
     }
   };
 
@@ -152,16 +213,19 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
   };
 
   const isLoading = privyLoading;
+  const canContinue = activeTab === 'email' ? !!email : !!phoneNumber;
 
   // Show OTP screen if needed
   if (showOtpScreen) {
     return (
       <OtpVerificationScreen
-        email={email}
+        email={verificationType === 'email' ? email : undefined}
+        phoneNumber={verificationType === 'sms' ? formatPhoneNumber(phoneNumber) : undefined}
+        verificationType={verificationType}
         onNavigate={onNavigate}
         onBack={() => setShowOtpScreen(false)}
-        privyVerifyCode={privyVerifyCode}
-        privySendCode={sendEmailCode}
+        privyVerifyCode={verificationType === 'email' ? privyVerifyCode : privyVerifySMSCode}
+        privySendCode={verificationType === 'email' ? sendEmailCode : sendSMSCode}
       />
     );
   }
@@ -184,40 +248,76 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
               {/* Title */}
               <View style={styles.titleSection}>
                 <Text style={styles.title}>Welcome to SharedTable</Text>
-                <Text style={styles.subtitle}>Enter your email to continue</Text>
+                <Text style={styles.subtitle}>Sign in or create an account</Text>
               </View>
 
               {/* Auth Form Section */}
               <View style={styles.inputSection}>
+                {/* Tab Selector */}
+                <View style={styles.tabContainer}>
+                  <Pressable
+                    style={[styles.tab, activeTab === 'email' && styles.activeTab]}
+                    onPress={() => setActiveTab('email')}
+                  >
+                    <Text style={[styles.tabText, activeTab === 'email' && styles.activeTabText]}>
+                      Email
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.tab, activeTab === 'phone' && styles.activeTab]}
+                    onPress={() => setActiveTab('phone')}
+                  >
+                    <Text style={[styles.tabText, activeTab === 'phone' && styles.activeTabText]}>
+                      Phone
+                    </Text>
+                  </Pressable>
+                </View>
+
+                {/* Input Form */}
                 <View style={styles.formContainer}>
-                  {/* Email Input */}
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Email address"
-                    placeholderTextColor={theme.colors.text.secondary}
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoComplete="email"
-                    returnKeyType="done"
-                    onSubmitEditing={handleEmailAuth}
-                  />
+                  {activeTab === 'email' ? (
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Email address"
+                      placeholderTextColor={theme.colors.text.secondary}
+                      value={email}
+                      onChangeText={setEmail}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoComplete="email"
+                      returnKeyType="done"
+                      onSubmitEditing={handleContinue}
+                    />
+                  ) : (
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Phone number"
+                      placeholderTextColor={theme.colors.text.secondary}
+                      value={phoneNumber}
+                      onChangeText={setPhoneNumber}
+                      keyboardType="phone-pad"
+                      autoComplete="tel"
+                      returnKeyType="done"
+                      onSubmitEditing={handleContinue}
+                    />
+                  )}
 
                   {/* Submit Button */}
                   <Pressable
                     style={({ pressed }) => [
                       styles.authButton,
-                      !email && styles.authButtonDisabled,
+                      !canContinue && styles.authButtonDisabled,
                       pressed && styles.buttonPressed,
                     ]}
-                    onPress={handleEmailAuth}
-                    disabled={isLoading || !email}
+                    onPress={handleContinue}
+                    disabled={isLoading || !canContinue}
                   >
                     {isLoading ? (
                       <ActivityIndicator color="#FFFFFF" size="small" />
                     ) : (
-                      <Text style={styles.authButtonText}>Continue with Email</Text>
+                      <Text style={styles.authButtonText}>
+                        Continue with {activeTab === 'email' ? 'Email' : 'Phone'}
+                      </Text>
                     )}
                   </Pressable>
                 </View>
@@ -288,6 +388,17 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
 WelcomeScreen.displayName = 'WelcomeScreen';
 
 const styles = StyleSheet.create({
+  activeTab: {
+    backgroundColor: theme.colors.white,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  activeTabText: {
+    color: theme.colors.primary.main,
+  },
   appleButton: {
     backgroundColor: theme.colors.text.primary,
   },
@@ -303,7 +414,6 @@ const styles = StyleSheet.create({
     borderRadius: scaleWidth(12),
     height: scaleHeight(52),
     justifyContent: 'center',
-    marginBottom: scaleHeight(16),
   },
   authButtonDisabled: {
     opacity: 0.5,
@@ -329,35 +439,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: scaleWidth(24),
   },
-  continueButton: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(12),
-    height: scaleHeight(52),
-    justifyContent: 'center',
-  },
-  continueButtonDisabled: {
-    opacity: 0.5,
-  },
-  continueButtonText: {
-    color: theme.colors.white,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(18),
-    fontWeight: '600',
-  },
-  emailInput: {
-    backgroundColor: theme.colors.white,
-    borderColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(12),
-    borderWidth: 1,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(16),
-    height: scaleHeight(52),
-    marginBottom: scaleHeight(16),
-    paddingHorizontal: scaleWidth(16),
-  },
-  // New styles for auth form
   formContainer: {
     marginBottom: scaleHeight(24),
   },
@@ -372,9 +453,6 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(16),
     fontWeight: '500',
   },
-  halfInput: {
-    flex: 1,
-  },
   input: {
     backgroundColor: theme.colors.white,
     borderColor: theme.colors.primary.main,
@@ -387,19 +465,11 @@ const styles = StyleSheet.create({
     marginBottom: scaleHeight(16),
     paddingHorizontal: scaleWidth(16),
   },
-  inputContainer: {
-    marginBottom: scaleHeight(24),
-  },
   inputSection: {
     paddingTop: scaleHeight(20),
   },
   keyboardView: {
     flex: 1,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    gap: scaleWidth(12),
-    marginBottom: scaleHeight(16),
   },
   orContainer: {
     alignItems: 'center',
@@ -436,6 +506,25 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
     textAlign: 'center',
+  },
+  tab: {
+    alignItems: 'center',
+    borderRadius: scaleWidth(8),
+    flex: 1,
+    paddingVertical: scaleHeight(12),
+  },
+  tabContainer: {
+    backgroundColor: '#F3F4F6', // Light gray background for tabs
+    borderRadius: scaleWidth(12),
+    flexDirection: 'row',
+    marginBottom: scaleHeight(24),
+    padding: scaleWidth(4),
+  },
+  tabText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    fontWeight: '500',
   },
   title: {
     color: theme.colors.text.primary,

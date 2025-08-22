@@ -14,7 +14,8 @@ const router = Router();
 // Validation schemas
 const syncUserSchema = z.object({
   privyUserId: z.string(),
-  email: z.string().email(),
+  email: z.string().email().optional(), // Make email optional for SMS auth
+  phoneNumber: z.string().optional(), // Add phone number support
   name: z.string().optional(),
   walletAddress: z.string().optional(),
   authProvider: z.enum(['email', 'sms', 'google', 'apple']).optional(),
@@ -35,27 +36,41 @@ router.post('/sync', async (req, res, next) => {
     // Validate request body
     const validatedData = syncUserSchema.parse(req.body);
 
-    // Log the incoming request for debugging (only in dev)
-    if (process.env.NODE_ENV === 'development') {
-      logger.debug('Sync user request:', {
-        privyUserId: validatedData.privyUserId,
-        email: validatedData.email,
-        authProvider: validatedData.authProvider,
-      });
-    }
+    // Check if user exists in Supabase by email or phone
+    let existingUser = null;
+    let fetchError = null;
 
-    // Skip Privy verification for now - we trust the frontend has authenticated
-    // In production, you'd want to verify the auth token instead
-    if (process.env.NODE_ENV === 'development') {
-      logger.debug('Sync request for Privy user:', validatedData.privyUserId);
+    if (validatedData.email) {
+      const result = await supabaseService
+        .from('users')
+        .select('id, email, phone, external_auth_id')
+        .eq('email', validatedData.email.toLowerCase())
+        .single();
+      existingUser = result.data;
+      fetchError = result.error;
+    } else if (validatedData.phoneNumber) {
+      // Normalize the phone for comparison (same format as we store)
+      let normalizedPhone = validatedData.phoneNumber.replace(/[^\d+]/g, '');
+      if (!normalizedPhone.startsWith('+')) {
+        normalizedPhone = `+${normalizedPhone}`;
+      }
+      const result = await supabaseService
+        .from('users')
+        .select('id, email, phone, external_auth_id')
+        .eq('phone', normalizedPhone)
+        .single();
+      existingUser = result.data;
+      fetchError = result.error;
+    } else {
+      // Check by Privy ID if no email or phone
+      const result = await supabaseService
+        .from('users')
+        .select('id, email, phone, external_auth_id')
+        .eq('external_auth_id', validatedData.privyUserId)
+        .single();
+      existingUser = result.data;
+      fetchError = result.error;
     }
-
-    // Check if user exists in Supabase
-    const { data: existingUser, error: fetchError } = await supabaseService
-      .from('users')
-      .select('id, email, external_auth_id')
-      .eq('email', validatedData.email.toLowerCase())
-      .single();
 
     let userId: string;
     let isNewUser = false;
@@ -90,59 +105,121 @@ router.post('/sync', async (req, res, next) => {
 
       logger.info(`Updated existing user: ${userId}`);
     } else {
-      // Create new user
-      isNewUser = true;
-      userId = crypto.randomUUID();
+      // Before creating a new user, double-check by Privy ID to prevent race conditions
+      const { data: privyCheck } = await supabaseService
+        .from('users')
+        .select('id')
+        .eq('external_auth_id', validatedData.privyUserId)
+        .single();
 
-      // Map auth provider to database enum values
-      const mapAuthProvider = (provider?: string) => {
-        switch (provider) {
-          case 'google':
-            return 'google';
-          case 'apple':
-            return 'apple';
-          case 'sms':
-            return 'sms';
-          case 'email':
-          default:
-            return 'email'; // Now database accepts 'email' directly
+      if (privyCheck) {
+        // User was created by another concurrent request
+        userId = privyCheck.id;
+        isNewUser = false;
+        logger.info(`Found user created by concurrent request: ${userId}`);
+      } else {
+        // Create new user
+        isNewUser = true;
+        userId = crypto.randomUUID();
+
+        // Map auth provider to database enum values
+        const mapAuthProvider = (provider?: string) => {
+          switch (provider) {
+            case 'google':
+              return 'google';
+            case 'apple':
+              return 'apple';
+            case 'sms':
+              return 'sms';
+            case 'email':
+            default:
+              return 'email'; // Now database accepts 'email' directly
+          }
+        };
+
+        // Helper function to normalize phone number
+        const normalizePhone = (phone: string) => {
+          // Remove all non-digit characters except the leading +
+          let normalized = phone.replace(/[^\d+]/g, '');
+          // Ensure it starts with + for international format
+          if (!normalized.startsWith('+')) {
+            normalized = `+${normalized}`;
+          }
+          return normalized;
+        };
+
+        const userData: any = {
+          id: userId,
+          email: validatedData.email ? validatedData.email.toLowerCase() : null,
+          phone: validatedData.phoneNumber ? normalizePhone(validatedData.phoneNumber) : null,
+          first_name: null, // Let user fill during onboarding
+          last_name: null, // Let user fill during onboarding
+          display_name: null, // Let user fill during onboarding
+          auth_provider: mapAuthProvider(validatedData.authProvider),
+          external_auth_id: validatedData.privyUserId,
+          status: 'active',
+          last_active_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        // Only set email_verified_at if email exists
+        if (validatedData.email) {
+          userData.email_verified_at = new Date().toISOString();
         }
-      };
 
-      const userData = {
-        id: userId,
-        email: validatedData.email.toLowerCase(),
-        first_name: null, // Let user fill during onboarding
-        last_name: null, // Let user fill during onboarding
-        display_name: null, // Let user fill during onboarding
-        auth_provider: mapAuthProvider(validatedData.authProvider),
-        external_auth_id: validatedData.privyUserId,
-        status: 'active',
-        email_verified_at: new Date().toISOString(),
-        last_active_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+        // Set phone_verified_at if phone exists
+        if (validatedData.phoneNumber) {
+          userData.phone_verified_at = new Date().toISOString();
+        }
 
-      const { error: createError } = await supabaseService.from('users').insert(userData);
+        const { error: createError } = await supabaseService.from('users').insert(userData);
 
-      if (createError) {
-        logger.error('Failed to create user:', createError);
-        throw new AppError('Failed to create user account', 500);
-      }
+        if (createError) {
+          // Check if it's a duplicate key error
+          if (createError.code === '23505' && createError.message.includes('external_auth_id')) {
+            logger.warn('User with this Privy ID already exists, fetching existing user');
+            // User already exists with this external_auth_id, fetch them instead
+            const { data: existingUser } = await supabaseService
+              .from('users')
+              .select('id')
+              .eq('external_auth_id', validatedData.privyUserId)
+              .single();
 
-      // Create user profile
-      const { error: profileError } = await supabaseService.from('user_profiles').insert({
-        user_id: userId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
+            if (existingUser) {
+              userId = existingUser.id;
+              isNewUser = false;
+            } else {
+              throw new AppError('Failed to create or find user', 500);
+            }
+          } else {
+            logger.error('Failed to create user:', {
+              error: createError,
+              userData,
+              message: createError.message,
+              details: createError.details,
+              hint: createError.hint,
+              code: createError.code,
+            });
+            throw new AppError(`Failed to create user account: ${createError.message}`, 500);
+          }
+        }
 
-      if (profileError && profileError.code !== '23505') {
-        logger.error('Failed to create user profile:', profileError);
-      }
+        // Create user profile (only for new users)
+        if (isNewUser) {
+          const { error: profileError } = await supabaseService.from('user_profiles').insert({
+            user_id: userId,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
 
-      logger.info(`Created new user: ${userId}`);
+          if (profileError && profileError.code !== '23505') {
+            logger.error('Failed to create user profile:', profileError);
+          }
+
+          logger.info(`Created new user: ${userId} with Privy ID: ${validatedData.privyUserId}`);
+        }
+      } // Close the else block for creating new user
     }
 
     // Sync wallet if provided
@@ -161,6 +238,14 @@ router.post('/sync', async (req, res, next) => {
       logger.error('Failed to fetch user data:', userError);
       throw new AppError('Failed to fetch user data', 500);
     }
+
+    // Log successful sync
+    logger.info(`User sync successful:`, {
+      userId: userData.id,
+      privyUserId: userData.external_auth_id,
+      authProvider: userData.auth_provider,
+      isNewUser,
+    });
 
     res.json({
       success: true,
@@ -185,13 +270,14 @@ router.post('/verify', async (req, res, next) => {
 
     try {
       const verifiedClaims = await privyClient.verifyAuthToken(token);
-      const user = await privyClient.getUser(verifiedClaims.userId);
 
       res.json({
         success: true,
         data: {
           userId: verifiedClaims.userId,
-          user,
+          user: {
+            id: verifiedClaims.userId,
+          },
         },
       });
     } catch (error) {
@@ -213,11 +299,31 @@ router.get('/me', verifyPrivyToken, async (req: AuthRequest, res, next) => {
     }
 
     // Get user from Supabase using Privy ID
-    const { data: user, error } = await supabaseService
+    // Try both with and without did:privy: prefix
+    let user = null;
+    let error = null;
+
+    // First try with the ID as-is
+    const result1 = await supabaseService
       .from('users')
       .select('*')
       .eq('external_auth_id', req.userId)
       .single();
+
+    user = result1.data;
+    error = result1.error;
+
+    // If not found and ID doesn't start with did:privy:, try adding the prefix
+    if (error && !req.userId.startsWith('did:privy:')) {
+      const result2 = await supabaseService
+        .from('users')
+        .select('*')
+        .eq('external_auth_id', `did:privy:${req.userId}`)
+        .single();
+
+      user = result2.data;
+      error = result2.error;
+    }
 
     if (error || !user) {
       throw new AppError('User not found', 404);
@@ -255,13 +361,37 @@ router.put('/profile', verifyPrivyToken, async (req: AuthRequest, res, next) => 
     }
 
     // Get user from database using Privy ID
-    const { data: user, error: fetchError } = await supabaseService
+    // Try both with and without did:privy: prefix
+    let user = null;
+    let fetchError = null;
+
+    // First try with the ID as-is
+    const result1 = await supabaseService
       .from('users')
-      .select('id')
+      .select('id, external_auth_id')
       .eq('external_auth_id', req.userId)
       .single();
 
+    user = result1.data;
+    fetchError = result1.error;
+
+    // If not found and ID doesn't start with did:privy:, try adding the prefix
+    if (fetchError && !req.userId.startsWith('did:privy:')) {
+      const result2 = await supabaseService
+        .from('users')
+        .select('id, external_auth_id')
+        .eq('external_auth_id', `did:privy:${req.userId}`)
+        .single();
+
+      user = result2.data;
+      fetchError = result2.error;
+    }
+
     if (fetchError || !user) {
+      logger.error('User not found in database:', {
+        privyUserId: req.userId,
+        error: fetchError,
+      });
       throw new AppError('User not found', 404);
     }
 

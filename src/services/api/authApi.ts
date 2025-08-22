@@ -69,10 +69,11 @@ apiClient.interceptors.response.use(
 
 interface SyncUserData {
   privyUserId: string;
-  email: string;
+  email?: string; // Optional for SMS auth
+  phoneNumber?: string; // Add phone number support
   name?: string;
   walletAddress?: string;
-  authProvider?: 'email' | 'google' | 'apple';
+  authProvider?: 'email' | 'google' | 'apple' | 'sms';
 }
 
 interface SyncUserResponse {
@@ -121,19 +122,10 @@ export class AuthAPI {
    */
   static async syncUser(userData: SyncUserData): Promise<SyncUserResponse> {
     try {
-      if (__DEV__) {
-        console.log('Syncing user to backend:', userData);
-      }
       const response = await apiClient.post<SyncUserResponse>('/auth/sync', userData);
-      if (__DEV__) {
-        console.log('Sync response:', response.data);
-      }
       return response.data;
     } catch (error) {
       logError('Failed to sync user', error);
-      if (__DEV__ && error.response) {
-        console.error('API Error Response:', error.response.data);
-      }
       throw error;
     }
   }

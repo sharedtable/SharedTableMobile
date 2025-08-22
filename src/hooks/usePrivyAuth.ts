@@ -1,7 +1,12 @@
-import { usePrivy, useLoginWithEmail, useLoginWithOAuth, useEmbeddedWallet } from '@privy-io/expo';
+import {
+  usePrivy,
+  useLoginWithEmail,
+  useLoginWithSMS,
+  useLoginWithOAuth,
+  useEmbeddedWallet,
+} from '@privy-io/expo';
 import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useState, useRef } from 'react';
-import { Platform } from 'react-native';
 
 import { AuthAPI } from '@/services/api/authApi';
 import { UserSyncService } from '@/services/userSyncService';
@@ -11,6 +16,7 @@ import { __DEV__, devLog, logError } from '@/utils/env';
 interface PrivyUser {
   id: string;
   email?: string;
+  phoneNumber?: string;
   walletAddress?: string;
   name?: string;
   avatar?: string;
@@ -26,6 +32,11 @@ interface UsePrivyAuthReturn {
   sendEmailCode: (email: string) => Promise<void>;
   verifyEmailCode: (code: string) => Promise<void>;
   emailState: ReturnType<typeof useLoginWithEmail>['state'];
+
+  // SMS login methods
+  sendSMSCode: (phone: string) => Promise<void>;
+  verifySMSCode: (code: string) => Promise<void>;
+  smsState: ReturnType<typeof useLoginWithSMS>['state'];
 
   // OAuth login methods
   loginWithGoogle: () => Promise<void>;
@@ -64,8 +75,22 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
     },
   });
 
+  // SMS login hook
+  const {
+    sendCode: sendSMSCode,
+    loginWithCode: verifySMSCode,
+    state: smsState,
+  } = useLoginWithSMS({
+    onError: (error) => {
+      if (__DEV__) {
+        console.error('SMS login error:', error);
+      }
+      setIsLoading(false);
+    },
+  });
+
   // OAuth login hook
-  const { login: oauthLogin, state: oauthState } = useLoginWithOAuth({
+  const { login: oauthLogin } = useLoginWithOAuth({
     onError: (error) => {
       if (__DEV__) {
         console.error('OAuth login error:', error);
@@ -90,101 +115,120 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
         email: privyUser.linked_accounts?.find((account) => account.type === 'email')?.address as
           | string
           | undefined,
+        phoneNumber: privyUser.linked_accounts?.find((account) => account.type === 'phone')
+          ?.phoneNumber as string | undefined,
         walletAddress:
           (privyUser.linked_accounts?.find((account) => account.type === 'wallet') as any)
             ?.address || ('address' in embeddedWallet ? embeddedWallet.address : undefined),
         name:
           privyUser.linked_accounts
             ?.find((account) => account.type === 'email')
-            ?.address?.split('@')[0] || 'User',
+            ?.address?.split('@')[0] ||
+          privyUser.linked_accounts?.find((account) => account.type === 'phone')?.phoneNumber ||
+          'User',
         avatar: undefined, // Privy doesn't provide avatar in this format
       }
     : null;
 
   // Use a ref to track if sync is in progress
-  const [syncInProgress, setSyncInProgress] = useState(false);
+  const syncInProgressRef = useRef(false);
   const lastSyncedUserId = useRef<string | null>(null);
+  const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Store user session securely and sync with backend
   useEffect(() => {
+    // Clear any pending sync timeout
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+    }
+
     // Prevent duplicate syncs
-    if (authenticated && user && !syncInProgress && lastSyncedUserId.current !== user.id) {
-      setSyncInProgress(true);
-      lastSyncedUserId.current = user.id;
-
-      // Store session locally
-      SecureStore.setItemAsync(
-        'privy_user_session',
-        JSON.stringify({
-          id: user.id,
-          email: user.email,
-          walletAddress: user.walletAddress,
-          timestamp: Date.now(),
-        })
-      ).catch((error) => {
-        if (__DEV__) {
-          console.error('Failed to store session:', error);
+    if (
+      authenticated &&
+      user &&
+      !syncInProgressRef.current &&
+      lastSyncedUserId.current !== user.id
+    ) {
+      // Debounce the sync to prevent rapid calls
+      syncTimeoutRef.current = setTimeout(() => {
+        if (syncInProgressRef.current || lastSyncedUserId.current === user.id) {
+          return;
         }
-      });
 
-      // Get and store Privy auth token for API calls
-      const storeAuthToken = async () => {
-        try {
-          const token = await getAccessToken();
-          if (token) {
-            await AuthAPI.storeAuthToken(token);
-          }
-        } catch (error) {
-          logError('Failed to store auth token', error);
-        }
-      };
+        syncInProgressRef.current = true;
+        lastSyncedUserId.current = user.id;
 
-      storeAuthToken();
-
-      // Sync user with backend API (only once per user)
-      const syncUser = async () => {
-        try {
-          const authProvider = privyUser?.linked_accounts?.find(
-            (account) => account.type === 'google_oauth'
-          )
-            ? 'google'
-            : privyUser?.linked_accounts?.find((account) => account.type === 'apple_oauth')
-              ? 'apple'
-              : 'email';
-
-          const result = await UserSyncService.syncPrivyUser({
+        // Store session locally
+        SecureStore.setItemAsync(
+          'privy_user_session',
+          JSON.stringify({
             id: user.id,
             email: user.email,
+            phoneNumber: user.phoneNumber,
             walletAddress: user.walletAddress,
-            name: user.name,
-            authProvider: authProvider as 'email' | 'google' | 'apple',
-          });
-
-          if (!result.success) {
-            logError('Failed to sync user with database', result.error);
-          } else {
-            if (__DEV__) {
-              devLog('User synced with database:', result.userId);
-            }
-
-            // Set onboarding status in the store (either new user or incomplete profile)
-            if (result.needsOnboarding) {
-              setNeedsOnboarding(true);
-              if (__DEV__) {
-                devLog('User needs onboarding - setting in store');
-              }
-            } else {
-              setNeedsOnboarding(false);
-            }
+            timestamp: Date.now(),
+          })
+        ).catch((error) => {
+          if (__DEV__) {
+            console.error('Failed to store session:', error);
           }
-        } catch (error) {
-          logError('User sync error', error);
-        } finally {
-          setSyncInProgress(false);
-        }
-      };
+        });
 
-      syncUser();
+        // Get and store Privy auth token for API calls
+        const storeAuthToken = async () => {
+          try {
+            const token = await getAccessToken();
+            if (token) {
+              await AuthAPI.storeAuthToken(token);
+            }
+          } catch (error) {
+            logError('Failed to store auth token', error);
+          }
+        };
+
+        storeAuthToken();
+
+        // Sync user with backend API (only once per user)
+        const syncUser = async () => {
+          try {
+            const authProvider = privyUser?.linked_accounts?.find(
+              (account) => account.type === 'google_oauth'
+            )
+              ? 'google'
+              : privyUser?.linked_accounts?.find((account) => account.type === 'apple_oauth')
+                ? 'apple'
+                : privyUser?.linked_accounts?.find((account) => account.type === 'phone')
+                  ? 'sms'
+                  : 'email';
+
+            const result = await UserSyncService.syncPrivyUser({
+              id: user.id,
+              email: user.email,
+              phoneNumber: user.phoneNumber,
+              walletAddress: user.walletAddress,
+              name: user.name,
+              authProvider: authProvider as 'email' | 'google' | 'apple' | 'sms',
+            });
+
+            if (!result.success) {
+              logError('Failed to sync user with database', result.error);
+            } else {
+              // Set onboarding status in the store (either new user or incomplete profile)
+              if (result.needsOnboarding) {
+                setNeedsOnboarding(true);
+              } else {
+                setNeedsOnboarding(false);
+              }
+            }
+          } catch (error) {
+            logError('User sync error', error);
+          } finally {
+            syncInProgressRef.current = false;
+          }
+        };
+
+        syncUser();
+      }, 500); // 500ms debounce
     } else {
       SecureStore.deleteItemAsync('privy_user_session').catch((error) => {
         if (__DEV__) {
@@ -192,7 +236,14 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
         }
       });
     }
-  }, [authenticated, user, privyUser, syncInProgress, getAccessToken]);
+
+    // Cleanup on unmount
+    return () => {
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+    };
+  }, [authenticated, user, privyUser, getAccessToken, setNeedsOnboarding]);
 
   // Track wallet creation state
   const walletCreationAttempted = useRef(false);
@@ -213,24 +264,11 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
           (account) => account.type === 'wallet' || account.type === 'smart_wallet'
         );
 
-        if (__DEV__) {
-          devLog('Wallet check:', {
-            hasWallet,
-            walletStatus: embeddedWallet.status,
-            walletAddress: 'address' in embeddedWallet ? embeddedWallet.address : undefined,
-          });
-        }
-
         if (!hasWallet && embeddedWallet.status === 'not-created') {
           walletCreationAttempted.current = true;
           try {
             // Create wallet without recovery method (will use default)
             await embeddedWallet.create();
-            if (__DEV__) {
-              devLog('Embedded wallet created successfully');
-            }
-
-            // Wallet sync is already handled in the main sync effect
           } catch (error) {
             const errorMessage = (error as Error)?.message || '';
             // Check if wallet already exists
@@ -289,37 +327,60 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
     [verifyEmailCode, authenticated]
   );
 
+  // Enhanced SMS code sending with loading state
+  const handleSendSMSCode = useCallback(
+    async (phone: string) => {
+      if (!isReady) {
+        throw new Error('Authentication system is initializing, please try again');
+      }
+
+      // Check if already authenticated
+      if (authenticated) {
+        throw new Error('Already authenticated. Please logout first.');
+      }
+
+      setIsLoading(true);
+      try {
+        await sendSMSCode({ phone });
+      } catch (error) {
+        setIsLoading(false);
+        throw error;
+      }
+    },
+    [isReady, sendSMSCode, authenticated]
+  );
+
+  // Enhanced SMS verification with loading state
+  const handleVerifySMSCode = useCallback(
+    async (code: string) => {
+      // Check if already authenticated
+      if (authenticated) {
+        throw new Error('Already authenticated. Please logout first.');
+      }
+
+      setIsLoading(true);
+      try {
+        await verifySMSCode({ code });
+      } catch (error) {
+        setIsLoading(false);
+        throw error;
+      }
+    },
+    [verifySMSCode, authenticated]
+  );
+
   // Enhanced Google login
   const loginWithGoogle = useCallback(async () => {
-    if (__DEV__) {
-      devLog('Initiating Google OAuth login...');
-      devLog('OAuth state:', oauthState);
-      devLog('Platform:', Platform.OS);
-    }
-
     setIsLoading(true);
     try {
-      const result = await oauthLogin({
+      await oauthLogin({
         provider: 'google',
       });
-      if (__DEV__) {
-        devLog('Google OAuth result:', result);
-      }
-      // Loading state will be cleared in onSuccess callback
     } catch (error) {
-      if (__DEV__) {
-        console.error('Google OAuth error details:', {
-          error,
-          message: (error as Error)?.message,
-          stack: (error as Error)?.stack,
-          code: (error as any)?.code,
-          details: (error as any)?.details,
-        });
-      }
       setIsLoading(false);
       throw error;
     }
-  }, [oauthLogin, oauthState]);
+  }, [oauthLogin]);
 
   // Enhanced Apple login
   const loginWithApple = useCallback(async () => {
@@ -403,6 +464,11 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
     sendEmailCode: handleSendEmailCode,
     verifyEmailCode: handleVerifyEmailCode,
     emailState,
+
+    // SMS methods
+    sendSMSCode: handleSendSMSCode,
+    verifySMSCode: handleVerifySMSCode,
+    smsState,
 
     // OAuth methods
     loginWithGoogle,

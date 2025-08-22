@@ -10,9 +10,10 @@ import { AuthAPI } from './api/authApi';
 interface PrivyUserData {
   id: string;
   email?: string;
+  phoneNumber?: string;
   walletAddress?: string;
   name?: string;
-  authProvider?: 'email' | 'google' | 'apple';
+  authProvider?: 'email' | 'google' | 'apple' | 'sms';
 }
 
 export class UserSyncService {
@@ -27,14 +28,11 @@ export class UserSyncService {
     error?: string;
   }> {
     try {
-      if (!privyUser.email) {
-        return { success: false, error: 'Email is required for user sync' };
-      }
-
-      // Call backend API to sync user
+      // Call backend API to sync user (email is now optional)
       const response = await AuthAPI.syncUser({
         privyUserId: privyUser.id,
-        email: privyUser.email,
+        email: privyUser.email, // Can be undefined for SMS auth
+        phoneNumber: privyUser.phoneNumber, // Add phone number
         name: privyUser.name,
         walletAddress: privyUser.walletAddress,
         authProvider: privyUser.authProvider,
