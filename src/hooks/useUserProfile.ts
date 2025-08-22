@@ -60,6 +60,7 @@ export const useUserProfile = (): UserProfileData => {
         setBookings(bookingsData || []);
       }
     } catch (err) {
+      console.error('Error fetching user profile:', err);
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -68,7 +69,6 @@ export const useUserProfile = (): UserProfileData => {
 
   useEffect(() => {
     fetchUserProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   return {

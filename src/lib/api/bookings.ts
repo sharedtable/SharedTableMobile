@@ -134,6 +134,7 @@ export class BookingsService {
         message: 'Successfully booked your spot!',
       };
     } catch (error) {
+      console.error('Error booking event:', error);
       return {
         success: false,
         message: 'An unexpected error occurred. Please try again.',
@@ -221,6 +222,7 @@ export class BookingsService {
         message: 'Booking cancelled successfully',
       };
     } catch (error) {
+      console.error('Failed to cancel booking:', error);
       return {
         success: false,
         message: 'Failed to cancel booking. Please try again.',
@@ -275,6 +277,7 @@ export class BookingsService {
 
       return userBookings;
     } catch (error) {
+      console.error('Error fetching user bookings:', error);
       return [];
     }
   }
@@ -309,6 +312,7 @@ export class BookingsService {
 
       return !!booking;
     } catch (error) {
+      console.error('Error checking if event is booked:', error);
       return false;
     }
   }
