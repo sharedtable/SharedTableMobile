@@ -16,8 +16,8 @@ const syncUserSchema = z.object({
   privyUserId: z.string(),
   email: z.string().email().optional(), // Make email optional for SMS auth
   phoneNumber: z.string().optional(), // Add phone number support
+  walletAddress: z.string().optional(), // Wallet address from frontend
   name: z.string().optional(),
-  walletAddress: z.string().optional(),
   authProvider: z.enum(['email', 'sms', 'google', 'apple']).optional(),
 });
 
@@ -29,12 +29,21 @@ const verifyTokenSchema = z.object({
  * POST /api/auth/sync
  * Sync Privy user with Supabase database
  * This endpoint should be called after successful Privy authentication
- * Note: This endpoint doesn't require authentication as it's called during the login process
  */
 router.post('/sync', async (req, res, next) => {
   try {
     // Validate request body
     const validatedData = syncUserSchema.parse(req.body);
+
+    // Log incoming data for debugging
+    if (process.env.NODE_ENV === 'development') {
+      logger.info('Sync request received:', {
+        privyUserId: validatedData.privyUserId,
+        email: validatedData.email,
+        walletAddress: validatedData.walletAddress,
+        authProvider: validatedData.authProvider,
+      });
+    }
 
     // Check if user exists in Supabase by email or phone
     let existingUser = null;
@@ -43,7 +52,7 @@ router.post('/sync', async (req, res, next) => {
     if (validatedData.email) {
       const result = await supabaseService
         .from('users')
-        .select('id, email, phone, external_auth_id')
+        .select('id, email, phone, external_auth_id, wallet_address')
         .eq('email', validatedData.email.toLowerCase())
         .single();
       existingUser = result.data;
@@ -56,7 +65,7 @@ router.post('/sync', async (req, res, next) => {
       }
       const result = await supabaseService
         .from('users')
-        .select('id, email, phone, external_auth_id')
+        .select('id, email, phone, external_auth_id, wallet_address')
         .eq('phone', normalizedPhone)
         .single();
       existingUser = result.data;
@@ -65,7 +74,7 @@ router.post('/sync', async (req, res, next) => {
       // Check by Privy ID if no email or phone
       const result = await supabaseService
         .from('users')
-        .select('id, email, phone, external_auth_id')
+        .select('id, email, phone, external_auth_id, wallet_address')
         .eq('external_auth_id', validatedData.privyUserId)
         .single();
       existingUser = result.data;
@@ -91,6 +100,15 @@ router.post('/sync', async (req, res, next) => {
       // Update external auth ID if not set
       if (!existingUser.external_auth_id) {
         updateData.external_auth_id = validatedData.privyUserId;
+      }
+
+      // Update wallet address if provided and different
+      if (
+        validatedData.walletAddress &&
+        validatedData.walletAddress !== existingUser.wallet_address
+      ) {
+        updateData.wallet_address = validatedData.walletAddress.toLowerCase();
+        logger.info(`Updating wallet address for user ${userId}: ${validatedData.walletAddress}`);
       }
 
       const { error: updateError } = await supabaseService
@@ -148,10 +166,13 @@ router.post('/sync', async (req, res, next) => {
           return normalized;
         };
 
-        const userData: any = {
+        const userData: Record<string, string | boolean | null> = {
           id: userId,
           email: validatedData.email ? validatedData.email.toLowerCase() : null,
           phone: validatedData.phoneNumber ? normalizePhone(validatedData.phoneNumber) : null,
+          wallet_address: validatedData.walletAddress
+            ? validatedData.walletAddress.toLowerCase()
+            : null,
           first_name: null, // Let user fill during onboarding
           last_name: null, // Let user fill during onboarding
           display_name: null, // Let user fill during onboarding
@@ -162,6 +183,10 @@ router.post('/sync', async (req, res, next) => {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
+
+        if (validatedData.walletAddress) {
+          logger.info(`Creating user with wallet address: ${validatedData.walletAddress}`);
+        }
 
         // Only set email_verified_at if email exists
         if (validatedData.email) {
@@ -222,11 +247,6 @@ router.post('/sync', async (req, res, next) => {
       } // Close the else block for creating new user
     }
 
-    // Sync wallet if provided
-    if (validatedData.walletAddress) {
-      await syncWallet(userId, validatedData.walletAddress);
-    }
-
     // Fetch complete user data to return
     const { data: userData, error: userError } = await supabaseService
       .from('users')
@@ -252,7 +272,7 @@ router.post('/sync', async (req, res, next) => {
       data: {
         user: userData,
         isNewUser,
-        needsOnboarding: !userData.onboarding_completed, // Check actual database field
+        needsOnboarding: !userData.onboarding_completed,
       },
     });
   } catch (error) {
@@ -329,19 +349,10 @@ router.get('/me', verifyPrivyToken, async (req: AuthRequest, res, next) => {
       throw new AppError('User not found', 404);
     }
 
-    // Get user's wallets
-    const { data: wallets } = await supabaseService
-      .from('wallets')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('is_active', true)
-      .order('is_primary', { ascending: false });
-
     res.json({
       success: true,
       data: {
         user,
-        wallets: wallets || [],
         privyUser: req.user,
       },
     });
@@ -448,78 +459,5 @@ router.put('/profile', verifyPrivyToken, async (req: AuthRequest, res, next) => 
     next(error);
   }
 });
-
-/**
- * Helper function to sync wallet
- */
-async function syncWallet(userId: string, walletAddress: string) {
-  try {
-    // Check if wallet exists
-    const { data: existingWallet, error: fetchError } = await supabaseService
-      .from('wallets')
-      .select('id, updated_at')
-      .eq('user_id', userId)
-      .eq('wallet_address', walletAddress.toLowerCase())
-      .single();
-
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      logger.error('Failed to fetch wallet:', fetchError);
-      return;
-    }
-
-    if (existingWallet) {
-      // If wallet was updated in the last 10 seconds, skip (prevent duplicate syncs)
-      const lastUpdated = new Date(existingWallet.updated_at);
-      const now = new Date();
-      const timeDiff = (now.getTime() - lastUpdated.getTime()) / 1000;
-
-      if (timeDiff < 10) {
-        logger.debug(`Wallet sync skipped (recently updated ${timeDiff}s ago)`);
-        return;
-      }
-    }
-
-    if (!existingWallet) {
-      // Check if this is the first wallet
-      const { data: userWallets } = await supabaseService
-        .from('wallets')
-        .select('id')
-        .eq('user_id', userId);
-
-      const isFirstWallet = !userWallets || userWallets.length === 0;
-
-      // Create new wallet
-      const walletData = {
-        user_id: userId,
-        wallet_id: crypto.randomUUID(),
-        wallet_address: walletAddress.toLowerCase(),
-        wallet_type: 'embedded',
-        is_primary: isFirstWallet,
-        is_active: true,
-        network: 'ethereum',
-        chain_id: 1,
-        status: 'active',
-        label: isFirstWallet ? 'Primary Wallet' : undefined,
-        metadata: {
-          source: 'privy',
-          verified: true,
-          verified_at: new Date().toISOString(),
-        },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error: insertError } = await supabaseService.from('wallets').insert(walletData);
-
-      if (insertError && insertError.code !== '23505') {
-        logger.error('Failed to insert wallet:', insertError);
-      } else if (process.env.NODE_ENV === 'development') {
-        logger.debug(`Wallet synced: ${walletAddress}`);
-      }
-    }
-  } catch (error) {
-    logger.error('Wallet sync failed:', error);
-  }
-}
 
 export default router;

@@ -9,7 +9,6 @@ import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
-import walletRoutes from './routes/wallets';
 import { logger } from './utils/logger';
 
 // Load environment variables
@@ -61,7 +60,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -72,7 +71,6 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/wallets', walletRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

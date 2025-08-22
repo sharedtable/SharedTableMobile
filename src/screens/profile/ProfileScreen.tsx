@@ -13,21 +13,13 @@ interface ProfileScreenProps {
 }
 
 export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
-  const { user, logout, createWallet } = usePrivyAuth();
+  const { user, logout } = usePrivyAuth();
 
   const handleLogout = async () => {
     try {
       await logout();
     } catch (error) {
       console.error('Logout error:', error);
-    }
-  };
-
-  const handleCreateWallet = async () => {
-    try {
-      await createWallet();
-    } catch (error) {
-      console.error('Create wallet error:', error);
     }
   };
 
@@ -46,21 +38,13 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
           </View>
           <Text style={styles.name}>{user?.name || user?.email?.split('@')[0] || 'User'}</Text>
           <Text style={styles.email}>{user?.email || 'No email'}</Text>
-          {user?.walletAddress ? (
-            <Text style={styles.wallet}>
-              {user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}
-            </Text>
-          ) : (
-            <Pressable
-              style={({ pressed }) => [
-                styles.createWalletButton,
-                pressed && styles.createWalletButtonPressed,
-              ]}
-              onPress={handleCreateWallet}
-            >
-              <Ionicons name="wallet-outline" size={20} color={theme.colors.white} />
-              <Text style={styles.createWalletText}>Create Wallet</Text>
-            </Pressable>
+          {user?.walletAddress && (
+            <View style={styles.walletContainer}>
+              <Ionicons name="wallet-outline" size={16} color={theme.colors.text.secondary} />
+              <Text style={styles.wallet}>
+                {user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}
+              </Text>
+            </View>
           )}
         </View>
 
@@ -102,24 +86,6 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.colors.white,
     flex: 1,
-  },
-  createWalletButton: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(20),
-    flexDirection: 'row',
-    gap: scaleWidth(8),
-    marginTop: scaleHeight(12),
-    paddingHorizontal: scaleWidth(16),
-    paddingVertical: scaleHeight(8),
-  },
-  createWalletButtonPressed: {
-    opacity: 0.8,
-  },
-  createWalletText: {
-    color: theme.colors.white,
-    fontSize: scaleFont(14),
-    fontWeight: '600',
   },
   email: {
     color: theme.colors.text.secondary,
@@ -183,5 +149,11 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     fontFamily: 'monospace',
     fontSize: scaleFont(12),
+  },
+  walletContainer: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: scaleWidth(6),
+    marginTop: scaleHeight(8),
   },
 });

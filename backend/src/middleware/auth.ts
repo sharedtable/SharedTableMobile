@@ -16,15 +16,20 @@ export interface AuthRequest extends Request {
 /**
  * Middleware to verify Privy authentication token
  */
-export const verifyPrivyToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const verifyPrivyToken = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Missing or invalid authorization header',
       });
+      return;
     }
 
     const token = authHeader.substring(7);
@@ -41,27 +46,30 @@ export const verifyPrivyToken = async (req: AuthRequest, res: Response, next: Ne
         logger.debug('Token verified for user:', verifiedClaims.userId);
       }
 
-      // Store just the essential user info
+      // Store user info from JWT claims
+      const claims = verifiedClaims as { userId: string; email?: string; walletAddress?: string };
       req.user = {
-        id: verifiedClaims.userId,
-        email: undefined,
-        walletAddress: undefined,
+        id: claims.userId,
+        email: claims.email,
+        walletAddress: claims.walletAddress,
       };
 
       next();
     } catch (error) {
       logger.error('Token verification failed:', error);
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Invalid or expired token',
       });
+      return;
     }
   } catch (error) {
     logger.error('Auth middleware error:', error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       error: 'Authentication error',
     });
+    return;
   }
 };
 
@@ -78,11 +86,12 @@ export const optionalAuth = async (req: AuthRequest, _res: Response, next: NextF
       const verifiedClaims = await privyClient.verifyAuthToken(token);
       req.userId = verifiedClaims.userId;
 
-      // Store just the essential user info
+      // Store user info from JWT claims
+      const claims = verifiedClaims as { userId: string; email?: string; walletAddress?: string };
       req.user = {
-        id: verifiedClaims.userId,
-        email: undefined,
-        walletAddress: undefined,
+        id: claims.userId,
+        email: claims.email,
+        walletAddress: claims.walletAddress,
       };
     } catch (error) {
       // Token is invalid, but we allow the request to continue

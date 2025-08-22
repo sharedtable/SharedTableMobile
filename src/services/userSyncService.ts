@@ -33,8 +33,8 @@ export class UserSyncService {
         privyUserId: privyUser.id,
         email: privyUser.email, // Can be undefined for SMS auth
         phoneNumber: privyUser.phoneNumber, // Add phone number
+        walletAddress: privyUser.walletAddress, // Wallet address from Privy
         name: privyUser.name,
-        walletAddress: privyUser.walletAddress,
         authProvider: privyUser.authProvider,
       });
 
@@ -85,24 +85,6 @@ export class UserSyncService {
     } catch (error) {
       logError('Failed to get current user', error);
       return null;
-    }
-  }
-
-  /**
-   * Get user's wallets from backend
-   */
-  static async getUserWallets(): Promise<any[]> {
-    try {
-      const response = await AuthAPI.getMe();
-
-      if (response.success) {
-        return response.data.wallets || [];
-      }
-
-      return [];
-    } catch (error) {
-      logError('Failed to get user wallets', error);
-      return [];
     }
   }
 }

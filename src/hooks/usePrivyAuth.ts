@@ -6,7 +6,7 @@ import {
   useEmbeddedWallet,
 } from '@privy-io/expo';
 import * as SecureStore from 'expo-secure-store';
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 
 import { AuthAPI } from '@/services/api/authApi';
 import { UserSyncService } from '@/services/userSyncService';
@@ -109,26 +109,36 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
   const embeddedWallet = useEmbeddedWallet();
 
   // Transform Privy user to our app format
-  const user: PrivyUser | null = privyUser
-    ? {
-        id: privyUser.id,
-        email: privyUser.linked_accounts?.find((account) => account.type === 'email')?.address as
-          | string
-          | undefined,
-        phoneNumber: privyUser.linked_accounts?.find((account) => account.type === 'phone')
-          ?.phoneNumber as string | undefined,
-        walletAddress:
-          (privyUser.linked_accounts?.find((account) => account.type === 'wallet') as any)
-            ?.address || ('address' in embeddedWallet ? embeddedWallet.address : undefined),
-        name:
-          privyUser.linked_accounts
-            ?.find((account) => account.type === 'email')
-            ?.address?.split('@')[0] ||
-          privyUser.linked_accounts?.find((account) => account.type === 'phone')?.phoneNumber ||
-          'User',
-        avatar: undefined, // Privy doesn't provide avatar in this format
-      }
-    : null;
+  const user: PrivyUser | null = useMemo(
+    () =>
+      privyUser
+        ? {
+            id: privyUser.id,
+            email: privyUser.linked_accounts?.find((account) => account.type === 'email')
+              ?.address as string | undefined,
+            phoneNumber: privyUser.linked_accounts?.find((account) => account.type === 'phone')
+              ?.phoneNumber as string | undefined,
+            name:
+              privyUser.linked_accounts
+                ?.find((account) => account.type === 'email')
+                ?.address?.split('@')[0] ||
+              privyUser.linked_accounts?.find((account) => account.type === 'phone')?.phoneNumber ||
+              'User',
+            avatar: undefined, // Privy doesn't provide avatar in this format
+          }
+        : null,
+    [privyUser]
+  );
+
+  // Get wallet address from embedded wallet or linked accounts
+  const walletAddress =
+    embeddedWallet.status === 'connected' && 'address' in embeddedWallet
+      ? embeddedWallet.address
+      : (
+          privyUser?.linked_accounts?.find((account) => account.type === 'wallet') as
+            | { address?: string }
+            | undefined
+        )?.address;
 
   // Use a ref to track if sync is in progress
   const syncInProgressRef = useRef(false);
@@ -165,7 +175,6 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
             id: user.id,
             email: user.email,
             phoneNumber: user.phoneNumber,
-            walletAddress: user.walletAddress,
             timestamp: Date.now(),
           })
         ).catch((error) => {
@@ -201,14 +210,20 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
                   ? 'sms'
                   : 'email';
 
-            const result = await UserSyncService.syncPrivyUser({
+            const syncData = {
               id: user.id,
               email: user.email,
               phoneNumber: user.phoneNumber,
-              walletAddress: user.walletAddress,
+              walletAddress: walletAddress as string | undefined,
               name: user.name,
               authProvider: authProvider as 'email' | 'google' | 'apple' | 'sms',
-            });
+            };
+
+            if (__DEV__) {
+              console.log('Syncing user with data:', syncData);
+            }
+
+            const result = await UserSyncService.syncPrivyUser(syncData);
 
             if (!result.success) {
               logError('Failed to sync user with database', result.error);
@@ -243,35 +258,33 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
         clearTimeout(syncTimeoutRef.current);
       }
     };
-  }, [authenticated, user, privyUser, getAccessToken, setNeedsOnboarding]);
+  }, [authenticated, user, privyUser, getAccessToken, setNeedsOnboarding, walletAddress]);
 
-  // Track wallet creation state
-  const walletCreationAttempted = useRef(false);
-
-  // Auto-create wallet for users without one
+  // Auto-create wallet for users without one (simplified)
   useEffect(() => {
     const createWalletIfNeeded = async () => {
-      // Only attempt once per session
       if (
         authenticated &&
         privyUser &&
         isReady &&
         embeddedWallet &&
-        !walletCreationAttempted.current
+        embeddedWallet.status === 'not-created'
       ) {
         // Check if user already has a wallet in their linked accounts
         const hasWallet = privyUser.linked_accounts?.some(
           (account) => account.type === 'wallet' || account.type === 'smart_wallet'
         );
 
-        if (!hasWallet && embeddedWallet.status === 'not-created') {
-          walletCreationAttempted.current = true;
+        if (!hasWallet) {
           try {
             // Create wallet without recovery method (will use default)
             await embeddedWallet.create();
+            if (__DEV__) {
+              devLog('Embedded wallet created');
+            }
           } catch (error) {
             const errorMessage = (error as Error)?.message || '';
-            // Check if wallet already exists
+            // Only log if it's not an "already exists" error
             if (!errorMessage.includes('already') && !errorMessage.includes('exists')) {
               logError('Failed to create embedded wallet', error);
             }
@@ -454,8 +467,16 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
     }
   }, []);
 
+  // Create user object with wallet address
+  const userWithWallet = user
+    ? {
+        ...user,
+        walletAddress: walletAddress as string | undefined,
+      }
+    : null;
+
   return {
-    user,
+    user: userWithWallet,
     isReady,
     isAuthenticated: authenticated,
     isLoading,

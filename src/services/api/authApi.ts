@@ -71,8 +71,8 @@ interface SyncUserData {
   privyUserId: string;
   email?: string; // Optional for SMS auth
   phoneNumber?: string; // Add phone number support
+  walletAddress?: string; // Wallet address from Privy
   name?: string;
-  walletAddress?: string;
   authProvider?: 'email' | 'google' | 'apple' | 'sms';
 }
 
