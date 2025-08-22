@@ -4,6 +4,9 @@ import '@testing-library/jest-native/extend-expect';
 jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
 jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter');
 
+// TODO: Consider changing jest tests to use dot env files.
+// https://stackoverflow.com/questions/50259025/using-env-files-for-unit-testing-with-jest
+
 // Mock Expo modules
 jest.mock('expo-constants', () => ({
   expoConfig: {

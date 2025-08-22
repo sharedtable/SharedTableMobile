@@ -304,6 +304,7 @@ export class RateLimitService {
           }
         } catch (error) {
           // If we can't parse the data, delete the key
+          authMonitoring.logSecurityEvent('rate_limit_cleanup_parse_error', 'low', { error });
           keysToDelete.push(key);
         }
       }
@@ -342,6 +343,7 @@ export class RateLimitService {
 
       return attempts.filter((attempt) => now - attempt.timestamp < windowMs);
     } catch (error) {
+      authMonitoring.logSecurityEvent('rate_limit_get_recent_attempts_error', 'low', { error });
       return [];
     }
   }
@@ -354,6 +356,7 @@ export class RateLimitService {
       const blockInfo = JSON.parse(data);
       return blockInfo;
     } catch (error) {
+      authMonitoring.logSecurityEvent('rate_limit_get_block_info_error', 'low', { error });
       return null;
     }
   }

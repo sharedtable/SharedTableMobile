@@ -95,7 +95,7 @@ export const optionalAuth = async (req: AuthRequest, _res: Response, next: NextF
       };
     } catch (error) {
       // Token is invalid, but we allow the request to continue
-      logger.debug('Optional auth: Invalid token provided');
+      logger.debug('Optional auth: Invalid token provided', error);
     }
   }
 

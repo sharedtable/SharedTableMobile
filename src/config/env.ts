@@ -25,7 +25,6 @@ const getEnvVar = (key: string, defaultValue: string = ''): string => {
   if (expoValue !== undefined) return expoValue;
 
   // Try to get from process.env (for bare workflow or web)
-  // eslint-disable-next-line expo/no-dynamic-env-var
   const processValue = process.env[`EXPO_PUBLIC_${key}`];
   if (processValue !== undefined) return processValue;
 
