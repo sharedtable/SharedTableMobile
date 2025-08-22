@@ -6,18 +6,17 @@ import reactNative from 'eslint-plugin-react-native';
 import reactHooks from 'eslint-plugin-react-hooks';
 // import eslintPluginPrettier from 'eslint-plugin-prettier';
 // import simpleImportSort from 'eslint-plugin-simple-import-sort';
-// import eslintPluginImport from 'eslint-plugin-import';
+import importPlugin from 'eslint-plugin-import';
 
 export default [
   js.configs.recommended,
+  //   importPlugin.flatConfigs.recommended,
+  //   importPlugin.flatConfigs.typescript,
   ...tseslint.configs.recommended,
   {
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['**/*.{ts,tsx}'],
     plugins: {
       '@typescript-eslint': tseslint.plugin,
-      //   prettier: eslintPluginPrettier,
-      //   'simple-import-sort': simpleImportSort,
-      //   import: eslintPluginImport,
     },
     languageOptions: {
       parser: tseslint.parser,
@@ -42,12 +41,8 @@ export default [
       '@typescript-eslint/no-non-null-assertion': 'warn',
       '@typescript-eslint/no-empty-interface': 'warn',
       '@typescript-eslint/ban-ts-comment': 'warn',
+      '@typescript-eslint/no-require-imports': 'warn',
 
-      // import plugin rules
-      //   'import/order': 'warn',
-      //   'import/no-unresolved': 'error',
-      //   'import/no-duplicates': 'error',
-      //   'import/no-cycle': 'warn',
       'no-console': [
         'warn',
         {
@@ -64,7 +59,7 @@ export default [
     },
   },
   {
-    files: ['**/*.tsx', '**/*.jsx'],
+    files: ['**/*.{tsx,jsx}'],
     plugins: {
       react,
       'react-native': reactNative,
@@ -102,7 +97,7 @@ export default [
       '.expo/',
       '.expo-shared/',
       'babel.config.js',
-      'metro.config.js',
+      'metro.config.cjs',
       'jest.config.js',
       'generate-blank-splash.js',
       'generate-icon.js',

@@ -187,6 +187,7 @@ export class DeepLinkSecurityService {
 
       return { isValid: true };
     } catch (error) {
+      authMonitoring.logSecurityEvent('url_parsing_error', 'low', { error });
       return { isValid: false, error: 'Malformed URL' };
     }
   }
@@ -416,6 +417,7 @@ export class DeepLinkSecurityService {
 
       return parsedUrl.toString();
     } catch (error) {
+      authMonitoring.logSecurityEvent('url_sanitization_error', 'low', { error });
       return '[MALFORMED_URL]';
     }
   }

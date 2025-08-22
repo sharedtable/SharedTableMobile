@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   preset: 'jest-expo',
   testEnvironment: 'node',
   transform: {
