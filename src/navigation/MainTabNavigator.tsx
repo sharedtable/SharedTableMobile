@@ -6,6 +6,7 @@ import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { HomeScreen } from '@/screens/home/HomeScreen';
 import { EventsScreen } from '@/screens/main/EventsScreen';
 import { ProfileScreen } from '@/screens/profile/ProfileScreen';
+import { ChatScreen } from '@/screens/chat/ChatScreen';
 import { theme } from '@/theme';
 
 export type MainTabParamList = {
@@ -13,6 +14,7 @@ export type MainTabParamList = {
   Events: undefined;
   Dashboard: undefined;
   Profile: undefined;
+  Chat: undefined;
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -32,6 +34,8 @@ export function MainTabNavigator() {
             iconName = focused ? 'calendar' : 'calendar-outline';
           } else if (route.name === 'Dashboard') {
             iconName = focused ? 'stats-chart' : 'stats-chart-outline';
+          } else if (route.name === 'Chat') {
+            iconName = focused ? 'chatbubble' : 'chatbubble-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
           } else {
@@ -71,6 +75,13 @@ export function MainTabNavigator() {
         component={DashboardScreen}
         options={{
           title: 'Dashboard',
+        }}
+      />
+      <Tab.Screen
+        name="Chat"
+        component={ChatScreen}
+        options={{
+          title: 'Chat',
         }}
       />
       <Tab.Screen

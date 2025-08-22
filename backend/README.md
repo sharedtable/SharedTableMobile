@@ -262,3 +262,7 @@ The API includes Winston logging. In production, consider:
 ## Support
 
 For issues or questions, contact the SharedTable team.
+
+# Jiashu's Notes
+
+see `README.md` in base directory.
