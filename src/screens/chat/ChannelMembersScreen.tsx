@@ -25,8 +25,8 @@ type RouteProps = RouteProp<ChatStackParamList, 'ChannelMembers'>;
 type NavigationProp = NativeStackNavigationProp<ChatStackParamList>;
 
 interface Member {
-  user_id: string;
-  user: {
+  user_id?: string;
+  user?: {
     id: string;
     name: string;
     image?: string;
@@ -54,7 +54,7 @@ export const ChannelMembersScreen: React.FC = () => {
         if (channels.length > 0) {
           const channel = channels[0];
           const response = await channel.queryMembers({});
-          setMembers(response.members);
+          setMembers(response.members as Member[]);
         }
       } catch (error) {
         console.error('Error fetching members:', error);
@@ -68,42 +68,48 @@ export const ChannelMembersScreen: React.FC = () => {
   }, [client, channelId]);
 
   const handleMemberPress = (member: Member) => {
-    navigation.navigate('UserProfile', { userId: member.user_id });
+    navigation.navigate('UserProfile', { userId: member.user_id || '' });
   };
 
-  const renderMember = ({ item }: { item: Member }) => (
-    <Pressable
-      style={styles.memberItem}
-      onPress={() => handleMemberPress(item)}
-    >
-      <View style={styles.memberAvatar}>
-        {item.user.image ? (
-          <View style={styles.avatarImage} />
-        ) : (
-          <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarText}>
-              {item.user.name?.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-        )}
-        {item.user.online && <View style={styles.onlineIndicator} />}
-      </View>
-      <View style={styles.memberInfo}>
-        <View style={styles.memberHeader}>
-          <Text style={styles.memberName}>{item.user.name}</Text>
-          {item.role === 'owner' && (
-            <View style={styles.ownerBadge}>
-              <Text style={styles.ownerText}>Owner</Text>
+  const renderMember = ({ item }: { item: Member }) => {
+    if (!item.user) {
+      return null;
+    }
+    
+    return (
+      <Pressable
+        style={styles.memberItem}
+        onPress={() => handleMemberPress(item)}
+      >
+        <View style={styles.memberAvatar}>
+          {item.user.image ? (
+            <View style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarText}>
+                {item.user.name?.charAt(0).toUpperCase()}
+              </Text>
             </View>
           )}
+          {item.user.online && <View style={styles.onlineIndicator} />}
         </View>
-        <Text style={styles.memberStatus}>
-          {item.user.online ? 'Online' : 'Offline'}
-        </Text>
-      </View>
-      <Ionicons name="chevron-forward" size={20} color={theme.colors.text.secondary} />
-    </Pressable>
-  );
+        <View style={styles.memberInfo}>
+          <View style={styles.memberHeader}>
+            <Text style={styles.memberName}>{item.user.name}</Text>
+            {item.role === 'owner' && (
+              <View style={styles.ownerBadge}>
+                <Text style={styles.ownerText}>Owner</Text>
+              </View>
+            )}
+          </View>
+          <Text style={styles.memberStatus}>
+            {item.user.online ? 'Online' : 'Offline'}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={theme.colors.text.secondary} />
+      </Pressable>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -114,7 +120,7 @@ export const ChannelMembersScreen: React.FC = () => {
       </View>
       <FlatList
         data={members}
-        keyExtractor={(item) => item.user_id}
+        keyExtractor={(item) => item.user_id || item.user?.id || 'unknown'}
         renderItem={renderMember}
         contentContainerStyle={styles.membersList}
         ItemSeparatorComponent={() => <View style={styles.separator} />}

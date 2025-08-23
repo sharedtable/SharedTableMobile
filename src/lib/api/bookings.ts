@@ -5,6 +5,7 @@
  */
 
 import { supabase } from '../supabase/client';
+import { UserSyncService } from '../../services/userSyncService';
 import type { Event } from '../supabase/types/database';
 
 export interface BookingRequest {

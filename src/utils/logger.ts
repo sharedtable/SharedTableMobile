@@ -70,7 +70,9 @@ class Logger {
     // Clean up old entries
     if (recentLogs.size > 100) {
       const oldestKey = recentLogs.keys().next().value;
-      recentLogs.delete(oldestKey);
+      if (oldestKey) {
+        recentLogs.delete(oldestKey);
+      }
     }
 
     return false;

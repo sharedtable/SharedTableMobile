@@ -4,11 +4,9 @@
  */
 
 import type { 
-  Channel as StreamChannel,
   ChannelMemberResponse,
   UserResponse as StreamUserResponse,
   MessageResponse,
-  ChannelSort,
 } from 'stream-chat';
 
 // Extend Stream's UserResponse to include our custom fields
@@ -39,10 +37,10 @@ export interface ExtendedMessage extends Omit<MessageResponse, 'user'> {
 }
 
 // Channel with custom data
-export type CustomChannel = StreamChannel<CustomChannelData>;
+export type CustomChannel = any; // Stream Chat's Channel type
 
 // Channel sort options
-export const channelSort: ChannelSort<CustomChannelData> = {
+export const channelSort = {
   last_message_at: -1 as const,
 };
 

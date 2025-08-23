@@ -62,7 +62,7 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         
         // Fetch the Stream user token from your backend using the api service
         const tokenResponse = await api.getChatUserToken();
-        const USER_TOKEN = tokenResponse.token || tokenResponse;
+        const USER_TOKEN = typeof tokenResponse === 'string' ? tokenResponse : tokenResponse.token;
         
         // Use the display name from backend if available, otherwise generate locally
         let displayName = tokenResponse.displayName || user.name || '';

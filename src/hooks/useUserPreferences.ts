@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { supabase } from '@/lib/supabase/client';
-import { UserPreferences } from '@/lib/supabase/types/database';
+import { UserPreferences, UserPreferencesUpdate } from '@/lib/supabase/types/database';
 
 interface UserPreferencesData {
   preferences: UserPreferences | null;
@@ -79,7 +79,7 @@ export const useUserPreferences = (): UserPreferencesData => {
       const { data: dbPreferences, error: dbError } = await supabase
         .from('user_preferences')
         .select('*')
-        .eq('user_id', dbUser.id)
+        .eq('user_id', userId)
         .single();
 
       if (dbError && dbError.code !== 'PGRST116') {
@@ -144,7 +144,7 @@ export const useUserPreferences = (): UserPreferencesData => {
             .update({
               ...updateData,
               updated_at: new Date().toISOString(),
-            })
+            } as UserPreferencesUpdate)
             .eq('user_id', dbUserId);
 
           if (error) {
@@ -153,10 +153,10 @@ export const useUserPreferences = (): UserPreferencesData => {
           }
         } else {
           // Create new preferences record
-          const { error } = await supabase.from('user_preferences').insert({
+          const { error } = await supabase.from('user_preferences').insert([{
             user_id: dbUserId,
             ...updateData,
-          });
+          }]);
 
           if (error) {
             console.error('Error creating database preferences:', error);
