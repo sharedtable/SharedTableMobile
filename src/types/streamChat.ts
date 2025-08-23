@@ -9,7 +9,6 @@ import type {
   UserResponse as StreamUserResponse,
   MessageResponse,
   ChannelSort,
-  Event,
 } from 'stream-chat';
 
 // Extend Stream's UserResponse to include our custom fields
