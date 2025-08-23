@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
 import { streamClient } from '../config/stream';
 import { verifyPrivyToken, AuthRequest } from '../middleware/auth';
@@ -9,7 +9,7 @@ import { supabaseService } from '../config/supabase';
 const router = Router();
 
 // POST /api/chat/token (protected)
-router.post('/token', verifyPrivyToken, async (req: AuthRequest, res, next) => {
+router.post('/token', verifyPrivyToken, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     // Use authenticated userId from Privy
     const privyUserId = req.userId;

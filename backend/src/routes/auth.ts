@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 
 import { privyClient } from '../config/privy';
@@ -30,7 +30,7 @@ const verifyTokenSchema = z.object({
  * Sync Privy user with Supabase database
  * This endpoint should be called after successful Privy authentication
  */
-router.post('/sync', async (req, res, next) => {
+router.post('/sync', async (req: Request, res: Response, next: NextFunction) => {
   try {
     // Validate request body
     const validatedData = syncUserSchema.parse(req.body);
@@ -285,7 +285,7 @@ router.post('/sync', async (req, res, next) => {
  * POST /api/auth/verify
  * Verify a Privy authentication token
  */
-router.post('/verify', async (req, res, next) => {
+router.post('/verify', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { token } = verifyTokenSchema.parse(req.body);
 
@@ -314,7 +314,7 @@ router.post('/verify', async (req, res, next) => {
  * GET /api/auth/me
  * Get current authenticated user's data
  */
-router.get('/me', verifyPrivyToken, async (req: AuthRequest, res, next) => {
+router.get('/me', verifyPrivyToken, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     if (!req.userId) {
       throw new AppError('User not authenticated', 401);
@@ -397,7 +397,7 @@ router.get('/me', verifyPrivyToken, async (req: AuthRequest, res, next) => {
  * PUT /api/auth/profile
  * Update user profile
  */
-router.put('/profile', verifyPrivyToken, async (req: AuthRequest, res, next) => {
+router.put('/profile', verifyPrivyToken, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     if (!req.userId) {
       throw new AppError('User not authenticated', 401);

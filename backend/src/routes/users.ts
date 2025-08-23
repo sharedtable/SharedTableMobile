@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Response, NextFunction } from 'express';
 import { z } from 'zod';
 
 import { supabaseService } from '../config/supabase';
@@ -22,7 +22,7 @@ const updateProfileSchema = z.object({
  * GET /api/users/:userId
  * Get user profile by ID
  */
-router.get('/:userId', verifyPrivyToken, async (req: AuthRequest, res, next) => {
+router.get('/:userId', verifyPrivyToken, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { userId } = req.params;
 
@@ -64,7 +64,7 @@ router.get('/:userId', verifyPrivyToken, async (req: AuthRequest, res, next) => 
  * PUT /api/users/profile
  * Update current user's profile
  */
-router.put('/profile', verifyPrivyToken, async (req: AuthRequest, res, next) => {
+router.put('/profile', verifyPrivyToken, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     if (!req.userId) {
       throw new AppError('User not authenticated', 401);
@@ -152,7 +152,7 @@ router.put('/profile', verifyPrivyToken, async (req: AuthRequest, res, next) => 
  * DELETE /api/users/account
  * Delete user account (soft delete)
  */
-router.delete('/account', verifyPrivyToken, async (req: AuthRequest, res, next) => {
+router.delete('/account', verifyPrivyToken, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     if (!req.userId) {
       throw new AppError('User not authenticated', 401);
@@ -208,7 +208,7 @@ router.delete('/account', verifyPrivyToken, async (req: AuthRequest, res, next) 
  * GET /api/users/search
  * Search users by name or email (authenticated only)
  */
-router.get('/search', verifyPrivyToken, async (req: AuthRequest, res, next) => {
+router.get('/search', verifyPrivyToken, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { q, limit = 10, offset = 0 } = req.query;
 
