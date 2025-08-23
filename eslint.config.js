@@ -94,6 +94,8 @@ export default [
       'node_modules/',
       'dist/',
       'build/',
+      'backend/dist/',
+      'backend/node_modules/',
       '.expo/',
       '.expo-shared/',
       'babel.config.js',

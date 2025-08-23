@@ -4,14 +4,12 @@
  * Updated to work with Privy authentication
  */
 
-import { UserSyncService } from '@/services/userSyncService';
-
 import { supabase } from '../supabase/client';
 import type { Event } from '../supabase/types/database';
 
 export interface BookingRequest {
   eventId: string;
-  userEmail: string; // Changed from userId to userEmail for Privy
+  userId: string; // Privy user ID
   specialRequests?: string;
 }
 
@@ -37,17 +35,22 @@ export class BookingsService {
    */
   static async bookEvent(booking: BookingRequest): Promise<BookingResponse> {
     try {
-      // Get user from database using email (from Privy auth)
-      if (!booking.userEmail) {
+      // Validate user ID
+      if (!booking.userId) {
         return {
           success: false,
-          message: 'User email is required to book an event',
+          message: 'User ID is required to book an event',
         };
       }
 
-      const user = await UserSyncService.getUserByEmail(booking.userEmail);
+      // Check if user exists in database
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', booking.userId)
+        .single();
 
-      if (!user) {
+      if (userError || !user) {
         return {
           success: false,
           message: 'User account not found. Please try logging in again.',

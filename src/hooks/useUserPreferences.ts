@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { supabase } from '@/lib/supabase/client';
 import { UserPreferences } from '@/lib/supabase/types/database';
-import { UserSyncService } from '@/services/userSyncService';
 
 interface UserPreferencesData {
   preferences: UserPreferences | null;
@@ -67,14 +66,14 @@ export const useUserPreferences = (): UserPreferencesData => {
       setLoading(true);
       setError(null);
 
-      // Get user from database using Privy email
-      const dbUser = await UserSyncService.getUserByEmail(user.email);
-      if (!dbUser) {
-        setError('User not found in database');
+      // Use Privy user ID directly
+      const userId = user.id;
+      if (!userId) {
+        setError('User ID not found');
         setLoading(false);
         return;
       }
-      setDbUserId(dbUser.id);
+      setDbUserId(userId);
 
       // Load database preferences
       const { data: dbPreferences, error: dbError } = await supabase

@@ -270,10 +270,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
             {/* Footer Links */}
             <View style={styles.footerLinks}>
-              <Pressable style={styles.footerLink} onPress={() => onNavigate?.('how-it-works')}>
+              <Pressable style={styles.footerLink} onPress={() => _onNavigate?.('how-it-works')}>
                 <Text style={styles.footerLinkText}>How it works</Text>
               </Pressable>
-              <Pressable style={styles.footerLink} onPress={() => onNavigate?.('faqs')}>
+              <Pressable style={styles.footerLink} onPress={() => _onNavigate?.('faqs')}>
                 <Text style={styles.footerLinkText}>FAQs</Text>
               </Pressable>
             </View>

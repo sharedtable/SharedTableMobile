@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# Backend compiled files
+backend/dist/
+backend/node_modules/
+
+# Testing
+coverage/
+
+# Temporary files
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# Environment variables
+.env*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# Misc
+.vscode/
+.idea/
