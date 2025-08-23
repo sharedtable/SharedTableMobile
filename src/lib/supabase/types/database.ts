@@ -1,7 +1,7 @@
 // Database types for Supabase integration
 // These should match your SharedTableWeb database schema
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       users: {
@@ -488,6 +488,9 @@ export interface Database {
       gender: 'male' | 'female' | 'non_binary' | 'prefer_not_to_say';
       university_year: 'freshman' | 'sophomore' | 'junior' | 'senior' | 'graduate' | 'other';
       event_status: 'active' | 'cancelled' | 'completed';
+    };
+    CompositeTypes: {
+      [_ in never]: never;
     };
   };
 }

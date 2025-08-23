@@ -139,8 +139,8 @@ export const useUserPreferences = (): UserPreferencesData => {
 
         if (preferences) {
           // Update existing preferences
-          const { error } = await supabase
-            .from('user_preferences')
+          const { error } = await (supabase
+            .from('user_preferences') as any)
             .update({
               ...updateData,
               updated_at: new Date().toISOString(),
@@ -153,7 +153,7 @@ export const useUserPreferences = (): UserPreferencesData => {
           }
         } else {
           // Create new preferences record
-          const { error } = await supabase.from('user_preferences').insert([{
+          const { error } = await (supabase.from('user_preferences') as any).insert([{
             user_id: dbUserId,
             ...updateData,
           }]);

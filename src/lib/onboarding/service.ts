@@ -57,8 +57,8 @@ export class OnboardingService {
 
       // If not found by external_auth_id, try by ID
       if (userError && userError.code === 'PGRST116') {
-        const result = await supabase
-          .from('users')
+        const result = await (supabase
+          .from('users') as any)
           .select('id, onboarding_completed_at')
           .eq('id', userId)
           .single();
@@ -81,9 +81,9 @@ export class OnboardingService {
       }
 
       // Use the Supabase user ID for the rest of the queries
-      const supabaseUserId = user?.id || userId;
+      const supabaseUserId = (user as any)?.id || userId;
 
-      if (user?.onboarding_completed_at) {
+      if ((user as any)?.onboarding_completed_at) {
         return {
           currentStep: this.ONBOARDING_STEPS.length,
           totalSteps: this.ONBOARDING_STEPS.length,
@@ -92,8 +92,8 @@ export class OnboardingService {
       }
 
       // Check profile completion status using the Supabase user ID
-      const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
+      const { data: profile, error: profileError } = await (supabase
+        .from('user_profiles') as any)
         .select('*')
         .eq('user_id', supabaseUserId)
         .single();
@@ -195,9 +195,9 @@ export class OnboardingService {
       }
 
       // Ensure user record exists and is updated
-      const { error: userError } = await supabase
-        .from('users')
-        .update(userUpdateData)
+      const { error: userError } = await (supabase
+        .from('users') as any)
+        .update(userUpdateData as any)
         .eq('id', userId);
 
       if (userError) {
@@ -370,7 +370,7 @@ export class OnboardingService {
       // Upsert profile data
       const { error: profileError } = await supabase
         .from('user_profiles')
-        .upsert(profileData as UserProfileInsert, {
+        .upsert(profileData as any, {
           onConflict: 'user_id',
         })
         .select();
@@ -437,15 +437,15 @@ export class OnboardingService {
       const validatedData = validationResult.data;
 
       // Update user record to mark onboarding as complete
-      const { error: userError } = await supabase
-        .from('users')
+      const { error: userError } = await (supabase
+        .from('users') as any)
         .update({
           onboarding_completed_at: new Date().toISOString(),
           first_name: validatedData.firstName,
           last_name: validatedData.lastName,
           display_name: `${validatedData.firstName} ${validatedData.lastName}`,
           updated_at: new Date().toISOString(),
-        } as UserUpdate)
+        } as any)
         .eq('id', userId);
 
       if (userError) {
@@ -484,7 +484,7 @@ export class OnboardingService {
         updated_at: new Date().toISOString(),
       } as UserProfileInsert;
 
-      const { error: profileError } = await supabase.from('user_profiles').upsert(profileData, {
+      const { error: profileError } = await (supabase.from('user_profiles') as any).upsert(profileData as any, {
         onConflict: 'user_id',
       });
 
@@ -534,7 +534,7 @@ export class OnboardingService {
         });
       }
 
-      const supabaseUserId = user?.id || userId;
+      const supabaseUserId = (user as any)?.id || userId;
 
       // Now fetch the profile
       const { data, error } = await supabase
@@ -606,8 +606,8 @@ export class OnboardingService {
       // If not found by external_auth_id, try by ID (in case it's already a Supabase ID)
       if (error && error.code === 'PGRST116') {
         console.log('[OnboardingService] Trying by ID instead...');
-        const result = await supabase
-          .from('users')
+        const result = await (supabase
+          .from('users') as any)
           .select('id, onboarding_completed_at')
           .eq('id', userId)
           .single();
@@ -634,11 +634,11 @@ export class OnboardingService {
       }
 
       // Store the Supabase user ID for later use if we found the user
-      if (data && data.id !== userId) {
-        (this as any).supabaseUserId = data.id;
+      if (data && (data as any).id !== userId) {
+        (this as any).supabaseUserId = (data as any).id;
       }
 
-      return !!data?.onboarding_completed_at;
+      return !!(data as any)?.onboarding_completed_at;
     } catch (error) {
       if (error instanceof OnboardingError) throw error;
 
@@ -656,8 +656,8 @@ export class OnboardingService {
   static async resetOnboardingProgress(userId: string): Promise<void> {
     try {
       // Mark onboarding as incomplete
-      const { error: userError } = await supabase
-        .from('users')
+      const { error: userError } = await (supabase
+        .from('users') as any)
         .update({
           onboarding_completed_at: null,
           updated_at: new Date().toISOString(),
