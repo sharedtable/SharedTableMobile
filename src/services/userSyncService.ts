@@ -83,4 +83,18 @@ export class UserSyncService {
       return null;
     }
   }
+
+  /**
+   * Get user by email (deprecated - use getCurrentUser instead)
+   */
+  static async getUserByEmail(email: string): Promise<any | null> {
+    try {
+      // This method is deprecated - we now use auth tokens instead of email lookup
+      // Keeping for backwards compatibility
+      return null;
+    } catch (error) {
+      logError('Failed to get user by email', error);
+      return null;
+    }
+  }
 }
