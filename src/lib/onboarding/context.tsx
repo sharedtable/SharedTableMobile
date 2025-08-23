@@ -8,14 +8,14 @@ import React, { createContext, useContext, useReducer, useEffect, useCallback } 
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 
 import { OnboardingService, OnboardingError, type OnboardingProgress } from './service';
-import type { CompleteOnboardingData, OnboardingStep } from './validation';
+import type { CompleteOnboardingData, OnboardingStep, ExtendedOnboardingData } from './validation';
 import { validateOnboardingStep } from './validation';
 
 // Context state interface
 interface OnboardingState {
   // Progress tracking
   progress: OnboardingProgress | null;
-  currentStepData: Partial<CompleteOnboardingData>;
+  currentStepData: Partial<ExtendedOnboardingData>;
 
   // Loading states
   loading: boolean;
@@ -39,8 +39,8 @@ type OnboardingAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_SAVING'; payload: boolean }
   | { type: 'SET_PROGRESS'; payload: OnboardingProgress | null }
-  | { type: 'SET_STEP_DATA'; payload: Partial<CompleteOnboardingData> }
-  | { type: 'MERGE_STEP_DATA'; payload: Partial<CompleteOnboardingData> }
+  | { type: 'SET_STEP_DATA'; payload: Partial<ExtendedOnboardingData> }
+  | { type: 'MERGE_STEP_DATA'; payload: Partial<ExtendedOnboardingData> }
   | { type: 'SET_ERROR'; payload: OnboardingError | null }
   | { type: 'SET_STEP_ERRORS'; payload: Record<string, string> }
   | { type: 'CLEAR_STEP_ERRORS' }
@@ -59,7 +59,7 @@ interface OnboardingContextActions {
   goToStep: (step: OnboardingStep) => void;
 
   // Data management
-  updateStepData: (data: Partial<CompleteOnboardingData>) => void;
+  updateStepData: (data: Partial<ExtendedOnboardingData>) => void;
   clearStepData: () => void;
 
   // Completion
@@ -212,7 +212,7 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
 
             // Convert profile data to step data format
             if (profile) {
-              const stepData: Partial<CompleteOnboardingData> = {};
+              const stepData: Partial<ExtendedOnboardingData> = {};
 
               if (profile.birth_date) {
                 stepData.birthDate = new Date(profile.birth_date);
@@ -385,7 +385,7 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
     console.log('📍 [OnboardingProvider] Navigate to step:', step);
   }, []);
 
-  const updateStepData = useCallback((data: Partial<CompleteOnboardingData>) => {
+  const updateStepData = useCallback((data: Partial<ExtendedOnboardingData>) => {
     dispatch({ type: 'MERGE_STEP_DATA', payload: data });
   }, []);
 

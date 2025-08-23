@@ -3,19 +3,11 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackNavigationProp } from '@react-navigation/stack';
 import React from 'react';
 
-// Import all onboarding screens
+// Import only required onboarding screens
 import { OnboardingProvider } from '@/lib/onboarding/context-simple';
 import { OnboardingBirthdayScreen } from '@/screens/onboarding/OnboardingBirthdayScreen';
-import { OnboardingDependentsScreen } from '@/screens/onboarding/OnboardingDependentsScreen';
-import { OnboardingEthnicityScreen } from '@/screens/onboarding/OnboardingEthnicityScreen';
 import { OnboardingGenderScreen } from '@/screens/onboarding/OnboardingGenderScreen';
-import { OnboardingInterestsScreen } from '@/screens/onboarding/OnboardingInterestsScreen';
-import { OnboardingLifestyleScreen } from '@/screens/onboarding/OnboardingLifestyleScreen';
 import { OnboardingNameScreen } from '@/screens/onboarding/OnboardingNameScreen';
-import { OnboardingPersonalityScreen } from '@/screens/onboarding/OnboardingPersonalityScreen';
-import { OnboardingPhotoScreen } from '@/screens/onboarding/OnboardingPhotoScreen';
-import { OnboardingRelationshipScreen } from '@/screens/onboarding/OnboardingRelationshipScreen';
-import { OnboardingWorkScreen } from '@/screens/onboarding/OnboardingWorkScreen';
 import { AuthAPI } from '@/services/api/authApi';
 import { useAuthStore } from '@/store/authStore';
 import { __DEV__, devLog } from '@/utils/env';
@@ -24,14 +16,6 @@ export type OnboardingStackParamList = {
   OnboardingName: undefined;
   OnboardingBirthday: undefined;
   OnboardingGender: undefined;
-  OnboardingDependents: undefined;
-  OnboardingWork: undefined;
-  OnboardingEthnicity: undefined;
-  OnboardingRelationship: undefined;
-  OnboardingLifestyle: undefined;
-  OnboardingInterests: undefined;
-  OnboardingPersonality: undefined;
-  OnboardingPhoto: undefined;
 };
 
 const Stack = createNativeStackNavigator<OnboardingStackParamList>();
@@ -52,22 +36,6 @@ const createScreenWrapper = (ScreenComponent: any, nextScreen?: string, currentS
         navigation.navigate('OnboardingBirthday');
       } else if (screen === 'onboarding-gender') {
         navigation.navigate('OnboardingGender');
-      } else if (screen === 'onboarding-dependents') {
-        navigation.navigate('OnboardingDependents');
-      } else if (screen === 'onboarding-work') {
-        navigation.navigate('OnboardingWork');
-      } else if (screen === 'onboarding-ethnicity') {
-        navigation.navigate('OnboardingEthnicity');
-      } else if (screen === 'onboarding-relationship') {
-        navigation.navigate('OnboardingRelationship');
-      } else if (screen === 'onboarding-lifestyle') {
-        navigation.navigate('OnboardingLifestyle');
-      } else if (screen === 'onboarding-interests') {
-        navigation.navigate('OnboardingInterests');
-      } else if (screen === 'onboarding-personality') {
-        navigation.navigate('OnboardingPersonality');
-      } else if (screen === 'onboarding-photo') {
-        navigation.navigate('OnboardingPhoto');
       } else if (screen === 'onboarding-complete' || screen === 'home') {
         // Mark onboarding as complete
         try {
@@ -88,7 +56,7 @@ const createScreenWrapper = (ScreenComponent: any, nextScreen?: string, currentS
     };
 
     return (
-      <ScreenComponent onNavigate={handleNavigate} currentStep={currentStep} totalSteps={11} />
+      <ScreenComponent onNavigate={handleNavigate} currentStep={currentStep} totalSteps={3} />
     );
   };
 };
@@ -113,39 +81,7 @@ export function OnboardingNavigator() {
         />
         <Stack.Screen
           name="OnboardingGender"
-          component={createScreenWrapper(OnboardingGenderScreen, 'OnboardingDependents', 3)}
-        />
-        <Stack.Screen
-          name="OnboardingDependents"
-          component={createScreenWrapper(OnboardingDependentsScreen, 'OnboardingWork', 4)}
-        />
-        <Stack.Screen
-          name="OnboardingWork"
-          component={createScreenWrapper(OnboardingWorkScreen, 'OnboardingEthnicity', 5)}
-        />
-        <Stack.Screen
-          name="OnboardingEthnicity"
-          component={createScreenWrapper(OnboardingEthnicityScreen, 'OnboardingRelationship', 6)}
-        />
-        <Stack.Screen
-          name="OnboardingRelationship"
-          component={createScreenWrapper(OnboardingRelationshipScreen, 'OnboardingLifestyle', 7)}
-        />
-        <Stack.Screen
-          name="OnboardingLifestyle"
-          component={createScreenWrapper(OnboardingLifestyleScreen, 'OnboardingInterests', 8)}
-        />
-        <Stack.Screen
-          name="OnboardingInterests"
-          component={createScreenWrapper(OnboardingInterestsScreen, 'OnboardingPersonality', 9)}
-        />
-        <Stack.Screen
-          name="OnboardingPersonality"
-          component={createScreenWrapper(OnboardingPersonalityScreen, 'OnboardingPhoto', 10)}
-        />
-        <Stack.Screen
-          name="OnboardingPhoto"
-          component={createScreenWrapper(OnboardingPhotoScreen, undefined, 11)}
+          component={createScreenWrapper(OnboardingGenderScreen, undefined, 3)}
         />
       </Stack.Navigator>
     </OnboardingProvider>
