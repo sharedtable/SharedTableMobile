@@ -6,7 +6,7 @@
 import { supabase } from '@/lib/supabase/client';
 import type { UserProfileInsert } from '@/lib/supabase/types/database';
 
-import type { CompleteOnboardingData } from './validation';
+import type { CompleteOnboardingData, ExtendedOnboardingData } from './validation';
 import { completeOnboardingSchema } from './validation';
 
 // Service error types
@@ -33,14 +33,6 @@ export class OnboardingService {
     'name',
     'birthday',
     'gender',
-    'dependents',
-    'work',
-    'ethnicity',
-    'relationship',
-    'lifestyle',
-    'interests',
-    'personality',
-    'photo',
   ] as const;
 
   /**
@@ -175,7 +167,7 @@ export class OnboardingService {
    */
   static async saveOnboardingStep(
     userId: string,
-    stepData: Partial<CompleteOnboardingData>
+    stepData: Partial<ExtendedOnboardingData>
   ): Promise<void> {
     try {
       // Prepare user update data
@@ -434,7 +426,7 @@ export class OnboardingService {
         });
       }
 
-      const validatedData = validationResult.data;
+      const validatedData = validationResult.data as ExtendedOnboardingData;
 
       // Update user record to mark onboarding as complete
       const { error: userError } = await (supabase

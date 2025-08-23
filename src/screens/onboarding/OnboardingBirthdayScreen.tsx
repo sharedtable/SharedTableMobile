@@ -34,7 +34,7 @@ const PICKER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
 export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> = ({
   onNavigate,
   currentStep = 2,
-  totalSteps = 10,
+  totalSteps = 3,
 }) => {
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
   const currentYear = new Date().getFullYear();

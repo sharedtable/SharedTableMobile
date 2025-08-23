@@ -24,6 +24,14 @@ export const nameSchema = z.object({
       /^[a-zA-Z\s'-]+$/,
       'Last name can only contain letters, spaces, hyphens, and apostrophes'
     ),
+  nickname: z
+    .string()
+    .min(1, 'Nickname is required')
+    .max(30, 'Nickname must be less than 30 characters')
+    .regex(
+      /^[a-zA-Z0-9\s'-]+$/,
+      'Nickname can only contain letters, numbers, spaces, hyphens, and apostrophes'
+    ),
 });
 
 export const birthdaySchema = z.object({
@@ -147,8 +155,13 @@ export const photoSchema = z.object({
     .transform((val) => val || null),
 });
 
-// Complete onboarding data schema
+// Complete onboarding data schema (simplified to only required fields)
 export const completeOnboardingSchema = nameSchema
+  .merge(birthdaySchema)
+  .merge(genderSchema);
+
+// Full onboarding data schema (all optional fields)
+export const fullOnboardingSchema = nameSchema
   .merge(birthdaySchema)
   .merge(genderSchema)
   .merge(dependentsSchema)
@@ -192,6 +205,25 @@ export type PersonalityData = z.infer<typeof personalitySchema>;
 export type PhotoData = z.infer<typeof photoSchema>;
 
 export type CompleteOnboardingData = z.infer<typeof completeOnboardingSchema>;
+
+// Extended type for backward compatibility with old onboarding screens
+export type ExtendedOnboardingData = CompleteOnboardingData & {
+  major?: string;
+  interests?: string[];
+  hasDependents?: 'yes' | 'no';
+  lineOfWork?: string;
+  ethnicity?: string;
+  relationshipType?: string;
+  wantChildren?: 'Yes' | 'No' | 'Maybe';
+  smokingHabit?: 'Rarely' | 'Sometimes' | 'Always';
+  timeSinceLastRelationship?: string;
+  personalityTraits?: string[];
+  avatarUrl?: string | null;
+  bio?: string | null;
+  dietaryRestrictions?: string[] | null;
+  location?: string | null;
+  universityYear?: string;
+};
 
 // Validation step type
 export type OnboardingStep = keyof typeof onboardingStepSchemas;

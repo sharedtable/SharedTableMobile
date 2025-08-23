@@ -29,6 +29,7 @@ export type {
   LifestyleData,
   PhotoData,
   CompleteOnboardingData,
+  ExtendedOnboardingData,
   OnboardingStep,
 } from './validation';
 

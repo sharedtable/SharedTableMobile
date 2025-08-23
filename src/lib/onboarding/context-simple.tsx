@@ -5,13 +5,14 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 import { __DEV__, devLog } from '@/utils/env';
+import { OnboardingAPI } from '@/services/api/onboardingApi';
 
-import type { CompleteOnboardingData, OnboardingStep } from './validation';
+import type { ExtendedOnboardingData, OnboardingStep } from './validation';
 import { validateOnboardingStep } from './validation';
 
 interface OnboardingContextType {
   // Current step data
-  currentStepData: Partial<CompleteOnboardingData>;
+  currentStepData: Partial<ExtendedOnboardingData>;
 
   // Actions
   saveStep: (step: OnboardingStep, data: any) => Promise<boolean>;
@@ -19,7 +20,7 @@ interface OnboardingContextType {
     step: OnboardingStep,
     data: any
   ) => { success: boolean; errors?: Record<string, string> };
-  updateStepData: (data: Partial<CompleteOnboardingData>) => void;
+  updateStepData: (data: Partial<ExtendedOnboardingData>) => void;
   clearStepData: () => void;
   clearErrors: () => void;
   uploadPhoto: (imageUri: string) => Promise<string | null>;
@@ -32,7 +33,7 @@ interface OnboardingContextType {
 const OnboardingContext = createContext<OnboardingContextType | null>(null);
 
 export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentStepData, setCurrentStepData] = useState<Partial<CompleteOnboardingData>>({});
+  const [currentStepData, setCurrentStepData] = useState<Partial<ExtendedOnboardingData>>({});
   const [saving, setSaving] = useState(false);
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
 
@@ -49,11 +50,47 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         return false;
       }
 
-      // Update local state
-      setCurrentStepData((prev) => ({ ...prev, ...data }));
+      // Update local state first
+      const updatedData = { ...currentStepData, ...data };
+      setCurrentStepData(updatedData);
 
-      // For now, we'll save to the backend when onboarding is complete
-      // Individual steps are stored locally
+      // For the 3 required steps, save to backend
+      if (step === 'name' || step === 'birthday' || step === 'gender') {
+        try {
+          // Prepare data for backend based on step
+          const apiData: any = {};
+          if (step === 'name') {
+            apiData.firstName = data.firstName;
+            apiData.lastName = data.lastName;
+            apiData.nickname = data.nickname;
+          } else if (step === 'birthday') {
+            apiData.birthDate = data.birthDate?.toISOString ? data.birthDate.toISOString() : data.birthDate;
+          } else if (step === 'gender') {
+            apiData.gender = data.gender;
+          }
+
+          await OnboardingAPI.saveStep({ step, data: apiData });
+
+          // If this is the last step (gender), complete the onboarding
+          if (step === 'gender') {
+            const completeData = {
+              firstName: updatedData.firstName!,
+              lastName: updatedData.lastName!,
+              nickname: updatedData.nickname!,
+              birthDate: updatedData.birthDate?.toISOString ? updatedData.birthDate.toISOString() : updatedData.birthDate!,
+              gender: updatedData.gender!,
+            };
+            await OnboardingAPI.completeOnboarding(completeData);
+          }
+        } catch (error) {
+          if (__DEV__) {
+            console.error(`Error saving ${step} to backend:`, error);
+          }
+          setStepErrors({ general: 'Failed to save data to server. Please try again.' });
+          setSaving(false);
+          return false;
+        }
+      }
 
       if (__DEV__) {
         devLog(`Onboarding step saved: ${step}`, data);
@@ -69,13 +106,13 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setStepErrors({ general: 'Failed to save data. Please try again.' });
       return false;
     }
-  }, []);
+  }, [currentStepData]);
 
   const validateStep = useCallback((step: OnboardingStep, data: any) => {
     return validateOnboardingStep(step, data);
   }, []);
 
-  const updateStepData = useCallback((data: Partial<CompleteOnboardingData>) => {
+  const updateStepData = useCallback((data: Partial<ExtendedOnboardingData>) => {
     setCurrentStepData((prev) => ({ ...prev, ...data }));
   }, []);
 

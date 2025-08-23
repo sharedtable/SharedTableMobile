@@ -12,6 +12,7 @@ import { logger } from './utils/logger';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
 import chatRoutes from './routes/chat';
+import onboardingRoutes from './routes/onboarding';
 
 // Load environment variables
 dotenv.config();
@@ -74,6 +75,7 @@ app.get('/health', (_req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/onboarding', onboardingRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

@@ -19,12 +19,13 @@ interface OnboardingNameScreenProps {
 export const OnboardingNameScreen: React.FC<OnboardingNameScreenProps> = ({
   onNavigate,
   currentStep = 1,
-  totalSteps = 10,
+  totalSteps = 3,
 }) => {
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
 
   const [firstName, setFirstName] = useState(currentStepData.firstName || '');
   const [lastName, setLastName] = useState(currentStepData.lastName || '');
+  const [nickname, setNickname] = useState(currentStepData.nickname || '');
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export const OnboardingNameScreen: React.FC<OnboardingNameScreenProps> = ({
       setLocalErrors({});
       clearErrors();
 
-      const nameData = { firstName, lastName };
+      const nameData = { firstName, lastName, nickname };
 
       // Validate locally first
       const validation = validateOnboardingStep('name', nameData);
@@ -117,13 +118,30 @@ export const OnboardingNameScreen: React.FC<OnboardingNameScreenProps> = ({
           error={localErrors.lastName || stepErrors.lastName}
         />
 
+        <OnboardingInput
+          label="Nickname"
+          value={nickname}
+          onChangeText={(text) => {
+            setNickname(text);
+            if (localErrors.nickname || stepErrors.nickname) {
+              setLocalErrors((prev) => ({ ...prev, nickname: '' }));
+              clearErrors();
+            }
+          }}
+          placeholder="What should we call you?"
+          required
+          keyboardType="default"
+          autoCapitalize="words"
+          error={localErrors.nickname || stepErrors.nickname}
+        />
+
         <View style={styles.spacer} />
 
         <View style={styles.bottomContainer}>
           <OnboardingButton
             onPress={handleNext}
             label={saving ? 'Saving...' : 'Next'}
-            disabled={!firstName.trim() || !lastName.trim() || saving}
+            disabled={!firstName.trim() || !lastName.trim() || !nickname.trim() || saving}
             loading={saving}
           />
         </View>
