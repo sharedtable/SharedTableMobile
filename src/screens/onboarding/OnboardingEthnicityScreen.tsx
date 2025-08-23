@@ -95,7 +95,7 @@ export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps>
       scrollable
     >
       <View style={styles.container}>
-        <OnboardingTitle>What is your ethnicity?</OnboardingTitle>
+        <OnboardingTitle>{"What is your ethnicity?"}</OnboardingTitle>
 
         {hasError && (
           <View style={styles.errorContainer}>

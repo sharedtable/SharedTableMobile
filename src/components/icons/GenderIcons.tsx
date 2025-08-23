@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 
+import { Colors } from '@/constants/colors';
+
 // import { scaleWidth } from '@/utils/responsive';
 
 interface GenderIconProps {
@@ -31,10 +33,9 @@ export const MaleIcon: React.FC<GenderIconProps> = ({
             borderRadius: circleSize / 2,
             borderWidth: strokeWidth,
             borderColor: activeColor,
-            backgroundColor: isSelected ? activeColor : 'transparent',
-            left: 0,
-            bottom: 0,
+            backgroundColor: isSelected ? activeColor : Colors.transparent,
           },
+          styles.maleCirclePosition,
         ]}
       />
 
@@ -43,48 +44,52 @@ export const MaleIcon: React.FC<GenderIconProps> = ({
         style={[
           styles.arrowContainer,
           {
-            position: 'absolute',
             top: size * 0.05,
             right: size * 0.05,
           },
+          styles.absolutePosition,
         ]}
       >
         {/* Arrow line */}
         <View
-          style={{
-            position: 'absolute',
-            width: arrowLength,
-            height: strokeWidth,
-            backgroundColor: activeColor,
-            top: size * 0.12,
-            right: -size * 0.02,
-            transform: [{ rotate: '-45deg' }],
-            transformOrigin: 'center',
-          }}
+          style={[
+            styles.absolutePosition,
+            {
+              width: arrowLength,
+              height: strokeWidth,
+              backgroundColor: activeColor,
+              top: size * 0.12,
+              right: -size * 0.02,
+              transform: [{ rotate: '-45deg' }],
+              transformOrigin: 'center',
+            },
+          ]}
         />
 
         {/* Arrow head - horizontal part */}
         <View
-          style={{
-            position: 'absolute',
-            width: size * 0.2,
-            height: strokeWidth,
-            backgroundColor: activeColor,
-            top: 0,
-            right: 0,
-          }}
+          style={[
+            styles.absolutePosition,
+            styles.arrowHeadTop,
+            {
+              width: size * 0.2,
+              height: strokeWidth,
+              backgroundColor: activeColor,
+            },
+          ]}
         />
 
         {/* Arrow head - vertical part */}
         <View
-          style={{
-            position: 'absolute',
-            width: strokeWidth,
-            height: size * 0.2,
-            backgroundColor: activeColor,
-            top: 0,
-            right: 0,
-          }}
+          style={[
+            styles.absolutePosition,
+            styles.arrowHeadTop,
+            {
+              width: strokeWidth,
+              height: size * 0.2,
+              backgroundColor: activeColor,
+            },
+          ]}
         />
       </View>
     </View>
@@ -107,52 +112,57 @@ export const FemaleIcon: React.FC<GenderIconProps> = ({
       <View
         style={[
           styles.circle,
+          styles.femaleCirclePosition,
           {
             width: circleSize,
             height: circleSize,
             borderRadius: circleSize / 2,
             borderWidth: strokeWidth,
             borderColor: activeColor,
-            backgroundColor: isSelected ? activeColor : 'transparent',
-            top: 0,
-            right: 0,
+            backgroundColor: isSelected ? activeColor : Colors.transparent,
           },
         ]}
       />
 
       {/* Cross pointing to bottom-left corner at 45 degrees */}
       <View
-        style={{
-          position: 'absolute',
+        style={[
+          styles.absolutePosition,
+          {
           left: size * 0.1,
           bottom: size * 0.1,
           width: crossLength,
           height: crossLength,
           transform: [{ rotate: '45deg' }],
-        }}
+          },
+        ]}
       >
         {/* Vertical stem of cross connecting to circle */}
         <View
-          style={{
-            position: 'absolute',
+          style={[
+            styles.absolutePosition,
+            {
             width: strokeWidth,
             height: crossLength * 1.4,
             backgroundColor: activeColor,
             left: (crossLength - strokeWidth) / 2,
             top: -crossLength * 0.4,
-          }}
+            },
+          ]}
         />
 
         {/* Horizontal arm of cross */}
         <View
-          style={{
-            position: 'absolute',
+          style={[
+            styles.absolutePosition,
+            {
             width: crossLength * 0.6,
             height: strokeWidth,
             backgroundColor: activeColor,
             left: (crossLength - crossLength * 0.6) / 2,
             top: (crossLength - strokeWidth) / 2,
-          }}
+            },
+          ]}
         />
       </View>
     </View>
@@ -164,8 +174,23 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   circle: {
-    backgroundColor: 'transparent',
+    backgroundColor: Colors.transparent,
     position: 'absolute',
+  },
+  femaleCirclePosition: {
+    top: 0,
+    right: 0,
+  },
+  maleCirclePosition: {
+    left: 0,
+    bottom: 0,
+  },
+  absolutePosition: {
+    position: 'absolute' as const,
+  },
+  arrowHeadTop: {
+    top: 0,
+    right: 0,
   },
   container: {
     position: 'relative',

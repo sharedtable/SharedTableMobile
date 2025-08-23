@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 
 import { Icon } from '@/components/base/Icon';
+import { Colors } from '@/constants/colors';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -133,7 +134,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.primary.main,
   },
   container: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor: Colors.backgroundLight,
     flex: 1,
     paddingTop: scaleHeight(20),
   },
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
   },
   streakCard: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: Colors.gray300,
     borderRadius: scaleWidth(27),
     borderWidth: 1,
     marginBottom: scaleHeight(16),
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
     marginBottom: scaleHeight(24),
   },
   streakInfo: {
-    backgroundColor: 'rgba(226, 72, 73, 0.05)',
+    backgroundColor: Colors.primaryLight,
     borderColor: theme.colors.primary.main,
     borderRadius: scaleWidth(27),
     borderWidth: 1,
@@ -231,7 +232,7 @@ const styles = StyleSheet.create({
   },
   taskItem: {
     alignItems: 'center',
-    backgroundColor: '#FAFAFA',
+    backgroundColor: Colors.gray50,
     borderColor: theme.colors.primary.main,
     borderRadius: scaleWidth(27),
     borderWidth: 1,
@@ -261,7 +262,7 @@ const styles = StyleSheet.create({
   },
   tasksCard: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: Colors.gray300,
     borderRadius: scaleWidth(27),
     borderWidth: 1,
     marginBottom: scaleHeight(16),

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 
+import { Colors } from '@/constants/colors';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -132,7 +133,7 @@ const styles = StyleSheet.create({
     paddingVertical: scaleHeight(10),
   },
   claimButtonDisabled: {
-    backgroundColor: '#CCCCCC',
+    backgroundColor: Colors.gray400,
   },
   claimButtonPressed: {
     opacity: 0.8,
@@ -144,7 +145,7 @@ const styles = StyleSheet.create({
     fontWeight: '600' as any,
   },
   container: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor: Colors.backgroundLight,
     flex: 1,
     paddingTop: scaleHeight(10),
   },
@@ -190,7 +191,7 @@ const styles = StyleSheet.create({
   pointsContainer: {
     alignItems: 'center',
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: Colors.gray300,
     borderRadius: scaleWidth(20),
     borderWidth: 1,
     flexDirection: 'row',
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
   },
   rewardCard: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: Colors.gray300,
     borderRadius: scaleWidth(27),
     borderWidth: 1,
     marginBottom: scaleHeight(16),
@@ -227,7 +228,7 @@ const styles = StyleSheet.create({
   tierContainer: {
     alignItems: 'center',
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: Colors.gray300,
     borderRadius: scaleWidth(20),
     borderWidth: 1,
     flexDirection: 'row',

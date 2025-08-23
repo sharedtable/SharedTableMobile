@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 import { Icon } from '@/components/base/Icon';
+import { Colors } from '@/constants/colors';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -34,7 +35,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
             <Text
               style={[
                 styles.trend,
-                { color: trend.startsWith('+') ? '#16A34A' : theme.colors.primary.main },
+                trend.startsWith('+') && styles.trendPositive,
               ]}
             >
               {trend}
@@ -52,7 +53,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: Colors.gray300,
     borderRadius: scaleWidth(27),
     borderWidth: 1,
     flex: 1,
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     alignItems: 'center',
-    backgroundColor: 'rgba(226, 72, 73, 0.1)',
+    backgroundColor: Colors.primaryLighter,
     borderRadius: scaleWidth(18),
     height: scaleWidth(36),
     justifyContent: 'center',
@@ -88,6 +89,7 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(12),
     fontWeight: '600' as any,
     marginLeft: scaleWidth(4),
+    color: theme.colors.primary.main,
   },
   value: {
     color: theme.colors.text.primary,
@@ -98,5 +100,8 @@ const styles = StyleSheet.create({
   valueRow: {
     alignItems: 'baseline',
     flexDirection: 'row',
+  },
+  trendPositive: {
+    color: Colors.success,
   },
 });

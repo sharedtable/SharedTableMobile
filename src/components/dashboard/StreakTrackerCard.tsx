@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
+import { Colors } from '@/constants/colors';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -48,7 +49,7 @@ export const StreakTrackerCard: React.FC<StreakTrackerCardProps> = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: Colors.gray300,
     borderRadius: scaleWidth(27),
     borderWidth: 1,
     padding: scaleWidth(20),
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
     fontWeight: '600' as any,
   },
   section: {
-    backgroundColor: 'rgba(226, 72, 73, 0.05)',
+    backgroundColor: Colors.primaryLight,
     borderColor: theme.colors.primary.main,
     borderRadius: scaleWidth(27),
     borderWidth: 1,

@@ -80,7 +80,7 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
       keyboardAvoiding
     >
       <View style={styles.container}>
-        <OnboardingTitle>What's your gender?</OnboardingTitle>
+        <OnboardingTitle>{"What's your gender?"}</OnboardingTitle>
 
         {hasError && (
           <View style={styles.errorContainer}>

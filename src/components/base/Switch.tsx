@@ -74,8 +74,8 @@ export const Switch = memo<SwitchProps>(
             width: config.width,
             height: config.height,
             backgroundColor: value ? trackColor.true : trackColor.false,
-            opacity: disabled ? 0.5 : 1,
           },
+          disabled && styles.disabled,
         ]}
         accessibilityRole="switch"
         accessibilityState={{ checked: value, disabled }}
@@ -158,5 +158,8 @@ const styles = StyleSheet.create({
         elevation: 2,
       },
     }),
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });

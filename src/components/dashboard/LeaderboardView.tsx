@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Image } from 'react-native';
 
+import { Colors } from '@/constants/colors';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -360,7 +361,7 @@ const styles = StyleSheet.create({
     width: scaleWidth(70),
   },
   container: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor: Colors.backgroundLight,
     flex: 1,
   },
   crownContainer: {
@@ -401,7 +402,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: Colors.gray300,
     borderRadius: scaleWidth(27),
     borderWidth: 1,
     marginBottom: scaleHeight(16),
@@ -411,7 +412,7 @@ const styles = StyleSheet.create({
   },
   listItem: {
     alignItems: 'center',
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: Colors.gray200,
     borderBottomWidth: 1,
     flexDirection: 'row',
     paddingVertical: scaleHeight(12),
@@ -435,7 +436,7 @@ const styles = StyleSheet.create({
   },
   podiumContainer: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: Colors.gray300,
     borderRadius: scaleWidth(27),
     borderWidth: 1,
     marginBottom: scaleHeight(16),
@@ -496,7 +497,7 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     backgroundColor: theme.colors.white,
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: Colors.gray300,
     borderBottomWidth: 1,
     flexDirection: 'row',
     paddingHorizontal: scaleWidth(24),

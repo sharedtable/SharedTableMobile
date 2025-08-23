@@ -177,7 +177,7 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
       keyboardAvoiding
     >
       <View style={styles.container}>
-        <OnboardingTitle>What's your birthday?</OnboardingTitle>
+        <OnboardingTitle>{"What's your birthday?"}</OnboardingTitle>
 
         {hasError && (
           <View style={styles.errorContainer}>

@@ -1,6 +1,7 @@
 import * as Font from 'expo-font';
 
 export const loadFonts = async () => {
+  /* eslint-disable @typescript-eslint/no-require-imports */
   await Font.loadAsync({
     // Keania One font for headings
     'Keania One': require('@/assets/fonts/KeaniaOne-Regular.ttf'),
@@ -16,6 +17,7 @@ export const loadFonts = async () => {
     'Inter-ExtraBold': require('@/assets/fonts/Inter-ExtraBold.ttf'),
     'Inter-Black': require('@/assets/fonts/Inter-Black.ttf'),
   });
+  /* eslint-enable @typescript-eslint/no-require-imports */
 };
 
 // Font configuration for text components
