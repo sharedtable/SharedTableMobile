@@ -59,14 +59,18 @@ export const useEvents = (): UseEventsReturn => {
       setSinglesDinners(singles);
       setAllEvents(upcoming);
 
-      console.log('✅ [useEvents] Events loaded:', {
-        regular: regular.length,
-        singles: singles.length,
-        total: upcoming.length,
-      });
+      if (__DEV__) {
+        console.log('[useEvents] Events loaded:', {
+          regular: regular.length,
+          singles: singles.length,
+          total: upcoming.length,
+        });
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load events';
-      console.error('❌ [useEvents] Error fetching events:', err);
+      if (__DEV__) {
+        console.error('[useEvents] Error fetching events:', err);
+      }
       setError(errorMessage);
 
       // Set empty arrays on error to prevent UI crashes
@@ -99,6 +103,14 @@ export const useEvents = (): UseEventsReturn => {
       }
 
       try {
+        if (__DEV__) {
+          console.log('[useEvents] Booking event with user:', {
+            userId: user.id,
+            eventId,
+            userEmail: user.email,
+          });
+        }
+        
         const bookingRequest: BookingRequest = {
           eventId,
           userId: user.id, // Use Privy user ID
@@ -114,7 +126,9 @@ export const useEvents = (): UseEventsReturn => {
 
         return response;
       } catch (error) {
-        console.error('❌ [useEvents] Booking failed:', error);
+        if (__DEV__) {
+          console.error('[useEvents] Booking failed:', error);
+        }
         return {
           success: false,
           message: 'Failed to book event. Please try again.',
@@ -137,7 +151,7 @@ export const useEvents = (): UseEventsReturn => {
       }
 
       try {
-        const response = await BookingsService.cancelBooking(eventId, user.email!);
+        const response = await BookingsService.cancelBooking(eventId, user.id);
 
         if (response.success) {
           // Refresh events to update participant counts
@@ -146,7 +160,9 @@ export const useEvents = (): UseEventsReturn => {
 
         return response;
       } catch (error) {
-        console.error('❌ [useEvents] Cancel booking failed:', error);
+        if (__DEV__) {
+          console.error('[useEvents] Cancel booking failed:', error);
+        }
         return {
           success: false,
           message: 'Failed to cancel booking. Please try again.',
@@ -164,9 +180,11 @@ export const useEvents = (): UseEventsReturn => {
       if (!user) return false;
 
       try {
-        return await BookingsService.isEventBooked(eventId, user.email!);
+        return await BookingsService.isEventBooked(eventId, user.id);
       } catch (error) {
-        console.error('❌ [useEvents] Failed to check booking status:', error);
+        if (__DEV__) {
+          console.error('[useEvents] Failed to check booking status:', error);
+        }
         return false;
       }
     },

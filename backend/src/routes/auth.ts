@@ -101,11 +101,8 @@ router.post('/sync', async (req: Request, res: Response, next: NextFunction) => 
       // This handles cases where users were created before we had Privy
       updateData.external_auth_id = validatedData.privyUserId;
 
-      // Update wallet address if provided and different
-      if (
-        validatedData.walletAddress &&
-        validatedData.walletAddress !== existingUser.wallet_address
-      ) {
+      // Update wallet address if provided (always update to ensure it's current)
+      if (validatedData.walletAddress) {
         updateData.wallet_address = validatedData.walletAddress.toLowerCase();
         logger.info(`Updating wallet address for user ${userId}: ${validatedData.walletAddress}`);
       }

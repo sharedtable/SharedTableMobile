@@ -5,7 +5,6 @@
  */
 
 import { supabase } from '../supabase/client';
-import { UserSyncService } from '../../services/userSyncService';
 import type { Event } from '../supabase/types/database';
 
 export interface BookingRequest {
@@ -44,14 +43,20 @@ export class BookingsService {
         };
       }
 
-      // Check if user exists in database
+      // Get user by external_auth_id (Privy ID)
       const { data: user, error: userError } = await supabase
         .from('users')
         .select('*')
-        .eq('id', booking.userId)
+        .eq('external_auth_id', booking.userId)
         .single();
 
       if (userError || !user) {
+        if (__DEV__) {
+          console.error('[BookingsService] User lookup failed:', { 
+            userId: booking.userId, 
+            error: userError 
+          });
+        }
         return {
           success: false,
           message: 'User account not found. Please try logging in again.',
@@ -90,12 +95,29 @@ export class BookingsService {
         };
       }
 
-      // Create booking record with proper enum values based on defaults
+      // Check if user already has a booking for this event
+      const { data: existingBooking } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('user_id', (user as any).id)
+        .eq('event_id', booking.eventId)
+        .eq('status', 'confirmed')
+        .single();
+
+      if (existingBooking) {
+        return {
+          success: false,
+          message: 'You have already booked this event',
+        };
+      }
+
+      // Create booking record with simplified schema
       const bookingData = {
         user_id: (user as any).id, // Use Supabase user ID from synced data
         event_id: booking.eventId,
-        status: 'pending', // Default value from schema
-        payment_status: 'pending', // Default value from schema
+        status: 'confirmed', // Auto-confirm for now (until payment integration)
+        amount_usdc: (event as any).price_cents ? (event as any).price_cents / 100 : 0, // Convert cents to USDC
+        wallet_address: (user as any).wallet_address || null,
         special_requests: booking.specialRequests || null,
         booking_source: 'mobile_app',
       };
@@ -107,6 +129,18 @@ export class BookingsService {
         .single();
 
       if (bookingError) {
+        if (__DEV__) {
+          console.error('Booking creation error:', bookingError);
+        }
+        
+        // Check if it's a unique constraint violation
+        if (bookingError.code === '23505') {
+          return {
+            success: false,
+            message: 'You have already booked this event',
+          };
+        }
+        
         return {
           success: false,
           message: 'Failed to complete booking. Please try again.',
@@ -138,7 +172,9 @@ export class BookingsService {
         message: 'Successfully booked your spot!',
       };
     } catch (error) {
-      console.error('Error booking event:', error);
+      if (__DEV__) {
+        console.error('Error booking event:', error);
+      }
       return {
         success: false,
         message: 'An unexpected error occurred. Please try again.',
@@ -149,10 +185,14 @@ export class BookingsService {
   /**
    * Cancel a booking
    */
-  static async cancelBooking(eventId: string, userEmail: string): Promise<BookingResponse> {
+  static async cancelBooking(eventId: string, userId: string): Promise<BookingResponse> {
     try {
-      // Get user from database
-      const user = await UserSyncService.getUserByEmail(userEmail);
+      // Get user by external_auth_id (Privy ID)
+      const { data: user } = await supabase
+        .from('users')
+        .select('id')
+        .eq('external_auth_id', userId)
+        .single();
 
       if (!user) {
         return {
@@ -165,7 +205,7 @@ export class BookingsService {
       const { data: booking, error: bookingError } = await supabase
         .from('bookings')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', (user as any).id)
         .eq('event_id', eventId)
         .eq('status', 'confirmed')
         .single();
@@ -226,7 +266,9 @@ export class BookingsService {
         message: 'Booking cancelled successfully',
       };
     } catch (error) {
-      console.error('Failed to cancel booking:', error);
+      if (__DEV__) {
+        console.error('Failed to cancel booking:', error);
+      }
       return {
         success: false,
         message: 'Failed to cancel booking. Please try again.',
@@ -237,10 +279,14 @@ export class BookingsService {
   /**
    * Get user's bookings
    */
-  static async getUserBookings(userEmail: string): Promise<UserBooking[]> {
+  static async getUserBookings(userId: string): Promise<UserBooking[]> {
     try {
-      // Get user from database
-      const user = await UserSyncService.getUserByEmail(userEmail);
+      // Get user by external_auth_id (Privy ID)
+      const { data: user } = await supabase
+        .from('users')
+        .select('id')
+        .eq('external_auth_id', userId)
+        .single();
 
       if (!user) {
         return [];
@@ -257,7 +303,7 @@ export class BookingsService {
           events (*)
         `
         )
-        .eq('user_id', user.id)
+        .eq('user_id', (user as any).id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -281,7 +327,9 @@ export class BookingsService {
 
       return userBookings;
     } catch (error) {
-      console.error('Error fetching user bookings:', error);
+      if (__DEV__) {
+        console.error('Error fetching user bookings:', error);
+      }
       return [];
     }
   }
@@ -289,10 +337,14 @@ export class BookingsService {
   /**
    * Check if user has already booked an event
    */
-  static async isEventBooked(eventId: string, userEmail: string): Promise<boolean> {
+  static async isEventBooked(eventId: string, userId: string): Promise<boolean> {
     try {
-      // Get user from database
-      const user = await UserSyncService.getUserByEmail(userEmail);
+      // Get user by external_auth_id (Privy ID)
+      const { data: user } = await supabase
+        .from('users')
+        .select('id')
+        .eq('external_auth_id', userId)
+        .single();
 
       if (!user) {
         return false;
@@ -301,7 +353,7 @@ export class BookingsService {
       const { data: booking, error } = await supabase
         .from('bookings')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', (user as any).id)
         .eq('event_id', eventId)
         .eq('status', 'confirmed')
         .single();
@@ -316,7 +368,9 @@ export class BookingsService {
 
       return !!booking;
     } catch (error) {
-      console.error('Error checking if event is booked:', error);
+      if (__DEV__) {
+        console.error('Error checking if event is booked:', error);
+      }
       return false;
     }
   }

@@ -33,10 +33,13 @@ export class EventsService {
       .order('start_time', { ascending: true });
 
     if (error) {
+      if (__DEV__) {
+        console.error('[EventsService] Error fetching events:', error);
+      }
       throw error;
     }
 
-    if (!events) {
+    if (!events || events.length === 0) {
       return [];
     }
 
