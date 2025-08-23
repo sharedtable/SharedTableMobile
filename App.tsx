@@ -14,14 +14,19 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AuthSyncProvider } from '@/components/AuthSyncProvider';
 import { PrivyProvider } from '@/lib/privy/PrivyProvider';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { useAuthStore } from '@/store/authStore';
+import { setLogLevel } from '@/utils/logger';
 
 // Hide the native splash screen immediately
 SplashScreen.hideAsync();
+
+// Configure logging - set to 'error' for production, 'info' for debugging
+setLogLevel(__DEV__ ? 'info' : 'error');
 
 export default function App() {
   const { initializeAuth } = useAuthStore();
@@ -50,15 +55,17 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider>
-      <StatusBar style="dark" />
-      <PrivyProvider>
-        <AuthSyncProvider>
-          <NavigationContainer>
-            <RootNavigator />
-          </NavigationContainer>
-        </AuthSyncProvider>
-      </PrivyProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <StatusBar style="dark" />
+        <PrivyProvider>
+          <AuthSyncProvider>
+            <NavigationContainer>
+              <RootNavigator />
+            </NavigationContainer>
+          </AuthSyncProvider>
+        </PrivyProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

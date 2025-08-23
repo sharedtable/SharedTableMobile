@@ -78,7 +78,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     detectSessionInUrl: false, // Disable for mobile
     flowType: 'pkce', // Most secure OAuth flow
-    debug: __DEV__, // Enable debug logging in development
+    debug: false, // Disable verbose logging
   },
   global: {
     headers: {

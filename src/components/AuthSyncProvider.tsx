@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { useAuthStore } from '@/store/authStore';
-import { __DEV__, devLog } from '@/utils/env';
+import { logger } from '@/utils/logger';
 
 interface AuthSyncProviderProps {
   children: React.ReactNode;
@@ -16,20 +16,15 @@ export function AuthSyncProvider({ children }: AuthSyncProviderProps) {
 
   useEffect(() => {
     if (!isReady) {
-      if (__DEV__) {
-        devLog('Privy not ready yet');
-      }
+      // Privy is still initializing, this is normal on app startup
       return;
     }
 
-    if (__DEV__) {
-      devLog('AuthSyncProvider - Privy state:', {
-        isReady,
-        hasUser: !!privyUser,
-        userId: privyUser?.id,
-        isAuthenticated,
-      });
-    }
+    logger.debug('AuthSyncProvider - Privy state', {
+      hasUser: !!privyUser,
+      userId: privyUser?.id,
+      isAuthenticated,
+    });
 
     if (privyUser && isAuthenticated) {
       // User is authenticated with Privy
@@ -48,17 +43,13 @@ export function AuthSyncProvider({ children }: AuthSyncProviderProps) {
 
       setPrivyUser(userData);
 
-      if (__DEV__) {
-        devLog('User authenticated and synced to store:', userData);
-      }
+      logger.debug('User authenticated and synced to store', userData);
     } else {
       // User is not authenticated
       setPrivyUser(null);
       setNeedsOnboarding(false);
 
-      if (__DEV__) {
-        devLog('User not authenticated, clearing store');
-      }
+      logger.debug('User not authenticated, clearing store');
     }
   }, [privyUser, isReady, isAuthenticated, setPrivyUser, setNeedsOnboarding]);
 

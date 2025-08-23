@@ -8,6 +8,7 @@ import * as SecureStore from 'expo-secure-store';
 
 import { __DEV__, logError } from '@/utils/env';
 import { retryWithBackoff, withTimeout } from '@/utils/retry';
+import { logger } from '@/utils/logger';
 
 // API configuration
 // Use your local IP address for development (not localhost)
@@ -143,13 +144,18 @@ export class AuthAPI {
   /**
    * Fetches a Stream Chat user token for the authenticated user
    */
-  static async getChatUserToken(): Promise<string> {
+  static async getChatUserToken(): Promise<{ token: string; displayName?: string }> {
     const token = await this.getAuthToken();
     if (!token) {
-      console.error('getChatUserToken: Not authenticated, no token found');
+      logger.error('getChatUserToken: Not authenticated');
       throw new Error('Not authenticated');
     }
-    const response = await apiClient.post<{ success: boolean; token: string }>(
+    const response = await apiClient.post<{ 
+      success: boolean; 
+      token: string;
+      streamUserId?: string;
+      displayName?: string;
+    }>(
       '/chat/token',
       {},
       {
@@ -160,12 +166,15 @@ export class AuthAPI {
     );
 
     if (!response.data.success || !response.data.token) {
-      console.error('Failed to fetch chat user token:', response.data);
+      logger.error('Failed to fetch chat user token', response.data);
       throw new Error('Failed to fetch chat user token');
     }
-    console.log('Fetched Stream USER_TOKEN:', response.data.token);
+    logger.debug('Fetched Stream USER_TOKEN with displayName:', response.data.displayName);
 
-    return response.data.token;
+    return {
+      token: response.data.token,
+      displayName: response.data.displayName,
+    };
   }
 
   /**

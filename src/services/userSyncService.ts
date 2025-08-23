@@ -4,6 +4,7 @@
  */
 
 import { __DEV__, logError } from '@/utils/env';
+import { logger } from '@/utils/logger';
 
 import { AuthAPI } from './api/authApi';
 
@@ -39,15 +40,10 @@ export class UserSyncService {
       });
 
       if (response.success) {
-        if (__DEV__) {
-          console.log(
-            response.data.isNewUser ? 'Created new user:' : 'Updated existing user:',
-            response.data.user.id
-          );
-          if (response.data.needsOnboarding) {
-            console.log('User needs onboarding');
-          }
-        }
+        logger.info(
+          response.data.isNewUser ? 'Created new user' : 'Updated existing user',
+          { userId: response.data.user.id, needsOnboarding: response.data.needsOnboarding }
+        );
 
         return {
           success: true,

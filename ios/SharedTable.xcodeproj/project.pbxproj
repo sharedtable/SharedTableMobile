@@ -9,27 +9,27 @@
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
+		46E4E2B13AA86B5074B19B40 /* libPods-SharedTable.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8231EA3BA68A3A44D239F5C8 /* libPods-SharedTable.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		C2538D5F00B2CD10D61332D6 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 882FC326DD0B40D77DC1D6FD /* PrivacyInfo.xcprivacy */; };
-		D1E8D006E0424FAA4A27D2D2 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE43844EBF96B0CDD4A8451D /* ExpoModulesProvider.swift */; };
+		DE32758D64575D12B52AD3CC /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F80AF0B14E9BD8930DF6AC59 /* PrivacyInfo.xcprivacy */; };
+		EA8307CE0A46B54F36A2B2F2 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43970B5AD86DF8C241532F7D /* ExpoModulesProvider.swift */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		F4567EBE1E7ED31A603564B2 /* libPods-SharedTable.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8EFD830042CEF907C1D1DBEC /* libPods-SharedTable.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0013313138EE5C22E6D66854 /* Pods-SharedTable.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SharedTable.debug.xcconfig"; path = "Target Support Files/Pods-SharedTable/Pods-SharedTable.debug.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* SharedTable.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SharedTable.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = SharedTable/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = SharedTable/Info.plist; sourceTree = "<group>"; };
-		37DFF2BCB07602D467A0491F /* Pods-SharedTable.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SharedTable.debug.xcconfig"; path = "Target Support Files/Pods-SharedTable/Pods-SharedTable.debug.xcconfig"; sourceTree = "<group>"; };
-		882FC326DD0B40D77DC1D6FD /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = SharedTable/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		8EFD830042CEF907C1D1DBEC /* libPods-SharedTable.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-SharedTable.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		43970B5AD86DF8C241532F7D /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-SharedTable/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		7E4EBF2A2D3A08C92D529553 /* Pods-SharedTable.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SharedTable.release.xcconfig"; path = "Target Support Files/Pods-SharedTable/Pods-SharedTable.release.xcconfig"; sourceTree = "<group>"; };
+		8231EA3BA68A3A44D239F5C8 /* libPods-SharedTable.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-SharedTable.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = SharedTable/SplashScreen.storyboard; sourceTree = "<group>"; };
-		AC721AC1F6EF56317D27F98B /* Pods-SharedTable.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SharedTable.release.xcconfig"; path = "Target Support Files/Pods-SharedTable/Pods-SharedTable.release.xcconfig"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		EE43844EBF96B0CDD4A8451D /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-SharedTable/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = SharedTable/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* SharedTable-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "SharedTable-Bridging-Header.h"; path = "SharedTable/SharedTable-Bridging-Header.h"; sourceTree = "<group>"; };
+		F80AF0B14E9BD8930DF6AC59 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = SharedTable/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F4567EBE1E7ED31A603564B2 /* libPods-SharedTable.a in Frameworks */,
+				46E4E2B13AA86B5074B19B40 /* libPods-SharedTable.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,7 +53,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				882FC326DD0B40D77DC1D6FD /* PrivacyInfo.xcprivacy */,
+				F80AF0B14E9BD8930DF6AC59 /* PrivacyInfo.xcprivacy */,
 			);
 			name = SharedTable;
 			sourceTree = "<group>";
@@ -62,7 +62,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				8EFD830042CEF907C1D1DBEC /* libPods-SharedTable.a */,
+				8231EA3BA68A3A44D239F5C8 /* libPods-SharedTable.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -81,8 +81,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				F138EC963EDFD0C1B80FEE30 /* Pods */,
-				C80A7D7DE75D496E5AA84EB4 /* ExpoModulesProviders */,
+				D8315FF3AFF17447D0EC9523 /* Pods */,
+				A8EAC60E53C2CB79AD5EAE2E /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -97,12 +97,12 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		AC274A85FE19610588BD856C /* SharedTable */ = {
+		A8EAC60E53C2CB79AD5EAE2E /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				EE43844EBF96B0CDD4A8451D /* ExpoModulesProvider.swift */,
+				D3E2181E6CABE80FD05D666C /* SharedTable */,
 			);
-			name = SharedTable;
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -114,19 +114,19 @@
 			path = SharedTable/Supporting;
 			sourceTree = "<group>";
 		};
-		C80A7D7DE75D496E5AA84EB4 /* ExpoModulesProviders */ = {
+		D3E2181E6CABE80FD05D666C /* SharedTable */ = {
 			isa = PBXGroup;
 			children = (
-				AC274A85FE19610588BD856C /* SharedTable */,
+				43970B5AD86DF8C241532F7D /* ExpoModulesProvider.swift */,
 			);
-			name = ExpoModulesProviders;
+			name = SharedTable;
 			sourceTree = "<group>";
 		};
-		F138EC963EDFD0C1B80FEE30 /* Pods */ = {
+		D8315FF3AFF17447D0EC9523 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				37DFF2BCB07602D467A0491F /* Pods-SharedTable.debug.xcconfig */,
-				AC721AC1F6EF56317D27F98B /* Pods-SharedTable.release.xcconfig */,
+				0013313138EE5C22E6D66854 /* Pods-SharedTable.debug.xcconfig */,
+				7E4EBF2A2D3A08C92D529553 /* Pods-SharedTable.release.xcconfig */,
 			);
 			name = Pods;
 			path = Pods;
@@ -140,13 +140,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "SharedTable" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				C80416FAE6B7C4BCE80FF015 /* [Expo] Configure project */,
+				436274311D42DC4446F24493 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				A51D8EDBCF2B39A4EA4E2DD4 /* [CP] Embed Pods Frameworks */,
+				0AA3E1FBDFD9FF984AE427E6 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -166,8 +166,8 @@
 				LastUpgradeCheck = 1130;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
+						DevelopmentTeam = GWAUMY424S;
 						LastSwiftMigration = 1250;
-						DevelopmentTeam = "GWAUMY424S";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -198,7 +198,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				C2538D5F00B2CD10D61332D6 /* PrivacyInfo.xcprivacy in Resources */,
+				DE32758D64575D12B52AD3CC /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -242,6 +242,45 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		0AA3E1FBDFD9FF984AE427E6 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-SharedTable/Pods-SharedTable-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/OpenSSL-Universal/OpenSSL.framework/OpenSSL",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/OpenSSL.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SharedTable/Pods-SharedTable-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		436274311D42DC4446F24493 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-SharedTable/expo-configure-project.sh\"\n";
+		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -256,6 +295,7 @@
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXUpdates/EXUpdates.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoDevice/ExpoDevice_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoMediaLibrary/ExpoMediaLibrary_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/RCT-Folly/RCT-Folly_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/RNCAsyncStorage/RNCAsyncStorage_resources.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/RNSVG/RNSVGFilters.bundle",
@@ -277,6 +317,7 @@
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXUpdates.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoDevice_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoFileSystem_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoMediaLibrary_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RCT-Folly_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNCAsyncStorage_resources.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNSVGFilters.bundle",
@@ -294,45 +335,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SharedTable/Pods-SharedTable-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		A51D8EDBCF2B39A4EA4E2DD4 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-SharedTable/Pods-SharedTable-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/OpenSSL-Universal/OpenSSL.framework/OpenSSL",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/OpenSSL.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SharedTable/Pods-SharedTable-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		C80416FAE6B7C4BCE80FF015 /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-SharedTable/expo-configure-project.sh\"\n";
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -341,7 +343,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				D1E8D006E0424FAA4A27D2D2 /* ExpoModulesProvider.swift in Sources */,
+				EA8307CE0A46B54F36A2B2F2 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -350,12 +352,15 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 37DFF2BCB07602D467A0491F /* Pods-SharedTable.debug.xcconfig */;
+			baseConfigurationReference = 0013313138EE5C22E6D66854 /* Pods-SharedTable.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = SharedTable/SharedTable.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GWAUMY424S;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -381,20 +386,20 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
-				DEVELOPMENT_TEAM = "GWAUMY424S";
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
 			};
 			name = Debug;
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = AC721AC1F6EF56317D27F98B /* Pods-SharedTable.release.xcconfig */;
+			baseConfigurationReference = 7E4EBF2A2D3A08C92D529553 /* Pods-SharedTable.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = SharedTable/SharedTable.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GWAUMY424S;
 				INFOPLIST_FILE = SharedTable/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -414,9 +419,6 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
-				DEVELOPMENT_TEAM = "GWAUMY424S";
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
 			};
 			name = Release;
 		};
