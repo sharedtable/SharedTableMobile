@@ -31,8 +31,9 @@ export const Logo = memo<LogoProps>(
     const calculatedHeight = (dimensions.width * heightRatio) / widthRatio;
 
     // Use the icon.png file for all variants for now
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    /* eslint-disable @typescript-eslint/no-require-imports */
     const logoSource = require('@/assets/icon.png');
+    /* eslint-enable @typescript-eslint/no-require-imports */
 
     return (
       <View style={[styles.container, style]}>

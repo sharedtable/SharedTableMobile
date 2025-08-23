@@ -3,6 +3,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 import { Icon } from '@/components/base/Icon';
+import { Colors } from '@/constants/colors';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -74,7 +75,7 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   percentBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: Colors.backgroundWhiteOverlay,
     borderRadius: scaleWidth(12),
     marginLeft: scaleWidth(12),
     paddingHorizontal: scaleWidth(8),

@@ -11,6 +11,7 @@ import {
   TextStyle,
 } from 'react-native';
 
+import { Colors } from '@/constants/colors';
 import { theme } from '@/theme';
 import { designTokens } from '@/theme/designTokens';
 import { createShadow } from '@/theme/styleUtils';
@@ -180,7 +181,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.contrast,
   },
   secondary: {
-    backgroundColor: 'transparent',
+    backgroundColor: Colors.transparent,
     borderColor: theme.colors.brand.primary,
     borderWidth: 1,
   },
@@ -206,7 +207,7 @@ const styles = StyleSheet.create({
     color: theme.colors.brand.primary,
   },
   textVariant: {
-    backgroundColor: 'transparent',
+    backgroundColor: Colors.transparent,
     elevation: 0,
     shadowOpacity: 0,
   },

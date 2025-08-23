@@ -111,36 +111,44 @@ class Logger {
   // Group related logs
   group(label: string): void {
     if (!__DEV__) return;
+    // eslint-disable-next-line no-console
     console.group(`📁 ${label}`);
   }
 
   groupEnd(): void {
     if (!__DEV__) return;
+    // eslint-disable-next-line no-console
     console.groupEnd();
   }
 
   // Timing utilities
   time(label: string): void {
     if (!this.shouldLog('debug')) return;
+    // eslint-disable-next-line no-console
     console.time(`⏱️ ${label}`);
   }
 
   timeEnd(label: string): void {
     if (!this.shouldLog('debug')) return;
+    // eslint-disable-next-line no-console
     console.timeEnd(`⏱️ ${label}`);
   }
 
   // Table for structured data
   table(data: any): void {
     if (!this.shouldLog('debug')) return;
+    // eslint-disable-next-line no-console
     console.table(data);
   }
 
   // Clean up console for production
   static cleanupConsole(): void {
     if (!__DEV__) {
+      // eslint-disable-next-line no-console
       console.log = () => {};
+      // eslint-disable-next-line no-console
       console.debug = () => {};
+      // eslint-disable-next-line no-console
       console.info = () => {};
       console.warn = () => {};
       // Keep console.error for critical issues

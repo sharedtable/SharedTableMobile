@@ -11,6 +11,7 @@ import {
   ViewStyle,
 } from 'react-native';
 
+import { Colors } from '@/constants/colors';
 import { theme } from '@/theme';
 
 import { Icon } from './Icon';
@@ -173,7 +174,7 @@ Dropdown.displayName = 'Dropdown';
 
 const styles = StyleSheet.create({
   backdrop: {
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: Colors.backgroundOverlay,
     flex: 1,
   },
   disabled: {

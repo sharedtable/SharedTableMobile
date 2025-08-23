@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 
+import { Colors } from '@/constants/colors';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
@@ -43,7 +44,7 @@ const styles = StyleSheet.create({
   card: {
     alignItems: 'center',
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: Colors.gray300,
     borderRadius: scaleWidth(24),
     borderWidth: 2,
     flexDirection: 'row',
@@ -53,10 +54,10 @@ const styles = StyleSheet.create({
     paddingVertical: scaleHeight(16),
   },
   cardDisabled: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: Colors.gray100,
   },
   cardSelected: {
-    backgroundColor: 'rgba(226, 72, 73, 0.1)',
+    backgroundColor: Colors.primaryLighter,
     borderColor: theme.colors.primary.main, // 10% of brand color
   },
   dateTime: {
@@ -67,15 +68,15 @@ const styles = StyleSheet.create({
   },
   selectionCircle: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: Colors.gray300,
     borderRadius: scaleWidth(10),
     borderWidth: 2,
     height: scaleWidth(20),
     width: scaleWidth(20),
   },
   selectionCircleDisabled: {
-    backgroundColor: '#E5E5E5',
-    borderColor: '#E5E5E5',
+    backgroundColor: Colors.gray300,
+    borderColor: Colors.gray300,
   },
   selectionCircleSelected: {
     backgroundColor: theme.colors.primary.main,

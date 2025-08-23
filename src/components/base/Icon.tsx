@@ -312,7 +312,11 @@ export const IconButton = memo<IconButtonProps>(
             padding,
             borderRadius,
             backgroundColor: backgroundColor || 'transparent',
-            opacity: pressed ? 0.7 : disabled ? 0.3 : 1,
+            opacity: (() => {
+              if (pressed) return 0.7;
+              if (disabled) return 0.3;
+              return 1;
+            })(),
             minWidth: ICON_CONFIG.touchTargetSize,
             minHeight: ICON_CONFIG.touchTargetSize,
           },
