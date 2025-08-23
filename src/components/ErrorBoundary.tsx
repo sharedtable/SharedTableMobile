@@ -3,6 +3,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 
 import { env } from '@/config/env';
+import { theme } from '@/theme';
 
 interface Props {
   children: ReactNode;
@@ -103,18 +104,18 @@ export class ErrorBoundary extends Component<Props, State> {
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: theme.colors.primary.main,
     borderRadius: 8,
     paddingHorizontal: 30,
     paddingVertical: 12,
   },
   buttonText: {
-    color: '#fff',
+    color: theme.colors.white,
     fontSize: 16,
     fontWeight: '600',
   },
   container: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.white,
     flex: 1,
   },
   content: {
@@ -124,14 +125,14 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   errorDetails: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.gray['1'],
     borderRadius: 8,
     marginBottom: 20,
     padding: 15,
     width: '100%',
   },
   errorText: {
-    color: '#d32f2f',
+    color: theme.colors.error.main,
     fontFamily: 'monospace',
     fontSize: 12,
   },
@@ -141,13 +142,13 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   message: {
-    color: '#666',
+    color: theme.colors.text.secondary,
     fontSize: 16,
     marginBottom: 30,
     textAlign: 'center',
   },
   stackText: {
-    color: '#666',
+    color: theme.colors.text.secondary,
     fontFamily: 'monospace',
     fontSize: 10,
   },

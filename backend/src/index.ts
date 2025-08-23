@@ -78,11 +78,12 @@ app.use('/api/chat', chatRoutes);
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
-// Start server
+// Start server - listen on all interfaces for mobile development
 app.listen(PORT, () => {
-  logger.info(`🚀 Server running on port ${PORT}`);
+  logger.info(`🚀 Server running on http://0.0.0.0:${PORT}`);
   logger.info(`📱 Environment: ${process.env.NODE_ENV}`);
   logger.info(`🔐 Privy App ID: ${process.env.PRIVY_APP_ID}`);
   logger.info(`💬 Stream API Key: ${process.env.STREAM_API_KEY}`);
   logger.info(`💬 Stream API Secret: ${process.env.STREAM_API_SECRET ? '[set]' : '[missing]'}`);
+  logger.info(`📲 Mobile access: http://192.168.1.5:${PORT}`);
 });

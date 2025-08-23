@@ -59,11 +59,13 @@ export const SquareButton = memo<SquareButtonProps>(
       primary: {
         backgroundColor: theme.colors.brand.primary,
         borderWidth: 0,
+        borderColor: 'transparent',
         textColor: theme.colors.white,
       },
       secondary: {
         backgroundColor: theme.colors.state.action,
         borderWidth: 0,
+        borderColor: 'transparent',
         textColor: theme.colors.white,
       },
       outline: {
@@ -75,6 +77,7 @@ export const SquareButton = memo<SquareButtonProps>(
       ghost: {
         backgroundColor: 'transparent',
         borderWidth: 0,
+        borderColor: 'transparent',
         textColor: theme.colors.text.primary,
       },
     };
@@ -93,7 +96,7 @@ export const SquareButton = memo<SquareButtonProps>(
             paddingHorizontal: currentSize.paddingHorizontal,
             backgroundColor: currentVariant.backgroundColor,
             borderWidth: currentVariant.borderWidth,
-            borderColor: (currentVariant as Record<string, string>).borderColor || 'transparent',
+            borderColor: currentVariant.borderColor,
           },
           fullWidth && styles.fullWidth,
           pressed && styles.pressed,
@@ -169,11 +172,13 @@ export const RoundedButton = memo<RoundedButtonProps>(
       primary: {
         backgroundColor: theme.colors.brand.primary,
         borderWidth: 0,
+        borderColor: 'transparent',
         textColor: theme.colors.white,
       },
       secondary: {
         backgroundColor: theme.colors.state.action,
         borderWidth: 0,
+        borderColor: 'transparent',
         textColor: theme.colors.white,
       },
       outline: {
@@ -185,6 +190,7 @@ export const RoundedButton = memo<RoundedButtonProps>(
       ghost: {
         backgroundColor: 'transparent',
         borderWidth: 0,
+        borderColor: 'transparent',
         textColor: theme.colors.text.primary,
       },
     };
@@ -203,7 +209,7 @@ export const RoundedButton = memo<RoundedButtonProps>(
             paddingHorizontal: currentSize.paddingHorizontal,
             backgroundColor: currentVariant.backgroundColor,
             borderWidth: currentVariant.borderWidth,
-            borderColor: (currentVariant as Record<string, string>).borderColor || 'transparent',
+            borderColor: currentVariant.borderColor,
           },
           pressed && styles.roundedPressed,
           (disabled || loading) && styles.disabled,
@@ -271,10 +277,12 @@ export const FAB = memo<FABProps>(
       primary: {
         backgroundColor: theme.colors.brand.primary,
         borderWidth: 0,
+        borderColor: 'transparent',
       },
       secondary: {
         backgroundColor: theme.colors.state.action,
         borderWidth: 0,
+        borderColor: 'transparent',
       },
       outline: {
         backgroundColor: theme.colors.white,
@@ -298,7 +306,7 @@ export const FAB = memo<FABProps>(
             borderRadius: buttonSize / 2,
             backgroundColor: currentVariant.backgroundColor,
             borderWidth: currentVariant.borderWidth,
-            borderColor: (currentVariant as Record<string, string>).borderColor || 'transparent',
+            borderColor: currentVariant.borderColor,
           },
           pressed && styles.fabPressed,
           disabled && styles.disabled,

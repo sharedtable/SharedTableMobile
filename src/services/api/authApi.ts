@@ -7,6 +7,7 @@ import axios, { AxiosInstance } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 import { __DEV__, logError } from '@/utils/env';
+import { retryWithBackoff, withTimeout } from '@/utils/retry';
 
 // API configuration
 // Use your local IP address for development (not localhost)
@@ -75,10 +76,20 @@ interface SyncUserData {
   authProvider?: 'email' | 'google' | 'apple' | 'sms';
 }
 
+interface User {
+  id: string;
+  email?: string;
+  phone?: string;
+  walletAddress?: string;
+  name?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 interface SyncUserResponse {
   success: boolean;
   data: {
-    user: any;
+    user: User;
     isNewUser: boolean;
     needsOnboarding: boolean;
   };
@@ -88,16 +99,29 @@ interface VerifyTokenResponse {
   success: boolean;
   data: {
     userId: string;
-    user: any;
+    user: User;
   };
+}
+
+interface Wallet {
+  address: string;
+  chainId?: number;
+  verified?: boolean;
+}
+
+interface PrivyUser {
+  id: string;
+  email?: string;
+  phone?: string;
+  wallet?: Wallet;
 }
 
 interface GetMeResponse {
   success: boolean;
   data: {
-    user: any;
-    wallets: any[];
-    privyUser: any;
+    user: User;
+    wallets: Wallet[];
+    privyUser: PrivyUser;
   };
 }
 
@@ -111,7 +135,7 @@ interface UpdateProfileData {
 interface UpdateProfileResponse {
   success: boolean;
   data: {
-    user: any;
+    user: User;
   };
 }
 
@@ -145,14 +169,31 @@ export class AuthAPI {
   }
 
   /**
-   * Sync Privy user with backend database
+   * Sync Privy user with backend database with retry logic
    */
   static async syncUser(userData: SyncUserData): Promise<SyncUserResponse> {
     try {
-      const response = await apiClient.post<SyncUserResponse>('/auth/sync', userData);
+      const response = await retryWithBackoff(
+        async () => {
+          const res = await withTimeout(
+            apiClient.post<SyncUserResponse>('/auth/sync', userData),
+            15000, // 15 second timeout
+            'User sync timed out'
+          );
+          return res;
+        },
+        {
+          maxAttempts: 3,
+          initialDelay: 1000,
+          onRetry: (error, attempt) => {
+            logError(`User sync attempt ${attempt} failed, retrying...`, error);
+          },
+        }
+      );
+      
       return response.data;
     } catch (error) {
-      logError('Failed to sync user', error);
+      logError('Failed to sync user after retries', error);
       throw error;
     }
   }
