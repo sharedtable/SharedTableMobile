@@ -97,10 +97,9 @@ router.post('/sync', async (req, res, next) => {
         last_active_at: new Date().toISOString(),
       };
 
-      // Update external auth ID if not set
-      if (!existingUser.external_auth_id) {
-        updateData.external_auth_id = validatedData.privyUserId;
-      }
+      // Always update external auth ID to ensure it's current
+      // This handles cases where users were created before we had Privy
+      updateData.external_auth_id = validatedData.privyUserId;
 
       // Update wallet address if provided and different
       if (
@@ -111,6 +110,8 @@ router.post('/sync', async (req, res, next) => {
         logger.info(`Updating wallet address for user ${userId}: ${validatedData.walletAddress}`);
       }
 
+      logger.info(`Updating user ${userId} with:`, updateData);
+      
       const { error: updateError } = await supabaseService
         .from('users')
         .update(updateData)
@@ -121,7 +122,7 @@ router.post('/sync', async (req, res, next) => {
         throw new AppError('Failed to update user', 500);
       }
 
-      logger.info(`Updated existing user: ${userId}`);
+      logger.info(`Successfully updated user ${userId} with external_auth_id: ${updateData.external_auth_id}`);
     } else {
       // Before creating a new user, double-check by Privy ID to prevent race conditions
       const { data: privyCheck } = await supabaseService
@@ -319,8 +320,13 @@ router.get('/me', verifyPrivyToken, async (req: AuthRequest, res, next) => {
       throw new AppError('User not authenticated', 401);
     }
 
+    logger.info('GET /auth/me - Looking for user:', {
+      privyId: req.userId,
+      email: req.user?.email,
+    });
+
     // Get user from Supabase using Privy ID
-    // Try both with and without did:privy: prefix
+    // Try multiple strategies to find the user
     let user = null;
     let error = null;
 
@@ -333,6 +339,10 @@ router.get('/me', verifyPrivyToken, async (req: AuthRequest, res, next) => {
 
     user = result1.data;
     error = result1.error;
+    
+    if (user) {
+      logger.info('Found user by external_auth_id:', user.id);
+    }
 
     // If not found and ID doesn't start with did:privy:, try adding the prefix
     if (error && !req.userId.startsWith('did:privy:')) {
@@ -346,7 +356,28 @@ router.get('/me', verifyPrivyToken, async (req: AuthRequest, res, next) => {
       error = result2.error;
     }
 
+    // If still not found and we have user email from token, try finding by email
+    if (error && req.user?.email) {
+      const result3 = await supabaseService
+        .from('users')
+        .select('*')
+        .eq('email', req.user.email.toLowerCase())
+        .single();
+
+      if (result3.data) {
+        user = result3.data;
+        error = null;
+        
+        // Update the external_auth_id for future lookups
+        await supabaseService
+          .from('users')
+          .update({ external_auth_id: req.userId })
+          .eq('id', user.id);
+      }
+    }
+
     if (error || !user) {
+      logger.warn(`User not found for Privy ID: ${req.userId}, email: ${req.user?.email}`);
       throw new AppError('User not found', 404);
     }
 

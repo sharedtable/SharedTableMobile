@@ -64,12 +64,13 @@ class ApiService {
           console.error('Error getting auth token:', error);
         }
 
-        // Log requests in development
-        if (__DEV__) {
-          console.log(
-            `📡 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`
-          );
-        }
+        // Log requests in development (disabled for cleaner logs)
+        // Uncomment for debugging API calls
+        // if (__DEV__) {
+        //   console.log(
+        //     `📡 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`
+        //   );
+        // }
 
         return config;
       },
@@ -81,9 +82,11 @@ class ApiService {
     // Response interceptor for error handling
     this.client.interceptors.response.use(
       (response) => {
-        if (__DEV__) {
-          console.log(`✅ API Response: ${response.config.url}`, response.data);
-        }
+        // Log responses in development (disabled for cleaner logs)
+        // Uncomment for debugging API responses
+        // if (__DEV__) {
+        //   console.log(`✅ API Response: ${response.config.url}`, response.data);
+        // }
         return response;
       },
       async (error: AxiosError) => {
@@ -319,26 +322,8 @@ class ApiService {
   // Stream Chat Token Endpoint
   // ==========================================================================
 
-  async getChatUserToken(): Promise<string> {
-    const token = await AuthAPI.getAuthToken();
-    if (!token) throw new Error('Not authenticated');
-    const response = await this.client.post<{ success: boolean; token: string }>(
-      '/chat/token',
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    if (!response.data.success || !response.data.token) {
-      console.error('Failed to fetch chat user token:', response.data);
-      throw new Error('Failed to fetch chat user token');
-    }
-    console.log('Fetched Stream USER_TOKEN:', response.data.token);
-
-    return response.data.token;
+  getChatUserToken(): Promise<{ token: string; displayName?: string }> {
+    return AuthAPI.getChatUserToken();
   }
 
   // ============================================================================

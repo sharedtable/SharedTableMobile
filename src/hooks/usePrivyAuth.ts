@@ -12,6 +12,7 @@ import { AuthAPI } from '@/services/api/authApi';
 import { UserSyncService } from '@/services/userSyncService';
 import { useAuthStore } from '@/store/authStore';
 import { __DEV__, devLog, logError } from '@/utils/env';
+import { logger } from '@/utils/logger';
 
 interface PrivyUser {
   id: string;
@@ -233,6 +234,24 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
                 setNeedsOnboarding(true);
               } else {
                 setNeedsOnboarding(false);
+              }
+              
+              // Only fetch profile if sync was successful and user exists
+              if (result.userId) {
+                // Fetch the user's full profile from backend to get their actual name
+                try {
+                  // Add a small delay to ensure database has committed the transaction
+                  await new Promise(resolve => setTimeout(resolve, 500));
+                  
+                  const userProfile = await UserSyncService.getCurrentUser();
+                  if (userProfile && (userProfile.display_name || userProfile.first_name)) {
+                    // Store the display name for future use
+                    // Note: We can't directly update the Privy user object
+                  }
+                } catch (error) {
+                  // This is expected for new users or if profile isn't set up yet
+                  logger.debug('User profile not yet available', { userId: result.userId });
+                }
               }
             }
           } catch (error) {

@@ -30,8 +30,9 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>sharedtable</string>
-          <string>com.sharedtable.app</string>
         </array>
+        <key>CFBundleURLName</key>
+        <string>com.sharedtable.app</string>
       </dict>
       <dict>
         <key>CFBundleURLSchemes</key>
