@@ -175,8 +175,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                       return (
                         <EventCard
                           key={event.id}
+                          title={event.title}
                           date={event.formattedDate}
                           time={event.formattedTime}
+                          location={event.location}
+                          price={event.priceDisplay}
+                          availableSpots={event.availableSpots}
                           isSelected={selectedEvent === event.id}
                           onPress={() => {
                             console.log(
@@ -186,7 +190,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                             );
                             setSelectedEvent(event.id);
                           }}
-                          disabled={false}
+                          disabled={!event.canBook}
                         />
                       );
                     })}
@@ -201,8 +205,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                       return (
                         <EventCard
                           key={event.id}
+                          title={event.title}
                           date={event.formattedDate}
                           time={event.formattedTime}
+                          location={event.location}
+                          price={event.priceDisplay}
+                          availableSpots={event.availableSpots}
                           isSelected={selectedEvent === event.id}
                           onPress={() => {
                             console.log(
@@ -212,7 +220,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                             );
                             setSelectedEvent(event.id);
                           }}
-                          disabled={false}
+                          disabled={!event.canBook}
                         />
                       );
                     })}
