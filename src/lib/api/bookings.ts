@@ -59,8 +59,8 @@ export class BookingsService {
       }
 
       // First, get the current event data
-      const { data: event, error: eventError } = await supabase
-        .from('events')
+      const { data: event, error: eventError } = await (supabase
+        .from('events') as any)
         .select('*')
         .eq('id', booking.eventId)
         .single();
@@ -73,14 +73,14 @@ export class BookingsService {
       }
 
       // Check if event is available for booking
-      if (event.status !== 'published') {
+      if ((event as any).status !== 'published') {
         return {
           success: false,
           message: 'Event is not available for booking',
         };
       }
 
-      const availableSpots = event.max_capacity - event.current_capacity;
+      const availableSpots = (event as any).max_capacity - (event as any).current_capacity;
 
       if (availableSpots <= 0) {
         return {
@@ -92,7 +92,7 @@ export class BookingsService {
 
       // Create booking record with proper enum values based on defaults
       const bookingData = {
-        user_id: user.id, // Use Supabase user ID from synced data
+        user_id: (user as any).id, // Use Supabase user ID from synced data
         event_id: booking.eventId,
         status: 'pending', // Default value from schema
         payment_status: 'pending', // Default value from schema
@@ -100,8 +100,8 @@ export class BookingsService {
         booking_source: 'mobile_app',
       };
 
-      const { data: bookingRecord, error: bookingError } = await supabase
-        .from('bookings')
+      const { data: bookingRecord, error: bookingError } = await (supabase
+        .from('bookings') as any)
         .insert(bookingData)
         .select()
         .single();
@@ -114,17 +114,17 @@ export class BookingsService {
       }
 
       // Update event participant count
-      const { error: updateError } = await supabase
-        .from('events')
+      const { error: updateError } = await (supabase
+        .from('events') as any)
         .update({
-          current_capacity: event.current_capacity + 1,
+          current_capacity: (event as any).current_capacity + 1,
           updated_at: new Date().toISOString(),
         })
         .eq('id', booking.eventId);
 
       if (updateError) {
         // Rollback the booking if event update fails
-        await supabase.from('bookings').delete().eq('id', bookingRecord.id);
+        await (supabase.from('bookings') as any).delete().eq('id', (bookingRecord as any).id);
 
         return {
           success: false,
@@ -134,7 +134,7 @@ export class BookingsService {
 
       return {
         success: true,
-        bookingId: bookingRecord.id,
+        bookingId: (bookingRecord as any).id,
         message: 'Successfully booked your spot!',
       };
     } catch (error) {
@@ -178,13 +178,13 @@ export class BookingsService {
       }
 
       // Update booking status to cancelled
-      const { error: updateBookingError } = await supabase
-        .from('bookings')
+      const { error: updateBookingError } = await (supabase
+        .from('bookings') as any)
         .update({
           status: 'cancelled',
           updated_at: new Date().toISOString(),
-        })
-        .eq('id', booking.id);
+        } as any)
+        .eq('id', (booking as any).id);
 
       if (updateBookingError) {
         return {
@@ -209,12 +209,12 @@ export class BookingsService {
       }
 
       // Decrease participant count
-      const { error: updateEventError } = await supabase
-        .from('events')
+      const { error: updateEventError } = await (supabase
+        .from('events') as any)
         .update({
-          current_capacity: Math.max(0, event.current_capacity - 1),
+          current_capacity: Math.max(0, (event as any)?.current_capacity - 1),
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq('id', eventId);
 
       if (updateEventError) {
@@ -246,8 +246,8 @@ export class BookingsService {
         return [];
       }
 
-      const { data: bookings, error } = await supabase
-        .from('bookings')
+      const { data: bookings, error } = await (supabase
+        .from('bookings') as any)
         .select(
           `
           id,
@@ -270,8 +270,8 @@ export class BookingsService {
 
       // Transform the data to match UserBooking interface
       const userBookings: UserBooking[] = bookings
-        .filter((booking) => booking.events) // Filter out bookings without event data
-        .map((booking) => ({
+        .filter((booking: any) => booking.events) // Filter out bookings without event data
+        .map((booking: any) => ({
           id: booking.id,
           event: booking.events as unknown as Event, // Cast properly from join result
           status: booking.status,

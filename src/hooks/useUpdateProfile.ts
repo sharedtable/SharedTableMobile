@@ -20,8 +20,8 @@ export const useUpdateProfile = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('users')
+      const { error } = await (supabase
+        .from('users') as any)
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
