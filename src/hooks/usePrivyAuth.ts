@@ -248,7 +248,7 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
                     // Store the display name for future use
                     // Note: We can't directly update the Privy user object
                   }
-                } catch (error) {
+                } catch {
                   // This is expected for new users or if profile isn't set up yet
                   logger.debug('User profile not yet available', { userId: result.userId });
                 }

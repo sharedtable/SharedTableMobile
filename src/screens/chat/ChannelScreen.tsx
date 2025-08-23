@@ -4,7 +4,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert, Platform } from 'react-native';
+import { View, StyleSheet, Pressable, Alert, Platform } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
@@ -12,7 +12,6 @@ import {
   MessageList,
   MessageInput,
   KeyboardCompatibleView,
-  useMessageContext,
 } from 'stream-chat-expo';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -23,42 +22,6 @@ import { useChatClient } from './hooks/useChatClient';
 type RouteProps = RouteProp<ChatStackParamList, 'Channel'>;
 type NavigationProp = NativeStackNavigationProp<ChatStackParamList>;
 
-// Custom Message Header component to show username and display info
-const _CustomMessageHeader: React.FC = () => {
-  const { message } = useMessageContext();
-  
-  if (!message?.user) return null;
-  
-  // Get the username - prioritize the name field
-  const userName = message.user.name || 'Unknown User';
-  
-  // Get contact info for subtitle - email or phone
-  let displayInfo = '';
-  const userAny = message.user as any; // Extended user with custom fields
-  if (userAny.email && userAny.email !== userName) {
-    displayInfo = userAny.email;
-  } else if (userAny.phone) {
-    displayInfo = userAny.phone;
-  } else if (userAny.displayInfo && userAny.displayInfo !== userName) {
-    displayInfo = userAny.displayInfo;
-  }
-  
-  // Don't show the ID as username
-  const isShowingId = userName.startsWith('!members-') || 
-                      userName.includes('did:privy:') ||
-                      userName === message.user.id;
-  
-  return (
-    <View style={styles.messageHeader}>
-      <Text style={styles.userName}>
-        {isShowingId ? 'User' : userName}
-      </Text>
-      {displayInfo && !isShowingId ? (
-        <Text style={styles.userDisplayInfo}>{displayInfo}</Text>
-      ) : null}
-    </View>
-  );
-};
 
 
 export const ChannelScreen: React.FC = () => {
@@ -235,20 +198,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: theme.colors.white,
-  },
-  messageHeader: {
-    marginBottom: 4,
-  },
-  userName: {
-    fontSize: 14,
-    fontFamily: theme.typography.fontFamily.semibold,
-    color: theme.colors.text.primary,
-  },
-  userDisplayInfo: {
-    fontSize: 12,
-    fontFamily: theme.typography.fontFamily.body,
-    color: theme.colors.text.secondary,
-    marginTop: 2,
   },
   headerRight: {
     flexDirection: 'row',
