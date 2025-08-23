@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '@/lib/supabase/client';
-import type { UserProfileInsert, UserUpdate } from '@/lib/supabase/types/database';
+import type { UserProfileInsert } from '@/lib/supabase/types/database';
 
 import type { CompleteOnboardingData } from './validation';
 import { completeOnboardingSchema } from './validation';
