@@ -25,7 +25,7 @@ export const useUpdateProfile = () => {
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
-        })
+        } as UserUpdate)
         .eq('id', user.id);
 
       if (error) {

@@ -101,7 +101,7 @@ export const useEvents = (): UseEventsReturn => {
       try {
         const bookingRequest: BookingRequest = {
           eventId,
-          userEmail: user.email!, // Use email from Privy auth
+          userId: user.id, // Use Privy user ID
           specialRequests,
         };
 

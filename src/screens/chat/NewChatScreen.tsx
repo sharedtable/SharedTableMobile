@@ -115,19 +115,15 @@ export const NewChatScreen: React.FC = () => {
         // Group chat - let Stream generate a unique ID
         channel = client.channel('messaging', {
           members: memberIds,
-        });
-        // Set the channel name after creation
-        channel.data = { 
-          ...channel.data,
           name: selectedUsers.map(u => u.name).join(', '),
-        };
+        } as any);
       }
 
       // Create or get the channel - watch it to load messages
       await channel.watch();
 
       // Navigate to the channel
-      navigation.replace('Channel', { channelId: channel.id });
+      navigation.replace('Channel', { channelId: channel.id! });
     } catch {
       Alert.alert('Error', 'Failed to create chat. Please try again.');
     } finally {

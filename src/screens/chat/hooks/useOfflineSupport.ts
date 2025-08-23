@@ -29,7 +29,7 @@ export const useOfflineSupport = () => {
     // Subscribe to network state
     const unsubscribe = NetInfo.addEventListener((state) => {
       const online = state.isConnected && state.isInternetReachable !== false;
-      setIsOnline(online);
+      setIsOnline(online || false);
       
       if (online) {
         logger.info('Network connected - syncing offline messages');
