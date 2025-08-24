@@ -11,6 +11,14 @@ import {
   ChannelList,
 } from 'stream-chat-expo';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, {
+  FadeInDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 
 import { theme } from '@/theme';
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
@@ -25,26 +33,31 @@ interface CustomChannelPreviewProps {
   unread?: number;
 }
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 const CustomChannelPreview: React.FC<CustomChannelPreviewProps> = (props) => {
   const navigation = useNavigation<NavigationProp>();
   const { user } = usePrivyAuth();
+  const scale = useSharedValue(1);
   
   // Extract channel from props (Stream Chat passes it this way)
   const channel = props.channel;
   
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+  
   const handlePress = useCallback(() => {
     if (channel) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      scale.value = withSpring(0.98, {}, () => {
+        scale.value = withSpring(1);
+      });
       navigation.navigate('Channel', { channelId: channel.id });
     }
   }, [channel, navigation]);
 
-  if (!channel) {
-    return null;
-  }
-
-  const unread = channel?.state?.unreadCount || 0;
-  
-  // Get proper channel name based on type
+  // Get proper channel name based on type - compute early for useMemo dependency
   let channelName = 'Channel';
   
   
@@ -89,6 +102,27 @@ const CustomChannelPreview: React.FC<CustomChannelPreviewProps> = (props) => {
       channelName.includes('cmekwb')) {
     channelName = 'Chat';
   }
+
+  // Generate gradient colors based on channel name - must be before any returns
+  const gradientColors = useMemo(() => {
+    const colors: [string, string][] = [
+      ['#667EEA', '#764BA2'],
+      ['#F093FB', '#F5576C'],
+      ['#4FACFE', '#00F2FE'],
+      ['#43E97B', '#38F9D7'],
+      ['#FA709A', '#FEE140'],
+      ['#30CFD0', '#330867'],
+    ];
+    const index = channelName.charCodeAt(0) % colors.length;
+    return colors[index];
+  }, [channelName]);
+
+  // Check if channel exists after hooks
+  if (!channel) {
+    return null;
+  }
+
+  const unread = channel?.state?.unreadCount || 0;
   
   // Get the latest message safely
   const messages = channel?.state?.messages || [];
@@ -101,7 +135,6 @@ const CustomChannelPreview: React.FC<CustomChannelPreviewProps> = (props) => {
   const lastMessageTime = latestMessage?.created_at ? new Date(latestMessage.created_at) : null;
   const timeText = lastMessageTime ? formatTime(lastMessageTime) : '';
 
-
   // Get first letter for avatar - make sure it's not from an ID
   let avatarLetter = channelName.charAt(0).toUpperCase();
   if (avatarLetter === '!' || avatarLetter === 'C') {
@@ -110,13 +143,25 @@ const CustomChannelPreview: React.FC<CustomChannelPreviewProps> = (props) => {
   }
 
   return (
-    <Pressable style={styles.channelPreview} onPress={handlePress}>
+    <AnimatedPressable 
+      style={[styles.channelPreview, animatedStyle]} 
+      onPress={handlePress}
+      entering={FadeInDown.duration(300).springify()}
+    >
       <View style={styles.avatarContainer}>
-        <View style={styles.avatar}>
+        <LinearGradient
+          colors={gradientColors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.avatar}
+        >
           <Text style={styles.avatarText}>
             {avatarLetter}
           </Text>
-        </View>
+        </LinearGradient>
+        {unread > 0 && (
+          <View style={styles.unreadDot} />
+        )}
       </View>
       <View style={styles.channelInfo}>
         <View style={styles.channelHeader}>
@@ -128,17 +173,19 @@ const CustomChannelPreview: React.FC<CustomChannelPreviewProps> = (props) => {
           ) : null}
         </View>
         <View style={styles.channelFooter}>
-          <Text style={styles.messageText} numberOfLines={1}>
+          <Text style={[styles.messageText, unread > 0 && styles.unreadMessage]} numberOfLines={1}>
             {lastMessageText}
           </Text>
           {unread > 0 && (
             <View style={styles.unreadBadge}>
-              <Text style={styles.unreadText}>{unread}</Text>
+              <Text style={styles.unreadText}>
+                {unread > 99 ? '99+' : unread}
+              </Text>
             </View>
           )}
         </View>
       </View>
-    </Pressable>
+    </AnimatedPressable>
   );
 };
 
@@ -194,8 +241,19 @@ export const ChannelListScreen: React.FC = () => {
   React.useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <Pressable onPress={handleNewChat} style={styles.headerButton}>
-          <Ionicons name="create-outline" size={24} color={theme.colors.primary.main} />
+        <Pressable 
+          onPress={handleNewChat} 
+          style={styles.headerButton}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <LinearGradient
+            colors={['#667EEA', '#764BA2']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.newChatGradient}
+          >
+            <Ionicons name="add" size={20} color="white" />
+          </LinearGradient>
         </Pressable>
       ),
     });
@@ -220,16 +278,39 @@ export const ChannelListScreen: React.FC = () => {
         onSelect={handleChannelSelect}
         Preview={CustomChannelPreview}
         EmptyStateIndicator={() => (
-          <View style={styles.emptyState}>
-            <Ionicons name="chatbubbles-outline" size={64} color={theme.colors.gray['3']} />
+          <Animated.View 
+            style={styles.emptyState}
+            entering={FadeInDown.duration(500).springify()}
+          >
+            <LinearGradient
+              colors={['#667EEA', '#764BA2']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.emptyIcon}
+            >
+              <Ionicons name="chatbubbles" size={40} color="white" />
+            </LinearGradient>
             <Text style={styles.emptyTitle}>No conversations yet</Text>
             <Text style={styles.emptyText}>
               Start a new conversation to connect with other SharedTable members
             </Text>
-            <Pressable style={styles.newChatButton} onPress={handleNewChat}>
-              <Text style={styles.newChatButtonText}>Start New Chat</Text>
+            <Pressable 
+              style={styles.newChatButton} 
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                handleNewChat();
+              }}
+            >
+              <LinearGradient
+                colors={['#667EEA', '#764BA2']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.newChatButtonGradient}
+              >
+                <Text style={styles.newChatButtonText}>Start New Chat</Text>
+              </LinearGradient>
             </Pressable>
-          </View>
+          </Animated.View>
         )}
       />
     </SafeAreaView>
@@ -239,18 +320,37 @@ export const ChannelListScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.white,
+    backgroundColor: '#FAFAFA',
   },
   headerButton: {
     padding: 8,
+  },
+  newChatGradient: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#667EEA',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   channelPreview: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.gray['1'],
+    paddingVertical: 14,
+    backgroundColor: 'white',
+    marginHorizontal: 12,
+    marginVertical: 4,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   channelInfo: {
     flex: 1,
@@ -269,14 +369,25 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     marginRight: 12,
+    position: 'relative',
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: theme.colors.primary.main,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  unreadDot: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#FF3B30',
+    borderWidth: 2,
+    borderColor: 'white',
   },
   avatarText: {
     color: theme.colors.white,
@@ -285,28 +396,33 @@ const styles = StyleSheet.create({
   },
   channelName: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: theme.typography.fontFamily.semibold,
-    color: theme.colors.text.primary,
+    color: '#1C1C1E',
   },
   timeText: {
-    fontSize: 12,
-    color: theme.colors.text.secondary,
+    fontSize: 13,
+    color: '#8E8E93',
     fontFamily: theme.typography.fontFamily.body,
   },
   messageText: {
     flex: 1,
     fontSize: 14,
-    color: theme.colors.text.secondary,
+    color: '#8E8E93',
     fontFamily: theme.typography.fontFamily.body,
   },
+  unreadMessage: {
+    color: '#1C1C1E',
+    fontFamily: theme.typography.fontFamily.medium,
+  },
   unreadBadge: {
-    backgroundColor: theme.colors.primary.main,
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    minWidth: 24,
+    backgroundColor: '#667EEA',
+    borderRadius: 10,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    minWidth: 22,
     alignItems: 'center',
+    marginLeft: 8,
   },
   unreadText: {
     color: theme.colors.white,
@@ -317,31 +433,41 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: 40,
+  },
+  emptyIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontFamily: theme.typography.fontFamily.semibold,
-    color: theme.colors.text.primary,
-    marginTop: 16,
+    color: '#1C1C1E',
     marginBottom: 8,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: theme.typography.fontFamily.body,
-    color: theme.colors.text.secondary,
+    color: '#8E8E93',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 32,
+    lineHeight: 22,
   },
   newChatButton: {
-    backgroundColor: theme.colors.primary.main,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 24,
+    overflow: 'hidden',
+    borderRadius: 25,
+  },
+  newChatButtonGradient: {
+    paddingHorizontal: 28,
+    paddingVertical: 14,
   },
   newChatButtonText: {
-    color: theme.colors.white,
+    color: 'white',
     fontFamily: theme.typography.fontFamily.semibold,
-    fontSize: 16,
+    fontSize: 15,
   },
 });

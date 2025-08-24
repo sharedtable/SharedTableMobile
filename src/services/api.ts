@@ -115,6 +115,12 @@ class ApiService {
 
   async getAuthToken(): Promise<string | null> {
     try {
+      // Try Privy token first (current auth system)
+      const privyToken = await SecureStore.getItemAsync('privy_auth_token');
+      if (privyToken) {
+        return privyToken;
+      }
+      // Fallback to old token key
       return await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
     } catch (error) {
       console.error('Error retrieving auth token:', error);
