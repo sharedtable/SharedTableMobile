@@ -7,10 +7,12 @@ import { HomeScreen } from '@/screens/home/HomeScreen';
 import { EventsScreen } from '@/screens/main/EventsScreen';
 import { ProfileScreen } from '@/screens/profile/ProfileScreen';
 import { ChatScreen } from '@/screens/chat/ChatScreen';
+import { FeedNavigator } from './FeedNavigator';
 import { theme } from '@/theme';
 
 export type MainTabParamList = {
   Home: undefined;
+  Feed: undefined;
   Events: undefined;
   Dashboard: undefined;
   Profile: undefined;
@@ -30,6 +32,8 @@ export function MainTabNavigator() {
 
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Feed') {
+            iconName = focused ? 'grid' : 'grid-outline';
           } else if (route.name === 'Events') {
             iconName = focused ? 'calendar' : 'calendar-outline';
           } else if (route.name === 'Dashboard') {
@@ -61,6 +65,13 @@ export function MainTabNavigator() {
         options={{
           title: 'Home',
           tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
+        }}
+      />
+      <Tab.Screen
+        name="Feed"
+        component={FeedNavigator}
+        options={{
+          title: 'Feed',
         }}
       />
       <Tab.Screen

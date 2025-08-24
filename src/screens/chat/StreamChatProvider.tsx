@@ -130,7 +130,9 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   return (
     <OverlayProvider>
-      <Chat client={client}>{children}</Chat>
+      <Chat client={client}>
+        {children}
+      </Chat>
     </OverlayProvider>
   );
 };
