@@ -19,6 +19,12 @@
     "prebuild": "expo prebuild",
     "build:ios": "eas build --platform ios",
     "build:android": "eas build --platform android",
+    "build:dev": "eas build --profile development --platform all",
+    "build:internal": "eas build --profile internal --platform all",
+    "build:preview": "eas build --profile preview --platform all",
+    "build:prod": "eas build --profile production --platform all",
+    "release:internal": "./scripts/internal-release.sh",
+    "update:ota": "eas update --branch internal",
     "prepare": "husky",
     "pre-commit": "lint-staged"
   },
