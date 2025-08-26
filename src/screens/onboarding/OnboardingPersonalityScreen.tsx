@@ -8,7 +8,7 @@ import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface OnboardingPersonalityScreenProps {
-  onNavigate?: (screen: string, data?: any) => void;
+  onNavigate?: (screen: string, data?: unknown) => void;
   currentStep?: number;
   totalSteps?: number;
   userData?: any;
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(18),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     lineHeight: scaleHeight(24),
     marginBottom: scaleHeight(12),
   },
@@ -338,6 +338,6 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '700' as any,
+    fontWeight: '700',
   },
 });

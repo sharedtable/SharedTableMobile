@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import feedApi from '../../services/feedApi';
+import feedApi from '@/services/feedApi';
 
 const CreatePostScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -25,7 +25,7 @@ const CreatePostScreen: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
 
-  const pickImage = useCallback(async () => {
+  const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (status !== 'granted') {
@@ -46,9 +46,9 @@ const CreatePostScreen: React.FC = () => {
     if (!result.canceled && result.assets[0]) {
       setSelectedImage(result.assets[0].uri);
     }
-  }, []);
+  };
 
-  const takePhoto = useCallback(async () => {
+  const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     
     if (status !== 'granted') {
@@ -68,9 +68,9 @@ const CreatePostScreen: React.FC = () => {
     if (!result.canceled && result.assets[0]) {
       setSelectedImage(result.assets[0].uri);
     }
-  }, []);
+  };
 
-  const showImageOptions = useCallback(() => {
+  const showImageOptions = () => {
     Alert.alert(
       'Select Image',
       'Choose from where you want to select an image',
@@ -81,9 +81,9 @@ const CreatePostScreen: React.FC = () => {
       ],
       { cancelable: true }
     );
-  }, [pickImage, takePhoto]);
+  };
 
-  const handlePost = useCallback(async () => {
+  const handlePost = async () => {
     if (!content && !selectedImage) {
       Alert.alert('Error', 'Please add some content or an image');
       return;
@@ -112,11 +112,11 @@ const CreatePostScreen: React.FC = () => {
     } finally {
       setPosting(false);
     }
-  }, [content, selectedImage, navigation]);
+  };
 
-  const removeImage = useCallback(() => {
+  const removeImage = () => {
     setSelectedImage(null);
-  }, []);
+  };
 
   return (
     <KeyboardAvoidingView

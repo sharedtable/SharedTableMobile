@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: scaleFont(24),
-    fontWeight: '700' as any,
+    fontWeight: '700',
     marginBottom: scaleHeight(8),
   },
   photoUploadButton: {
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   questionItem: {
     marginBottom: scaleHeight(20),
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   scrollView: {
     flex: 1,
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(18),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     marginBottom: scaleHeight(16),
   },
   starButton: {
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   submitContainer: {
     backgroundColor: theme.colors.white,
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   yesNoTextSelected: {
     color: theme.colors.white,

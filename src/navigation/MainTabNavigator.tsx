@@ -5,9 +5,9 @@ import React from 'react';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { HomeScreen } from '@/screens/home/HomeScreen';
 import { EventsScreen } from '@/screens/main/EventsScreen';
-import { ProfileScreen } from '@/screens/profile/ProfileScreen';
 import { ChatScreen } from '@/screens/chat/ChatScreen';
 import { FeedNavigator } from './FeedNavigator';
+import { ProfileNavigator } from './ProfileNavigator';
 import { theme } from '@/theme';
 
 export type MainTabParamList = {
@@ -97,7 +97,7 @@ export function MainTabNavigator() {
       />
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={ProfileNavigator}
         options={{
           title: 'Profile',
         }}

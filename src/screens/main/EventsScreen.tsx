@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { NavigationProp, RouteProp } from '@react-navigation/native';
 
 import { theme } from '@/theme';
 import { scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface EventsScreenProps {
-  navigation?: any;
-  route?: any;
-  onNavigate?: (screen: string, data?: any) => void;
+  navigation?: NavigationProp<any>;
+  route?: RouteProp<any>;
+  onNavigate?: (screen: string, data?: unknown) => void;
 }
 
 export function EventsScreen(_props: EventsScreenProps) {

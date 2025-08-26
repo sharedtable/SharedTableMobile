@@ -8,7 +8,7 @@ import { theme } from '@/theme';
 import { scaleHeight, scaleWidth, scaleFont } from '@/utils/responsive';
 
 interface OnboardingInterestsScreenProps {
-  onNavigate?: (screen: string, data?: any) => void;
+  onNavigate?: (screen: string, data?: unknown) => void;
   currentStep?: number;
   totalSteps?: number;
 }
@@ -198,11 +198,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '500' as any,
+    fontWeight: '500',
   },
   interestTextSelected: {
     color: theme.colors.primary.main,
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   optionsContainer: {
     gap: scaleHeight(12),

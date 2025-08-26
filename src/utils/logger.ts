@@ -39,7 +39,7 @@ class Logger {
     return logLevels[level] >= logLevels[config.level];
   }
 
-  private formatMessage(message: string, data?: any): string {
+  private formatMessage(message: string, data?: unknown): string {
     if (!data) return message;
     
     const dataStr = typeof data === 'object' 
@@ -78,29 +78,29 @@ class Logger {
     return false;
   }
 
-  debug(message: string, data?: any): void {
+  debug(message: string, data?: unknown): void {
     if (!this.shouldLog('debug')) return;
     if (this.shouldThrottle(message)) return;
     console.log(`🔍 [DEBUG] ${this.formatMessage(message, data)}`);
   }
 
-  info(message: string, data?: any): void {
+  info(message: string, data?: unknown): void {
     if (!this.shouldLog('info')) return;
     if (this.shouldThrottle(message)) return;
     console.log(`ℹ️ [INFO] ${this.formatMessage(message, data)}`);
   }
 
-  warn(message: string, data?: any): void {
+  warn(message: string, data?: unknown): void {
     if (!this.shouldLog('warn')) return;
     if (this.shouldThrottle(message)) return;
     console.warn(`⚠️ [WARN] ${this.formatMessage(message, data)}`);
   }
 
-  error(message: string, error?: any): void {
+  error(message: string, error?: Error | unknown): void {
     if (!this.shouldLog('error')) return;
     
-    const errorMessage = error?.message || error;
-    const stack = error?.stack;
+    const errorMessage = error instanceof Error ? error.message : error;
+    const stack = error instanceof Error ? error.stack : undefined;
     
     console.error(`❌ [ERROR] ${message}`, errorMessage);
     if (__DEV__ && stack) {
@@ -135,7 +135,7 @@ class Logger {
   }
 
   // Table for structured data
-  table(data: any): void {
+  table(data: unknown): void {
     if (!this.shouldLog('debug')) return;
     // eslint-disable-next-line no-console
     console.table(data);
@@ -144,7 +144,7 @@ class Logger {
   // Clean up console for production
   static cleanupConsole(): void {
     if (!__DEV__) {
-      // eslint-disable-next-line no-console
+       
       console.log = () => {};
       // eslint-disable-next-line no-console
       console.debug = () => {};

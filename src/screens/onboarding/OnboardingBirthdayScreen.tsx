@@ -7,7 +7,7 @@ import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface OnboardingBirthdayScreenProps {
-  onNavigate?: (screen: string, data?: any) => void;
+  onNavigate?: (screen: string, data?: unknown) => void;
   currentStep?: number;
   totalSteps?: number;
 }
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   pickerTextSelected: {
     color: '#000000',
     fontSize: scaleFont(18),
-    fontWeight: '700' as any, // Pure black for selected text
+    fontWeight: '700', // Pure black for selected text
   },
   pickerWrapper: {
     flex: 1,

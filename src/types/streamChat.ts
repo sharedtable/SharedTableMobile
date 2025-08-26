@@ -37,7 +37,7 @@ export interface ExtendedMessage extends Omit<MessageResponse, 'user'> {
 }
 
 // Channel with custom data
-export type CustomChannel = any; // Stream Chat's Channel type
+export type CustomChannel = unknown; // Stream Chat's Channel type - should be imported from stream-chat
 
 // Channel sort options
 export const channelSort = {

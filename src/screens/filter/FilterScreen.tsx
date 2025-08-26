@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   cancelText: {
     color: theme.colors.primary.main,
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(12),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   filterSection: {
     borderBottomColor: '#E5E5E5',
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(18),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   optionItem: {
     borderBottomColor: '#F0F0F0',
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(18),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     marginBottom: scaleHeight(8),
   },
   scrollView: {
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
   },
   tagTextSelected: {
     color: theme.colors.primary.main,
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   tagsContainer: {
     flexDirection: 'row',

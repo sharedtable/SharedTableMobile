@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: scaleFont(20),
-    fontWeight: '700' as any,
+    fontWeight: '700',
   },
   pointsText: {
     color: theme.colors.text.secondary,
@@ -153,6 +153,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
 });

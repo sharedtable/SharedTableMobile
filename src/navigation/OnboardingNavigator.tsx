@@ -22,7 +22,7 @@ const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 
 // Create a wrapper component for each screen that provides navigation
 const createScreenWrapper = (ScreenComponent: any, nextScreen?: string, currentStep?: number) => {
-  return () => {
+  const ScreenWrapper = () => {
     const navigation = useNavigation<StackNavigationProp<OnboardingStackParamList>>();
     const { setNeedsOnboarding } = useAuthStore();
 
@@ -59,6 +59,10 @@ const createScreenWrapper = (ScreenComponent: any, nextScreen?: string, currentS
       <ScreenComponent onNavigate={handleNavigate} currentStep={currentStep} totalSteps={3} />
     );
   };
+
+  ScreenWrapper.displayName = `${ScreenComponent.name}Wrapper`;
+  
+  return ScreenWrapper;
 };
 
 export function OnboardingNavigator() {

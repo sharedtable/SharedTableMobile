@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     marginBottom: scaleHeight(20),
   },
   checkbox: {
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(12),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   infoRow: {
     alignItems: 'center',
@@ -170,11 +170,11 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   progressHighlight: {
     color: theme.colors.text.primary,
-    fontWeight: '700' as any,
+    fontWeight: '700',
   },
   progressSummary: {
     alignItems: 'center',
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     marginBottom: scaleHeight(8),
   },
   streakCard: {
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(48),
-    fontWeight: '700' as any,
+    fontWeight: '700',
     lineHeight: scaleFont(52),
   },
   taskItem: {
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(13),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   taskPointsCompleted: {
     color: theme.colors.text.secondary,

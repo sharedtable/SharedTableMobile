@@ -22,6 +22,7 @@ export interface User {
   email: string;
   name: string;
   image?: string;
+  bio?: string;
   emailVerified?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -29,7 +30,108 @@ export interface User {
   // Add other user fields as needed
 }
 
-export interface ApiResponse<T = any> {
+export interface DiningEvent {
+  id: string;
+  title: string;
+  description: string;
+  cuisine_type: string;
+  dining_style: string;
+  restaurant_name: string;
+  address: string;
+  city: string;
+  event_date: string;
+  start_time: string;
+  end_time: string;
+  min_guests: number;
+  max_guests: number;
+  price_per_person: number;
+  price_includes?: string;
+  payment_method: string;
+  dietary_accommodations?: string[];
+  age_restriction?: string;
+  dress_code?: string;
+  languages_spoken?: string[];
+  cover_image?: string;
+  tags?: string[];
+  visibility?: string;
+  host_id: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EventBooking {
+  id: string;
+  event_id: string;
+  user_id: string;
+  guest_count: number;
+  dietary_notes?: string;
+  special_requests?: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EventAttendee {
+  id: string;
+  event_id: string;
+  user_id: string;
+  user: User;
+  status: 'pending' | 'confirmed' | 'waitlisted' | 'declined' | 'cancelled';
+  guests_count: number;
+  dietary_notes?: string;
+  special_requests?: string;
+  requested_at: string;
+  confirmed_at?: string;
+  joined_at: string;
+}
+
+export interface EventMessage {
+  id: string;
+  event_id: string;
+  user_id: string;
+  user: User;
+  message: string;
+  message_type: 'text' | 'image' | 'system' | 'announcement';
+  reply_to_id?: string;
+  reply_to?: EventMessage;
+  image_url?: string;
+  edited: boolean;
+  deleted: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EventReview {
+  id: string;
+  event_id: string;
+  user_id: string;
+  overall_rating: number;
+  food_rating?: number;
+  atmosphere_rating?: number;
+  host_rating?: number;
+  value_rating?: number;
+  review_text?: string;
+  highlights?: string[];
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+  user: User;
+}
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  type: string;
+  read: boolean;
+  data?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -201,12 +303,12 @@ class ApiService {
   // User Profile Endpoints
   // ============================================================================
 
-  async getUserProfile(): Promise<ApiResponse<any>> {
+  async getUserProfile(): Promise<ApiResponse<User>> {
     const response = await this.client.get('/user/profile');
     return response.data;
   }
 
-  async updateProfile(data: any): Promise<ApiResponse<any>> {
+  async updateProfile(data: Partial<User>): Promise<ApiResponse<User>> {
     const response = await this.client.put('/user/profile', data);
     return response.data;
   }
@@ -219,7 +321,7 @@ class ApiService {
       uri,
       type: 'image/jpeg',
       name: 'profile.jpg',
-    } as any);
+    } as any); // React Native specific file upload format
 
     const response = await this.client.post('/user/profile-photo', formData, {
       headers: {
@@ -231,26 +333,154 @@ class ApiService {
   }
 
   // ============================================================================
-  // Reservations/Events Endpoints
+  // Dining Events Endpoints
   // ============================================================================
 
-  async getAvailableEvents(): Promise<ApiResponse<any[]>> {
-    const response = await this.client.get('/reservations/available');
+  async getAvailableEvents(params?: {
+    city?: string;
+    cuisine?: string;
+    date?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    status?: string;
+  }): Promise<ApiResponse<DiningEvent[]>> {
+    const response = await this.client.get('/events/available', { params });
     return response.data;
   }
 
-  async getEventDetails(eventId: string): Promise<ApiResponse<any>> {
-    const response = await this.client.get(`/reservations/${eventId}`);
+  async getEventDetails(eventId: string): Promise<ApiResponse<DiningEvent>> {
+    const response = await this.client.get(`/events/${eventId}`);
+    return response.data;
+  }
+
+  async createEvent(data: {
+    title: string;
+    description: string;
+    cuisine_type: string;
+    dining_style: string;
+    restaurant_name: string;
+    address: string;
+    city: string;
+    event_date: string;
+    start_time: string;
+    end_time: string;
+    min_guests: number;
+    max_guests: number;
+    price_per_person: number;
+    price_includes?: string;
+    payment_method: string;
+    dietary_accommodations?: string[];
+    age_restriction?: string;
+    dress_code?: string;
+    languages_spoken?: string[];
+    cover_image?: string;
+    tags?: string[];
+    visibility?: string;
+  }): Promise<ApiResponse<DiningEvent>> {
+    const response = await this.client.post('/events/create', data);
+    return response.data;
+  }
+
+  async updateEvent(eventId: string, data: Partial<DiningEvent>): Promise<ApiResponse<DiningEvent>> {
+    const response = await this.client.put(`/events/${eventId}`, data);
+    return response.data;
+  }
+
+  async deleteEvent(eventId: string): Promise<ApiResponse<void>> {
+    const response = await this.client.delete(`/events/${eventId}`);
     return response.data;
   }
 
   async bookEvent(data: {
     eventId: string;
     guestCount?: number;
-    dietaryRestrictions?: string;
-    notes?: string;
-  }): Promise<ApiResponse<any>> {
-    const response = await this.client.post('/reservations/book', data);
+    dietaryNotes?: string;
+    specialRequests?: string;
+  }): Promise<ApiResponse<EventBooking>> {
+    const response = await this.client.post('/events/book', data);
+    return response.data;
+  }
+
+  async cancelEventBooking(eventId: string): Promise<ApiResponse<void>> {
+    const response = await this.client.delete(`/events/${eventId}/booking`);
+    return response.data;
+  }
+
+  async getMyHostedEvents(): Promise<ApiResponse<DiningEvent[]>> {
+    const response = await this.client.get('/events/my-hosted');
+    return response.data;
+  }
+
+  async getEventAttendees(eventId: string): Promise<ApiResponse<EventAttendee[]>> {
+    const response = await this.client.get(`/events/${eventId}/attendees`);
+    return response.data;
+  }
+
+  async joinWaitlist(eventId: string): Promise<ApiResponse<void>> {
+    const response = await this.client.post(`/events/${eventId}/waitlist`);
+    return response.data;
+  }
+
+  async leaveWaitlist(eventId: string): Promise<ApiResponse<void>> {
+    const response = await this.client.delete(`/events/${eventId}/waitlist`);
+    return response.data;
+  }
+
+  // ============================================================================
+  // Event Messages Endpoints
+  // ============================================================================
+
+  async getEventMessages(eventId: string, params?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<ApiResponse<EventMessage[]>> {
+    const response = await this.client.get(`/events/${eventId}/messages`, { params });
+    return response.data;
+  }
+
+  async sendEventMessage(eventId: string, data: {
+    message: string;
+    replyToId?: string;
+  }): Promise<ApiResponse<EventMessage>> {
+    const response = await this.client.post(`/events/${eventId}/messages`, data);
+    return response.data;
+  }
+
+  async deleteEventMessage(eventId: string, messageId: string): Promise<ApiResponse<void>> {
+    const response = await this.client.delete(`/events/${eventId}/messages/${messageId}`);
+    return response.data;
+  }
+
+  // ============================================================================
+  // Event Reviews Endpoints
+  // ============================================================================
+
+  async getEventReviews(eventId: string): Promise<ApiResponse<EventReview[]>> {
+    const response = await this.client.get(`/events/${eventId}/reviews`);
+    return response.data;
+  }
+
+  async createEventReview(eventId: string, data: {
+    overall_rating: number;
+    food_rating?: number;
+    atmosphere_rating?: number;
+    host_rating?: number;
+    value_rating?: number;
+    review_text?: string;
+    highlights?: string[];
+    is_public?: boolean;
+  }): Promise<ApiResponse<EventReview>> {
+    const response = await this.client.post(`/events/${eventId}/reviews`, data);
+    return response.data;
+  }
+
+  async updateEventReview(eventId: string, reviewId: string, data: Partial<EventReview>): Promise<ApiResponse<EventReview>> {
+    const response = await this.client.put(`/events/${eventId}/reviews/${reviewId}`, data);
+    return response.data;
+  }
+
+  async deleteEventReview(eventId: string, reviewId: string): Promise<ApiResponse<void>> {
+    const response = await this.client.delete(`/events/${eventId}/reviews/${reviewId}`);
     return response.data;
   }
 
@@ -258,12 +488,12 @@ class ApiService {
   // Bookings Endpoints
   // ============================================================================
 
-  async getMyBookings(): Promise<ApiResponse<any[]>> {
+  async getMyBookings(): Promise<ApiResponse<EventBooking[]>> {
     const response = await this.client.get('/bookings/my-bookings');
     return response.data;
   }
 
-  async getBookingDetails(bookingId: string): Promise<ApiResponse<any>> {
+  async getBookingDetails(bookingId: string): Promise<ApiResponse<EventBooking>> {
     const response = await this.client.get(`/bookings/${bookingId}`);
     return response.data;
   }
@@ -281,7 +511,7 @@ class ApiService {
     limit?: number;
     offset?: number;
     unreadOnly?: boolean;
-  }): Promise<ApiResponse<any[]>> {
+  }): Promise<ApiResponse<Notification[]>> {
     const response = await this.client.get('/notifications', { params });
     return response.data;
   }
@@ -347,10 +577,10 @@ class ApiService {
   }
 
   // Generic request method for any custom endpoints
-  async request<T = any>(
+  async request<T = unknown>(
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     endpoint: string,
-    data?: any,
+    data?: unknown,
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {
     const response = await this.client.request({

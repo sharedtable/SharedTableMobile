@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar } from 'react-native';
+import { NavigationProp, RouteProp } from '@react-navigation/native';
 
 import { GourmandProgressCard } from '@/components/dashboard/GourmandProgressCard';
 import { LeaderboardView } from '@/components/dashboard/LeaderboardView';
@@ -14,9 +15,9 @@ import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface DashboardScreenProps {
-  navigation?: any;
-  route?: any;
-  onNavigate?: (screen: string, data?: any) => void;
+  navigation?: NavigationProp<any>;
+  route?: RouteProp<any>;
+  onNavigate?: (screen: string, data?: unknown) => void;
 }
 
 type DashboardTab = 'overview' | 'leaderboard' | 'quest' | 'loyalty';
@@ -177,7 +178,7 @@ const styles = StyleSheet.create({
   },
   activeTabText: {
     color: theme.colors.primary.main,
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   container: {
     backgroundColor: '#F9F9F9',
@@ -235,7 +236,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: scaleFont(24),
-    fontWeight: '700' as any,
+    fontWeight: '700',
     marginBottom: scaleHeight(4),
   },
 });

@@ -7,7 +7,7 @@ import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface StatsCardProps {
-  icon: string;
+  icon: string; // TODO: Update to proper IconName type when Icon component is available
   iconColor?: string;
   value: string | number;
   label: string;
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   trend: {
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(12),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     marginLeft: scaleWidth(4),
     color: theme.colors.primary.main,
   },
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: scaleFont(20),
-    fontWeight: '700' as any,
+    fontWeight: '700',
   },
   valueRow: {
     alignItems: 'baseline',

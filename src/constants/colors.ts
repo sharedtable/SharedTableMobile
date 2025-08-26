@@ -59,7 +59,20 @@ export const Colors = {
   blackOverlayMedium: 'rgba(0, 0, 0, 0.5)',
   whiteOverlay: 'rgba(255, 255, 255, 0.6)',
   whiteOpaque: 'rgba(255, 255, 255, 1)',
+  whiteOverlayLight: 'rgba(255, 255, 255, 0.9)',
+  whiteOverlayMedium: 'rgba(255, 255, 255, 0.5)',
   primaryMedium: 'rgba(226, 72, 73, 0.3)',
+  
+  // UI specific colors
+  borderGray: '#E1E1E1',
+  textPrimary: '#262626',
+  textSecondary: '#8E8E93',
+  textTertiary: '#8B4513',
+  backgroundYellow: '#FFF9E6',
+  borderYellow: '#FFE5B4',
+  googleBlue: '#4285F4',
+  backgroundGray: '#F8F8F8',
+  textDarkGray: '#1C1C1E',
 } as const;
 
 export type ColorKey = keyof typeof Colors;

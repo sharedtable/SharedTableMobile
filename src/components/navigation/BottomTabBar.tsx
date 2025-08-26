@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon, IconName } from '@/components/base/Icon';
 import { theme } from '@/theme';
+import { Colors } from '@/constants/colors';
 import { scaleFont } from '@/utils/responsive';
 
 export type TabName = 'home' | 'events' | 'dashboard' | 'profile' | 'chat';
@@ -45,7 +46,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({ activeTab, onTabPres
                 <Icon
                   name={tab.icon as IconName}
                   size={24}
-                  color={isActive ? theme.colors.white : 'rgba(255, 255, 255, 0.6)'}
+                  color={isActive ? theme.colors.white : Colors.whiteOverlay}
                 />
                 {isActive && <View style={styles.activeIndicator} />}
               </View>
@@ -99,7 +100,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   labelInactive: {
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: Colors.whiteOverlay,
     fontWeight: '400',
   },
   tab: {
