@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
 
 import { theme } from '@/theme';
+import { Colors } from '@/constants/colors';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface OnboardingButtonProps {
@@ -87,7 +88,7 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   outlineButton: {
-    backgroundColor: 'transparent',
+    backgroundColor: Colors.transparent,
     borderColor: theme.colors.primary.main,
     borderWidth: 2,
   },

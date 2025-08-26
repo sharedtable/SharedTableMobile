@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable, Keyboard } from 'react-native';
 
 import { theme } from '@/theme';
+import { Colors } from '@/constants/colors';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface InviteFriendsSectionProps {
@@ -59,7 +60,7 @@ const styles = StyleSheet.create({
     fontWeight: '400' as any,
   },
   container: {
-    borderTopColor: '#F0F0F0',
+    borderTopColor: Colors.gray200,
     borderTopWidth: 1,
     marginTop: scaleHeight(24),
     paddingHorizontal: scaleWidth(24),
@@ -80,8 +81,8 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     alignItems: 'center',
-    backgroundColor: '#FAFAFA',
-    borderColor: '#E5E5E5',
+    backgroundColor: Colors.gray50,
+    borderColor: Colors.gray300,
     borderRadius: scaleWidth(28),
     borderWidth: 1,
     flexDirection: 'row',

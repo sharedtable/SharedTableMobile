@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   },
   activeTabText: {
     color: theme.colors.text.primary,
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   avatar: {
     borderRadius: scaleWidth(30),
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
   },
   currentUserText: {
     color: theme.colors.white,
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   firstPlace: {
     borderColor: theme.colors.primary.main,
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     marginBottom: scaleHeight(4),
     maxWidth: scaleWidth(80),
   },
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: scaleFont(12),
-    fontWeight: '700' as any,
+    fontWeight: '700',
   },
   secondPlace: {
     borderColor: theme.colors.primary.main,

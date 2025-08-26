@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(12),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   textContent: {
     flex: 1,
@@ -94,6 +94,6 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: scaleFont(18),
-    fontWeight: '700' as any,
+    fontWeight: '700',
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,6 +8,7 @@ import {
   Platform,
   TouchableOpacity,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,9 +24,31 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import PostCard from '../../components/feed/PostCard';
+import EnhancedPostCard, { PostData } from '../../components/feed/EnhancedPostCard';
 import PostCardSkeleton from '../../components/feed/PostCardSkeleton';
 import feedApi from '../../services/feedApi';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+interface ReactionData {
+  id: string;
+  user_id: string;
+  reaction_type: string;
+  created_at: string;
+}
+
+interface Comment {
+  id: string;
+  post_id: string;
+  user_id: string;
+  text: string;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    id: string;
+    name: string;
+    avatar_url?: string;
+  };
+}
 
 interface FeedActivity {
   id: string;
@@ -35,14 +58,43 @@ interface FeedActivity {
   time: string;
   content?: string;
   image_url?: string;
-  user_data?: any;
-  post?: any;
+  user_data?: {
+    id: string;
+    name: string;
+    avatar_url?: string;
+  };
+  post?: {
+    id: string;
+    content?: string;
+    users?: {
+      name: string;
+      avatar_url?: string;
+    };
+  };
   reaction_counts?: {
     like?: number;
+    love?: number;
+    fire?: number;
+    yum?: number;
+    clap?: number;
     comment?: number;
   };
   own_reactions?: {
-    like?: any[];
+    like?: ReactionData[];
+    love?: ReactionData[];
+    fire?: ReactionData[];
+    yum?: ReactionData[];
+    clap?: ReactionData[];
+  };
+  user_reaction_type?: 'like' | 'love' | 'fire' | 'yum' | 'clap';
+  first_comment?: {
+    id: string;
+    user: {
+      username: string;
+      name: string;
+    };
+    text: string;
+    created_at: string;
   };
 }
 
@@ -56,6 +108,7 @@ const FeedScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
   
   const scrollY = useSharedValue(0);
   const fabScale = useSharedValue(1);
@@ -71,12 +124,13 @@ const FeedScreen: React.FC = () => {
       console.log('Feed data received:', data);
       setActivities(data);
       setHasMore(data.length === 20);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading feed:', error);
+      const err = error as any; // Type assertion for error handling
       console.error('Error details:', {
-        message: error?.message,
-        response: error?.response?.data,
-        status: error?.response?.status,
+        message: err?.message,
+        response: err?.response?.data,
+        status: err?.response?.status,
       });
     } finally {
       setLoading(false);
@@ -106,6 +160,12 @@ const FeedScreen: React.FC = () => {
 
   useEffect(() => {
     loadFeed();
+    // Load saved posts
+    AsyncStorage.getItem('saved_posts').then(saved => {
+      if (saved) {
+        setSavedPosts(new Set(JSON.parse(saved)));
+      }
+    }).catch(console.error);
   }, [loadFeed]);
   
   // Refresh when screen comes into focus
@@ -116,46 +176,156 @@ const FeedScreen: React.FC = () => {
     return unsubscribe;
   }, [navigation, loadFeed]);
 
-  const handleLike = useCallback(async (activityId: string) => {
+  const handleReaction = useCallback(async (activityId: string, reactionType: string) => {
     try {
-      // Optimistic update
+      const validReactions = ['like', 'love', 'fire', 'yum', 'clap'] as const;
+      const reaction = reactionType as typeof validReactions[number];
+      
+      // Optimistic update for all reaction types
       setActivities(prev => prev.map(activity => {
         if (activity.id === activityId) {
-          const isLiked = activity.own_reactions?.like && activity.own_reactions.like.length > 0;
+          const currentReaction = activity.user_reaction_type;
+          const isRemoving = currentReaction === reaction;
+          
+          // Update reaction counts
+          const newCounts = { ...activity.reaction_counts };
+          
+          // Remove old reaction count if switching reactions
+          if (currentReaction && currentReaction !== reaction) {
+            newCounts[currentReaction] = (newCounts[currentReaction] || 1) - 1;
+          }
+          
+          // Update new reaction count
+          if (isRemoving) {
+            newCounts[reaction] = (newCounts[reaction] || 1) - 1;
+          } else {
+            newCounts[reaction] = (newCounts[reaction] || 0) + 1;
+          }
+          
+          // Update own reactions
+          const newOwnReactions = { ...activity.own_reactions };
+          
+          // Clear all reactions first if switching
+          if (currentReaction && currentReaction !== reaction) {
+            validReactions.forEach(r => {
+              newOwnReactions[r] = [];
+            });
+          }
+          
+          // Set the new reaction
+          if (isRemoving) {
+            newOwnReactions[reaction] = [];
+          } else {
+            newOwnReactions[reaction] = [{
+              id: 'temp',
+              user_id: 'current-user', // TODO: Get from auth
+              reaction_type: reaction,
+              created_at: new Date().toISOString(),
+            }];
+          }
+          
           return {
             ...activity,
-            reaction_counts: {
-              ...activity.reaction_counts,
-              like: (activity.reaction_counts?.like || 0) + (isLiked ? -1 : 1),
-            },
-            own_reactions: {
-              ...activity.own_reactions,
-              like: isLiked ? [] : [{ id: 'temp' }],
-            },
+            reaction_counts: newCounts,
+            own_reactions: newOwnReactions,
+            user_reaction_type: isRemoving ? undefined : reaction,
           };
         }
         return activity;
       }));
       
-      // Make API call
+      // Make API call - for now using like/unlike API
+      // In production, you'd have specific endpoints for each reaction type
       const activity = activities.find(a => a.id === activityId);
-      const isLiked = activity?.own_reactions?.like && activity.own_reactions.like.length > 0;
+      const hasReaction = activity?.user_reaction_type;
       
-      if (isLiked) {
+      if (hasReaction === reaction) {
+        // Remove reaction
         await feedApi.unlikePost(activityId);
       } else {
+        // Add/change reaction
         await feedApi.likePost(activityId);
       }
     } catch (error) {
-      console.error('Error liking post:', error);
+      console.error('Error reacting to post:', error);
       // Revert optimistic update on error
       loadFeed();
     }
   }, [activities]);
 
   const handleComment = useCallback((activityId: string) => {
-    // Navigate to comment screen or show comment modal
-    console.log('Comment on:', activityId);
+    // Navigate to comment screen
+    (navigation as any).navigate('Comments', {
+      postId: activityId,
+      postAuthor: 'Author', // Get from activity data
+    });
+  }, [navigation]);
+
+  const handleShare = useCallback(async (activityId: string) => {
+    try {
+      // Haptic feedback
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+
+      // Get post details
+      const activity = activities.find(a => a.id === activityId);
+      if (!activity) return;
+
+      // Create share message
+      const shareMessage = `Check out this delicious post on SharedTable! 🍽️\n\n${activity.content || 'Amazing food experience!'}\n\n#SharedTable #Foodie`;
+
+      // Share using native share
+      if (Platform.OS === 'ios') {
+        // iOS share
+        Alert.alert(
+          '📤 Share Post',
+          shareMessage,
+          [
+            { text: 'Copy Link', onPress: () => {
+              // TODO: Copy deep link to clipboard
+              Alert.alert('Success', 'Link copied! 📋');
+            }},
+            { text: 'Cancel', style: 'cancel' }
+          ]
+        );
+      } else {
+        // Android share
+        Alert.alert('Share', shareMessage);
+      }
+    } catch (error) {
+      console.error('Error sharing post:', error);
+    }
+  }, [activities]);
+
+  const handleSave = useCallback(async (activityId: string) => {
+    try {
+      // Haptic feedback
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+
+      // Toggle save state
+      setSavedPosts(prev => {
+        const newSaved = new Set(prev);
+        if (newSaved.has(activityId)) {
+          newSaved.delete(activityId);
+          // Save to AsyncStorage
+          AsyncStorage.setItem('saved_posts', JSON.stringify(Array.from(newSaved))).catch(console.error);
+          return newSaved;
+        } else {
+          newSaved.add(activityId);
+          // Save to AsyncStorage
+          AsyncStorage.setItem('saved_posts', JSON.stringify(Array.from(newSaved))).catch(console.error);
+          return newSaved;
+        }
+      });
+
+      // TODO: When backend is ready, save to API
+      // TODO: await feedApi.savePost(activityId);
+    } catch (error) {
+      console.error('Error saving post:', error);
+    }
   }, []);
 
   const handleCreatePost = useCallback(() => {
@@ -169,15 +339,126 @@ const FeedScreen: React.FC = () => {
     (navigation as any).navigate('CreatePost');
   }, [navigation]);
 
+  // Load first comment and count for posts
+  const [postComments, setPostComments] = useState<{ [key: string]: Comment[] }>({});
+  const [commentCounts, setCommentCounts] = useState<{ [key: string]: number }>({});
+
+  useEffect(() => {
+    // Load first comment and count for each activity
+    activities.forEach(async (activity) => {
+      try {
+        const storedComments = await AsyncStorage.getItem(`comments_${activity.id}`);
+        if (storedComments) {
+          const comments = JSON.parse(storedComments);
+          if (comments.length > 0) {
+            setPostComments(prev => ({
+              ...prev,
+              [activity.id]: comments[0]
+            }));
+            setCommentCounts(prev => ({
+              ...prev,
+              [activity.id]: comments.length
+            }));
+          }
+        }
+      } catch (error) {
+        console.log('Error loading comment preview:', error);
+      }
+    });
+  }, [activities]);
+  
+  // Refresh comment data when returning from comments screen
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      // Reload comment data when screen comes back into focus
+      activities.forEach(async (activity) => {
+        try {
+          const storedComments = await AsyncStorage.getItem(`comments_${activity.id}`);
+          if (storedComments) {
+            const comments = JSON.parse(storedComments);
+            setPostComments(prev => ({
+              ...prev,
+              [activity.id]: comments.length > 0 ? comments[0] : null
+            }));
+            setCommentCounts(prev => ({
+              ...prev,
+              [activity.id]: comments.length
+            }));
+          }
+        } catch (error) {
+          console.log('Error reloading comment preview:', error);
+        }
+      });
+    });
+    return unsubscribe;
+  }, [navigation, activities]);
+
   const renderItem = useCallback(({ item }: { item: FeedActivity }) => {
+    // Determine user's current reaction type
+    let userReaction: 'like' | 'love' | 'fire' | 'yum' | 'clap' | undefined = undefined;
+    
+    if (item.user_reaction_type) {
+      userReaction = item.user_reaction_type;
+    } else {
+      // Fallback to checking individual reactions for backward compatibility
+      if (item.own_reactions?.like && item.own_reactions.like.length > 0) userReaction = 'like';
+      else if (item.own_reactions?.love && item.own_reactions.love.length > 0) userReaction = 'love';
+      else if (item.own_reactions?.fire && item.own_reactions.fire.length > 0) userReaction = 'fire';
+      else if (item.own_reactions?.yum && item.own_reactions.yum.length > 0) userReaction = 'yum';
+      else if (item.own_reactions?.clap && item.own_reactions.clap.length > 0) userReaction = 'clap';
+    }
+    
+    // Convert FeedActivity to PostData format
+    const postData: PostData = {
+      id: item.id,
+      type: 'text',
+      author: {
+        id: item.actor,
+        name: item.post?.users?.name || 'Anonymous',
+        username: item.post?.users?.name?.toLowerCase().replace(/\s/g, '') || 'anonymous',
+        avatar_url: item.user_data?.avatar_url,
+        verified: false,
+      },
+      content: item.content,
+      media: item.image_url ? [{
+        type: 'image',
+        url: item.image_url,
+      }] : undefined,
+      reactions: {
+        like: item.reaction_counts?.like || 0,
+        love: item.reaction_counts?.love || 0,
+        fire: item.reaction_counts?.fire || 0,
+        yum: item.reaction_counts?.yum || 0,
+        clap: item.reaction_counts?.clap || 0,
+      },
+      user_reaction: userReaction,
+      comments_count: commentCounts[item.id] || item.reaction_counts?.comment || 0,
+      first_comment: postComments[item.id]?.[0] ? {
+        id: postComments[item.id][0].id,
+        user: {
+          username: postComments[item.id][0].user?.name || 'Unknown',
+          name: postComments[item.id][0].user?.name || 'Unknown',
+        },
+        text: postComments[item.id][0].text,
+        created_at: postComments[item.id][0].created_at,
+      } : item.first_comment,
+      shares_count: 0,
+      saves_count: 0,
+      is_saved: savedPosts.has(item.id),
+      created_at: item.time,
+    };
+
     return (
-      <PostCard
-        activity={item}
-        onLike={() => handleLike(item.id)}
+      <EnhancedPostCard
+        post={postData}
+        onLike={(reaction) => handleReaction(item.id, reaction)}
         onComment={() => handleComment(item.id)}
+        onShare={() => handleShare(item.id)}
+        onSave={() => handleSave(item.id)}
+        onProfile={(userId) => console.log('Profile:', userId)}
       />
     );
-  }, [handleLike, handleComment]);
+  }, [handleReaction, handleComment, handleShare, handleSave, postComments, commentCounts, savedPosts]);
 
   const keyExtractor = useCallback((item: FeedActivity) => item.id, []);
 
@@ -194,14 +475,14 @@ const FeedScreen: React.FC = () => {
     
     return (
       <View style={styles.emptyContainer}>
-        <Ionicons name="camera-outline" size={64} color="#C7C7CC" />
-        <Text style={styles.emptyText}>No posts yet</Text>
-        <Text style={styles.emptySubtext}>Follow some foodies to see their posts!</Text>
+        <Text style={styles.emptyEmoji}>🍕🍔🍣</Text>
+        <Text style={styles.emptyText}>No foodie posts yet</Text>
+        <Text style={styles.emptySubtext}>Share your culinary adventures! 🌮</Text>
         <TouchableOpacity 
           style={styles.emptyButton}
           onPress={() => (navigation as any).navigate('CreatePost')}
         >
-          <Text style={styles.emptyButtonText}>Create your first post</Text>
+          <Text style={styles.emptyButtonText}>📸 Share Your First Dish</Text>
         </TouchableOpacity>
       </View>
     );
@@ -245,7 +526,7 @@ const FeedScreen: React.FC = () => {
     ),
   }));
 
-  const handleScroll = useCallback((event: any) => {
+  const handleScroll = useCallback((event: { nativeEvent: { contentOffset: { y: number } } }) => {
     scrollY.value = event.nativeEvent.contentOffset.y;
   }, []);
 
@@ -255,7 +536,7 @@ const FeedScreen: React.FC = () => {
       
       <Animated.View style={[styles.header, { paddingTop: insets.top }, headerAnimatedStyle]}>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>SharedTable</Text>
+          <Text style={styles.headerTitle}>🍽️ SharedTable</Text>
           <View style={styles.headerActions}>
             <TouchableOpacity style={styles.headerButton}>
               <Ionicons name="search-outline" size={24} color="#262626" />
@@ -302,7 +583,7 @@ const FeedScreen: React.FC = () => {
           end={{ x: 1, y: 1 }}
           style={styles.fabGradient}
         >
-          <Ionicons name="add" size={28} color="white" />
+          <Text style={styles.fabEmoji}>🍳</Text>
         </LinearGradient>
       </AnimatedTouchableOpacity>
     </View>
@@ -368,6 +649,10 @@ const styles = StyleSheet.create({
     paddingTop: 120,
     paddingHorizontal: 40,
   },
+  emptyEmoji: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
   emptyText: {
     fontSize: 20,
     fontWeight: '600',
@@ -415,6 +700,9 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  fabEmoji: {
+    fontSize: 28,
   },
 });
 

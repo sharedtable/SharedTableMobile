@@ -10,6 +10,8 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect } from 'react';
 
+import { Colors } from '@/constants/colors';
+
 const { width: screenWidth } = Dimensions.get('window');
 
 const PostCardSkeleton: React.FC = () => {
@@ -21,7 +23,7 @@ const PostCardSkeleton: React.FC = () => {
       -1,
       false
     );
-  }, []);
+  }, [shimmer]);
 
   const animatedStyle = useAnimatedStyle(() => {
     const translateX = interpolate(
@@ -133,10 +135,10 @@ const PostCardSkeleton: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
+    backgroundColor: Colors.white,
     marginBottom: 1,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E1E1E1',
+    borderBottomColor: Colors.borderGray,
   },
   header: {
     flexDirection: 'row',
@@ -153,14 +155,14 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: Colors.gray200,
     marginRight: 12,
     overflow: 'hidden',
   },
   userNameSkeleton: {
     width: 100,
     height: 12,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: Colors.gray200,
     borderRadius: 6,
     marginBottom: 4,
     overflow: 'hidden',
@@ -168,14 +170,14 @@ const styles = StyleSheet.create({
   timeSkeleton: {
     width: 60,
     height: 10,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: Colors.gray200,
     borderRadius: 5,
     overflow: 'hidden',
   },
   imageSkeleton: {
     width: screenWidth,
     height: screenWidth,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: Colors.gray200,
     overflow: 'hidden',
   },
   actions: {
@@ -189,7 +191,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: Colors.gray200,
     marginRight: 16,
     overflow: 'hidden',
   },
@@ -200,7 +202,7 @@ const styles = StyleSheet.create({
   contentLine: {
     width: '100%',
     height: 12,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: Colors.gray200,
     borderRadius: 6,
     marginBottom: 6,
     overflow: 'hidden',

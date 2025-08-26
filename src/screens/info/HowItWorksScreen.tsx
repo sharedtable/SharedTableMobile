@@ -14,7 +14,7 @@ import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface HowItWorksScreenProps {
-  onNavigate?: (screen: string, data?: any) => void;
+  onNavigate?: (screen: string, data?: unknown) => void;
 }
 
 const steps = [
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(20),
-    fontWeight: '700' as any,
+    fontWeight: '700',
     textAlign: 'center',
   },
   scrollContent: {
@@ -184,14 +184,14 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(18),
-    fontWeight: '700' as any,
+    fontWeight: '700',
     textAlign: 'center',
   },
   stepTitle: {
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(15),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     marginBottom: scaleHeight(3),
   },
   stepsContainer: {

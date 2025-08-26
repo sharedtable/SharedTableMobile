@@ -81,13 +81,13 @@ export function sleep(ms: number): Promise<void> {
  */
 export function Retry(options?: RetryOptions) {
   return function (
-    target: any,
+    target: unknown,
     propertyKey: string,
     descriptor: PropertyDescriptor
   ) {
     const originalMethod = descriptor.value;
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: unknown[]) {
       return retryWithBackoff(() => originalMethod.apply(this, args), options);
     };
 

@@ -1,18 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, Pressable, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { theme } from '@/theme';
 import { scaleHeight, scaleFont, scaleWidth } from '@/utils/responsive';
+import { ProfileStackParamList } from '@/navigation/ProfileNavigator';
 
-interface ProfileScreenProps {
-  navigation?: unknown;
-  route?: unknown;
-  onNavigate?: (screen: string) => void;
-}
+type ProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
 
-export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
+export function ProfileScreen() {
+  const navigation = useNavigation<ProfileNavigationProp>();
   const { user, logout } = usePrivyAuth();
 
   const handleLogout = async () => {
@@ -24,6 +24,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
   };
 
   const profileItems = [
+    { id: 'dining-preferences', title: 'Dining Preferences', icon: 'restaurant-outline' },
     { id: 'settings', title: 'Settings', icon: 'settings-outline' },
     { id: 'help', title: 'Help & Support', icon: 'help-circle-outline' },
     { id: 'about', title: 'About', icon: 'information-circle-outline' },
@@ -53,7 +54,22 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
             <Pressable
               key={item.id}
               style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
-              onPress={() => onNavigate?.(item.id)}
+              onPress={() => {
+                switch (item.id) {
+                  case 'dining-preferences':
+                    navigation.navigate('DiningPreferences');
+                    break;
+                  case 'settings':
+                    navigation.navigate('Settings');
+                    break;
+                  case 'about':
+                    navigation.navigate('About');
+                    break;
+                  case 'help':
+                    // TODO: Navigate to help screen
+                    break;
+                }
+              }}
             >
               <View style={styles.menuItemLeft}>
                 <Ionicons

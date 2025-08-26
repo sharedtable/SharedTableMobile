@@ -226,7 +226,10 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
     try {
       setIsLoading(true);
       // Use Privy resend passed from parent
-      const identifier = verificationType === 'email' ? email! : phoneNumber!;
+      const identifier = verificationType === 'email' ? email : phoneNumber;
+      if (!identifier) {
+        throw new Error('No identifier available for verification');
+      }
       await privySendCode(identifier);
 
       // Reset timer and clear OTP
@@ -372,7 +375,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '500' as any,
+    fontWeight: '500',
   },
   bottomSpacer: {
     height: scaleHeight(40),
@@ -393,7 +396,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     textAlign: 'center',
   },
   keyboardView: {
@@ -412,7 +415,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(24),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     height: scaleHeight(56),
     width: scaleWidth(44),
   },
@@ -438,7 +441,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   resendSection: {
     alignItems: 'center',
@@ -468,7 +471,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(28),
-    fontWeight: '700' as any,
+    fontWeight: '700',
     marginBottom: scaleHeight(12),
     textAlign: 'center',
   },
@@ -493,6 +496,6 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(18),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
 });

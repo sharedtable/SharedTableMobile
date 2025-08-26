@@ -14,7 +14,7 @@ import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface FAQsScreenProps {
-  onNavigate?: (screen: string, data?: any) => void;
+  onNavigate?: (screen: string, data?: unknown) => void;
 }
 
 interface FAQItem {
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     color: '#6B6B6B',
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(15),
-    fontWeight: '400' as any,
+    fontWeight: '400',
     lineHeight: scaleFont(22),
   },
   closeButton: {
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(28),
-    fontWeight: '700' as any,
+    fontWeight: '700',
     lineHeight: scaleFont(32),
   },
   iconContainer: {
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: scaleFont(20),
-    fontWeight: '700' as any,
+    fontWeight: '700',
     paddingRight: scaleWidth(16),
   },
   scrollContent: {

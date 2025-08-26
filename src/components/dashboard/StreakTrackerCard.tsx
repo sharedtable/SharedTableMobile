@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(12),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   section: {
     backgroundColor: Colors.primaryLight,
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   streakDisplay: {
     alignItems: 'center',
@@ -100,14 +100,14 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(48),
-    fontWeight: '700' as any,
+    fontWeight: '700',
     lineHeight: scaleFont(52),
   },
   title: {
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     marginBottom: scaleHeight(20),
   },
 });

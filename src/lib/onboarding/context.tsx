@@ -347,10 +347,11 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
         }
 
         // Save to database using the correct user ID
-        await OnboardingService.saveOnboardingStep(userIdForSave, validation.data!);
-
-        // Update local state
-        dispatch({ type: 'MERGE_STEP_DATA', payload: validation.data! });
+        if (validation.data) {
+          await OnboardingService.saveOnboardingStep(userIdForSave, validation.data);
+          // Update local state
+          dispatch({ type: 'MERGE_STEP_DATA', payload: validation.data });
+        }
 
         // Refresh progress
         const progress = await OnboardingService.getOnboardingProgress(userIdForSave);

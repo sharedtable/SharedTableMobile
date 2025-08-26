@@ -12,7 +12,7 @@ import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface OnboardingLifestyleScreenProps {
-  onNavigate?: (screen: string, data?: any) => void;
+  onNavigate?: (screen: string, data?: unknown) => void;
   currentStep?: number;
   totalSteps?: number;
 }
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(32),
-    fontWeight: '700' as any,
+    fontWeight: '700',
     lineHeight: scaleHeight(40),
     marginBottom: scaleHeight(24),
     marginTop: scaleHeight(32),

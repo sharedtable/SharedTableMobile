@@ -73,12 +73,15 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
           // If this is the last step (gender), complete the onboarding
           if (step === 'gender') {
+            if (!updatedData.firstName || !updatedData.lastName || !updatedData.nickname || !updatedData.birthDate || !updatedData.gender) {
+              throw new Error('Missing required onboarding data');
+            }
             const completeData = {
-              firstName: updatedData.firstName!,
-              lastName: updatedData.lastName!,
-              nickname: updatedData.nickname!,
-              birthDate: updatedData.birthDate?.toISOString ? updatedData.birthDate.toISOString() : updatedData.birthDate!,
-              gender: updatedData.gender!,
+              firstName: updatedData.firstName,
+              lastName: updatedData.lastName,
+              nickname: updatedData.nickname,
+              birthDate: updatedData.birthDate?.toISOString ? updatedData.birthDate.toISOString() : updatedData.birthDate,
+              gender: updatedData.gender,
             };
             await OnboardingAPI.completeOnboarding(completeData);
           }

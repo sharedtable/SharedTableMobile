@@ -248,7 +248,7 @@ export function useFeatureFlags(...flags: (keyof FeatureFlags)[]): boolean[] {
   // We need to call hooks unconditionally, so we get all flags first
   const flagStates: boolean[] = [];
   
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+   
   for (const flag of flags) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     flagStates.push(useFeatureFlag(flag));

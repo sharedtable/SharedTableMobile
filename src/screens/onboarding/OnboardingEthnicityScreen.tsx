@@ -12,7 +12,7 @@ import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface OnboardingEthnicityScreenProps {
-  onNavigate?: (screen: string, data?: any) => void;
+  onNavigate?: (screen: string, data?: unknown) => void;
   currentStep?: number;
   totalSteps?: number;
 }

@@ -8,7 +8,7 @@ import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface OnboardingPhotoScreenProps {
-  onNavigate?: (screen: string, data?: any) => void;
+  onNavigate?: (screen: string, data?: unknown) => void;
   currentStep?: number;
   totalSteps?: number;
 }
@@ -294,6 +294,6 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
 });

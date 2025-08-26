@@ -8,7 +8,7 @@ import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface OnboardingGenderScreenProps {
-  onNavigate?: (screen: string, data?: any) => void;
+  onNavigate?: (screen: string, data?: unknown) => void;
   currentStep?: number;
   totalSteps?: number;
 }
@@ -89,56 +89,123 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
         )}
 
         {/* Gender Options */}
-        <View style={styles.optionsContainer}>
-          {/* Male Option */}
-          <Pressable
-            style={[styles.genderCard, selectedGender === 'male' && styles.genderCardSelected]}
-            onPress={() => {
-              setSelectedGender('male');
-              if (localErrors.gender || stepErrors.gender) {
-                setLocalErrors((prev) => ({ ...prev, gender: '' }));
-                clearErrors();
-              }
-            }}
-          >
-            <View style={styles.iconContainer}>
-              <MaleIcon
-                size={50}
-                color={theme.colors.primary.main}
-                isSelected={selectedGender === 'male'}
-              />
-            </View>
-            <Text
-              style={[styles.genderText, selectedGender === 'male' && styles.genderTextSelected]}
+        <View style={styles.optionsGrid}>
+          {/* First Row */}
+          <View style={styles.optionsRow}>
+            {/* Male Option */}
+            <Pressable
+              style={[styles.genderCard, selectedGender === 'male' && styles.genderCardSelected]}
+              onPress={() => {
+                setSelectedGender('male');
+                if (localErrors.gender || stepErrors.gender) {
+                  setLocalErrors((prev) => ({ ...prev, gender: '' }));
+                  clearErrors();
+                }
+              }}
             >
-              Male
-            </Text>
-          </Pressable>
+              <View style={styles.iconContainer}>
+                <MaleIcon
+                  size={40}
+                  color={theme.colors.primary.main}
+                  isSelected={selectedGender === 'male'}
+                />
+              </View>
+              <Text
+                style={[styles.genderText, selectedGender === 'male' && styles.genderTextSelected]}
+              >
+                Male
+              </Text>
+            </Pressable>
 
-          {/* Female Option */}
-          <Pressable
-            style={[styles.genderCard, selectedGender === 'female' && styles.genderCardSelected]}
-            onPress={() => {
-              setSelectedGender('female');
-              if (localErrors.gender || stepErrors.gender) {
-                setLocalErrors((prev) => ({ ...prev, gender: '' }));
-                clearErrors();
-              }
-            }}
-          >
-            <View style={styles.iconContainer}>
-              <FemaleIcon
-                size={50}
-                color={theme.colors.primary.main}
-                isSelected={selectedGender === 'female'}
-              />
-            </View>
-            <Text
-              style={[styles.genderText, selectedGender === 'female' && styles.genderTextSelected]}
+            {/* Female Option */}
+            <Pressable
+              style={[styles.genderCard, selectedGender === 'female' && styles.genderCardSelected]}
+              onPress={() => {
+                setSelectedGender('female');
+                if (localErrors.gender || stepErrors.gender) {
+                  setLocalErrors((prev) => ({ ...prev, gender: '' }));
+                  clearErrors();
+                }
+              }}
             >
-              Female
-            </Text>
-          </Pressable>
+              <View style={styles.iconContainer}>
+                <FemaleIcon
+                  size={40}
+                  color={theme.colors.primary.main}
+                  isSelected={selectedGender === 'female'}
+                />
+              </View>
+              <Text
+                style={[styles.genderText, selectedGender === 'female' && styles.genderTextSelected]}
+              >
+                Female
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Second Row */}
+          <View style={styles.optionsRow}>
+            {/* Non-binary Option */}
+            <Pressable
+              style={[
+                styles.genderCard,
+                styles.textOnlyCard,
+                selectedGender === 'non_binary' && styles.genderCardSelected
+              ]}
+              onPress={() => {
+                setSelectedGender('non_binary');
+                if (localErrors.gender || stepErrors.gender) {
+                  setLocalErrors((prev) => ({ ...prev, gender: '' }));
+                  clearErrors();
+                }
+              }}
+            >
+              <Text
+                style={[
+                  styles.genderText,
+                  styles.textOnlyText,
+                  selectedGender === 'non_binary' && styles.genderTextSelected
+                ]}
+              >
+                Non-binary
+              </Text>
+            </Pressable>
+
+            {/* Prefer not to say Option */}
+            <Pressable
+              style={[
+                styles.genderCard,
+                styles.textOnlyCard,
+                styles.preferNotToSayCard,
+                selectedGender === 'prefer_not_to_say' && styles.preferNotToSaySelected
+              ]}
+              onPress={() => {
+                setSelectedGender('prefer_not_to_say');
+                if (localErrors.gender || stepErrors.gender) {
+                  setLocalErrors((prev) => ({ ...prev, gender: '' }));
+                  clearErrors();
+                }
+              }}
+            >
+              <View style={styles.preferNotToSayContent}>
+                <Text
+                  style={[
+                    styles.genderText,
+                    styles.textOnlyText,
+                    styles.preferNotToSayText,
+                    selectedGender === 'prefer_not_to_say' && styles.preferNotToSayTextSelected
+                  ]}
+                >
+                  Prefer not to say
+                </Text>
+                {selectedGender === 'prefer_not_to_say' && (
+                  <View style={styles.checkmark}>
+                    <Text style={styles.checkmarkText}>✓</Text>
+                  </View>
+                )}
+              </View>
+            </Pressable>
+          </View>
         </View>
 
         {/* Spacer */}
@@ -185,7 +252,8 @@ const styles = StyleSheet.create({
     borderRadius: scaleWidth(16),
     borderWidth: 2,
     flex: 1,
-    paddingVertical: scaleHeight(32),
+    paddingVertical: scaleHeight(24),
+    justifyContent: 'center',
   },
   genderCardSelected: {
     backgroundColor: 'rgba(226, 72, 73, 0.3)', // 30% of brand color
@@ -194,23 +262,65 @@ const styles = StyleSheet.create({
   genderText: {
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(16),
-    fontWeight: '500' as any,
+    fontSize: scaleFont(15),
+    fontWeight: '500',
   },
   genderTextSelected: {
     color: theme.colors.primary.main,
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   iconContainer: {
     alignItems: 'center',
-    height: scaleWidth(60),
+    height: scaleWidth(45),
     justifyContent: 'center',
-    marginBottom: scaleHeight(12),
-    width: scaleWidth(60),
+    marginBottom: scaleHeight(8),
+    width: scaleWidth(45),
   },
-  optionsContainer: {
+  optionsGrid: {
+    gap: scaleHeight(16),
+  },
+  optionsRow: {
     flexDirection: 'row',
     gap: scaleWidth(16),
+  },
+  textOnlyCard: {
+    paddingVertical: scaleHeight(28),
+  },
+  textOnlyText: {
+    fontSize: scaleFont(14),
+  },
+  preferNotToSayCard: {
+    backgroundColor: 'rgba(255, 182, 193, 0.15)', // Light pink background
+    borderColor: 'rgba(255, 182, 193, 0.5)',
+  },
+  preferNotToSaySelected: {
+    backgroundColor: 'rgba(255, 182, 193, 0.4)',
+    borderColor: '#FFB6C1',
+  },
+  preferNotToSayContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scaleWidth(8),
+  },
+  preferNotToSayText: {
+    color: '#9CA3AF',
+  },
+  preferNotToSayTextSelected: {
+    color: '#E24849',
+    fontWeight: '600',
+  },
+  checkmark: {
+    width: scaleWidth(20),
+    height: scaleWidth(20),
+    borderRadius: scaleWidth(10),
+    backgroundColor: '#E24849',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkmarkText: {
+    color: 'white',
+    fontSize: scaleFont(12),
+    fontWeight: '600',
   },
   spacer: {
     flex: 1,

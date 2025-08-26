@@ -123,7 +123,9 @@ export const NewChatScreen: React.FC = () => {
       await channel.watch();
 
       // Navigate to the channel
-      navigation.replace('Channel', { channelId: channel.id! });
+      if (channel.id) {
+        navigation.replace('Channel', { channelId: channel.id });
+      }
     } catch {
       Alert.alert('Error', 'Failed to create chat. Please try again.');
     } finally {

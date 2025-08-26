@@ -197,7 +197,7 @@ export interface Notification {
   data?: {
     bookingId?: string;
     eventId?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -222,12 +222,12 @@ export interface PaymentIntent {
 }
 
 // API Response Types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
   code?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export interface PaginatedResponse<T> {

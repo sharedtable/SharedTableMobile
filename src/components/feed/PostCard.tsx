@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -21,8 +20,17 @@ import Animated, {
 } from 'react-native-reanimated';
 import { formatDistanceToNow } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+
+import { Colors } from '@/constants/colors';
 
 const { width: screenWidth } = Dimensions.get('window');
+
+interface ReactionData {
+  user_id: string;
+  reaction_type: string;
+  created_at: string;
+}
 
 interface PostCardProps {
   activity: {
@@ -41,7 +49,7 @@ interface PostCardProps {
       comment?: number;
     };
     own_reactions?: {
-      like?: any[];
+      like?: ReactionData[];
     };
   };
   onLike: () => void;
@@ -216,10 +224,10 @@ const PostCard = memo<PostCardProps>(({ activity, onLike, onComment }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
+    backgroundColor: Colors.white,
     marginBottom: 1,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E1E1E1',
+    borderBottomColor: Colors.borderGray,
   },
   header: {
     flexDirection: 'row',
@@ -246,7 +254,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   avatarText: {
-    color: 'white',
+    color: Colors.white,
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -256,17 +264,17 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#262626',
+    color: Colors.textPrimary,
   },
   timeAgo: {
     fontSize: 11,
-    color: '#8E8E93',
+    color: Colors.textSecondary,
     marginTop: 1,
   },
   imageContainer: {
     width: screenWidth,
     height: screenWidth,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: Colors.gray50,
   },
   postImage: {
     width: '100%',
@@ -278,7 +286,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: Colors.gray50,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -288,12 +296,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: Colors.gray50,
     justifyContent: 'center',
     alignItems: 'center',
   },
   errorText: {
-    color: '#8E8E93',
+    color: Colors.textSecondary,
     fontSize: 12,
     marginTop: 8,
   },
@@ -314,7 +322,7 @@ const styles = StyleSheet.create({
   likesCount: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#262626',
+    color: Colors.textPrimary,
     paddingHorizontal: 12,
     marginBottom: 6,
   },
@@ -324,7 +332,7 @@ const styles = StyleSheet.create({
   },
   content: {
     fontSize: 13,
-    color: '#262626',
+    color: Colors.textPrimary,
     lineHeight: 18,
   },
   contentUser: {
@@ -332,10 +340,12 @@ const styles = StyleSheet.create({
   },
   viewComments: {
     fontSize: 13,
-    color: '#8E8E93',
+    color: Colors.textSecondary,
     paddingHorizontal: 12,
     paddingBottom: 12,
   },
 });
+
+PostCard.displayName = 'PostCard';
 
 export default PostCard;

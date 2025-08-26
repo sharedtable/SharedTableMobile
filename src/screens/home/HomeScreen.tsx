@@ -13,6 +13,7 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
+import { NavigationProp, RouteProp } from '@react-navigation/native';
 
 import { Icon } from '@/components/base/Icon';
 import { EventCard } from '@/components/home/EventCard';
@@ -23,9 +24,9 @@ import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface HomeScreenProps {
-  navigation?: any;
-  route?: any;
-  onNavigate?: (screen: string, data?: any) => void;
+  navigation?: NavigationProp<any>;
+  route?: RouteProp<any>;
+  onNavigate?: (screen: string, data?: unknown) => void;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
@@ -302,7 +303,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(18),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     marginBottom: scaleHeight(16),
   },
   container: {
@@ -333,7 +334,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(18),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     marginBottom: scaleHeight(8),
     textAlign: 'center',
   },
@@ -350,7 +351,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
-    fontWeight: '500' as any,
+    fontWeight: '500',
   },
   footerLinks: {
     flexDirection: 'row',
@@ -377,7 +378,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     marginRight: scaleWidth(8),
   },
   heroImage: {
@@ -399,7 +400,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(20),
-    fontWeight: '700' as any,
+    fontWeight: '700',
     marginBottom: scaleHeight(8),
     textAlign: 'center',
   },
@@ -445,7 +446,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(18),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     marginBottom: scaleHeight(8),
     textAlign: 'center',
   },
@@ -459,7 +460,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   scrollContent: {
     flexGrow: 1,

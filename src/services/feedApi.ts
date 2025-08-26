@@ -1,5 +1,26 @@
 import { api, ApiResponse } from './api';
 
+interface ReactionData {
+  id: string;
+  user_id: string;
+  reaction_type: string;
+  created_at: string;
+}
+
+interface Comment {
+  id: string;
+  post_id: string;
+  user_id: string;
+  text: string;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    id: string;
+    name: string;
+    avatar_url?: string;
+  };
+}
+
 interface Post {
   id: string;
   user_id: string;
@@ -21,7 +42,11 @@ interface FeedActivity {
   time: string;
   content?: string;
   image_url?: string;
-  user_data?: any;
+  user_data?: {
+    id: string;
+    name: string;
+    avatar_url?: string;
+  };
   engagement?: {
     likes: number;
     comments: number;
@@ -32,7 +57,7 @@ interface FeedActivity {
     comment?: number;
   };
   own_reactions?: {
-    like?: any[];
+    like?: ReactionData[];
   };
 }
 
@@ -45,7 +70,7 @@ class FeedApi {
   async getTimeline(limit = 20, offset = 0): Promise<FeedActivity[]> {
     try {
       console.log('Fetching timeline with params:', { limit, offset });
-      const response = await api.request('GET', '/feed/timeline', undefined, {
+      const response = await api.request<FeedActivity[]>('GET', '/feed/timeline', undefined, {
         params: { limit, offset }
       });
       console.log('Timeline response:', response);
@@ -57,7 +82,7 @@ class FeedApi {
   }
 
   async getDiscoverFeed(limit = 20, offset = 0): Promise<FeedActivity[]> {
-    const response = await api.request('GET', '/feed/discover', null, {
+    const response = await api.request<FeedActivity[]>('GET', '/feed/discover', null, {
       params: { limit, offset }
     });
     return response.data || [];
@@ -71,8 +96,22 @@ class FeedApi {
     await api.request('DELETE', `/feed/posts/${postId}/like`);
   }
 
-  async commentOnPost(activityId: string, text: string): Promise<any> {
+  async commentOnPost(activityId: string, text: string): Promise<ApiResponse<Comment>> {
     return api.request('POST', `/feed/posts/${activityId}/comment`, { text });
+  }
+
+  async getPostComments(postId: string): Promise<Comment[]> {
+    try {
+      const response = await api.request<Comment[]>('GET', `/feed/posts/${postId}/comments`);
+      return response.data || [];
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      return [];
+    }
+  }
+
+  async deleteComment(commentId: string): Promise<void> {
+    await api.request('DELETE', `/feed/comments/${commentId}`);
   }
 
   async followUser(userId: string): Promise<void> {
@@ -93,9 +132,9 @@ class FeedApi {
         uri,
         type: 'image/jpeg',
         name: 'upload.jpg',
-      } as any);
+      } as any); // React Native specific file upload format
       
-      const response = await api.request('POST', '/upload/upload', formData, {
+      const response = await api.request<{ url: string }>('POST', '/upload/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -115,8 +154,8 @@ class FeedApi {
   }
 
   async getFeedToken(): Promise<string> {
-    const response = await api.request('GET', '/feed/token');
-    return response.data?.token;
+    const response = await api.request<{ token: string }>('GET', '/feed/token');
+    return response.data?.token || '';
   }
 }
 

@@ -11,7 +11,7 @@ import { useOnboarding, validateOnboardingStep } from '@/lib/onboarding';
 import { scaleHeight } from '@/utils/responsive';
 
 interface OnboardingNameScreenProps {
-  onNavigate?: (screen: string, data?: any) => void;
+  onNavigate?: (screen: string, data?: unknown) => void;
   currentStep?: number;
   totalSteps?: number;
 }
