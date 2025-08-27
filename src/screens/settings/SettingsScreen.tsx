@@ -1,295 +1,215 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar, Modal } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { View, Text, StyleSheet, SafeAreaView, Pressable, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { Icon } from '@/components/base/Icon';
-import { TopBar } from '@/components/navigation/TopBar';
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { theme } from '@/theme';
-import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
+import { scaleHeight, scaleFont, scaleWidth } from '@/utils/responsive';
+import { ProfileStackParamList } from '@/navigation/ProfileNavigator';
 
-interface SettingsScreenProps {
-  onNavigate?: (screen: string, data?: Record<string, unknown>) => void;
-}
+type ProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
 
-interface SettingsItem {
-  id: string;
-  title: string;
-  icon?: string;
-  onPress?: () => void;
-  showArrow?: boolean;
-}
-
-const settingsItems: SettingsItem[] = [
-  { id: 'account', title: 'Account', showArrow: true },
-  { id: 'notifications', title: 'Notifications', showArrow: true },
-  { id: 'appearance', title: 'Appearance', showArrow: true },
-  { id: 'privacy', title: 'Privacy & Security', showArrow: true },
-  { id: 'language', title: 'Language', showArrow: true },
-  { id: 'refer', title: 'Refer a Friend', showArrow: true },
-  { id: 'about', title: 'About', showArrow: true },
-  { id: 'logout', title: 'Log Out', showArrow: true },
-];
-
-export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate }) => {
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const { logout, user } = usePrivyAuth();
-
-  const handleBack = () => {
-    onNavigate?.('profile');
-  };
-
-  const handleSettingPress = (item: SettingsItem) => {
-    if (item.id === 'logout') {
-      setShowLogoutModal(true);
-    } else if (item.id === 'notifications') {
-      onNavigate?.('notifications');
-    } else if (item.id === 'privacy') {
-      onNavigate?.('privacy-security');
-    } else if (item.id === 'appearance') {
-      onNavigate?.('appearance');
-    } else if (item.id === 'account') {
-      onNavigate?.('account');
-    } else if (item.id === 'about') {
-      onNavigate?.('about');
-    } else {
-      // Navigate to other settings items
-    }
-  };
+export function SettingsScreen() {
+  const navigation = useNavigation<ProfileNavigationProp>();
+  const { user, logout } = usePrivyAuth();
 
   const handleLogout = async () => {
     try {
-      setShowLogoutModal(false);
       await logout();
-      // Navigation will be handled by AuthWrapper/App based on auth state
     } catch (error) {
-      console.error('Logout failed:', error);
-      // Still close modal and let auth state handle navigation
+      console.error('Logout error:', error);
     }
   };
 
-  const handleCancelLogout = () => {
-    setShowLogoutModal(false);
+  const handleBack = () => {
+    navigation.goBack();
   };
 
+  const settingsItems = [
+    { id: 'account', title: 'Account', icon: 'person-outline' },
+    { id: 'dining-preferences', title: 'Dining Preferences', icon: 'restaurant-outline' },
+    { id: 'notifications', title: 'Notifications', icon: 'notifications-outline' },
+    { id: 'privacy', title: 'Privacy & Security', icon: 'lock-closed-outline' },
+    { id: 'language', title: 'Language', icon: 'language-outline' },
+    { id: 'appearance', title: 'Appearance', icon: 'color-palette-outline' },
+    { id: 'help', title: 'Help & Support', icon: 'help-circle-outline' },
+    { id: 'about', title: 'About', icon: 'information-circle-outline' },
+  ];
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={styles.container}>
+      {/* Header with back button */}
+      <View style={styles.headerBar}>
+        <Pressable onPress={handleBack} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={theme.colors.text.primary} />
+        </Pressable>
+        <Text style={styles.headerTitle}>Settings</Text>
+        <View style={styles.backButton} />
+      </View>
 
-      {/* Top Bar */}
-      <TopBar title="Settings" showBack onBack={handleBack} />
-
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false}>
         {/* User Profile Section */}
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Icon name="user" size={40} color="#B2EDE8" />
-            </View>
-            <View style={styles.editBadge}>
-              <Icon name="edit" size={12} color={theme.colors.white} />
-            </View>
+            <Ionicons name="person-circle" size={80} color={theme.colors.primary.main} />
           </View>
-          <Text style={styles.userName}>{user?.name || user?.email?.split('@')[0] || 'User'}</Text>
-          <Text style={styles.userHandle}>{user?.email || ''}</Text>
+          <Text style={styles.name}>{user?.name || user?.email?.split('@')[0] || 'User'}</Text>
+          <Text style={styles.email}>{user?.email || 'No email'}</Text>
+          {user?.walletAddress && (
+            <View style={styles.walletContainer}>
+              <Ionicons name="wallet-outline" size={16} color={theme.colors.text.secondary} />
+              <Text style={styles.wallet}>
+                {user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}
+              </Text>
+            </View>
+          )}
         </View>
 
-        {/* Settings Items */}
-        <View style={styles.settingsList}>
-          {settingsItems.map((item, index) => (
+        {/* Settings Menu Items */}
+        <View style={styles.menuSection}>
+          {settingsItems.map((item) => (
             <Pressable
               key={item.id}
-              style={({ pressed }) => [
-                styles.settingsItem,
-                pressed && styles.settingsItemPressed,
-                index === settingsItems.length - 1 && styles.lastItem,
-              ]}
-              onPress={() => handleSettingPress(item)}
+              style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
+              onPress={() => {
+                switch (item.id) {
+                  case 'dining-preferences':
+                    navigation.navigate('DiningPreferences');
+                    break;
+                  case 'about':
+                    navigation.navigate('About');
+                    break;
+                  case 'account':
+                  case 'notifications':
+                  case 'privacy':
+                  case 'language':
+                  case 'appearance':
+                  case 'help':
+                    // TODO: Navigate to respective screens when implemented
+                    break;
+                }
+              }}
             >
-              <Text style={[styles.settingsText, item.id === 'logout' && styles.logoutText]}>
-                {item.title}
-              </Text>
-              {item.showArrow && (
-                <Icon name="chevron-right" size={20} color={theme.colors.text.secondary} />
-              )}
+              <View style={styles.menuItemLeft}>
+                <Ionicons
+                  name={item.icon as keyof typeof Ionicons.glyphMap}
+                  size={24}
+                  color={theme.colors.text.primary}
+                />
+                <Text style={styles.menuItemText}>{item.title}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={theme.colors.text.secondary} />
             </Pressable>
           ))}
         </View>
 
-        <View style={{ height: scaleHeight(50) }} />
+        {/* Logout Button */}
+        <Pressable
+          style={({ pressed }) => [styles.logoutButton, pressed && styles.logoutButtonPressed]}
+          onPress={handleLogout}
+        >
+          <Text style={styles.logoutText}>Log Out</Text>
+        </Pressable>
       </ScrollView>
-
-      {/* Logout Confirmation Modal */}
-      <Modal
-        visible={showLogoutModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={handleCancelLogout}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Log out</Text>
-            <Text style={styles.modalMessage}>
-              Are you sure you want to log out? You&apos;ll need to login again to use the app.
-            </Text>
-            <View style={styles.modalButtons}>
-              <Pressable
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={handleCancelLogout}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </Pressable>
-              <Pressable style={[styles.modalButton, styles.logoutButton]} onPress={handleLogout}>
-                <Text style={styles.logoutButtonText}>Log out</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </View>
+    </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  avatar: {
-    alignItems: 'center',
-    backgroundColor: '#B2EDE8',
-    borderRadius: scaleWidth(40),
-    height: scaleWidth(80),
-    justifyContent: 'center',
-    width: scaleWidth(80),
-  },
   avatarContainer: {
     marginBottom: scaleHeight(16),
-    position: 'relative',
   },
-  cancelButton: {
-    backgroundColor: theme.colors.white,
-    borderColor: theme.colors.primary.main,
-    borderWidth: 1,
-  },
-  cancelButtonText: {
-    color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
-    fontWeight: '600',
+  backButton: {
+    padding: scaleWidth(8),
+    width: scaleWidth(40),
   },
   container: {
-    backgroundColor: '#F9F9F9',
-    flex: 1,
-  },
-  editBadge: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.primary.main,
-    borderColor: theme.colors.white,
-    borderRadius: scaleWidth(14),
-    borderWidth: 2,
-    bottom: 0,
-    height: scaleWidth(28),
-    justifyContent: 'center',
-    position: 'absolute',
-    right: 0,
-    width: scaleWidth(28),
-  },
-  lastItem: {
-    borderBottomWidth: 0,
-  },
-  logoutButton: {
-    backgroundColor: theme.colors.primary.main,
-  },
-  logoutButtonText: {
-    color: theme.colors.white,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
-    fontWeight: '600',
-  },
-  logoutText: {
-    color: theme.colors.primary.main,
-  },
-  modalButton: {
-    alignItems: 'center',
-    borderRadius: scaleWidth(25),
-    flex: 1,
-    paddingVertical: scaleHeight(12),
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: scaleWidth(12),
-  },
-  modalContent: {
     backgroundColor: theme.colors.white,
-    borderRadius: scaleWidth(20),
-    marginHorizontal: scaleWidth(40),
-    maxWidth: scaleWidth(350),
-    padding: scaleWidth(24),
-    width: '85%',
+    flex: 1,
   },
-  modalMessage: {
+  email: {
     color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
-    lineHeight: scaleFont(20),
-    marginBottom: scaleHeight(24),
-    textAlign: 'center',
+    marginBottom: scaleHeight(4),
   },
-  modalOverlay: {
+  headerBar: {
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    flex: 1,
-    justifyContent: 'center',
-  },
-  modalTitle: {
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: scaleFont(20),
-    fontWeight: '700',
-    marginBottom: scaleHeight(12),
-    textAlign: 'center',
-  },
-  profileSection: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.white,
-    marginBottom: scaleHeight(20),
-    paddingVertical: scaleHeight(30),
-  },
-  scrollView: {
-    flex: 1,
-  },
-  settingsItem: {
-    alignItems: 'center',
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: theme.colors.gray['1'],
     borderBottomWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: scaleWidth(20),
-    paddingVertical: scaleHeight(16),
+    paddingHorizontal: scaleWidth(16),
+    paddingVertical: scaleHeight(12),
   },
-  settingsItemPressed: {
-    backgroundColor: '#F5F5F5',
-  },
-  settingsList: {
-    backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
-    borderRadius: scaleWidth(27),
-    borderWidth: 1,
-    marginHorizontal: scaleWidth(16),
-    overflow: 'hidden',
-  },
-  settingsText: {
+  headerTitle: {
     color: theme.colors.text.primary,
-    flex: 1,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(16),
-  },
-  userHandle: {
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
-  },
-  userName: {
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(20),
     fontWeight: '600',
+  },
+  logoutButton: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(12),
+    marginBottom: scaleHeight(24),
+    marginHorizontal: scaleWidth(24),
+    marginTop: scaleHeight(32),
+    paddingVertical: scaleHeight(14),
+  },
+  logoutButtonPressed: {
+    opacity: 0.8,
+  },
+  logoutText: {
+    color: theme.colors.white,
+    fontSize: scaleFont(16),
+    fontWeight: '600',
+  },
+  menuItem: {
+    alignItems: 'center',
+    borderBottomColor: theme.colors.gray['1'],
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: scaleWidth(24),
+    paddingVertical: scaleHeight(16),
+  },
+  menuItemLeft: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: scaleWidth(12),
+  },
+  menuItemPressed: {
+    backgroundColor: theme.colors.gray['1'],
+  },
+  menuItemText: {
+    color: theme.colors.text.primary,
+    fontSize: scaleFont(16),
+  },
+  menuSection: {
+    paddingTop: scaleHeight(20),
+  },
+  name: {
+    color: theme.colors.text.primary,
+    fontSize: scaleFont(24),
+    fontWeight: '700',
     marginBottom: scaleHeight(4),
+  },
+  profileSection: {
+    alignItems: 'center',
+    borderBottomColor: theme.colors.gray['1'],
+    borderBottomWidth: 1,
+    paddingVertical: scaleHeight(32),
+  },
+  wallet: {
+    color: theme.colors.text.secondary,
+    fontFamily: 'monospace',
+    fontSize: scaleFont(12),
+  },
+  walletContainer: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: scaleWidth(6),
+    marginTop: scaleHeight(8),
   },
 });
