@@ -4,7 +4,6 @@ import React from 'react';
 
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { HomeScreen } from '@/screens/home/HomeScreen';
-import { EventsScreen } from '@/screens/main/EventsScreen';
 import { ChatScreen } from '@/screens/chat/ChatScreen';
 import { FeedNavigator } from './FeedNavigator';
 import { ProfileNavigator } from './ProfileNavigator';
@@ -13,7 +12,6 @@ import { theme } from '@/theme';
 export type MainTabParamList = {
   Home: undefined;
   Feed: undefined;
-  Events: undefined;
   Dashboard: undefined;
   Profile: undefined;
   Chat: undefined;
@@ -34,8 +32,6 @@ export function MainTabNavigator() {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Feed') {
             iconName = focused ? 'grid' : 'grid-outline';
-          } else if (route.name === 'Events') {
-            iconName = focused ? 'calendar' : 'calendar-outline';
           } else if (route.name === 'Dashboard') {
             iconName = focused ? 'stats-chart' : 'stats-chart-outline';
           } else if (route.name === 'Chat') {
@@ -72,13 +68,6 @@ export function MainTabNavigator() {
         component={FeedNavigator}
         options={{
           title: 'Feed',
-        }}
-      />
-      <Tab.Screen
-        name="Events"
-        component={EventsScreen}
-        options={{
-          title: 'Events',
         }}
       />
       <Tab.Screen

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { OnboardingLayout, OnboardingTitle, OnboardingButton } from '@/components/onboarding';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
+import { usePersonalizationFlow } from '@/hooks/usePersonalizationFlow';
 
 interface PersonalizationCuisineScreenProps {
   onNavigate?: (screen: string, data?: unknown) => void;
@@ -53,13 +55,17 @@ const cuisineCategories = [
   },
 ];
 
-export const PersonalizationCuisineScreen: React.FC<PersonalizationCuisineScreenProps> = ({
+export const CuisinePreferencesScreen: React.FC<PersonalizationCuisineScreenProps> = ({
   onNavigate,
-  currentStep = 5,
-  totalSteps = 8,
+  currentStep = 2,  // Second personalization step
+  totalSteps = 6,   // Total personalization steps
 }) => {
+  const navigation = useNavigation();
+  const { saveStepData } = usePersonalizationFlow();
   const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
   const [loveLevel, setLoveLevel] = useState<Record<string, 'like' | 'love'>>({});
+  const [avoidCuisines, setAvoidCuisines] = useState<string[]>([]);
+  const [_saving, setSaving] = useState(false);
 
   const handleCuisinePress = (cuisineId: string) => {
     if (selectedCuisines.includes(cuisineId)) {
@@ -78,16 +84,42 @@ export const PersonalizationCuisineScreen: React.FC<PersonalizationCuisineScreen
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const data = { 
       cuisine_preferences: selectedCuisines,
-      cuisine_love_levels: loveLevel 
+      cuisine_love_levels: loveLevel,
+      cuisine_avoid: avoidCuisines
     };
-    onNavigate?.('personalization-dining-style', data);
+    
+    setSaving(true);
+    try {
+      const success = await saveStepData('cuisine', data);
+      
+      if (success) {
+        // Use React Navigation if available, otherwise fall back to onNavigate prop
+        if (navigation && (navigation as any).navigate) {
+          (navigation as any).navigate('PersonalizationDiningStyle', data);
+        } else if (onNavigate) {
+          onNavigate('personalization-dining-style', data);
+        }
+      } else {
+        Alert.alert('Error', 'Failed to save preferences. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error saving cuisine preferences:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleBack = () => {
-    onNavigate?.('personalization-dietary');
+    // Use React Navigation's goBack if available
+    if (navigation && (navigation as any).goBack) {
+      (navigation as any).goBack();
+    } else if (onNavigate) {
+      onNavigate('personalization-dietary');
+    }
   };
 
   const getCuisineStyle = (cuisineId: string) => {
@@ -110,6 +142,28 @@ export const PersonalizationCuisineScreen: React.FC<PersonalizationCuisineScreen
     return [styles.cuisineText, styles.cuisineTextSelected];
   };
 
+  const handleAvoidCuisinePress = (cuisineId: string) => {
+    if (avoidCuisines.includes(cuisineId)) {
+      setAvoidCuisines(avoidCuisines.filter(id => id !== cuisineId));
+    } else {
+      setAvoidCuisines([...avoidCuisines, cuisineId]);
+    }
+  };
+
+  const getAvoidCuisineStyle = (cuisineId: string) => {
+    if (avoidCuisines.includes(cuisineId)) {
+      return [styles.cuisineCard, styles.cuisineCardAvoid];
+    }
+    return styles.cuisineCard;
+  };
+
+  const getAvoidCuisineTextStyle = (cuisineId: string) => {
+    if (avoidCuisines.includes(cuisineId)) {
+      return [styles.cuisineText, styles.cuisineTextAvoid];
+    }
+    return styles.cuisineText;
+  };
+
   return (
     <OnboardingLayout
       onBack={handleBack}
@@ -117,10 +171,17 @@ export const PersonalizationCuisineScreen: React.FC<PersonalizationCuisineScreen
       totalSteps={totalSteps}
     >
       <View style={styles.container}>
-        <OnboardingTitle>Favorite Cuisines</OnboardingTitle>
+        <OnboardingTitle>Cuisine Preferences</OnboardingTitle>
         <Text style={styles.subtitle}>
-          Tap once to like, twice to love! We'll prioritize events featuring your favorite cuisines.
+          Let us know your favorite cuisines and any you prefer to avoid for better event recommendations.
         </Text>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderTitle}>Cuisines You Love</Text>
+          <Text style={styles.sectionHeaderSubtitle}>
+            Tap once to like, twice to love!
+          </Text>
+        </View>
 
         <View style={styles.legendContainer}>
           <View style={styles.legendItem}>
@@ -170,15 +231,51 @@ export const PersonalizationCuisineScreen: React.FC<PersonalizationCuisineScreen
               </View>
             </View>
           ))}
+
+          {/* Cuisines to Avoid Section */}
+          <View style={styles.avoidSection}>
+            <Text style={styles.avoidTitle}>Cuisines to Avoid</Text>
+            <Text style={styles.avoidSubtitle}>
+              Select any cuisines you prefer to avoid (optional)
+            </Text>
+            
+            {cuisineCategories.map((category) => (
+              <View key={`avoid-${category.category}`} style={styles.categoryContainer}>
+                <Text style={styles.categoryTitle}>{category.category}</Text>
+                <View style={styles.cuisineGrid}>
+                  {category.cuisines.map((cuisine) => {
+                    const isAvoided = avoidCuisines.includes(cuisine.id);
+                    return (
+                      <Pressable
+                        key={`avoid-${cuisine.id}`}
+                        style={getAvoidCuisineStyle(cuisine.id)}
+                        onPress={() => handleAvoidCuisinePress(cuisine.id)}
+                      >
+                        <Text style={styles.cuisineEmoji}>{cuisine.emoji}</Text>
+                        <Text style={getAvoidCuisineTextStyle(cuisine.id)}>
+                          {cuisine.label.split(' ')[1]}
+                        </Text>
+                        {isAvoided && (
+                          <View style={styles.avoidIndicator}>
+                            <Text style={styles.avoidIndicatorText}>✕</Text>
+                          </View>
+                        )}
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            ))}
+          </View>
         </ScrollView>
 
         <View style={styles.bottomContainer}>
           <OnboardingButton
             onPress={handleNext}
-            label={`Continue (${selectedCuisines.length} selected)`}
-            disabled={selectedCuisines.length === 0}
+            label={`Continue (${selectedCuisines.length} favorites${avoidCuisines.length > 0 ? `, ${avoidCuisines.length} avoided` : ''})`}
+            disabled={selectedCuisines.length < 3}
           />
-          {selectedCuisines.length === 0 && (
+          {selectedCuisines.length < 3 && (
             <Text style={styles.helperText}>
               Select at least 3 cuisines you enjoy
             </Text>
@@ -310,5 +407,62 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(12),
     textAlign: 'center',
     marginTop: scaleHeight(8),
+  },
+  sectionHeader: {
+    marginBottom: scaleHeight(12),
+  },
+  sectionHeaderTitle: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.semibold,
+    fontSize: scaleFont(18),
+    marginBottom: scaleHeight(4),
+  },
+  sectionHeaderSubtitle: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
+  },
+  avoidSection: {
+    marginTop: scaleHeight(32),
+    paddingTop: scaleHeight(24),
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+  },
+  avoidTitle: {
+    color: '#EF4444',
+    fontFamily: theme.typography.fontFamily.semibold,
+    fontSize: scaleFont(18),
+    marginBottom: scaleHeight(6),
+  },
+  avoidSubtitle: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    lineHeight: scaleFont(20),
+    marginBottom: scaleHeight(20),
+  },
+  cuisineCardAvoid: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderColor: '#EF4444',
+  },
+  cuisineTextAvoid: {
+    color: '#EF4444',
+    fontWeight: '600',
+  },
+  avoidIndicator: {
+    position: 'absolute',
+    top: scaleHeight(4),
+    right: scaleWidth(4),
+    width: scaleWidth(20),
+    height: scaleWidth(20),
+    borderRadius: scaleWidth(10),
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avoidIndicatorText: {
+    color: 'white',
+    fontSize: scaleFont(10),
+    fontWeight: 'bold',
   },
 });

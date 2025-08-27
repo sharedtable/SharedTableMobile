@@ -6,12 +6,23 @@ export const colors = {
     primary: '#E24849', // Primary red from design
   },
 
-  // Primary (alias for brand)
+  // Primary (alias for brand) - Extended color palette
   primary: {
     main: '#E24849',
     light: '#FF6B6B',
+    dark: '#C13637',
     contrast: '#FFFFFF',
-  },
+    50: '#FEF2F2',
+    100: '#FEE2E2',
+    200: '#FECACA',
+    300: '#FCA5A5',
+    400: '#F87171',
+    500: '#E24849',
+    600: '#DC2626',
+    700: '#B91C1C',
+    800: '#991B1B',
+    900: '#7F1D1D',
+  } as const,
 
   // State Colors
   state: {
@@ -24,24 +35,55 @@ export const colors = {
     main: '#DC2626',
     light: '#EF4444',
     dark: '#B91C1C',
+    50: '#FEF2F2',
+    100: '#FEE2E2',
+    200: '#FECACA',
+    300: '#FCA5A5',
+    400: '#F87171',
+    500: '#DC2626',
+    600: '#DC2626',
+    700: '#B91C1C',
+    800: '#991B1B',
+    900: '#7F1D1D',
   },
 
   success: {
     main: '#16A34A',
     light: '#22C55E',
     dark: '#15803D',
+    50: '#F0FDF4',
+    100: '#DCFCE7',
+    200: '#BBF7D0',
+    300: '#86EFAC',
+    400: '#4ADE80',
+    500: '#16A34A',
+    600: '#16A34A',
+    700: '#15803D',
+    800: '#166534',
+    900: '#14532D',
   },
 
   warning: {
     main: '#EAB308',
     light: '#FDE047',
     dark: '#CA8A04',
+    50: '#FEFCE8',
+    100: '#FEF9C3',
+    200: '#FEF08A',
+    300: '#FDE047',
+    400: '#FACC15',
+    500: '#EAB308',
+    600: '#EAB308',
+    700: '#CA8A04',
+    800: '#A16207',
+    900: '#854D0E',
   },
 
   // Text Colors
   text: {
     primary: '#1F2024',
     secondary: '#808080',
+    tertiary: '#9CA3AF',
     disabled: '#9A9A9A',
   },
 
@@ -84,6 +126,16 @@ export const colors = {
     '2': '#808080', // Medium gray (50% black would be rgba(0, 0, 0, 0.5))
     '3': '#9A9A9A', // Medium gray
     '4': '#B2B6C6', // Blue-gray
+    '50': '#F9FAFB',
+    '100': '#F3F4F6',
+    '200': '#E5E7EB',
+    '300': '#D1D5DB',
+    '400': '#9CA3AF',
+    '500': '#6B7280',
+    '600': '#4B5563',
+    '700': '#374151',
+    '800': '#1F2937',
+    '900': '#111827',
   },
 };
 

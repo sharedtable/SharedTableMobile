@@ -3,11 +3,13 @@ import React from 'react';
 
 import { ProfileScreen } from '@/screens/profile/ProfileScreen';
 import DiningPreferencesScreen from '@/screens/profile/DiningPreferencesScreen';
-import { PersonalizationDietaryScreen } from '@/screens/onboarding/PersonalizationDietaryScreen';
-import { PersonalizationCuisineScreen } from '@/screens/onboarding/PersonalizationCuisineScreen';
-import { PersonalizationDiningStyleScreen } from '@/screens/onboarding/PersonalizationDiningStyleScreen';
-import { PersonalizationSocialScreen } from '@/screens/onboarding/PersonalizationSocialScreen';
-import { PersonalizationFoodieProfileScreen } from '@/screens/onboarding/PersonalizationFoodieProfileScreen';
+import { 
+  DietaryPreferencesScreen,
+  CuisinePreferencesScreen,
+  DiningStyleScreen,
+  SocialPreferencesScreen,
+  FoodieProfileScreen 
+} from '@/screens/personalization';
 import { SettingsScreen } from '@/screens/settings/SettingsScreen';
 import { AboutScreen } from '@/screens/settings/AboutScreen';
 
@@ -50,35 +52,35 @@ export function ProfileNavigator() {
       />
       <Stack.Screen 
         name="PersonalizationDietary" 
-        component={PersonalizationDietaryScreen}
+        component={DietaryPreferencesScreen}
         options={{
           headerShown: false,
         }}
       />
       <Stack.Screen 
         name="PersonalizationCuisine" 
-        component={PersonalizationCuisineScreen}
+        component={CuisinePreferencesScreen}
         options={{
           headerShown: false,
         }}
       />
       <Stack.Screen 
         name="PersonalizationDiningStyle" 
-        component={PersonalizationDiningStyleScreen}
+        component={DiningStyleScreen}
         options={{
           headerShown: false,
         }}
       />
       <Stack.Screen 
         name="PersonalizationSocial" 
-        component={PersonalizationSocialScreen}
+        component={SocialPreferencesScreen}
         options={{
           headerShown: false,
         }}
       />
       <Stack.Screen 
         name="PersonalizationFoodieProfile" 
-        component={PersonalizationFoodieProfileScreen}
+        component={FoodieProfileScreen}
         options={{
           headerShown: false,
         }}

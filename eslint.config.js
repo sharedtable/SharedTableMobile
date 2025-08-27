@@ -96,6 +96,8 @@ export default [
       'build/',
       'backend/**/*',
       'backend/',
+      'supabase/**/*',
+      'supabase/',
       '.expo/',
       '.expo-shared/',
       'babel.config.js',

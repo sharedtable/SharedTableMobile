@@ -15,8 +15,8 @@ interface OnboardingGenderScreenProps {
 
 export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
   onNavigate,
-  currentStep = 3,
-  totalSteps = 3,
+  currentStep = 3,  // Last onboarding step (Name, Birthday, Gender)
+  totalSteps = 3,   // Total onboarding steps only
 }) => {
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
 
@@ -49,7 +49,7 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
 
       if (success) {
         console.log('✅ [OnboardingGenderScreen] Gender saved successfully');
-        onNavigate?.('onboarding-complete', genderData);
+        onNavigate?.('personalization-dietary', genderData);
       } else {
         // Handle step errors from context
         if (Object.keys(stepErrors).length > 0) {

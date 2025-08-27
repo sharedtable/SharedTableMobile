@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { OnboardingLayout, OnboardingTitle, OnboardingButton } from '@/components/onboarding';
+import Slider from '@react-native-community/slider';
+import { useNavigation } from '@react-navigation/native';
+import { OnboardingLayout, OnboardingTitle, OnboardingButton, OnboardingInput } from '@/components/onboarding';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
+import { usePersonalizationFlow } from '@/hooks/usePersonalizationFlow';
 
 interface PersonalizationDiningStyleScreenProps {
   onNavigate?: (screen: string, data?: unknown) => void;
@@ -74,12 +77,17 @@ const diningPreferences: DiningPreference[] = [
   },
 ];
 
-export const PersonalizationDiningStyleScreen: React.FC<PersonalizationDiningStyleScreenProps> = ({
+export const DiningStyleScreen: React.FC<PersonalizationDiningStyleScreenProps> = ({
   onNavigate,
-  currentStep = 6,
-  totalSteps = 8,
+  currentStep = 3,  // Third personalization step
+  totalSteps = 6,   // Total personalization steps
 }) => {
+  const navigation = useNavigation();
+  const { saveStepData } = usePersonalizationFlow();
   const [selections, setSelections] = useState<Record<string, string[]>>({});
+  const [zipCode, setZipCode] = useState<string>('');
+  const [travelDistance, setTravelDistance] = useState<number>(15);
+  const [_saving, setSaving] = useState(false);
 
   const toggleOption = (questionId: string, optionId: string, multiSelect?: boolean) => {
     const currentSelections = selections[questionId] || [];
@@ -108,18 +116,51 @@ export const PersonalizationDiningStyleScreen: React.FC<PersonalizationDiningSty
     return (selections[questionId] || []).includes(optionId);
   };
 
-  const handleNext = () => {
-    const data = { dining_style_preferences: selections };
-    onNavigate?.('personalization-social', data);
+  const handleNext = async () => {
+    const data = { 
+      dining_style_preferences: selections,
+      zipCode,
+      travelDistance,
+    };
+    
+    setSaving(true);
+    try {
+      const success = await saveStepData('dining-style', data);
+      
+      if (success) {
+        // Use React Navigation if available, otherwise fall back to onNavigate prop
+        if (navigation && (navigation as any).navigate) {
+          (navigation as any).navigate('PersonalizationSocial', data);
+        } else if (onNavigate) {
+          onNavigate('personalization-social', data);
+        }
+      } else {
+        Alert.alert('Error', 'Failed to save preferences. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error saving dining style preferences:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleBack = () => {
-    onNavigate?.('personalization-cuisine');
+    // Use React Navigation's goBack if available
+    if (navigation && (navigation as any).goBack) {
+      (navigation as any).goBack();
+    } else if (onNavigate) {
+      onNavigate('personalization-cuisine');
+    }
   };
 
   const allQuestionsAnswered = diningPreferences.every(
     pref => (selections[pref.id] || []).length > 0
   );
+  
+  const isValidZipCode = (zip: string): boolean => {
+    return /^\d{5}(-\d{4})?$/.test(zip.trim());
+  };
 
   return (
     <OnboardingLayout
@@ -196,17 +237,72 @@ export const PersonalizationDiningStyleScreen: React.FC<PersonalizationDiningSty
               )}
             </View>
           ))}
+
+          {/* Location Section */}
+          <View style={styles.locationSection}>
+            <Text style={styles.locationTitle}>Your Location</Text>
+            <Text style={styles.locationSubtitle}>
+              Help us find great dining spots near you.
+            </Text>
+            
+            {/* Zip Code Input */}
+            <OnboardingInput
+              label="Zip Code"
+              value={zipCode}
+              onChangeText={setZipCode}
+              placeholder="12345"
+              keyboardType="numeric"
+              required
+              error={zipCode && !isValidZipCode(zipCode) ? 'Please enter a valid zip code' : undefined}
+            />
+            
+            {/* Distance Slider */}
+            <View style={styles.distanceContainer}>
+              <Text style={styles.distanceLabel}>
+                Distance willing to travel for dining: {travelDistance} miles
+              </Text>
+              <View style={styles.sliderContainer}>
+                <View style={styles.sliderWrapper}>
+                  <Slider
+                    style={styles.slider}
+                    minimumValue={1}
+                    maximumValue={50}
+                    value={travelDistance}
+                    onValueChange={(value) => setTravelDistance(Math.round(value))}
+                    minimumTrackTintColor={theme.colors.primary.main}
+                    maximumTrackTintColor="rgba(226, 72, 73, 0.1)"
+                    thumbTintColor={theme.colors.primary.main}
+                  />
+                  <View
+                    style={[
+                      styles.valueOnBottom,
+                      { left: `${((travelDistance - 1) / 49) * 100}%` },
+                    ]}
+                    pointerEvents="none"
+                  >
+                    <Text style={styles.valueText}>{travelDistance}</Text>
+                  </View>
+                </View>
+                <View style={styles.distanceLabels}>
+                  <Text style={styles.distanceMinLabel}>1 mile</Text>
+                  <Text style={styles.distanceMaxLabel}>50 miles</Text>
+                </View>
+              </View>
+            </View>
+          </View>
         </ScrollView>
 
         <View style={styles.bottomContainer}>
           <OnboardingButton
             onPress={handleNext}
             label="Continue"
-            disabled={!allQuestionsAnswered}
+            disabled={!allQuestionsAnswered || !zipCode || !isValidZipCode(zipCode)}
           />
-          {!allQuestionsAnswered && (
+          {(!allQuestionsAnswered || !zipCode || !isValidZipCode(zipCode)) && (
             <Text style={styles.helperText}>
-              Please answer all questions to continue
+              {!allQuestionsAnswered ? 'Please answer all dining preference questions' : 
+               !zipCode ? 'Please enter your zip code' :
+               !isValidZipCode(zipCode) ? 'Please enter a valid zip code' : ''}
             </Text>
           )}
         </View>
@@ -316,5 +412,72 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(12),
     textAlign: 'center',
     marginTop: scaleHeight(8),
+  },
+  locationSection: {
+    marginTop: scaleHeight(32),
+    paddingTop: scaleHeight(24),
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  locationTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.semibold,
+    fontSize: scaleFont(18),
+    marginBottom: scaleHeight(8),
+  },
+  locationSubtitle: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    lineHeight: scaleFont(20),
+    marginBottom: scaleHeight(20),
+  },
+  distanceContainer: {
+    marginTop: scaleHeight(8),
+  },
+  distanceLabel: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(15),
+    fontWeight: '600',
+    marginBottom: scaleHeight(12),
+  },
+  sliderContainer: {
+    paddingHorizontal: scaleWidth(8),
+  },
+  sliderWrapper: {
+    position: 'relative',
+  },
+  slider: {
+    height: scaleHeight(30),
+    width: '100%',
+  },
+  valueOnBottom: {
+    alignItems: 'center',
+    bottom: scaleHeight(-25),
+    marginLeft: -scaleWidth(10),
+    position: 'absolute',
+    width: scaleWidth(20),
+  },
+  valueText: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '700',
+  },
+  distanceLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: scaleHeight(20),
+  },
+  distanceMinLabel: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
+  },
+  distanceMaxLabel: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
   },
 });
