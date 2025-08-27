@@ -1,6 +1,7 @@
 import Slider from '@react-native-community/slider';
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, ScrollView, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { OnboardingLayout, OnboardingTitle, OnboardingButton } from '@/components/onboarding';
 import { useOnboarding, validateOnboardingStep } from '@/lib/onboarding';
@@ -24,6 +25,25 @@ interface PersonalityTraits {
   seekExperiences: number;
   politicalViews: number;
 }
+
+const mbtiTypes = [
+  { code: 'INTJ', name: 'The Architect' },
+  { code: 'INTP', name: 'The Thinker' },
+  { code: 'ENTJ', name: 'The Commander' },
+  { code: 'ENTP', name: 'The Debater' },
+  { code: 'INFJ', name: 'The Advocate' },
+  { code: 'INFP', name: 'The Mediator' },
+  { code: 'ENFJ', name: 'The Protagonist' },
+  { code: 'ENFP', name: 'The Campaigner' },
+  { code: 'ISTJ', name: 'The Logistician' },
+  { code: 'ISFJ', name: 'The Protector' },
+  { code: 'ESTJ', name: 'The Executive' },
+  { code: 'ESFJ', name: 'The Consul' },
+  { code: 'ISTP', name: 'The Virtuoso' },
+  { code: 'ISFP', name: 'The Adventurer' },
+  { code: 'ESTP', name: 'The Entrepreneur' },
+  { code: 'ESFP', name: 'The Entertainer' },
+];
 
 const questionsPage1 = [
   {
@@ -87,6 +107,11 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedMbti, setSelectedMbti] = useState<string | null>(
+    currentStepData.mbtiType || null
+  );
+  const [punctuality, setPunctuality] = useState<number>(currentStepData.punctuality || 5);
+  const [showMbtiDropdown, setShowMbtiDropdown] = useState(false);
   const [traits, setTraits] = useState<PersonalityTraits>(() => {
     // Check if personalityTraits is an array (from database) and convert back to object
     if (Array.isArray(currentStepData.personalityTraits)) {
@@ -133,6 +158,11 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
       setCurrentPage(2);
       return;
     }
+    
+    if (currentPage === 2) {
+      setCurrentPage(3);
+      return;
+    }
 
     try {
       setLocalErrors({});
@@ -142,7 +172,11 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
       const personalityTraits = Object.keys(traits).map(
         (key) => `${key}: ${traits[key as keyof PersonalityTraits]}`
       );
-      const personalityData = { personalityTraits };
+      const personalityData = { 
+        personalityTraits,
+        mbtiType: selectedMbti,
+        punctuality,
+      };
 
       // Validate locally first
       const validation = validateOnboardingStep('personality', personalityData);
@@ -172,7 +206,9 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
   };
 
   const handleBack = () => {
-    if (currentPage === 2) {
+    if (currentPage === 3) {
+      setCurrentPage(2);
+    } else if (currentPage === 2) {
       setCurrentPage(1);
     } else {
       onNavigate?.('onboarding-interests');
@@ -187,6 +223,7 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
   };
 
   const questions = currentPage === 1 ? questionsPage1 : questionsPage2;
+  const isLastPage = currentPage === 3;
   const hasError = Object.keys(localErrors).length > 0 || Object.keys(stepErrors).length > 0;
   const errorMessage =
     localErrors.personalityTraits ||
@@ -204,7 +241,7 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
       <View style={styles.container}>
         {/* Page Title */}
         <OnboardingTitle>
-          {currentPage === 1 ? 'Tell us about yourself' : 'Your personality'}
+          {currentPage === 1 ? 'Tell us about yourself' : currentPage === 2 ? 'Your personality' : 'More about you'}
         </OnboardingTitle>
 
         {hasError && (
@@ -213,50 +250,159 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
           </View>
         )}
 
-        {/* Questions */}
-        {questions.map((q, _index) => (
-          <View key={q.key} style={styles.questionContainer}>
-            <Text style={styles.question}>{q.question}</Text>
-
-            <View style={styles.sliderContainer}>
-              <View style={styles.sliderWrapper}>
-                <Slider
-                  style={styles.slider}
-                  minimumValue={1}
-                  maximumValue={10}
-                  value={traits[q.key as keyof PersonalityTraits]}
-                  onValueChange={(value) => updateTrait(q.key, Math.round(value))}
-                  minimumTrackTintColor={theme.colors.primary.main}
-                  maximumTrackTintColor="rgba(226, 72, 73, 0.1)"
-                  thumbTintColor={theme.colors.primary.main}
+        {/* Content based on current page */}
+        {currentPage === 3 ? (
+          <View>
+            {/* MBTI Section */}
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>MBTI Personality Type <Text style={styles.optional}>(Optional)</Text></Text>
+              <Text style={styles.sectionSubtitle}>
+                If you know your Myers-Briggs personality type, select it below.
+              </Text>
+              
+              <Pressable
+                style={[
+                  styles.dropdownButton,
+                  selectedMbti && styles.dropdownButtonSelected,
+                  showMbtiDropdown && styles.dropdownButtonActive,
+                ]}
+                onPress={() => setShowMbtiDropdown(!showMbtiDropdown)}
+              >
+                <Text style={[
+                  styles.dropdownButtonText,
+                  selectedMbti && styles.dropdownButtonTextSelected,
+                ]}>
+                  {selectedMbti ? `${selectedMbti} - ${mbtiTypes.find(t => t.code === selectedMbti)?.name}` : 'Select your MBTI type (optional)'}
+                </Text>
+                <Ionicons 
+                  name={showMbtiDropdown ? 'chevron-up' : 'chevron-down'} 
+                  size={20} 
+                  color={selectedMbti ? theme.colors.primary.main : '#9CA3AF'} 
                 />
-                <View
-                  style={[
-                    styles.valueOnBottom,
-                    {
-                      left: `${((traits[q.key as keyof PersonalityTraits] - 1) / 9) * 100}%`,
-                    },
-                  ]}
-                  pointerEvents="none"
-                >
-                  <Text style={styles.valueText}>{traits[q.key as keyof PersonalityTraits]}</Text>
+              </Pressable>
+              
+              {showMbtiDropdown && (
+                <View style={styles.dropdown}>
+                  <ScrollView style={styles.dropdownScroll} nestedScrollEnabled>
+                    {mbtiTypes.map((type) => (
+                      <Pressable
+                        key={type.code}
+                        style={[
+                          styles.dropdownOption,
+                          selectedMbti === type.code && styles.dropdownOptionSelected,
+                        ]}
+                        onPress={() => {
+                          setSelectedMbti(type.code);
+                          setShowMbtiDropdown(false);
+                        }}
+                      >
+                        <View style={styles.mbtiOptionContent}>
+                          <Text style={[
+                            styles.mbtiCode,
+                            selectedMbti === type.code && styles.mbtiCodeSelected,
+                          ]}>
+                            {type.code}
+                          </Text>
+                          <Text style={[
+                            styles.mbtiName,
+                            selectedMbti === type.code && styles.mbtiNameSelected,
+                          ]}>
+                            {type.name}
+                          </Text>
+                        </View>
+                        {selectedMbti === type.code && (
+                          <Ionicons name="checkmark" size={16} color={theme.colors.primary.main} />
+                        )}
+                      </Pressable>
+                    ))}
+                  </ScrollView>
                 </View>
-              </View>
+              )}
+            </View>
 
-              <View style={styles.labelsContainer}>
-                <Text style={styles.labelLeft}>{q.leftLabel}</Text>
-                <Text style={styles.labelRight}>{q.rightLabel}</Text>
+            {/* Punctuality Section */}
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>Punctuality</Text>
+              <Text style={styles.sectionSubtitle}>
+                How would you describe your punctuality?
+              </Text>
+              
+              <View style={styles.sliderContainer}>
+                <View style={styles.sliderWrapper}>
+                  <Slider
+                    style={styles.slider}
+                    minimumValue={1}
+                    maximumValue={10}
+                    value={punctuality}
+                    onValueChange={(value) => setPunctuality(Math.round(value))}
+                    minimumTrackTintColor={theme.colors.primary.main}
+                    maximumTrackTintColor="rgba(226, 72, 73, 0.1)"
+                    thumbTintColor={theme.colors.primary.main}
+                  />
+                  <View
+                    style={[
+                      styles.valueOnBottom,
+                      { left: `${((punctuality - 1) / 9) * 100}%` },
+                    ]}
+                    pointerEvents="none"
+                  >
+                    <Text style={styles.valueText}>{punctuality}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.labelsContainer}>
+                  <Text style={styles.labelLeft}>Always late</Text>
+                  <Text style={styles.labelRight}>Always early</Text>
+                </View>
               </View>
             </View>
           </View>
-        ))}
+        ) : (
+          /* Questions for pages 1 and 2 */
+          questions.map((q, _index) => (
+            <View key={q.key} style={styles.questionContainer}>
+              <Text style={styles.question}>{q.question}</Text>
+
+              <View style={styles.sliderContainer}>
+                <View style={styles.sliderWrapper}>
+                  <Slider
+                    style={styles.slider}
+                    minimumValue={1}
+                    maximumValue={10}
+                    value={traits[q.key as keyof PersonalityTraits]}
+                    onValueChange={(value) => updateTrait(q.key, Math.round(value))}
+                    minimumTrackTintColor={theme.colors.primary.main}
+                    maximumTrackTintColor="rgba(226, 72, 73, 0.1)"
+                    thumbTintColor={theme.colors.primary.main}
+                  />
+                  <View
+                    style={[
+                      styles.valueOnBottom,
+                      {
+                        left: `${((traits[q.key as keyof PersonalityTraits] - 1) / 9) * 100}%`,
+                      },
+                    ]}
+                    pointerEvents="none"
+                  >
+                    <Text style={styles.valueText}>{traits[q.key as keyof PersonalityTraits]}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.labelsContainer}>
+                  <Text style={styles.labelLeft}>{q.leftLabel}</Text>
+                  <Text style={styles.labelRight}>{q.rightLabel}</Text>
+                </View>
+              </View>
+            </View>
+          ))
+        )}
 
         <View style={styles.spacer} />
 
         <View style={styles.bottomContainer}>
           <OnboardingButton
             onPress={handleNext}
-            label={saving ? 'Saving...' : currentPage === 1 ? 'Continue' : 'Next'}
+            label={saving ? 'Saving...' : isLastPage ? 'Next' : 'Continue'}
             loading={saving}
             disabled={saving}
           />
@@ -267,10 +413,6 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
 };
 
 const styles = StyleSheet.create({
-  bottomContainer: {
-    paddingBottom: scaleHeight(40),
-    paddingTop: scaleHeight(10),
-  },
   container: {
     flex: 1,
   },
@@ -286,6 +428,105 @@ const styles = StyleSheet.create({
     color: '#DC2626',
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
+  },
+  sectionContainer: {
+    marginBottom: scaleHeight(32),
+  },
+  sectionTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.semibold,
+    fontSize: scaleFont(18),
+    marginBottom: scaleHeight(8),
+  },
+  sectionSubtitle: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    lineHeight: scaleFont(20),
+    marginBottom: scaleHeight(16),
+  },
+  optional: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    fontWeight: '400',
+  },
+  dropdownButton: {
+    backgroundColor: 'white',
+    borderColor: '#E5E7EB',
+    borderRadius: scaleWidth(12),
+    borderWidth: 2,
+    paddingVertical: scaleHeight(16),
+    paddingHorizontal: scaleWidth(16),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dropdownButtonSelected: {
+    backgroundColor: 'rgba(226, 72, 73, 0.08)',
+    borderColor: theme.colors.primary.main,
+  },
+  dropdownButtonActive: {
+    borderColor: theme.colors.primary.main,
+  },
+  dropdownButtonText: {
+    color: '#9CA3AF',
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    flex: 1,
+  },
+  dropdownButtonTextSelected: {
+    color: theme.colors.text.primary,
+    fontWeight: '600',
+  },
+  dropdown: {
+    backgroundColor: 'white',
+    borderColor: '#E5E7EB',
+    borderRadius: scaleWidth(12),
+    borderWidth: 1,
+    marginTop: scaleHeight(8),
+    maxHeight: scaleHeight(250),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  dropdownScroll: {
+    maxHeight: scaleHeight(250),
+  },
+  dropdownOption: {
+    paddingVertical: scaleHeight(12),
+    paddingHorizontal: scaleWidth(16),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  dropdownOptionSelected: {
+    backgroundColor: 'rgba(226, 72, 73, 0.08)',
+  },
+  mbtiOptionContent: {
+    flex: 1,
+  },
+  mbtiCode: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    fontWeight: '700',
+  },
+  mbtiCodeSelected: {
+    color: theme.colors.primary.main,
+  },
+  mbtiName: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    marginTop: scaleHeight(2),
+  },
+  mbtiNameSelected: {
+    color: theme.colors.text.primary,
   },
   labelLeft: {
     color: theme.colors.text.secondary,
@@ -339,5 +580,9 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
     fontWeight: '700',
+  },
+  bottomContainer: {
+    paddingBottom: scaleHeight(40),
+    paddingTop: scaleHeight(10),
   },
 });

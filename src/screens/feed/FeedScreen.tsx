@@ -120,8 +120,88 @@ const FeedScreen: React.FC = () => {
       }
       
       console.log('Starting to load feed...');
-      const data = await feedApi.getTimeline(20, 0);
+      let data = await feedApi.getTimeline(20, 0);
       console.log('Feed data received:', data);
+      
+      // If no data from API, use mock data for demo
+      if (data.length === 0) {
+        console.log('No feed data from API, using mock data');
+        data = [
+          {
+            id: 'mock-1',
+            actor: 'user-1',
+            verb: 'post',
+            object: 'post-1',
+            time: new Date().toISOString(),
+            content: '🍕 Just discovered the most amazing pizza place in Palo Alto! The truffle mushroom pizza is to die for. Who wants to join me there next week?',
+            image_url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800',
+            user_data: {
+              id: 'user-1',
+              name: 'Sarah Chen',
+              avatar_url: 'https://i.pravatar.cc/150?img=1'
+            },
+            reaction_counts: {
+              like: 12,
+              love: 3,
+              fire: 5,
+              yum: 8,
+              comment: 4
+            },
+            own_reactions: {},
+            first_comment: {
+              id: 'comment-1',
+              user: {
+                username: 'alexkim',
+                name: 'Alex Kim'
+              },
+              text: 'Count me in! I love truffle anything 😍',
+              created_at: new Date().toISOString()
+            }
+          },
+          {
+            id: 'mock-2',
+            actor: 'user-2',
+            verb: 'post',
+            object: 'post-2',
+            time: new Date(Date.now() - 3600000).toISOString(),
+            content: 'Looking for dinner buddies tonight! Thinking of trying that new Korean BBQ place on University Ave. 6:30pm, max 4 people. Who\'s interested? 🥩🔥',
+            user_data: {
+              id: 'user-2',
+              name: 'Marcus Johnson',
+              avatar_url: 'https://i.pravatar.cc/150?img=3'
+            },
+            reaction_counts: {
+              like: 8,
+              fire: 4,
+              clap: 2,
+              comment: 6
+            },
+            own_reactions: {}
+          },
+          {
+            id: 'mock-3',
+            actor: 'user-3',
+            verb: 'post',
+            object: 'post-3',
+            time: new Date(Date.now() - 7200000).toISOString(),
+            content: 'Pro tip: The Stanford Shopping Center farmers market on Sunday mornings has the best organic strawberries! Perfect for weekend brunch prep 🍓',
+            image_url: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=800',
+            user_data: {
+              id: 'user-3',
+              name: 'Emily Rodriguez',
+              avatar_url: 'https://i.pravatar.cc/150?img=5'
+            },
+            reaction_counts: {
+              like: 15,
+              love: 6,
+              yum: 3,
+              comment: 2
+            },
+            own_reactions: {}
+          }
+        ];
+      }
+      
       setActivities(data);
       setHasMore(data.length === 20);
     } catch (error: unknown) {

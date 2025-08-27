@@ -276,8 +276,7 @@ export type RootStackParamList = {
   ForgotPassword: undefined;
   Home: undefined;
   Profile: undefined;
-  Events: { type?: EventType };
-  EventDetails: { eventId: string };
+  EventDetails: { eventId: string }; // Kept for potential future use
   Bookings: undefined;
   BookingDetails: { bookingId: string };
   Payment: { eventId: string; amount: number };
@@ -287,7 +286,6 @@ export type RootStackParamList = {
 
 export type TabParamList = {
   HomeTab: undefined;
-  EventsTab: undefined;
   BookingsTab: undefined;
   ProfileTab: undefined;
 };

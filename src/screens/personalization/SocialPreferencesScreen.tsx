@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { OnboardingLayout, OnboardingTitle, OnboardingButton } from '@/components/onboarding';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
+import { usePersonalizationFlow } from '@/hooks/usePersonalizationFlow';
 
 interface PersonalizationSocialScreenProps {
   onNavigate?: (screen: string, data?: unknown) => void;
@@ -12,11 +14,14 @@ interface PersonalizationSocialScreenProps {
   totalSteps?: number;
 }
 
-export const PersonalizationSocialScreen: React.FC<PersonalizationSocialScreenProps> = ({
+export const SocialPreferencesScreen: React.FC<PersonalizationSocialScreenProps> = ({
   onNavigate,
-  currentStep = 7,
-  totalSteps = 8,
+  currentStep = 4,  // Fourth personalization step
+  totalSteps = 6,   // Total personalization steps
 }) => {
+  const navigation = useNavigation();
+  const { saveStepData } = usePersonalizationFlow();
+  const [_saving, setSaving] = useState(false);
   // Slider values (0-100)
   const [socialLevel, setSocialLevel] = useState(50);
   const [adventureLevel, setAdventureLevel] = useState(50);
@@ -26,6 +31,11 @@ export const PersonalizationSocialScreen: React.FC<PersonalizationSocialScreenPr
   const [interests, setInterests] = useState<string[]>([]);
   const [goals, setGoals] = useState<string[]>([]);
   const [languages, setLanguages] = useState<string[]>([]);
+  
+  // Social media handles
+  const [instagramHandle, setInstagramHandle] = useState('');
+  const [linkedinHandle, setLinkedinHandle] = useState('');
+  const [twitterHandle, setTwitterHandle] = useState('');
 
   const interestOptions = [
     { id: 'cooking', label: 'Cooking', icon: '👨‍🍳' },
@@ -70,7 +80,25 @@ export const PersonalizationSocialScreen: React.FC<PersonalizationSocialScreenPr
     }
   };
 
-  const handleNext = () => {
+  // Social media validation helpers
+  const validateInstagramHandle = (handle: string) => {
+    const cleaned = handle.replace('@', '');
+    return cleaned.length === 0 || /^[a-zA-Z0-9._]{1,30}$/.test(cleaned);
+  };
+
+  const validateTwitterHandle = (handle: string) => {
+    const cleaned = handle.replace('@', '');
+    return cleaned.length === 0 || /^[a-zA-Z0-9_]{1,15}$/.test(cleaned);
+  };
+
+  const validateLinkedinHandle = (handle: string) => {
+    if (handle.length === 0) return true;
+    // Check for LinkedIn profile URL format or username
+    return /^(https?:\/\/)?(www\.)?linkedin\.com\/(in|pub)\/[a-zA-Z0-9-]+\/?$/.test(handle) || 
+           /^[a-zA-Z0-9-]{3,100}$/.test(handle);
+  };
+
+  const handleNext = async () => {
     const data = {
       social_preferences: {
         social_level: socialLevel,
@@ -79,13 +107,43 @@ export const PersonalizationSocialScreen: React.FC<PersonalizationSocialScreenPr
         interests,
         goals,
         languages,
+        social_media: {
+          instagram: instagramHandle.replace('@', ''),
+          linkedin: linkedinHandle,
+          twitter: twitterHandle.replace('@', ''),
+        }
       }
     };
-    onNavigate?.('personalization-foodie-profile', data);
+    
+    setSaving(true);
+    try {
+      const success = await saveStepData('social', data);
+      
+      if (success) {
+        // Use React Navigation if available, otherwise fall back to onNavigate prop
+        if (navigation && (navigation as any).navigate) {
+          (navigation as any).navigate('PersonalizationFoodieProfile', data);
+        } else if (onNavigate) {
+          onNavigate('personalization-foodie-profile', data);
+        }
+      } else {
+        Alert.alert('Error', 'Failed to save preferences. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error saving social preferences:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleBack = () => {
-    onNavigate?.('personalization-dining-style');
+    // Use React Navigation's goBack if available
+    if (navigation && (navigation as any).goBack) {
+      (navigation as any).goBack();
+    } else if (onNavigate) {
+      onNavigate('personalization-dining-style');
+    }
   };
 
   const getSocialLevelText = () => {
@@ -280,6 +338,82 @@ export const PersonalizationSocialScreen: React.FC<PersonalizationSocialScreenPr
               })}
             </View>
           </View>
+
+          {/* Social Media Handles */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Connect Your Social Media</Text>
+            <Text style={styles.socialSubtitle}>
+              Optional: Add your social handles to connect with other foodies (all optional)
+            </Text>
+            
+            <View style={styles.socialInputsContainer}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Instagram</Text>
+                <View style={styles.inputWithPrefix}>
+                  <Text style={styles.inputPrefix}>@</Text>
+                  <TextInput
+                    style={[
+                      styles.socialInput,
+                      !validateInstagramHandle(instagramHandle) && styles.inputError
+                    ]}
+                    placeholder="your.username"
+                    placeholderTextColor="#9CA3AF"
+                    value={instagramHandle.replace('@', '')}
+                    onChangeText={(text) => setInstagramHandle(text)}
+                    maxLength={30}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                </View>
+                {!validateInstagramHandle(instagramHandle) && (
+                  <Text style={styles.errorText}>Invalid Instagram handle</Text>
+                )}
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>LinkedIn</Text>
+                <TextInput
+                  style={[
+                    styles.socialInputFull,
+                    !validateLinkedinHandle(linkedinHandle) && styles.inputError
+                  ]}
+                  placeholder="linkedin.com/in/yourname or just yourname"
+                  placeholderTextColor="#9CA3AF"
+                  value={linkedinHandle}
+                  onChangeText={setLinkedinHandle}
+                  maxLength={100}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {!validateLinkedinHandle(linkedinHandle) && (
+                  <Text style={styles.errorText}>Invalid LinkedIn profile</Text>
+                )}
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Twitter/X</Text>
+                <View style={styles.inputWithPrefix}>
+                  <Text style={styles.inputPrefix}>@</Text>
+                  <TextInput
+                    style={[
+                      styles.socialInput,
+                      !validateTwitterHandle(twitterHandle) && styles.inputError
+                    ]}
+                    placeholder="yourusername"
+                    placeholderTextColor="#9CA3AF"
+                    value={twitterHandle.replace('@', '')}
+                    onChangeText={(text) => setTwitterHandle(text)}
+                    maxLength={15}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                </View>
+                {!validateTwitterHandle(twitterHandle) && (
+                  <Text style={styles.errorText}>Invalid Twitter handle</Text>
+                )}
+              </View>
+            </View>
+          </View>
         </ScrollView>
 
         <View style={styles.bottomContainer}>
@@ -440,5 +574,66 @@ const styles = StyleSheet.create({
   bottomContainer: {
     paddingTop: scaleHeight(20),
     paddingBottom: scaleHeight(40),
+  },
+  socialSubtitle: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
+    lineHeight: scaleFont(18),
+    marginBottom: scaleHeight(16),
+  },
+  socialInputsContainer: {
+    gap: scaleHeight(16),
+  },
+  inputContainer: {
+    marginBottom: scaleHeight(4),
+  },
+  inputLabel: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: scaleFont(14),
+    marginBottom: scaleHeight(6),
+  },
+  inputWithPrefix: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderColor: '#E5E7EB',
+    borderRadius: scaleWidth(12),
+    borderWidth: 1,
+    paddingHorizontal: scaleWidth(12),
+    height: scaleHeight(44),
+  },
+  inputPrefix: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: scaleFont(16),
+    marginRight: scaleWidth(4),
+  },
+  socialInput: {
+    flex: 1,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    color: theme.colors.text.primary,
+  },
+  socialInputFull: {
+    backgroundColor: 'white',
+    borderColor: '#E5E7EB',
+    borderRadius: scaleWidth(12),
+    borderWidth: 1,
+    padding: scaleWidth(12),
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    color: theme.colors.text.primary,
+    height: scaleHeight(44),
+  },
+  inputError: {
+    borderColor: '#EF4444',
+  },
+  errorText: {
+    color: '#EF4444',
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
+    marginTop: scaleHeight(4),
   },
 });

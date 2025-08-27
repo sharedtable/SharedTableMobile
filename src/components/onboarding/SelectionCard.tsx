@@ -11,6 +11,7 @@ interface SelectionCardProps {
   onPress: () => void;
   icon?: React.ReactNode;
   compact?: boolean;
+  fullWidth?: boolean;
 }
 
 export const SelectionCard: React.FC<SelectionCardProps> = ({
@@ -19,6 +20,7 @@ export const SelectionCard: React.FC<SelectionCardProps> = ({
   onPress,
   icon,
   compact = false,
+  fullWidth: _fullWidth = false,
 }) => {
   return (
     <Pressable

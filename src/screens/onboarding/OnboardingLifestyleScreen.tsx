@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Alert, StyleSheet, Text } from 'react-native';
+import { View, Alert, StyleSheet, Text, ScrollView } from 'react-native';
 
 import {
   OnboardingLayout,
@@ -18,7 +18,10 @@ interface OnboardingLifestyleScreenProps {
 }
 
 const childrenOptions = ['Yes', 'No', 'Maybe'];
-const smokingOptions = ['Rarely', 'Sometimes', 'Always'];
+
+const alcoholOptions = ['Never', 'Rarely', 'Socially', 'Regularly'];
+const cannabisOptions = ['Never', 'Rarely', 'Sometimes', 'Regularly', 'Medical only'];
+const otherDrugsOptions = ['Never', 'Rarely', 'Sometimes', 'Prefer not to say'];
 
 export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps> = ({
   onNavigate,
@@ -30,8 +33,14 @@ export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps>
   const [wantChildren, setWantChildren] = useState<string | null>(
     currentStepData.wantChildren || null
   );
-  const [smokingHabit, setSmokingHabit] = useState<string | null>(
-    currentStepData.smokingHabit || null
+  const [alcoholUse, setAlcoholUse] = useState<string | null>(
+    currentStepData.alcoholUse || null
+  );
+  const [cannabisUse, setCannabisUse] = useState<string | null>(
+    currentStepData.cannabisUse || null
+  );
+  const [otherDrugsUse, setOtherDrugsUse] = useState<string | null>(
+    currentStepData.otherDrugsUse || null
   );
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
@@ -47,7 +56,9 @@ export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps>
 
       const lifestyleData = {
         wantChildren,
-        smokingHabit,
+        alcoholUse,
+        cannabisUse,
+        otherDrugsUse,
       };
 
       // Validate locally first
@@ -85,8 +96,12 @@ export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps>
   const errorMessage =
     localErrors.wantChildren ||
     stepErrors.wantChildren ||
-    localErrors.smokingHabit ||
-    stepErrors.smokingHabit ||
+    localErrors.alcoholUse ||
+    stepErrors.alcoholUse ||
+    localErrors.cannabisUse ||
+    stepErrors.cannabisUse ||
+    localErrors.otherDrugsUse ||
+    stepErrors.otherDrugsUse ||
     localErrors.general ||
     stepErrors.general;
 
@@ -98,7 +113,10 @@ export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps>
       scrollable
     >
       <View style={styles.container}>
-        <OnboardingTitle>Do you want children?</OnboardingTitle>
+        <OnboardingTitle>Lifestyle Choices</OnboardingTitle>
+        <Text style={styles.subtitle}>
+          Help us understand your lifestyle to find compatible dining partners.
+        </Text>
 
         {hasError && (
           <View style={styles.errorContainer}>
@@ -106,43 +124,104 @@ export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps>
           </View>
         )}
 
-        <View style={styles.optionsContainer}>
-          {childrenOptions.map((option) => (
-            <SelectionCard
-              key={option}
-              label={option}
-              selected={wantChildren === option}
-              onPress={() => {
-                setWantChildren(option);
-                if (localErrors.wantChildren || stepErrors.wantChildren) {
-                  setLocalErrors((prev) => ({ ...prev, wantChildren: '' }));
-                  clearErrors();
-                }
-              }}
-              compact
-            />
-          ))}
-        </View>
+        <ScrollView 
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Children Section */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Do you want children?</Text>
+            <View style={styles.optionsContainer}>
+              {childrenOptions.map((option) => (
+                <SelectionCard
+                  key={option}
+                  label={option}
+                  selected={wantChildren === option}
+                  onPress={() => {
+                    setWantChildren(option);
+                    if (localErrors.wantChildren || stepErrors.wantChildren) {
+                      setLocalErrors((prev) => ({ ...prev, wantChildren: '' }));
+                      clearErrors();
+                    }
+                  }}
+                  compact
+                />
+              ))}
+            </View>
+          </View>
 
-        <Text style={styles.secondTitle}>Do you smoke or vape?</Text>
+          {/* Alcohol Section */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Alcohol use</Text>
+            <Text style={styles.sectionSubtitle}>How often do you drink alcohol?</Text>
+            <View style={styles.optionsContainer}>
+              {alcoholOptions.map((option) => (
+                <SelectionCard
+                  key={option}
+                  label={option}
+                  selected={alcoholUse === option}
+                  onPress={() => {
+                    setAlcoholUse(option);
+                    if (localErrors.alcoholUse || stepErrors.alcoholUse) {
+                      setLocalErrors((prev) => ({ ...prev, alcoholUse: '' }));
+                      clearErrors();
+                    }
+                  }}
+                  compact
+                />
+              ))}
+            </View>
+          </View>
 
-        <View style={styles.optionsContainer}>
-          {smokingOptions.map((option) => (
-            <SelectionCard
-              key={option}
-              label={option}
-              selected={smokingHabit === option}
-              onPress={() => {
-                setSmokingHabit(option);
-                if (localErrors.smokingHabit || stepErrors.smokingHabit) {
-                  setLocalErrors((prev) => ({ ...prev, smokingHabit: '' }));
-                  clearErrors();
-                }
-              }}
-              compact
-            />
-          ))}
-        </View>
+          {/* Cannabis Section */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Cannabis use</Text>
+            <Text style={styles.sectionSubtitle}>How often do you use cannabis?</Text>
+            <View style={styles.optionsContainer}>
+              {cannabisOptions.map((option) => (
+                <SelectionCard
+                  key={option}
+                  label={option}
+                  selected={cannabisUse === option}
+                  onPress={() => {
+                    setCannabisUse(option);
+                    if (localErrors.cannabisUse || stepErrors.cannabisUse) {
+                      setLocalErrors((prev) => ({ ...prev, cannabisUse: '' }));
+                      clearErrors();
+                    }
+                  }}
+                  compact
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Other Drugs Section */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Other recreational drugs</Text>
+            <Text style={styles.sectionSubtitle}>
+              How often do you use other recreational substances?
+            </Text>
+            <View style={styles.optionsContainer}>
+              {otherDrugsOptions.map((option) => (
+                <SelectionCard
+                  key={option}
+                  label={option}
+                  selected={otherDrugsUse === option}
+                  onPress={() => {
+                    setOtherDrugsUse(option);
+                    if (localErrors.otherDrugsUse || stepErrors.otherDrugsUse) {
+                      setLocalErrors((prev) => ({ ...prev, otherDrugsUse: '' }));
+                      clearErrors();
+                    }
+                  }}
+                  compact
+                />
+              ))}
+            </View>
+          </View>
+        </ScrollView>
 
         <View style={styles.spacer} />
 
@@ -150,9 +229,14 @@ export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps>
           <OnboardingButton
             onPress={handleNext}
             label={saving ? 'Saving...' : 'Next'}
-            disabled={!wantChildren || !smokingHabit || saving}
+            disabled={!wantChildren || !alcoholUse || !cannabisUse || !otherDrugsUse || saving}
             loading={saving}
           />
+          {(!wantChildren || !alcoholUse || !cannabisUse || !otherDrugsUse) && (
+            <Text style={styles.helperText}>
+              Please answer all questions to continue
+            </Text>
+          )}
         </View>
       </View>
     </OnboardingLayout>
@@ -160,12 +244,38 @@ export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps>
 };
 
 const styles = StyleSheet.create({
-  bottomContainer: {
-    paddingBottom: scaleHeight(40),
-    paddingTop: scaleHeight(20),
-  },
   container: {
     flex: 1,
+  },
+  subtitle: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    lineHeight: scaleFont(20),
+    marginBottom: scaleHeight(24),
+    marginTop: scaleHeight(8),
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: scaleHeight(20),
+  },
+  sectionContainer: {
+    marginBottom: scaleHeight(28),
+  },
+  sectionTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.semibold,
+    fontSize: scaleFont(18),
+    marginBottom: scaleHeight(8),
+  },
+  sectionSubtitle: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    lineHeight: scaleFont(20),
+    marginBottom: scaleHeight(16),
   },
   errorContainer: {
     backgroundColor: '#FEE2E2',
@@ -183,17 +293,19 @@ const styles = StyleSheet.create({
   optionsContainer: {
     gap: scaleHeight(12),
   },
-  secondTitle: {
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.heading,
-    fontSize: scaleFont(32),
-    fontWeight: '700',
-    lineHeight: scaleHeight(40),
-    marginBottom: scaleHeight(24),
-    marginTop: scaleHeight(32),
-  },
   spacer: {
     flex: 1,
     minHeight: scaleHeight(40),
+  },
+  bottomContainer: {
+    paddingBottom: scaleHeight(40),
+    paddingTop: scaleHeight(20),
+  },
+  helperText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
+    textAlign: 'center',
+    marginTop: scaleHeight(8),
   },
 });

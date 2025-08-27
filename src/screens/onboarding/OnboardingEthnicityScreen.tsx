@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Alert, StyleSheet } from 'react-native';
+import { View, Text, Alert, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import {
   OnboardingLayout,
@@ -28,6 +29,40 @@ const ethnicityOptions = [
   'Other',
 ];
 
+const commonCountries = [
+  'United States',
+  'Canada',
+  'United Kingdom',
+  'Australia',
+  'Germany',
+  'France',
+  'Italy',
+  'Spain',
+  'Netherlands',
+  'Sweden',
+  'Norway',
+  'Denmark',
+  'Japan',
+  'South Korea',
+  'China',
+  'India',
+  'Brazil',
+  'Mexico',
+  'Argentina',
+  'Other',
+];
+
+const religionOptions = [
+  'Christianity',
+  'Islam',
+  'Judaism',
+  'Hinduism',
+  'Buddhism',
+  'Atheist/Agnostic',
+  'Other',
+  'Prefer not to say',
+];
+
 export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps> = ({
   onNavigate,
   currentStep = 6,
@@ -38,6 +73,14 @@ export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps>
   const [selectedEthnicity, setSelectedEthnicity] = useState<string | null>(
     currentStepData.ethnicity || null
   );
+  const [selectedNationality, setSelectedNationality] = useState<string | null>(
+    currentStepData.nationality || null
+  );
+  const [selectedReligion, setSelectedReligion] = useState<string | null>(
+    currentStepData.religion || null
+  );
+  const [showNationalityDropdown, setShowNationalityDropdown] = useState(false);
+  const [showReligionDropdown, setShowReligionDropdown] = useState(false);
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -50,7 +93,11 @@ export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps>
       setLocalErrors({});
       clearErrors();
 
-      const ethnicityData = { ethnicity: selectedEthnicity };
+      const ethnicityData = { 
+        ethnicity: selectedEthnicity,
+        nationality: selectedNationality,
+        religion: selectedReligion,
+      };
 
       // Validate locally first
       const validation = validateOnboardingStep('ethnicity', ethnicityData);
@@ -95,7 +142,10 @@ export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps>
       scrollable
     >
       <View style={styles.container}>
-        <OnboardingTitle>{"What is your ethnicity?"}</OnboardingTitle>
+        <OnboardingTitle>{'About Your Background'}</OnboardingTitle>
+        <Text style={styles.subtitle}>
+          Help us understand your cultural background to connect you with like-minded people.
+        </Text>
 
         {hasError && (
           <View style={styles.errorContainer}>
@@ -103,33 +153,154 @@ export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps>
           </View>
         )}
 
-        <View style={styles.optionsContainer}>
-          {ethnicityOptions.map((option) => (
-            <SelectionCard
-              key={option}
-              label={option}
-              selected={selectedEthnicity === option}
-              onPress={() => {
-                setSelectedEthnicity(option);
-                if (localErrors.ethnicity || stepErrors.ethnicity) {
-                  setLocalErrors((prev) => ({ ...prev, ethnicity: '' }));
-                  clearErrors();
-                }
-              }}
-              compact
-            />
-          ))}
-        </View>
+        <ScrollView 
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Ethnicity Section */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Ethnicity</Text>
+            <View style={styles.optionsContainer}>
+              {ethnicityOptions.map((option) => (
+                <SelectionCard
+                  key={option}
+                  label={option}
+                  selected={selectedEthnicity === option}
+                  onPress={() => {
+                    setSelectedEthnicity(option);
+                    if (localErrors.ethnicity || stepErrors.ethnicity) {
+                      setLocalErrors((prev) => ({ ...prev, ethnicity: '' }));
+                      clearErrors();
+                    }
+                  }}
+                  compact
+                />
+              ))}
+            </View>
+          </View>
 
-        <View style={styles.spacer} />
+          {/* Nationality Section */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Nationality</Text>
+            <Pressable
+              style={[
+                styles.dropdownButton,
+                selectedNationality && styles.dropdownButtonSelected,
+                showNationalityDropdown && styles.dropdownButtonActive,
+              ]}
+              onPress={() => setShowNationalityDropdown(!showNationalityDropdown)}
+            >
+              <Text style={[
+                styles.dropdownButtonText,
+                selectedNationality && styles.dropdownButtonTextSelected,
+              ]}>
+                {selectedNationality || 'Select your nationality'}
+              </Text>
+              <Ionicons 
+                name={showNationalityDropdown ? 'chevron-up' : 'chevron-down'} 
+                size={20} 
+                color={selectedNationality ? theme.colors.primary.main : '#9CA3AF'} 
+              />
+            </Pressable>
+            
+            {showNationalityDropdown && (
+              <View style={styles.dropdown}>
+                <ScrollView style={styles.dropdownScroll} nestedScrollEnabled>
+                  {commonCountries.map((country) => (
+                    <Pressable
+                      key={country}
+                      style={[
+                        styles.dropdownOption,
+                        selectedNationality === country && styles.dropdownOptionSelected,
+                      ]}
+                      onPress={() => {
+                        setSelectedNationality(country);
+                        setShowNationalityDropdown(false);
+                      }}
+                    >
+                      <Text style={[
+                        styles.dropdownOptionText,
+                        selectedNationality === country && styles.dropdownOptionTextSelected,
+                      ]}>
+                        {country}
+                      </Text>
+                      {selectedNationality === country && (
+                        <Ionicons name="checkmark" size={16} color={theme.colors.primary.main} />
+                      )}
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </View>
+
+          {/* Religion Section */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Religion <Text style={styles.optional}>(Optional)</Text></Text>
+            <Pressable
+              style={[
+                styles.dropdownButton,
+                selectedReligion && styles.dropdownButtonSelected,
+                showReligionDropdown && styles.dropdownButtonActive,
+              ]}
+              onPress={() => setShowReligionDropdown(!showReligionDropdown)}
+            >
+              <Text style={[
+                styles.dropdownButtonText,
+                selectedReligion && styles.dropdownButtonTextSelected,
+              ]}>
+                {selectedReligion || 'Select your religion (optional)'}
+              </Text>
+              <Ionicons 
+                name={showReligionDropdown ? 'chevron-up' : 'chevron-down'} 
+                size={20} 
+                color={selectedReligion ? theme.colors.primary.main : '#9CA3AF'} 
+              />
+            </Pressable>
+            
+            {showReligionDropdown && (
+              <View style={styles.dropdown}>
+                {religionOptions.map((religion) => (
+                  <Pressable
+                    key={religion}
+                    style={[
+                      styles.dropdownOption,
+                      selectedReligion === religion && styles.dropdownOptionSelected,
+                    ]}
+                    onPress={() => {
+                      setSelectedReligion(religion);
+                      setShowReligionDropdown(false);
+                    }}
+                  >
+                    <Text style={[
+                      styles.dropdownOptionText,
+                      selectedReligion === religion && styles.dropdownOptionTextSelected,
+                    ]}>
+                      {religion}
+                    </Text>
+                    {selectedReligion === religion && (
+                      <Ionicons name="checkmark" size={16} color={theme.colors.primary.main} />
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+            )}
+          </View>
+        </ScrollView>
 
         <View style={styles.bottomContainer}>
           <OnboardingButton
             onPress={handleNext}
             label={saving ? 'Saving...' : 'Next'}
-            disabled={!selectedEthnicity || saving}
+            disabled={!selectedEthnicity || !selectedNationality || saving}
             loading={saving}
           />
+          {(!selectedEthnicity || !selectedNationality) && (
+            <Text style={styles.helperText}>
+              Please select your ethnicity and nationality to continue
+            </Text>
+          )}
         </View>
       </View>
     </OnboardingLayout>
@@ -137,11 +308,37 @@ export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps>
 };
 
 const styles = StyleSheet.create({
-  bottomContainer: {
-    paddingBottom: scaleHeight(40),
-  },
   container: {
     flex: 1,
+  },
+  subtitle: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    lineHeight: scaleFont(20),
+    marginBottom: scaleHeight(24),
+    marginTop: scaleHeight(8),
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: scaleHeight(20),
+  },
+  sectionContainer: {
+    marginBottom: scaleHeight(28),
+  },
+  sectionTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.semibold,
+    fontSize: scaleFont(16),
+    marginBottom: scaleHeight(12),
+  },
+  optional: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '400',
   },
   errorContainer: {
     backgroundColor: '#FEE2E2',
@@ -159,7 +356,81 @@ const styles = StyleSheet.create({
   optionsContainer: {
     gap: scaleHeight(12),
   },
-  spacer: {
-    height: scaleHeight(40),
+  dropdownButton: {
+    backgroundColor: 'white',
+    borderColor: '#E5E7EB',
+    borderRadius: scaleWidth(12),
+    borderWidth: 2,
+    paddingVertical: scaleHeight(16),
+    paddingHorizontal: scaleWidth(16),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dropdownButtonSelected: {
+    backgroundColor: 'rgba(226, 72, 73, 0.08)',
+    borderColor: theme.colors.primary.main,
+  },
+  dropdownButtonActive: {
+    borderColor: theme.colors.primary.main,
+  },
+  dropdownButtonText: {
+    color: '#9CA3AF',
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    flex: 1,
+  },
+  dropdownButtonTextSelected: {
+    color: theme.colors.text.primary,
+    fontWeight: '600',
+  },
+  dropdown: {
+    backgroundColor: 'white',
+    borderColor: '#E5E7EB',
+    borderRadius: scaleWidth(12),
+    borderWidth: 1,
+    marginTop: scaleHeight(8),
+    maxHeight: scaleHeight(200),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  dropdownScroll: {
+    maxHeight: scaleHeight(200),
+  },
+  dropdownOption: {
+    paddingVertical: scaleHeight(12),
+    paddingHorizontal: scaleWidth(16),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  dropdownOptionSelected: {
+    backgroundColor: 'rgba(226, 72, 73, 0.08)',
+  },
+  dropdownOptionText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(15),
+    flex: 1,
+  },
+  dropdownOptionTextSelected: {
+    color: theme.colors.primary.main,
+    fontWeight: '600',
+  },
+  bottomContainer: {
+    paddingTop: scaleHeight(20),
+    paddingBottom: scaleHeight(40),
+  },
+  helperText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
+    textAlign: 'center',
+    marginTop: scaleHeight(8),
   },
 });

@@ -1,8 +1,8 @@
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image, Alert, ScrollView } from 'react-native';
 
-import { OnboardingLayout, OnboardingTitle, OnboardingButton } from '@/components/onboarding';
+import { OnboardingLayout, OnboardingTitle, OnboardingButton, OnboardingInput } from '@/components/onboarding';
 import { useOnboarding, validateOnboardingStep } from '@/lib/onboarding';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
@@ -23,6 +23,10 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
   const [profileImage, setProfileImage] = useState<string | null>(
     currentStepData.avatarUrl || null
   );
+  const [heightUnit, setHeightUnit] = useState<'imperial' | 'metric'>('imperial');
+  const [heightFeet, setHeightFeet] = useState<string>(currentStepData.heightFeet?.toString() || '');
+  const [heightInches, setHeightInches] = useState<string>(currentStepData.heightInches?.toString() || '');
+  const [heightCm, setHeightCm] = useState<string>(currentStepData.heightCm?.toString() || '');
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -109,7 +113,30 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
       setLocalErrors({});
       clearErrors();
 
-      const photoData = { avatarUrl: profileImage };
+      // Prepare height data based on selected unit
+      let heightData = {};
+      if (heightUnit === 'imperial') {
+        if (heightFeet) {
+          heightData = {
+            heightFeet: parseInt(heightFeet, 10) || null,
+            heightInches: parseInt(heightInches, 10) || 0,
+            heightCm: null,
+          };
+        }
+      } else {
+        if (heightCm) {
+          heightData = {
+            heightCm: parseInt(heightCm, 10) || null,
+            heightFeet: null,
+            heightInches: null,
+          };
+        }
+      }
+
+      const photoData = { 
+        avatarUrl: profileImage,
+        ...heightData,
+      };
 
       // Validate locally first
       const validation = validateOnboardingStep('photo', photoData);
@@ -159,6 +186,16 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
     ]);
   };
 
+  const isValidHeight = (): boolean => {
+    if (heightUnit === 'imperial') {
+      const feet = parseInt(heightFeet, 10);
+      return !isNaN(feet) && feet >= 3 && feet <= 8;
+    } else {
+      const cm = parseInt(heightCm, 10);
+      return !isNaN(cm) && cm >= 100 && cm <= 250;
+    }
+  };
+
   const hasError = Object.keys(localErrors).length > 0 || Object.keys(stepErrors).length > 0;
   const errorMessage =
     localErrors.avatarUrl || stepErrors.avatarUrl || localErrors.general || stepErrors.general;
@@ -166,9 +203,14 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
   return (
     <OnboardingLayout onBack={handleBack} currentStep={currentStep} totalSteps={totalSteps}>
       <View style={styles.container}>
+        <ScrollView 
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
         {/* Title */}
         <OnboardingTitle>
-          Say "Cheese"! Let's{'\n'}
+          Say &quot;Cheese&quot;! Let&apos;s{'\n'}
           showcase your radiance{'\n'}
           with a selfie!
         </OnboardingTitle>
@@ -187,6 +229,7 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
                 <Image source={{ uri: profileImage }} style={styles.profileImage} />
               ) : (
                 <Image
+                  // eslint-disable-next-line @typescript-eslint/no-require-imports
                   source={require('@/assets/icon.png')} // Placeholder image
                   style={styles.placeholderImage}
                 />
@@ -205,16 +248,94 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
           </Pressable>
         </View>
 
-        <View style={styles.spacer} />
+        {/* Height Section */}
+        <View style={styles.heightSection}>
+          <Text style={styles.heightTitle}>Your Height</Text>
+          <Text style={styles.heightSubtitle}>This helps us find better dining partners for you.</Text>
+          
+          {/* Unit Toggle */}
+          <View style={styles.unitToggleContainer}>
+            <Pressable
+              style={[
+                styles.unitToggleButton,
+                heightUnit === 'imperial' && styles.unitToggleButtonActive,
+              ]}
+              onPress={() => setHeightUnit('imperial')}
+            >
+              <Text style={[
+                styles.unitToggleText,
+                heightUnit === 'imperial' && styles.unitToggleTextActive,
+              ]}>
+                ft/in
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.unitToggleButton,
+                heightUnit === 'metric' && styles.unitToggleButtonActive,
+              ]}
+              onPress={() => setHeightUnit('metric')}
+            >
+              <Text style={[
+                styles.unitToggleText,
+                heightUnit === 'metric' && styles.unitToggleTextActive,
+              ]}>
+                cm
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Height Inputs */}
+          {heightUnit === 'imperial' ? (
+            <View style={styles.imperialInputContainer}>
+              <View style={styles.heightInputWrapper}>
+                <OnboardingInput
+                  label="Feet"
+                  value={heightFeet}
+                  onChangeText={setHeightFeet}
+                  placeholder="5"
+                  keyboardType="numeric"
+                  required
+                />
+              </View>
+              <View style={styles.heightInputWrapper}>
+                <OnboardingInput
+                  label="Inches"
+                  value={heightInches}
+                  onChangeText={setHeightInches}
+                  placeholder="8"
+                  keyboardType="numeric"
+                />
+              </View>
+            </View>
+          ) : (
+            <View style={styles.metricInputContainer}>
+              <OnboardingInput
+                label="Height (cm)"
+                value={heightCm}
+                onChangeText={setHeightCm}
+                placeholder="170"
+                keyboardType="numeric"
+                required
+              />
+            </View>
+          )}
+        </View>
+        </ScrollView>
 
         {/* Next Button */}
         <View style={styles.bottomContainer}>
           <OnboardingButton
             onPress={handleContinue}
             label={saving ? 'Saving...' : 'Next'}
-            disabled={saving}
+            disabled={saving || !isValidHeight()}
             loading={saving}
           />
+          {!isValidHeight() && (
+            <Text style={styles.helperText}>
+              Please enter a valid height to continue
+            </Text>
+          )}
         </View>
       </View>
     </OnboardingLayout>
@@ -222,23 +343,25 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  bottomContainer: {
-    paddingBottom: scaleHeight(40),
-    paddingTop: scaleHeight(20),
-  },
   container: {
     flex: 1,
   },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: scaleHeight(20),
+  },
   errorContainer: {
-    backgroundColor: '#FEE2E2',
-    borderColor: '#FCA5A5',
+    backgroundColor: theme.colors.error[50] || '#FEE2E2',
+    borderColor: theme.colors.error[300] || '#FCA5A5',
     borderRadius: scaleWidth(8),
     borderWidth: 1,
     marginBottom: scaleHeight(16),
     padding: scaleWidth(12),
   },
   errorText: {
-    color: '#DC2626',
+    color: theme.colors.error[600] || '#DC2626',
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
   },
@@ -253,7 +376,7 @@ const styles = StyleSheet.create({
   },
   photoCircleOuter: {
     alignItems: 'center',
-    backgroundColor: 'rgba(226, 72, 73, 0.1)', // 10% of brand color
+    backgroundColor: `${theme.colors.primary[500]}1A`, // 10% opacity of brand color
     borderRadius: scaleWidth(140),
     height: scaleWidth(280),
     justifyContent: 'center',
@@ -275,10 +398,6 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
     width: '100%',
   },
-  spacer: {
-    flex: 1,
-    minHeight: scaleHeight(40),
-  },
   takePhotoButton: {
     backgroundColor: theme.colors.white,
     borderColor: theme.colors.primary.main,
@@ -295,5 +414,71 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
     fontWeight: '600',
+  },
+  heightSection: {
+    marginTop: scaleHeight(40),
+    paddingHorizontal: scaleWidth(4),
+  },
+  heightTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.semibold,
+    fontSize: scaleFont(18),
+    marginBottom: scaleHeight(8),
+    textAlign: 'center',
+  },
+  heightSubtitle: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    marginBottom: scaleHeight(24),
+    textAlign: 'center',
+    lineHeight: scaleFont(20),
+  },
+  unitToggleContainer: {
+    flexDirection: 'row',
+    backgroundColor: theme.colors.gray[100] || '#F3F4F6',
+    borderRadius: scaleWidth(12),
+    padding: scaleWidth(4),
+    marginBottom: scaleHeight(20),
+  },
+  unitToggleButton: {
+    flex: 1,
+    paddingVertical: scaleHeight(8),
+    paddingHorizontal: scaleWidth(16),
+    borderRadius: scaleWidth(8),
+    alignItems: 'center',
+  },
+  unitToggleButtonActive: {
+    backgroundColor: theme.colors.primary.main,
+  },
+  unitToggleText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '600',
+  },
+  unitToggleTextActive: {
+    color: theme.colors.white,
+  },
+  imperialInputContainer: {
+    flexDirection: 'row',
+    gap: scaleWidth(12),
+  },
+  heightInputWrapper: {
+    flex: 1,
+  },
+  metricInputContainer: {
+    // Single input takes full width
+  },
+  bottomContainer: {
+    paddingBottom: scaleHeight(40),
+    paddingTop: scaleHeight(20),
+  },
+  helperText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
+    textAlign: 'center',
+    marginTop: scaleHeight(8),
   },
 });

@@ -54,10 +54,28 @@ interface FeedActivity {
   post?: Post;
   reaction_counts?: {
     like?: number;
+    love?: number;
+    fire?: number;
+    yum?: number;
+    clap?: number;
     comment?: number;
   };
   own_reactions?: {
     like?: ReactionData[];
+    love?: ReactionData[];
+    fire?: ReactionData[];
+    yum?: ReactionData[];
+    clap?: ReactionData[];
+  };
+  user_reaction_type?: 'like' | 'love' | 'fire' | 'yum' | 'clap';
+  first_comment?: {
+    id: string;
+    user: {
+      username: string;
+      name: string;
+    };
+    text: string;
+    created_at: string;
   };
 }
 
@@ -75,9 +93,15 @@ class FeedApi {
       });
       console.log('Timeline response:', response);
       return response.data || [];
-    } catch (error) {
+    } catch (error: any) {
+      // If it's a 404, the endpoint doesn't exist yet
+      if (error?.response?.status === 404) {
+        console.log('Timeline API endpoint not available yet, returning empty array');
+        return [];
+      }
       console.error('Timeline fetch error:', error);
-      throw error;
+      // Return empty array to allow app to function without backend
+      return [];
     }
   }
 
@@ -89,23 +113,58 @@ class FeedApi {
   }
 
   async likePost(postId: string): Promise<void> {
-    await api.request('POST', `/feed/posts/${postId}/like`);
+    try {
+      await api.request('POST', `/feed/posts/${postId}/like`);
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        console.log('Like API endpoint not available yet');
+      } else {
+        console.error('Error liking post:', error);
+      }
+    }
   }
 
   async unlikePost(postId: string): Promise<void> {
-    await api.request('DELETE', `/feed/posts/${postId}/like`);
+    try {
+      await api.request('DELETE', `/feed/posts/${postId}/like`);
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        console.log('Unlike API endpoint not available yet');
+      } else {
+        console.error('Error unliking post:', error);
+      }
+    }
   }
 
   async commentOnPost(activityId: string, text: string): Promise<ApiResponse<Comment>> {
-    return api.request('POST', `/feed/posts/${activityId}/comment`, { text });
+    try {
+      return await api.request('POST', `/feed/posts/${activityId}/comment`, { text });
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        console.log('Comment API endpoint not available yet');
+        // Return a mock unsuccessful response
+        return {
+          success: false,
+          error: 'API endpoint not available',
+          data: undefined
+        } as ApiResponse<Comment>;
+      }
+      throw error;
+    }
   }
 
   async getPostComments(postId: string): Promise<Comment[]> {
     try {
       const response = await api.request<Comment[]>('GET', `/feed/posts/${postId}/comments`);
       return response.data || [];
-    } catch (error) {
+    } catch (error: any) {
+      // If it's a 404, the endpoint doesn't exist yet
+      if (error?.response?.status === 404) {
+        console.log('Comments API endpoint not available yet, returning empty array');
+        return [];
+      }
       console.error('Error fetching comments:', error);
+      // Return empty array instead of throwing to allow fallback to local storage
       return [];
     }
   }
