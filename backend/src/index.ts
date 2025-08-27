@@ -15,6 +15,7 @@ import chatRoutes from './routes/chat';
 import onboardingRoutes from './routes/onboarding';
 import feedRoutes from './routes/feedRoutes';
 import uploadRoutes from './routes/uploadRoutes';
+import bookingsRoutes from './routes/bookings';
 
 // Load environment variables
 dotenv.config();
@@ -80,6 +81,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/bookings', bookingsRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
