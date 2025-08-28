@@ -6,7 +6,7 @@ import { logger } from '../utils/logger';
 const router = express.Router();
 
 // Get all available time slots for signup
-router.get('/available', async (req: AuthRequest, res: Response) => {
+router.get('/available', async (_req: AuthRequest, res: Response) => {
   try {
     // Get time slots that are in the future and still open
     const now = new Date();
@@ -91,7 +91,7 @@ router.post('/signup', verifyPrivyToken, async (req: AuthRequest, res: Response)
     }
 
     // Check if user already signed up for this slot
-    const { data: existingSignup, error: existingError } = await supabaseService
+    const { data: existingSignup } = await supabaseService
       .from('slot_signups')
       .select('id')
       .eq('time_slot_id', timeSlotId)
@@ -199,12 +199,73 @@ router.get('/my-signups', verifyPrivyToken, async (req: AuthRequest, res: Respon
       });
     }
 
+    // For grouped signups, fetch the dinner group details
+    const enhancedSignups = await Promise.all(
+      (signups || []).map(async (signup) => {
+        if (signup.status === 'grouped') {
+          // Fetch the dinner group for this signup
+          const { data: groupMember } = await supabaseService
+            .from('group_members')
+            .select(`
+              *,
+              dinner_group:dinner_groups(*)
+            `)
+            .eq('user_id', userId)
+            .eq('dinner_group.time_slot_id', signup.time_slot_id)
+            .single();
+
+          if (groupMember?.dinner_group) {
+            return {
+              ...signup,
+              dinner_group: groupMember.dinner_group,
+            };
+          }
+        }
+        return signup;
+      })
+    );
+
     return res.json({
       success: true,
-      data: signups || [],
+      data: enhancedSignups,
     });
   } catch (error) {
     logger.error('Error in my-signups endpoint:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    });
+  }
+});
+
+// Get group members for a dinner group
+router.get('/group-members/:dinnerGroupId', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const { dinnerGroupId } = req.params;
+
+    // Get all members in the group
+    const { data: members, error } = await supabaseService
+      .from('group_members')
+      .select(`
+        *,
+        user:users(id, email, first_name, last_name, display_name)
+      `)
+      .eq('dinner_group_id', dinnerGroupId);
+
+    if (error) {
+      logger.error('Error fetching group members:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to fetch group members',
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: members || [],
+    });
+  } catch (error) {
+    logger.error('Error in group-members endpoint:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error',

@@ -249,12 +249,27 @@ class ApiService {
       // Try Privy token first (current auth system)
       const privyToken = await SecureStore.getItemAsync('privy_auth_token');
       if (privyToken) {
+        // Check if we need to refresh the token
+        // This is a temporary solution - ideally Privy SDK should handle this
         return privyToken;
       }
       // Fallback to old token key
       return await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
     } catch (error) {
       console.error('Error retrieving auth token:', error);
+      return null;
+    }
+  }
+
+  async refreshAuthToken(): Promise<string | null> {
+    try {
+      // Get fresh token from Privy
+      // Note: This requires the Privy SDK to be initialized
+      // The actual refresh should be handled by the usePrivyAuth hook
+      console.log('Token expired - please re-authenticate');
+      return null;
+    } catch (error) {
+      console.error('Error refreshing auth token:', error);
       return null;
     }
   }
@@ -538,6 +553,11 @@ class ApiService {
 
   async getMyDinnerGroup(timeSlotId: string): Promise<ApiResponse<any>> {
     const response = await this.client.get(`/time-slots/my-group/${timeSlotId}`);
+    return response.data;
+  }
+
+  async getGroupMembers(dinnerGroupId: string): Promise<ApiResponse<any[]>> {
+    const response = await this.client.get(`/time-slots/group-members/${dinnerGroupId}`);
     return response.data;
   }
 

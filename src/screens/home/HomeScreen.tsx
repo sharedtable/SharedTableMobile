@@ -208,15 +208,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
 
   const formatDate = useCallback((dateString: string) => {
     try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        console.error('Invalid date string:', dateString);
-        return 'Invalid date';
-      }
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-      });
+      // Date is in YYYY-MM-DD format, already local time
+      const [_year, month, day] = dateString.split('-');
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${monthNames[parseInt(month, 10) - 1]} ${parseInt(day, 10)}`;
     } catch (error) {
       console.error('Error formatting date:', error);
       return 'Invalid date';
@@ -225,18 +220,21 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
 
   const formatTime = useCallback((timeString: string) => {
     try {
+      // Time is in HH:MM:SS format, already local time
       const [hours, minutes] = timeString.split(':');
-      const date = new Date();
-      date.setHours(parseInt(hours, 10), parseInt(minutes, 10));
-      if (isNaN(date.getTime())) {
+      const hour = parseInt(hours, 10);
+      const minute = parseInt(minutes, 10);
+      
+      if (isNaN(hour) || isNaN(minute)) {
         console.error('Invalid time string:', timeString);
         return 'Invalid time';
       }
-      return date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      });
+      
+      const period = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+      const displayMinute = minute.toString().padStart(2, '0');
+      
+      return `${displayHour}:${displayMinute} ${period}`;
     } catch (error) {
       console.error('Error formatting time:', error);
       return 'Invalid time';

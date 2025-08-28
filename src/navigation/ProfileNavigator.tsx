@@ -2,6 +2,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
 import { ProfileScreen } from '@/screens/profile/ProfileScreen';
+import { DinnerDetailsScreen } from '@/screens/profile/DinnerDetailsScreen';
 import DiningPreferencesScreen from '@/screens/profile/DiningPreferencesScreen';
 import { 
   DietaryPreferencesScreen,
@@ -15,6 +16,9 @@ import { AboutScreen } from '@/screens/settings/AboutScreen';
 
 export type ProfileStackParamList = {
   ProfileMain: undefined;
+  DinnerDetails: {
+    reservation: any; // You can type this more specifically based on your data structure
+  };
   DiningPreferences: undefined;
   PersonalizationDietary: undefined;
   PersonalizationCuisine: undefined;
@@ -39,6 +43,13 @@ export function ProfileNavigator() {
       <Stack.Screen 
         name="ProfileMain" 
         component={ProfileScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen 
+        name="DinnerDetails" 
+        component={DinnerDetailsScreen}
         options={{
           headerShown: false,
         }}

@@ -28,58 +28,69 @@ interface RestaurantItem {
   image?: string;
 }
 
-interface BookingItem {
+interface TimeSlotSignup {
   id: string;
-  status?: string;
-  event_id?: string;
-  event_date?: string;
-  date?: string;
-  event?: {
-    id?: string;
-    restaurant_name?: string;
-    name?: string;
-    title?: string;
-    event_date?: string;
-    date?: string;
-    start_time?: string;
-    time?: string;
-    status?: string;
+  time_slot_id: string;
+  user_id: string;
+  status: 'pending' | 'confirmed' | 'grouped' | 'cancelled';
+  dietary_restrictions?: string;
+  preferences?: string;
+  signed_up_at: string;
+  time_slot?: {
+    id: string;
+    slot_date: string;
+    slot_time: string;
+    day_of_week: string;
+    max_signups: number;
+    current_signups: number;
+    status: string;
+    dinner_type?: 'regular' | 'singles';
+  };
+  dinner_group?: {
+    id: string;
+    time_slot_id: string;
+    group_name: string;
+    restaurant_name: string;
+    restaurant_address: string;
+    member_count: number;
+    max_members: number;
+    status: 'confirmed' | 'cancelled' | 'completed';
+    created_at?: string;
+    updated_at?: string;
   };
 }
 
 export function ProfileScreen() {
   const navigation = useNavigation<ProfileNavigationProp>();
   const { user } = usePrivyAuth();
-  const [reservations, setReservations] = useState<BookingItem[]>([]);
+  const [reservations, setReservations] = useState<TimeSlotSignup[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [connections] = useState(0);
 
   const fetchReservations = async () => {
     try {
-      const response = await api.getMyBookings();
+      const response = await api.getMySignups();
       if (response.success && response.data) {
-        console.log('Bookings data:', response.data); // Debug log
+        console.log('Signups data:', response.data); // Debug log
         
-        // Filter upcoming bookings (not cancelled) and sort by date
+        // Filter upcoming signups (not cancelled) and sort by date
         const upcoming = response.data
-          .filter((booking: BookingItem) => {
-            // Check various possible date fields
-            const eventDate = booking.event?.event_date || 
-                            booking.event?.date || 
-                            booking.event_date || 
-                            booking.date;
-            
-            return booking.status !== 'cancelled' && 
-                   eventDate && 
-                   new Date(eventDate) > new Date();
+          .filter((signup: TimeSlotSignup) => {
+            if (signup.status === 'cancelled' || !signup.time_slot) return false;
+            // Compare dates as strings since they're in YYYY-MM-DD format
+            const today = new Date().toISOString().split('T')[0];
+            return signup.time_slot.slot_date >= today;
           })
-          .sort((a: BookingItem, b: BookingItem) => {
-            const aDate = a.event?.event_date || a.event?.date || a.event_date || a.date || '';
-            const bDate = b.event?.event_date || b.event?.date || b.event_date || b.date || '';
-            return new Date(aDate).getTime() - new Date(bDate).getTime();
-          })
-          .slice(0, 2); // Show only next 2 reservations
+          .sort((a: TimeSlotSignup, b: TimeSlotSignup) => {
+            if (!a.time_slot || !b.time_slot) return 0;
+            // Sort by date string (YYYY-MM-DD format sorts correctly as strings)
+            if (a.time_slot.slot_date !== b.time_slot.slot_date) {
+              return a.time_slot.slot_date.localeCompare(b.time_slot.slot_date);
+            }
+            // If same date, sort by time
+            return a.time_slot.slot_time.localeCompare(b.time_slot.slot_time);
+          });
         
         setReservations(upcoming);
       }
@@ -104,17 +115,21 @@ export function ProfileScreen() {
     navigation.navigate('Settings');
   };
 
-  const handleCancelReservation = async (bookingId: string) => {
+  const handleCancelReservation = async (signupId: string) => {
     try {
-      await api.cancelBooking(bookingId);
-      // Refresh the reservations list after cancellation
-      fetchReservations();
+      const response = await api.cancelSignup(signupId);
+      if (response.success) {
+        // Refresh the reservations list after cancellation
+        await fetchReservations();
+      } else {
+        console.error('Failed to cancel reservation:', response.error);
+      }
     } catch (error) {
       console.error('Failed to cancel reservation:', error);
     }
   };
 
-  const formatDate = (dateString: string | undefined) => {
+  const _formatDate = (dateString: string | undefined) => {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -123,16 +138,51 @@ export function ProfileScreen() {
     });
   };
 
-  const formatTime = (dateString: string | undefined, timeString: string | undefined) => {
-    if (!dateString || !timeString) return '';
+  const _formatTime = (timeString: string | undefined) => {
+    if (!timeString) return '';
     const [hours, minutes] = timeString.split(':');
-    const date = new Date(dateString);
+    const date = new Date();
     date.setHours(parseInt(hours), parseInt(minutes));
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
     });
+  };
+
+  const _getStatusLabel = (signup: TimeSlotSignup) => {
+    if (signup.status === 'grouped' && signup.dinner_group) {
+      return 'MATCHED';
+    }
+    switch (signup.status) {
+      case 'pending':
+        return 'AWAITING MATCH';
+      case 'confirmed':
+        return 'CONFIRMED';
+      case 'cancelled':
+        return 'CANCELLED';
+      default:
+        return signup.status.toUpperCase();
+    }
+  };
+
+  const _getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'MATCHED':
+      case 'grouped':
+        return styles.statusConfirmed;
+      case 'AWAITING MATCH':
+      case 'pending':
+        return styles.statusPending;
+      case 'CONFIRMED':
+      case 'confirmed':
+        return styles.statusConfirmed;
+      case 'CANCELLED':
+      case 'cancelled':
+        return styles.statusCancelled;
+      default:
+        return styles.statusPending;
+    }
   };
 
   // Mock data for top rated restaurants
@@ -203,54 +253,96 @@ export function ProfileScreen() {
           </Pressable>
         </View>
 
-        {/* Next Reservations */}
+        {/* Dinner Reservations */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Next Reservation</Text>
-            <Pressable>
-              <Ionicons name="ellipsis-horizontal" size={20} color={theme.colors.text.secondary} />
-            </Pressable>
+            <Text style={styles.sectionTitle}>My Dinner Reservations</Text>
+            {reservations.length > 0 && (
+              <View style={styles.sectionBadge}>
+                <Text style={styles.sectionCount}>{reservations.length}</Text>
+              </View>
+            )}
           </View>
           
           {loading ? (
-            <ActivityIndicator size="small" color={theme.colors.primary.main} />
+            <View style={styles.container}>
+              <ActivityIndicator size="small" color={theme.colors.primary.main} />
+            </View>
           ) : reservations.length > 0 ? (
-            reservations.map((reservation) => (
-              <View key={reservation.id} style={styles.reservationCard}>
-                <View style={styles.reservationImage} />
-                <View style={styles.reservationInfo}>
-                  <Text style={styles.reservationName}>
-                    {reservation.event?.restaurant_name || 
-                     reservation.event?.name || 
-                     reservation.event?.title || 
-                     'Event'}
-                  </Text>
-                  <Text style={styles.reservationDate}>
-                    {formatDate(reservation.event?.event_date || reservation.event?.date)} at {formatTime(reservation.event?.event_date || reservation.event?.date, reservation.event?.start_time || reservation.event?.time)}
-                  </Text>
-                  <View style={styles.statusBadge}>
-                    <Text style={[
-                      styles.statusText,
-                      reservation.status === 'confirmed' && styles.statusConfirmed,
-                      reservation.status === 'pending' && styles.statusPending,
-                      reservation.status === 'cancelled' && styles.statusCancelled,
-                    ]}>
-                      {reservation.status?.toUpperCase() || 'PENDING'}
-                    </Text>
+            reservations.map((reservation) => {
+              const formatReservationDate = () => {
+                if (!reservation.time_slot?.slot_date) return '';
+                // Date is already in local time (YYYY-MM-DD format)
+                const dateParts = reservation.time_slot.slot_date.split('-');
+                const _year = dateParts[0];
+                const month = dateParts[1];
+                const day = dateParts[2];
+                
+                // Format time (assuming it's in HH:MM:SS format)
+                const time = reservation.time_slot?.slot_time ? 
+                  reservation.time_slot.slot_time.substring(0, 5).split(':').map((t, i) => 
+                    i === 0 ? (parseInt(t) > 12 ? parseInt(t) - 12 : parseInt(t) === 0 ? 12 : parseInt(t)) : t
+                  ).join(':') + (parseInt(reservation.time_slot.slot_time.substring(0, 2)) >= 12 ? ' PM' : ' AM') : '';
+                
+                return `${_year}-${month}-${day} at ${time}`;
+              };
+
+              const handleSeeDetails = () => {
+                navigation.navigate('DinnerDetails', { reservation });
+              };
+
+              return (
+                <Pressable 
+                  key={reservation.id} 
+                  style={styles.reservationCard}
+                  onPress={reservation.dinner_group ? handleSeeDetails : undefined}
+                >
+                  <View style={styles.cardContent}>
+                    {/* Left: Square image placeholder */}
+                    <View style={styles.imageSquare} />
+                    
+                    {/* Center: Restaurant info */}
+                    <View style={styles.restaurantInfo}>
+                      <Text style={styles.restaurantTitle}>
+                        {reservation.dinner_group?.restaurant_name || 'Awaiting Restaurant'}
+                      </Text>
+                      <View style={styles.dateRow}>
+                        <Ionicons name="calendar-outline" size={14} color={theme.colors.text.secondary} />
+                        <Text style={styles.dateText}>
+                          {formatReservationDate()}
+                        </Text>
+                      </View>
+                    </View>
+                    
+                    {/* Right: Actions */}
+                    <View style={styles.cardActions}>
+                      {reservation.dinner_group && (
+                        <Pressable 
+                          style={styles.detailsButton}
+                          onPress={handleSeeDetails}
+                        >
+                          <Text style={styles.detailsText}>See details</Text>
+                        </Pressable>
+                      )}
+                      {reservation.status !== 'grouped' && reservation.status !== 'cancelled' && (
+                        <Pressable 
+                          style={styles.cancelTextButton}
+                          onPress={() => handleCancelReservation(reservation.id)}
+                        >
+                          <Text style={styles.cancelText}>Cancel</Text>
+                        </Pressable>
+                      )}
+                    </View>
                   </View>
-                </View>
-                <View style={styles.reservationActions}>
-                  <Text style={styles.seeDetailsText}>See details</Text>
-                  {reservation.status === 'confirmed' && (
-                    <Pressable onPress={() => handleCancelReservation(reservation.id)}>
-                      <Text style={styles.cancelText}>Cancel</Text>
-                    </Pressable>
-                  )}
-                </View>
-              </View>
-            ))
+                </Pressable>
+              );
+            })
           ) : (
-            <Text style={styles.noReservationsText}>No upcoming reservations</Text>
+            <View style={styles.container}>
+              <Ionicons name="calendar-outline" size={48} color={theme.colors.text.tertiary} />
+              <Text style={styles.noReservationsText}>No upcoming dinner reservations</Text>
+              <Text style={styles.noReservationsText}>Book a dinner to get started!</Text>
+            </View>
           )}
         </View>
 
@@ -283,7 +375,7 @@ export function ProfileScreen() {
                 <View style={styles.restaurantImage}>
                   <Ionicons name="restaurant" size={30} color={theme.colors.primary.main} />
                 </View>
-                <Text style={styles.restaurantName}>{restaurant.name}</Text>
+                <Text style={styles.reservationName}>{restaurant.name}</Text>
                 <Text style={styles.restaurantRating}>★ {restaurant.rating}</Text>
               </Pressable>
             ))}
@@ -389,30 +481,59 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
-  reservationActions: {
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-  },
   reservationCard: {
-    borderBottomColor: theme.colors.gray['1'],
+    backgroundColor: theme.colors.white,
+    marginHorizontal: scaleWidth(20),
+    marginBottom: scaleHeight(1),
     borderBottomWidth: 1,
+    borderBottomColor: '#E8E8E8',
+  },
+  cardContent: {
     flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: scaleHeight(12),
   },
-  reservationDate: {
-    color: theme.colors.text.secondary,
-    fontSize: scaleFont(12),
-  },
-  reservationImage: {
-    backgroundColor: theme.colors.gray['2'],
+  imageSquare: {
+    width: scaleWidth(48),
+    height: scaleWidth(48),
+    backgroundColor: '#C4C4C4',
     borderRadius: scaleWidth(8),
-    height: scaleWidth(50),
     marginRight: scaleWidth(12),
-    width: scaleWidth(50),
   },
-  reservationInfo: {
+  restaurantInfo: {
     flex: 1,
     justifyContent: 'center',
+  },
+  restaurantTitle: {
+    fontSize: scaleFont(16),
+    fontWeight: '600',
+    color: theme.colors.text.primary,
+    marginBottom: scaleHeight(4),
+  },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: scaleFont(13),
+    color: theme.colors.text.secondary,
+    marginLeft: scaleWidth(4),
+  },
+  cardActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  detailsButton: {
+    marginRight: scaleWidth(12),
+  },
+  detailsText: {
+    fontSize: scaleFont(13),
+    color: '#00BCD4',
+    fontWeight: '500',
+  },
+  cancelTextButton: {
+    paddingVertical: scaleHeight(4),
+    paddingHorizontal: scaleWidth(8),
   },
   reservationName: {
     color: theme.colors.text.primary,
@@ -440,12 +561,6 @@ const styles = StyleSheet.create({
   restaurantList: {
     paddingTop: scaleHeight(12),
   },
-  restaurantName: {
-    color: theme.colors.text.primary,
-    fontSize: scaleFont(12),
-    fontWeight: '500',
-    marginBottom: scaleHeight(2),
-  },
   restaurantRating: {
     color: theme.colors.text.secondary,
     fontSize: scaleFont(11),
@@ -465,14 +580,6 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(18),
     fontWeight: '600',
   },
-  seeDetailsText: {
-    color: theme.colors.primary.main,
-    fontSize: scaleFont(12),
-    marginBottom: scaleHeight(4),
-  },
-  statusBadge: {
-    marginTop: scaleHeight(4),
-  },
   statusCancelled: {
     color: theme.colors.gray['3'],
   },
@@ -481,11 +588,6 @@ const styles = StyleSheet.create({
   },
   statusPending: {
     color: theme.colors.warning?.main || '#FF9800',
-  },
-  statusText: {
-    fontSize: scaleFont(10),
-    fontWeight: '600',
-    letterSpacing: 0.5,
   },
   statsNumber: {
     color: theme.colors.text.primary,
@@ -551,5 +653,16 @@ const styles = StyleSheet.create({
   userStats: {
     alignItems: 'center',
     flexDirection: 'row',
+  },
+  sectionBadge: {
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(12),
+    paddingHorizontal: scaleWidth(10),
+    paddingVertical: scaleHeight(4),
+  },
+  sectionCount: {
+    color: theme.colors.white,
+    fontSize: scaleFont(12),
+    fontWeight: '700',
   },
 });
