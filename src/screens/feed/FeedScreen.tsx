@@ -28,6 +28,7 @@ import EnhancedPostCard, { PostData } from '../../components/feed/EnhancedPostCa
 import PostCardSkeleton from '../../components/feed/PostCardSkeleton';
 import feedApi from '../../services/feedApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNotificationStore } from '@/store/notificationStore';
 
 interface ReactionData {
   id: string;
@@ -102,13 +103,14 @@ const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpaci
 
 const FeedScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const [activities, setActivities] = useState<FeedActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
+  const { unreadCount, loadNotifications } = useNotificationStore();
   
   const scrollY = useSharedValue(0);
   const fabScale = useSharedValue(1);
@@ -240,6 +242,7 @@ const FeedScreen: React.FC = () => {
 
   useEffect(() => {
     loadFeed();
+    loadNotifications();
     // Load saved posts
     AsyncStorage.getItem('saved_posts').then(saved => {
       if (saved) {
@@ -335,7 +338,7 @@ const FeedScreen: React.FC = () => {
 
   const handleComment = useCallback((activityId: string) => {
     // Navigate to comment screen
-    (navigation as any).navigate('Comments', {
+    navigation.navigate('Comments', {
       postId: activityId,
       postAuthor: 'Author', // Get from activity data
     });
@@ -416,7 +419,11 @@ const FeedScreen: React.FC = () => {
       withSpring(0.9, { damping: 15, stiffness: 400 }),
       withSpring(1, { damping: 15, stiffness: 400 })
     );
-    (navigation as any).navigate('CreatePost');
+    navigation.navigate('CreatePost');
+  }, [navigation, fabScale]);
+
+  const handleNotificationPress = useCallback(() => {
+    navigation.navigate('NotificationsList');
   }, [navigation]);
 
   // Load first comment and count for posts
@@ -560,7 +567,7 @@ const FeedScreen: React.FC = () => {
         <Text style={styles.emptySubtext}>Share your culinary adventures! 🌮</Text>
         <TouchableOpacity 
           style={styles.emptyButton}
-          onPress={() => (navigation as any).navigate('CreatePost')}
+          onPress={() => navigation.navigate('CreatePost')}
         >
           <Text style={styles.emptyButtonText}>📸 Share Your First Dish</Text>
         </TouchableOpacity>
@@ -621,9 +628,15 @@ const FeedScreen: React.FC = () => {
             <TouchableOpacity style={styles.headerButton}>
               <Ionicons name="search-outline" size={24} color="#262626" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.headerButton}>
+            <TouchableOpacity style={styles.headerButton} onPress={handleNotificationPress}>
               <Ionicons name="notifications-outline" size={24} color="#262626" />
-              <View style={styles.notificationDot} />
+              {unreadCount > 0 && (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationBadgeText}>
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -710,14 +723,22 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     position: 'relative',
   },
-  notificationDot: {
+  notificationBadge: {
     position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    top: 4,
+    right: 4,
     backgroundColor: '#FF3B30',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  notificationBadgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: '600',
   },
   listContent: {
     paddingBottom: 100,

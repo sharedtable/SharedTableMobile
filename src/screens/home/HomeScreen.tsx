@@ -13,16 +13,18 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
-import { NavigationProp, RouteProp } from '@react-navigation/native';
+import { NavigationProp, RouteProp, useNavigation } from '@react-navigation/native';
 
 import { Ionicons } from '@expo/vector-icons';
 import { Icon } from '@/components/base/Icon';
 import { InviteFriendsSection } from '@/components/home/InviteFriendsSection';
+import { TopBar } from '@/components/navigation/TopBar';
 // Removed BottomTabBar - now using React Navigation's tab bar
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { api } from '@/services/api';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
+import { useNotificationStore } from '@/store/notificationStore';
 
 // Images
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -66,6 +68,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
   onNavigate: _onNavigate,
 }) => {
   const { user } = usePrivyAuth();
+  const navigation = useNavigation<any>();
+  const { unreadCount, loadNotifications } = useNotificationStore();
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
@@ -77,6 +81,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
   const lastFetchTimeRef = useRef<number>(0);
   const retryCountRef = useRef(0);
   const hasInitialLoadRef = useRef(false);
+  
+  const handleNotificationPress = () => {
+    navigation.navigate('NotificationsList');
+  };
 
   // Fetch available time slots and user's signups with debouncing and retry logic
   const fetchData = useCallback(async (isRefreshing = false, retryCount = 0) => {
@@ -193,6 +201,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
     if (!hasInitialLoadRef.current) {
       hasInitialLoadRef.current = true;
       fetchData();
+      loadNotifications();
     }
   }, [fetchData]);
 
@@ -316,7 +325,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
+      
+      {/* Top Bar with Notifications */}
+      <TopBar
+        title="Home"
+        showNotification
+        notificationCount={unreadCount}
+        onNotification={handleNotificationPress}
+      />
 
       <KeyboardAvoidingView
         style={styles.keyboardView}

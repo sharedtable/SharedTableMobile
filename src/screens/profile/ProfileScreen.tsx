@@ -18,6 +18,7 @@ import { theme } from '@/theme';
 import { scaleHeight, scaleFont, scaleWidth } from '@/utils/responsive';
 import { ProfileStackParamList } from '@/navigation/ProfileNavigator';
 import { api } from '@/services/api';
+import { useNotificationStore } from '@/store/notificationStore';
 
 type ProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
 
@@ -67,6 +68,7 @@ export function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [connections] = useState(0);
+  const { unreadCount, loadNotifications } = useNotificationStore();
 
   const fetchReservations = async () => {
     try {
@@ -104,6 +106,7 @@ export function ProfileScreen() {
 
   useEffect(() => {
     fetchReservations();
+    loadNotifications();
   }, []);
 
   const onRefresh = () => {
@@ -113,6 +116,10 @@ export function ProfileScreen() {
 
   const handleSettingsPress = () => {
     navigation.navigate('Settings');
+  };
+
+  const handleNotificationPress = () => {
+    navigation.navigate('NotificationsList' as any);
   };
 
   const handleCancelReservation = async (signupId: string) => {
@@ -209,8 +216,15 @@ export function ProfileScreen() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Profile</Text>
           <View style={styles.headerButtons}>
-            <Pressable style={styles.iconButton}>
+            <Pressable style={styles.iconButton} onPress={handleNotificationPress}>
               <Ionicons name="notifications-outline" size={24} color={theme.colors.text.primary} />
+              {unreadCount > 0 && (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationBadgeText}>
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Text>
+                </View>
+              )}
             </Pressable>
             <Pressable style={styles.iconButton} onPress={handleSettingsPress}>
               <Ionicons name="settings-outline" size={24} color={theme.colors.text.primary} />
@@ -463,6 +477,24 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: scaleWidth(8),
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: theme.colors.error.main,
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  notificationBadgeText: {
+    color: theme.colors.white,
+    fontSize: 10,
+    fontWeight: '600',
   },
   noReservationsText: {
     color: theme.colors.text.secondary,

@@ -1,35 +1,19 @@
 import * as Notifications from 'expo-notifications';
-import React, { createContext, useContext, ReactNode, useState, useCallback, useEffect } from 'react';
-import { notificationService } from '@/services/notificationService';
+import React, { ReactNode, useState, useCallback, useEffect } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { useNotificationStore } from '@/store/notificationStore';
 import { NotificationData, NotificationType, NotificationPriority, NotificationChannel } from '@/types/notification.types';
 import { InAppNotification } from '@/components/notifications/InAppNotification';
-import { useNavigation } from '@react-navigation/native';
 
-interface NotificationContextType {
-  expoPushToken: string | null;
-  notification: Notifications.Notification | null;
-  inAppNotification: NotificationData | null;
-  registerForPushNotifications: () => Promise<void>;
-  showInAppNotification: (notification: NotificationData) => void;
-  dismissInAppNotification: () => void;
-  scheduleDinnerReminder: (eventId: string, eventDate: Date, eventTitle: string) => Promise<void>;
-  cancelDinnerReminder: (eventId: string) => Promise<void>;
+interface NotificationWrapperProps {
+  children: ReactNode;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
-
-export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const NotificationWrapper: React.FC<NotificationWrapperProps> = ({ children }) => {
   const navigation = useNavigation<any>();
-  const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
-  const [notification, setNotification] = useState<Notifications.Notification | null>(null);
   const [inAppNotification, setInAppNotification] = useState<NotificationData | null>(null);
   
-  const {
-    initialize,
-    scheduleDinnerReminder: scheduleReminder,
-    cancelDinnerReminder: cancelReminder,
-  } = useNotificationStore();
+  const { initialize } = useNotificationStore();
 
   useEffect(() => {
     // Initialize notification system
@@ -38,7 +22,6 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     // Set up notification listeners
     const notificationListener = Notifications.addNotificationReceivedListener(notification => {
       console.log('Notification received:', notification);
-      setNotification(notification);
       
       // Convert to our notification format and show in-app
       const notificationData: NotificationData = {
@@ -68,13 +51,6 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     };
   }, []);
 
-  const registerForPushNotifications = useCallback(async () => {
-    const token = await notificationService.registerForPushNotifications();
-    if (token) {
-      setExpoPushToken(token);
-    }
-  }, []);
-
   const showInAppNotification = useCallback((notification: NotificationData) => {
     setInAppNotification(notification);
   }, []);
@@ -82,18 +58,6 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const dismissInAppNotification = useCallback(() => {
     setInAppNotification(null);
   }, []);
-
-  const scheduleDinnerReminder = useCallback(async (
-    eventId: string,
-    eventDate: Date,
-    eventTitle: string
-  ) => {
-    await scheduleReminder(eventId, eventDate, eventTitle);
-  }, [scheduleReminder]);
-
-  const cancelDinnerReminder = useCallback(async (eventId: string) => {
-    await cancelReminder(eventId);
-  }, [cancelReminder]);
 
   const handleNotificationResponse = (response: Notifications.NotificationResponse) => {
     const data = response.notification.request.content.data;
@@ -174,32 +138,13 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   };
 
   return (
-    <NotificationContext.Provider
-      value={{
-        expoPushToken,
-        notification,
-        inAppNotification,
-        registerForPushNotifications,
-        showInAppNotification,
-        dismissInAppNotification,
-        scheduleDinnerReminder,
-        cancelDinnerReminder,
-      }}
-    >
+    <>
       {children}
       <InAppNotification
         notification={inAppNotification}
         onPress={handleInAppNotificationPress}
         onDismiss={dismissInAppNotification}
       />
-    </NotificationContext.Provider>
+    </>
   );
-};
-
-export const useNotifications = () => {
-  const context = useContext(NotificationContext);
-  if (!context) {
-    throw new Error('useNotifications must be used within a NotificationProvider');
-  }
-  return context;
 };
