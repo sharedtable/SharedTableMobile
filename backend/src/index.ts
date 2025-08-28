@@ -16,6 +16,8 @@ import onboardingRoutes from './routes/onboarding';
 import feedRoutes from './routes/feedRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import bookingsRoutes from './routes/bookings';
+import timeSlotsRoutes from './routes/timeSlots';
+import groupingRoutes from './routes/admin/grouping';
 
 // Load environment variables
 dotenv.config();
@@ -82,6 +84,8 @@ app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/bookings', bookingsRoutes);
+app.use('/api/time-slots', timeSlotsRoutes);
+app.use('/api/admin/grouping', groupingRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

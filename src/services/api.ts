@@ -140,6 +140,8 @@ export interface ApiResponse<T = unknown> {
 
 class ApiService {
   private client: AxiosInstance;
+  private requestQueue: Map<string, number> = new Map();
+  private readonly MIN_REQUEST_INTERVAL = 1000; // 1 second between same endpoint calls
 
   constructor() {
     this.client = axios.create({
@@ -154,9 +156,27 @@ class ApiService {
   }
 
   private setupInterceptors() {
-    // Request interceptor to add auth token
+    // Request interceptor to add auth token and rate limiting
     this.client.interceptors.request.use(
       async (config) => {
+        // Rate limiting check
+        const requestKey = `${config.method}:${config.url}`;
+        const lastRequestTime = this.requestQueue.get(requestKey) || 0;
+        const now = Date.now();
+        const timeSinceLastRequest = now - lastRequestTime;
+
+        // For GET requests to the same endpoint, enforce minimum interval
+        if (config.method === 'get' && timeSinceLastRequest < this.MIN_REQUEST_INTERVAL) {
+          console.warn(
+            `⏱️ Rate limiting: Delaying ${requestKey} request by ${this.MIN_REQUEST_INTERVAL - timeSinceLastRequest}ms`
+          );
+          await new Promise(resolve => 
+            setTimeout(resolve, this.MIN_REQUEST_INTERVAL - timeSinceLastRequest)
+          );
+        }
+
+        this.requestQueue.set(requestKey, Date.now());
+
         try {
           const token = await this.getAuthToken();
           if (token) {
@@ -204,6 +224,15 @@ class ApiService {
           // Clear auth and redirect to login
           await this.clearAuth();
           // The auth store will handle navigation
+        }
+
+        // Handle 429 Too Many Requests
+        if (error.response?.status === 429) {
+          const retryAfter = error.response.headers['retry-after'];
+          console.error(
+            `🚫 Rate limited (429). Retry after: ${retryAfter || 'unknown'} seconds`
+          );
+          // You could implement automatic retry here if needed
         }
 
         return Promise.reject(error);
@@ -485,7 +514,40 @@ class ApiService {
   }
 
   // ============================================================================
-  // Bookings Endpoints
+  // Time Slots Endpoints
+  // ============================================================================
+
+  async getAvailableTimeSlots(): Promise<ApiResponse<any[]>> {
+    const response = await this.client.get('/time-slots/available');
+    return response.data;
+  }
+
+  async signupForTimeSlot(data: {
+    timeSlotId: string;
+    dietaryRestrictions?: string;
+    preferences?: string;
+  }): Promise<ApiResponse<any>> {
+    const response = await this.client.post('/time-slots/signup', data);
+    return response.data;
+  }
+
+  async getMySignups(): Promise<ApiResponse<any[]>> {
+    const response = await this.client.get('/time-slots/my-signups');
+    return response.data;
+  }
+
+  async getMyDinnerGroup(timeSlotId: string): Promise<ApiResponse<any>> {
+    const response = await this.client.get(`/time-slots/my-group/${timeSlotId}`);
+    return response.data;
+  }
+
+  async cancelSignup(signupId: string): Promise<ApiResponse<void>> {
+    const response = await this.client.delete(`/time-slots/signup/${signupId}`);
+    return response.data;
+  }
+
+  // ============================================================================
+  // Bookings Endpoints (Legacy - keeping for compatibility)
   // ============================================================================
 
   async getMyBookings(): Promise<ApiResponse<EventBooking[]>> {
