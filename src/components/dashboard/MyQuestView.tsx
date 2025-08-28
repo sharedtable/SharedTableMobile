@@ -1,56 +1,109 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 
 import { Icon } from '@/components/base/Icon';
 import { Colors } from '@/constants/colors';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
+import { useQuests, useStreak } from '@/hooks/useGamification';
 
-interface Task {
-  id: string;
-  text: string;
-  points: number;
-  completed: boolean;
-}
 
 export const MyQuestView: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>([
-    { id: '1', text: 'Complete a dinner booking', points: 50, completed: false },
-    { id: '2', text: 'Refer a friend to join', points: 50, completed: false },
-  ]);
-
-  const toggleTask = (taskId: string) => {
-    setTasks((prev) =>
-      prev.map((task) => (task.id === taskId ? { ...task, completed: !task.completed } : task))
-    );
-  };
-
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedQuestType, setSelectedQuestType] = useState<'biweekly' | 'weekly'>('biweekly');
+  
+  const { quests, isLoading, completeTask, isCompletingTask, refetch } = useQuests(selectedQuestType);
+  const { streakInfo, claimBonus, isClaiming, refetch: refetchStreak } = useStreak();
+  
+  // Get current quest (first uncompleted quest)
+  const currentQuest = quests.find(q => !q.completedAt) || quests[0];
+  const tasks = useMemo(() => currentQuest?.tasks || [], [currentQuest]);
+  
+  const toggleTask = useCallback(async (questId: string, taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (task?.completed) return; // Don't toggle completed tasks
+    
+    try {
+      completeTask({ questId, taskId });
+    } catch (_error) {
+      Alert.alert('Error', 'Failed to complete task. Please try again.');
+    }
+  }, [tasks, completeTask]);
+  
+  const handleClaimStreakBonus = useCallback(async () => {
+    if (isClaiming) return;
+    
+    try {
+      claimBonus();
+      Alert.alert('Success', 'Streak bonus claimed!');
+    } catch (_error) {
+      Alert.alert('Error', 'Failed to claim streak bonus.');
+    }
+  }, [claimBonus, isClaiming]);
+  
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([refetch(), refetchStreak()]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetch, refetchStreak]);
+  
   const completedPoints = tasks
     .filter((task) => task.completed)
     .reduce((sum, task) => sum + task.points, 0);
-
+  
   const _totalPossiblePoints = tasks.reduce((sum, task) => sum + task.points, 0);
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={styles.container} 
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          colors={[theme.colors.primary.main]}
+          tintColor={theme.colors.primary.main}
+        />
+      }
+    >
+      {isLoading && !refreshing && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary.main} />
+          <Text style={styles.loadingText}>Loading quests...</Text>
+        </View>
+      )}
       {/* Monthly Streak Tracker */}
       <View style={styles.streakCard}>
         <Text style={styles.cardTitle}>Monthly Streak Tracker</Text>
 
         <View style={styles.streakDisplay}>
-          <Text style={styles.streakNumber}>6</Text>
+          <Text style={styles.streakNumber}>{streakInfo?.currentStreak || 0}</Text>
           <Text style={styles.streakLabel}>Weeks Strong</Text>
         </View>
 
         <View style={styles.streakInfo}>
           <View style={styles.infoRow}>
             <Text style={styles.infoTitle}>Weekly Points</Text>
-            <Text style={styles.infoPoints}>+200 pts this week</Text>
+            <Text style={styles.infoPoints}>+{streakInfo?.weeklyPoints || 0} pts this week</Text>
           </View>
           <Text style={styles.infoDescription}>
             Maintain your streak to earn 50 bonus points per week!
           </Text>
+          {streakInfo && streakInfo.currentStreak > 0 && streakInfo.currentStreak % 3 === 0 && (
+            <Pressable 
+              style={styles.claimButton}
+              onPress={handleClaimStreakBonus}
+              disabled={isClaiming}
+            >
+              <Text style={styles.claimButtonText}>
+                {isClaiming ? 'Claiming...' : 'Claim Milestone Reward!'}
+              </Text>
+            </Pressable>
+          )}
         </View>
 
         <View style={styles.streakInfo}>
@@ -65,10 +118,22 @@ export const MyQuestView: React.FC = () => {
       {/* Biweekly Tasks */}
       <View style={styles.tasksCard}>
         <View style={styles.tasksHeader}>
-          <Text style={styles.cardTitle}>Biweekly Tasks</Text>
-          <View style={styles.editButton}>
-            <Icon name="edit" size={16} color={theme.colors.primary.main} />
-            <Text style={styles.editText}>Edit Tasks</Text>
+          <Text style={styles.cardTitle}>
+            {selectedQuestType === 'biweekly' ? 'Biweekly' : 'Weekly'} Tasks
+          </Text>
+          <View style={styles.questTypeSelector}>
+            <Pressable 
+              style={[styles.questTypeButton, selectedQuestType === 'weekly' && styles.questTypeButtonActive]}
+              onPress={() => setSelectedQuestType('weekly')}
+            >
+              <Text style={[styles.questTypeText, selectedQuestType === 'weekly' && styles.questTypeTextActive]}>Weekly</Text>
+            </Pressable>
+            <Pressable 
+              style={[styles.questTypeButton, selectedQuestType === 'biweekly' && styles.questTypeButtonActive]}
+              onPress={() => setSelectedQuestType('biweekly')}
+            >
+              <Text style={[styles.questTypeText, selectedQuestType === 'biweekly' && styles.questTypeTextActive]}>Biweekly</Text>
+            </Pressable>
           </View>
         </View>
 
@@ -76,19 +141,30 @@ export const MyQuestView: React.FC = () => {
           Complete tasks to maintain your streak and earn points
         </Text>
 
-        {tasks.map((task) => (
-          <Pressable key={task.id} style={styles.taskItem} onPress={() => toggleTask(task.id)}>
-            <View style={[styles.checkbox, task.completed && styles.checkboxChecked]}>
-              {task.completed && <Icon name="check" size={14} color={theme.colors.white} />}
-            </View>
-            <Text style={[styles.taskText, task.completed && styles.taskTextCompleted]}>
-              {task.text}
-            </Text>
-            <Text style={[styles.taskPoints, task.completed && styles.taskPointsCompleted]}>
-              {task.points} pts
-            </Text>
-          </Pressable>
-        ))}
+        {tasks.length > 0 ? (
+          tasks.map((task) => (
+            <Pressable 
+              key={task.id} 
+              style={styles.taskItem} 
+              onPress={() => currentQuest && toggleTask(currentQuest.id, task.id)}
+              disabled={task.completed || isCompletingTask}
+            >
+              <View style={[styles.checkbox, task.completed && styles.checkboxChecked]}>
+                {task.completed && <Icon name="check" size={14} color={theme.colors.white} />}
+              </View>
+              <Text style={[styles.taskText, task.completed && styles.taskTextCompleted]}>
+                {task.text}
+              </Text>
+              <Text style={[styles.taskPoints, task.completed && styles.taskPointsCompleted]}>
+                {task.points} pts
+              </Text>
+            </Pressable>
+          ))
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>No active quests available</Text>
+          </View>
+        )}
 
         {/* Progress Summary */}
         <LinearGradient
@@ -103,6 +179,11 @@ export const MyQuestView: React.FC = () => {
             <Text style={styles.progressHighlight}>{completedPoints} points</Text> this week
           </Text>
           <Text style={styles.progressText}>from completed tasks!</Text>
+          {currentQuest?.expiresAt && (
+            <Text style={styles.expiresText}>
+              Expires: {new Date(currentQuest.expiresAt).toLocaleDateString()}
+            </Text>
+          )}
         </LinearGradient>
       </View>
 
@@ -129,6 +210,20 @@ const styles = StyleSheet.create({
     marginRight: scaleWidth(12),
     width: scaleWidth(20),
   },
+  claimButton: {
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(12),
+    marginTop: scaleHeight(12),
+    paddingHorizontal: scaleWidth(20),
+    paddingVertical: scaleHeight(10),
+  },
+  claimButtonText: {
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   checkboxChecked: {
     backgroundColor: theme.colors.primary.main,
     borderColor: theme.colors.primary.main,
@@ -138,15 +233,54 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: scaleHeight(20),
   },
-  editButton: {
+  emptyState: {
     alignItems: 'center',
-    flexDirection: 'row',
-    gap: scaleWidth(4),
+    paddingVertical: scaleHeight(20),
   },
-  editText: {
+  emptyStateText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+  },
+  expiresText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
+    marginTop: scaleHeight(8),
+    textAlign: 'center',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: scaleHeight(40),
+  },
+  loadingText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    marginTop: scaleHeight(12),
+  },
+  questTypeButton: {
+    borderColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(12),
+    borderWidth: 1,
+    paddingHorizontal: scaleWidth(12),
+    paddingVertical: scaleHeight(4),
+  },
+  questTypeButtonActive: {
+    backgroundColor: theme.colors.primary.main,
+  },
+  questTypeSelector: {
+    flexDirection: 'row',
+    gap: scaleWidth(8),
+  },
+  questTypeText: {
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(12),
+  },
+  questTypeTextActive: {
+    color: theme.colors.white,
   },
   infoDescription: {
     color: theme.colors.text.secondary,

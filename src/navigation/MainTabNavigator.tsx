@@ -8,6 +8,7 @@ import { ChatScreen } from '@/screens/chat/ChatScreen';
 import { FeedNavigator } from './FeedNavigator';
 import { ProfileNavigator } from './ProfileNavigator';
 import { theme } from '@/theme';
+import { useNotificationStore } from '@/store/notificationStore';
 
 export type MainTabParamList = {
   Home: undefined;
@@ -20,7 +21,7 @@ export type MainTabParamList = {
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export function MainTabNavigator() {
-  const unreadCount = 0; // useNotificationStore((state) => state.unreadCount);
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
 
   return (
     <Tab.Navigator

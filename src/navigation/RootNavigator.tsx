@@ -3,6 +3,8 @@ import React from 'react';
 
 import { LoadingScreen } from '@/screens/LoadingScreen';
 import { useAuthStore } from '@/store/authStore';
+import { NotificationsListScreen } from '@/screens/notifications/NotificationsListScreen';
+import EventDetailsScreen from '@/screens/events/EventDetailsScreen';
 
 // Navigators
 import { AuthNavigator } from './AuthNavigator';
@@ -16,6 +18,10 @@ export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
   Onboarding: undefined;
+  NotificationsList: undefined;
+  EventDetails: {
+    eventId: string;
+  };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -35,11 +41,32 @@ export function RootNavigator() {
       }}
     >
       {isAuthenticated ? (
-        needsOnboarding ? (
-          <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
-        ) : (
-          <Stack.Screen name="Main" component={MainTabNavigator} />
-        )
+        <>
+          {needsOnboarding ? (
+            <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
+          ) : (
+            <Stack.Screen name="Main" component={MainTabNavigator} />
+          )}
+          <Stack.Screen 
+            name="NotificationsList" 
+            component={NotificationsListScreen}
+            options={{
+              presentation: 'modal',
+              animation: 'slide_from_bottom',
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen 
+            name="EventDetails" 
+            component={EventDetailsScreen}
+            options={{
+              presentation: 'modal',
+              animation: 'slide_from_bottom',
+              headerShown: true,
+              headerTitle: 'Event Details',
+            }}
+          />
+        </>
       ) : (
         <Stack.Screen name="Auth" component={AuthNavigator} />
       )}

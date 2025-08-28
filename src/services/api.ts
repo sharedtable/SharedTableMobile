@@ -131,6 +131,16 @@ export interface Notification {
   updated_at: string;
 }
 
+import type {
+  GamificationStats,
+  Achievement,
+  Quest,
+  LeaderboardData,
+  PointTransaction,
+  LoyaltyItem,
+  StreakInfo,
+} from '@/types/gamification';
+
 export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
@@ -594,22 +604,188 @@ class ApiService {
     offset?: number;
     unreadOnly?: boolean;
   }): Promise<ApiResponse<Notification[]>> {
-    const response = await this.client.get('/notifications', { params });
-    return response.data;
+    try {
+      const response = await this.client.get('/notifications', { params });
+      return response.data;
+    } catch (error) {
+      // If notifications endpoint doesn't exist, return empty array
+      if ((error as AxiosError)?.response?.status === 404) {
+        console.warn('Notifications endpoint not available, returning empty array');
+        return { success: true, data: [] };
+      }
+      throw error;
+    }
   }
 
   async markNotificationAsRead(notificationId: string): Promise<ApiResponse<void>> {
-    const response = await this.client.put(`/notifications/${notificationId}/read`);
-    return response.data;
+    try {
+      const response = await this.client.put(`/notifications/${notificationId}/read`);
+      return response.data;
+    } catch (error) {
+      if ((error as AxiosError)?.response?.status === 404) {
+        console.warn('Notifications endpoint not available');
+        return { success: true };
+      }
+      throw error;
+    }
   }
 
   async getUnreadCount(): Promise<ApiResponse<{ count: number }>> {
-    const response = await this.client.get('/notifications/unread-count');
-    return response.data;
+    try {
+      const response = await this.client.get('/notifications/unread-count');
+      return response.data;
+    } catch (error) {
+      if ((error as AxiosError)?.response?.status === 404) {
+        return { success: true, data: { count: 0 } };
+      }
+      throw error;
+    }
   }
 
   async registerPushToken(token: string): Promise<ApiResponse<void>> {
-    const response = await this.client.post('/notifications/register-token', { token });
+    try {
+      const response = await this.client.post('/notifications/register-token', { token });
+      return response.data;
+    } catch (error) {
+      if ((error as AxiosError)?.response?.status === 404) {
+        console.warn('Push token registration endpoint not available');
+        return { success: true };
+      }
+      throw error;
+    }
+  }
+
+  async updatePushToken(token: string): Promise<ApiResponse<void>> {
+    try {
+      const response = await this.client.put('/notifications/push-token', { token });
+      return response.data;
+    } catch (error) {
+      if ((error as AxiosError)?.response?.status === 404) {
+        console.warn('Push token update endpoint not available');
+        return { success: true };
+      }
+      throw error;
+    }
+  }
+
+  async getUnreadChatCount(): Promise<number> {
+    try {
+      const response = await this.client.get('/chat/unread-count');
+      return response.data.data?.count || 0;
+    } catch (error) {
+      console.error('Failed to get unread chat count:', error);
+      return 0;
+    }
+  }
+
+  async getUnreadFeedCount(): Promise<number> {
+    try {
+      const response = await this.client.get('/feed/unread-count');
+      return response.data.data?.count || 0;
+    } catch (error) {
+      console.error('Failed to get unread feed count:', error);
+      return 0;
+    }
+  }
+
+  async confirmEventAttendance(eventId: string): Promise<ApiResponse<void>> {
+    const response = await this.client.post(`/events/${eventId}/confirm-attendance`);
+    return response.data;
+  }
+
+  async cancelEventAttendance(eventId: string): Promise<ApiResponse<void>> {
+    const response = await this.client.delete(`/events/${eventId}/attendance`);
+    return response.data;
+  }
+
+  async sendChatMessage(chatId: string, message: string): Promise<ApiResponse<void>> {
+    const response = await this.client.post(`/chat/${chatId}/messages`, { message });
+    return response.data;
+  }
+
+  async approveBooking(bookingId: string): Promise<ApiResponse<void>> {
+    const response = await this.client.put(`/bookings/${bookingId}/approve`);
+    return response.data;
+  }
+
+  async rejectBooking(bookingId: string): Promise<ApiResponse<void>> {
+    const response = await this.client.put(`/bookings/${bookingId}/reject`);
+    return response.data;
+  }
+
+  // ============================================================================
+  // Gamification Endpoints
+  // ============================================================================
+
+  async getGamificationStats(): Promise<ApiResponse<GamificationStats>> {
+    const response = await this.client.get('/gamification/stats');
+    return response.data;
+  }
+
+  async getAchievements(): Promise<ApiResponse<Achievement[]>> {
+    const response = await this.client.get('/gamification/achievements');
+    return response.data;
+  }
+
+  async getQuests(type?: 'daily' | 'weekly' | 'biweekly' | 'monthly'): Promise<ApiResponse<Quest[]>> {
+    const response = await this.client.get('/gamification/quests', {
+      params: { type },
+    });
+    return response.data;
+  }
+
+  async completeQuestTask(questId: string, taskId: string): Promise<ApiResponse<{
+    quest: Quest;
+    pointsEarned: number;
+  }>> {
+    const response = await this.client.post(`/gamification/quests/${questId}/tasks/${taskId}/complete`);
+    return response.data;
+  }
+
+  async getLeaderboard(type: 'dinners' | 'points' | 'monthly'): Promise<ApiResponse<LeaderboardData>> {
+    const response = await this.client.get('/gamification/leaderboard', {
+      params: { type },
+    });
+    return response.data;
+  }
+
+  async getPointTransactions(limit: number = 50): Promise<ApiResponse<PointTransaction[]>> {
+    const response = await this.client.get('/gamification/transactions', {
+      params: { limit },
+    });
+    return response.data;
+  }
+
+  async getLoyaltyShopItems(): Promise<ApiResponse<LoyaltyItem[]>> {
+    const response = await this.client.get('/gamification/loyalty/items');
+    return response.data;
+  }
+
+  async redeemLoyaltyItem(itemId: string): Promise<ApiResponse<{
+    success: boolean;
+    remainingPoints: number;
+  }>> {
+    const response = await this.client.post(`/gamification/loyalty/redeem/${itemId}`);
+    return response.data;
+  }
+
+  async getStreakInfo(): Promise<ApiResponse<StreakInfo>> {
+    const response = await this.client.get('/gamification/streak');
+    return response.data;
+  }
+
+  async claimStreakBonus(): Promise<ApiResponse<{
+    pointsEarned: number;
+    newStreak: number;
+  }>> {
+    const response = await this.client.post('/gamification/streak/claim');
+    return response.data;
+  }
+
+  async trackAchievementProgress(achievementId: string, progress: number): Promise<ApiResponse<Achievement>> {
+    const response = await this.client.post(`/gamification/achievements/${achievementId}/progress`, {
+      progress,
+    });
     return response.data;
   }
 

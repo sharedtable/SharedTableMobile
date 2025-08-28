@@ -18,6 +18,8 @@ import uploadRoutes from './routes/uploadRoutes';
 import bookingsRoutes from './routes/bookings';
 import timeSlotsRoutes from './routes/timeSlots';
 import groupingRoutes from './routes/admin/grouping';
+import gamificationRoutes from './routes/gamification';
+import notificationRoutes from './routes/notifications';
 
 // Load environment variables
 dotenv.config();
@@ -86,6 +88,8 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/bookings', bookingsRoutes);
 app.use('/api/time-slots', timeSlotsRoutes);
 app.use('/api/admin/grouping', groupingRoutes);
+app.use('/api/gamification', gamificationRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

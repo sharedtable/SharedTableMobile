@@ -12,7 +12,9 @@
       "resizeMode": "cover",
       "backgroundColor": "#E24849"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.sharedtable.app",
@@ -26,12 +28,16 @@
         "NSLocationWhenInUseUsageDescription": "SharedTable uses your location to show nearby dining events.",
         "CFBundleURLTypes": [
           {
-            "CFBundleURLSchemes": ["sharedtable"],
+            "CFBundleURLSchemes": [
+              "sharedtable"
+            ],
             "CFBundleURLName": "com.sharedtable.app"
           }
         ]
       },
-      "associatedDomains": ["applinks:sxrvesdqhcovajaqnqcw.supabase.co"]
+      "associatedDomains": [
+        "applinks:sxrvesdqhcovajaqnqcw.supabase.co"
+      ]
     },
     "android": {
       "adaptiveIcon": {
@@ -41,11 +47,14 @@
       "package": "com.sharedtable.app",
       "versionCode": 1,
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
       ],
       "intentFilters": [
         {
@@ -60,7 +69,10 @@
               "host": "auth-callback"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -78,7 +90,10 @@
         {
           "icon": "./src/assets/notification-icon.png",
           "color": "#E24849",
-          "sounds": []
+          "sounds": [
+            "./src/assets/sounds/notification.wav"
+          ],
+          "mode": "production"
         }
       ],
       "expo-font"
@@ -88,12 +103,10 @@
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN4cnZlc2RxaGNvdmFqYXFucWN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4NzgxNzAsImV4cCI6MjA3MDQ1NDE3MH0.IVjirwF3tEjKJ9j70lLMPobf9Zez914bEFZd2JdAeMY",
       "privyAppId": "cmej9f9cp00xbl10b8zwjifec",
       "eas": {
-        "projectId": "your-project-id-here"
+        "projectId": "6acfad68-786e-4582-8ad3-b26e3c91f0f9"
       }
     },
-    "updates": {
-      "url": "https://u.expo.dev/your-project-id-here"
-    },
-    "runtimeVersion": "1.0.0"
+    "runtimeVersion": "1.0.0",
+    "owner": "0xbigotry"
   }
 }

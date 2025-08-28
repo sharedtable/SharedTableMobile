@@ -1,22 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Image } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Image, ActivityIndicator, RefreshControl } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
+import { useLeaderboard } from '@/hooks/useGamification';
+import type { LeaderboardEntry } from '@/types/gamification';
 
 type LeaderboardTab = 'dinners' | 'points' | 'monthly';
 
-interface LeaderboardEntry {
-  rank: number;
-  name: string;
-  avatar: string;
-  value: number;
-  unit: string;
-  isCurrentUser?: boolean;
-}
-
-// Generate mock data for ranks 4-100
+// Fallback mock data for when API is unavailable
 const generateMockEntries = (
   startRank: number,
   endRank: number,
@@ -131,96 +124,91 @@ const generateMockEntries = (
     const basePoints = 100 - (i - 1) * 0.7; // Gradually decreasing points
     entries.push({
       rank: i,
-      name: i === currentUserRank ? 'You' : names[nameIndex],
-      avatar: `https://i.pravatar.cc/150?img=${(i % 50) + 1}`,
-      value: Math.max(Math.round(basePoints), 10),
-      unit: 'pts',
+      userId: `user-${i}`,
+      userName: i === currentUserRank ? 'You' : names[nameIndex],
+      userAvatar: `https://i.pravatar.cc/150?img=${(i % 50) + 1}`,
+      points: Math.max(Math.round(basePoints), 10),
+      dinnersAttended: Math.floor(Math.random() * 50) + 1,
       isCurrentUser: i === currentUserRank,
     });
   }
   return entries;
 };
 
-const mockData: Record<LeaderboardTab, LeaderboardEntry[]> = {
-  dinners: [
+// Default mock data for fallback
+const createMockData = (): Record<LeaderboardTab, LeaderboardEntry[]> => {
+  const createTopThree = () => [
     {
       rank: 1,
-      name: 'Bryan Wolf',
-      avatar: 'https://i.pravatar.cc/150?img=1',
-      value: 100,
-      unit: 'pts',
+      userId: '1',
+      userName: 'Bryan Wolf',
+      userAvatar: 'https://i.pravatar.cc/150?img=1',
+      points: 2500,
+      dinnersAttended: 45,
+      isCurrentUser: false,
     },
     {
       rank: 2,
-      name: 'Meghan Jess...',
-      avatar: 'https://i.pravatar.cc/150?img=2',
-      value: 90,
-      unit: 'pts',
+      userId: '2',
+      userName: 'Meghan Jessica',
+      userAvatar: 'https://i.pravatar.cc/150?img=2',
+      points: 2200,
+      dinnersAttended: 38,
+      isCurrentUser: false,
     },
     {
       rank: 3,
-      name: 'Alex Turner',
-      avatar: 'https://i.pravatar.cc/150?img=3',
-      value: 88,
-      unit: 'pts',
+      userId: '3',
+      userName: 'Alex Turner',
+      userAvatar: 'https://i.pravatar.cc/150?img=3',
+      points: 2000,
+      dinnersAttended: 35,
+      isCurrentUser: false,
     },
-    ...generateMockEntries(4, 100, 56),
-  ],
-  points: [
-    {
-      rank: 1,
-      name: 'Bryan Wolf',
-      avatar: 'https://i.pravatar.cc/150?img=1',
-      value: 100,
-      unit: 'pts',
-    },
-    {
-      rank: 2,
-      name: 'Meghan Jess...',
-      avatar: 'https://i.pravatar.cc/150?img=2',
-      value: 90,
-      unit: 'pts',
-    },
-    {
-      rank: 3,
-      name: 'Alex Turner',
-      avatar: 'https://i.pravatar.cc/150?img=3',
-      value: 88,
-      unit: 'pts',
-    },
-    ...generateMockEntries(4, 100, 42),
-  ],
-  monthly: [
-    {
-      rank: 1,
-      name: 'Bryan Wolf',
-      avatar: 'https://i.pravatar.cc/150?img=1',
-      value: 100,
-      unit: 'pts',
-    },
-    {
-      rank: 2,
-      name: 'Meghan Jess...',
-      avatar: 'https://i.pravatar.cc/150?img=2',
-      value: 90,
-      unit: 'pts',
-    },
-    {
-      rank: 3,
-      name: 'Alex Turner',
-      avatar: 'https://i.pravatar.cc/150?img=3',
-      value: 88,
-      unit: 'pts',
-    },
-    ...generateMockEntries(4, 100, 23),
-  ],
+  ];
+
+  return {
+    dinners: [...createTopThree(), ...generateMockEntries(4, 100, 56)],
+    points: [...createTopThree(), ...generateMockEntries(4, 100, 42)],
+    monthly: [...createTopThree(), ...generateMockEntries(4, 100, 23)],
+  };
 };
 
 export const LeaderboardView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<LeaderboardTab>('dinners');
-  const data = mockData[activeTab];
-  const topThree = data.slice(0, 3);
-  const restOfList = data.slice(3);
+  const [activeTab, setActiveTab] = useState<LeaderboardTab>('points');
+  const [refreshing, setRefreshing] = useState(false);
+  const [localData, setLocalData] = useState<Record<LeaderboardTab, LeaderboardEntry[]>>(createMockData());
+  
+  const { leaderboard, isLoading, fetchLeaderboard, refetch } = useLeaderboard();
+  
+  useEffect(() => {
+    // Fetch leaderboard data for active tab
+    fetchLeaderboard(activeTab);
+  }, [activeTab, fetchLeaderboard]);
+  
+  useEffect(() => {
+    // Update local data when leaderboard changes
+    if (leaderboard) {
+      setLocalData(prev => ({
+        ...prev,
+        ...leaderboard,
+      }));
+    }
+  }, [leaderboard]);
+  
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+      await fetchLeaderboard(activeTab);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [activeTab, fetchLeaderboard, refetch]);
+  
+  const currentData = localData[activeTab] || [];
+  const topThree = currentData.slice(0, 3);
+  const restOfList = currentData.slice(3);
 
   return (
     <View style={styles.container}>
@@ -252,60 +240,81 @@ export const LeaderboardView: React.FC = () => {
         </Pressable>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[theme.colors.primary.main]}
+            tintColor={theme.colors.primary.main}
+          />
+        }
+      >
+        {isLoading && !refreshing && currentData.length === 0 && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary.main} />
+          </View>
+        )}
         {/* Podium Section */}
         <View style={styles.podiumContainer}>
           <View style={styles.podiumWrapper}>
             {/* Second Place */}
-            <View style={styles.podiumItem}>
-              <View style={[styles.avatarContainer, styles.secondPlace]}>
-                <Image source={{ uri: topThree[1]?.avatar }} style={styles.avatar} />
+            {topThree[1] && (
+              <View style={styles.podiumItem}>
+                <View style={[styles.avatarContainer, styles.secondPlace]}>
+                  <Image source={{ uri: topThree[1]?.userAvatar || 'https://i.pravatar.cc/150?img=2' }} style={styles.avatar} />
                 <View style={styles.rankBadge}>
                   <Text style={styles.rankText}>2</Text>
                 </View>
+                </View>
+                <Text style={styles.podiumName} numberOfLines={1}>
+                  {topThree[1]?.userName}
+                </Text>
+                <Text style={styles.podiumPoints}>
+                  {topThree[1]?.points} pts
+                </Text>
               </View>
-              <Text style={styles.podiumName} numberOfLines={1}>
-                {topThree[1]?.name}
-              </Text>
-              <Text style={styles.podiumPoints}>
-                {topThree[1]?.value} {topThree[1]?.unit}
-              </Text>
-            </View>
+            )}
 
             {/* First Place */}
-            <View style={[styles.podiumItem, styles.firstPlaceItem]}>
-              <View style={styles.crownContainer}>
-                <Text style={styles.crownEmoji}>👑</Text>
-              </View>
-              <View style={[styles.avatarContainer, styles.firstPlace]}>
-                <Image source={{ uri: topThree[0]?.avatar }} style={styles.avatarLarge} />
+            {topThree[0] && (
+              <View style={[styles.podiumItem, styles.firstPlaceItem]}>
+                <View style={styles.crownContainer}>
+                  <Text style={styles.crownEmoji}>👑</Text>
+                </View>
+                <View style={[styles.avatarContainer, styles.firstPlace]}>
+                  <Image source={{ uri: topThree[0]?.userAvatar || 'https://i.pravatar.cc/150?img=1' }} style={styles.avatarLarge} />
                 <View style={[styles.rankBadge, styles.firstRankBadge]}>
                   <Text style={styles.rankText}>1</Text>
                 </View>
+                </View>
+                <Text style={styles.podiumName} numberOfLines={1}>
+                  {topThree[0]?.userName}
+                </Text>
+                <Text style={styles.podiumPoints}>
+                  {topThree[0]?.points} pts
+                </Text>
               </View>
-              <Text style={styles.podiumName} numberOfLines={1}>
-                {topThree[0]?.name}
-              </Text>
-              <Text style={styles.podiumPoints}>
-                {topThree[0]?.value} {topThree[0]?.unit}
-              </Text>
-            </View>
+            )}
 
             {/* Third Place */}
-            <View style={styles.podiumItem}>
-              <View style={[styles.avatarContainer, styles.thirdPlace]}>
-                <Image source={{ uri: topThree[2]?.avatar }} style={styles.avatar} />
+            {topThree[2] && (
+              <View style={styles.podiumItem}>
+                <View style={[styles.avatarContainer, styles.thirdPlace]}>
+                  <Image source={{ uri: topThree[2]?.userAvatar || 'https://i.pravatar.cc/150?img=3' }} style={styles.avatar} />
                 <View style={styles.rankBadge}>
                   <Text style={styles.rankText}>3</Text>
                 </View>
+                </View>
+                <Text style={styles.podiumName} numberOfLines={1}>
+                  {topThree[2]?.userName}
+                </Text>
+                <Text style={styles.podiumPoints}>
+                  {topThree[2]?.points} pts
+                </Text>
               </View>
-              <Text style={styles.podiumName} numberOfLines={1}>
-                {topThree[2]?.name}
-              </Text>
-              <Text style={styles.podiumPoints}>
-                {topThree[2]?.value} {topThree[2]?.unit}
-              </Text>
-            </View>
+            )}
           </View>
         </View>
 
@@ -319,15 +328,15 @@ export const LeaderboardView: React.FC = () => {
               <Text style={[styles.listRank, entry.isCurrentUser && styles.currentUserText]}>
                 {entry.rank}
               </Text>
-              <Image source={{ uri: entry.avatar }} style={styles.listAvatar} />
+              <Image source={{ uri: entry.userAvatar || `https://i.pravatar.cc/150?img=${entry.rank}` }} style={styles.listAvatar} />
               <Text
                 style={[styles.listName, entry.isCurrentUser && styles.currentUserText]}
                 numberOfLines={1}
               >
-                {entry.name}
+                {entry.userName}
               </Text>
               <Text style={[styles.listPoints, entry.isCurrentUser && styles.currentUserText]}>
-                {entry.value} {entry.unit}
+                {activeTab === 'dinners' ? `${entry.dinnersAttended} dinners` : `${entry.points} pts`}
               </Text>
             </View>
           ))}
@@ -427,6 +436,11 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: scaleHeight(40),
   },
   listRank: {
     color: theme.colors.text.secondary,

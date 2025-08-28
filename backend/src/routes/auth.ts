@@ -8,6 +8,7 @@ import { supabaseService } from '../config/supabase';
 import { AuthRequest, verifyPrivyToken } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
+import { GamificationService } from '../services/gamificationService';
 
 const router = Router();
 
@@ -239,6 +240,9 @@ router.post('/sync', async (req: Request, res: Response, next: NextFunction) => 
           if (profileError && profileError.code !== '23505') {
             logger.error('Failed to create user profile:', profileError);
           }
+
+          // Initialize gamification stats for new user
+          await GamificationService.initializeUserStats(userId);
 
           logger.info(`Created new user: ${userId} with Privy ID: ${validatedData.privyUserId}`);
         }

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar } from 'react-native';
-import { NavigationProp, RouteProp } from '@react-navigation/native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar, ActivityIndicator, RefreshControl } from 'react-native';
+import { NavigationProp, RouteProp, useNavigation } from '@react-navigation/native';
 
 import { GourmandProgressCard } from '@/components/dashboard/GourmandProgressCard';
 import { LeaderboardView } from '@/components/dashboard/LeaderboardView';
@@ -13,6 +13,10 @@ import { TierProgressCard } from '@/components/dashboard/TierProgressCard';
 import { TopBar } from '@/components/navigation/TopBar';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
+import { useGamificationStats, useStreak, useGamificationSync } from '@/hooks/useGamification';
+import { TIER_CONFIG } from '@/types/gamification';
+import { useAuthStore } from '@/store/authStore';
+import { useNotificationStore } from '@/store/notificationStore';
 
 interface DashboardScreenProps {
   navigation?: NavigationProp<any>;
@@ -28,25 +32,67 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onNavigate: _onNavigate,
 }) => {
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
-  // Removed activeNavTab - navigation is now handled by React Navigation's tab bar
+  const [refreshing, setRefreshing] = useState(false);
+  const navigation = useNavigation<any>();
+  
+  const profile = useAuthStore((state) => state.privyUser);
+  const { unreadCount, loadNotifications } = useNotificationStore();
+  const { stats, isLoading: statsLoading } = useGamificationStats();
+  const { streakInfo } = useStreak();
+  const { syncAll } = useGamificationSync();
+  
+  const currentTier = stats ? TIER_CONFIG.find(t => t.tier === Math.min(stats.currentTier, 5)) : TIER_CONFIG[0];
+  const nextTier = stats && stats.currentTier < 5 ? TIER_CONFIG[stats.currentTier] : null;
+  
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await syncAll();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+  
+  useEffect(() => {
+    // Initial data fetch
+    syncAll();
+    loadNotifications();
+  }, []);
+  
+  const handleNotificationPress = () => {
+    navigation.navigate('NotificationsList');
+  };
 
   const renderTabContent = () => {
+    if (statsLoading && !stats) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary.main} />
+          <Text style={styles.loadingText}>Loading your stats...</Text>
+        </View>
+      );
+    }
+    
     switch (activeTab) {
       case 'overview':
         return (
           <>
             {/* Welcome Section */}
             <View style={styles.welcomeSection}>
-              <Text style={styles.welcomeTitle}>Welcome back, John!</Text>
+              <Text style={styles.welcomeTitle}>Welcome back, {profile?.name?.split(' ')[0] || 'Foodie'}!</Text>
               <Text style={styles.welcomeSubtitle}>Track your food journey, unlock rewards.</Text>
             </View>
 
             {/* Tier Progress */}
             <TierProgressCard
-              tier={4}
-              level="Gourmand Level"
-              dinnersAttended={45}
-              percentComplete={20}
+              tier={stats?.currentTier || 1}
+              level={currentTier?.name || 'Newcomer'}
+              dinnersAttended={stats?.dinnersAttended || 0}
+              percentComplete={stats?.pointsToNextTier && nextTier 
+                ? Math.round(((stats.totalPoints - currentTier!.pointsRequired) / 
+                  (nextTier.pointsRequired - currentTier!.pointsRequired)) * 100)
+                : 100
+              }
             />
 
             {/* Stats Cards */}
@@ -54,40 +100,42 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               <StatsCard
                 icon="star"
                 iconColor="#FFB800"
-                value="900"
+                value={stats?.totalPoints?.toString() || '0'}
                 label="Total Points"
-                trend="+20%"
+                trend={stats?.totalPoints && stats.totalPoints > 0 ? '+20%' : undefined}
               />
               <View style={{ width: scaleWidth(12) }} />
               <StatsCard
                 icon="trophy"
                 iconColor="#4A90E2"
-                value="# 5"
-                label="Monthly Special"
-                trend="+5%"
+                value={stats?.monthlyRank ? `#${stats.monthlyRank}` : 'N/A'}
+                label="Monthly Rank"
+                trend={stats?.monthlyRank && stats.monthlyRank <= 10 ? 'Top 10!' : undefined}
               />
             </View>
 
             {/* Gourmand Progress */}
             <GourmandProgressCard
-              currentProgress={25}
-              totalProgress={50}
-              currentBenefit="10% point bonus • Restaurant discounts"
-              nextBenefit="dddafeed"
-              pointsBonus={25}
-              pointsToNext={24}
+              currentProgress={stats?.totalPoints || 0}
+              totalProgress={nextTier?.pointsRequired || currentTier?.pointsRequired || 100}
+              currentBenefit={currentTier?.benefits.join(' • ') || 'Start your journey'}
+              nextBenefit={nextTier?.benefits[0] || 'Max tier reached!'}
+              pointsBonus={currentTier?.tier ? (currentTier.tier - 1) * 5 : 0}
+              pointsToNext={stats?.pointsToNextTier || 0}
             />
 
             {/* Streak Tracker */}
             <StreakTrackerCard
-              weeksCount={6}
+              weeksCount={streakInfo?.currentStreak || 0}
               weeklyPoints={{
                 description: 'Maintain your streak to earn 50 bonus points per week',
-                points: 200,
+                points: streakInfo?.weeklyPoints || 0,
               }}
               nextReward={{
                 description:
-                  "Mystery reward unlocks every 3 weeks! Keep your streak to find out what's waiting for you",
+                  streakInfo?.nextMilestone 
+                    ? `${streakInfo.nextMilestone - (streakInfo.currentStreak || 0)} weeks until next milestone reward!`
+                    : "Mystery reward unlocks every 3 weeks! Keep your streak to find out what's waiting for you",
               }}
             />
           </>
@@ -110,7 +158,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       <TopBar
         title="Dashboard"
         showNotification
-        onNotification={() => console.log('Notifications')}
+        notificationCount={unreadCount}
+        onNotification={handleNotificationPress}
       />
 
       {/* Tab Navigation */}
@@ -160,6 +209,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[theme.colors.primary.main]}
+            tintColor={theme.colors.primary.main}
+          />
+        }
       >
         {renderTabContent()}
         <View style={{ height: scaleHeight(100) }} />
@@ -183,6 +240,18 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#F9F9F9',
     flex: 1,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: scaleHeight(400),
+  },
+  loadingText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    marginTop: scaleHeight(12),
   },
   // Unused styles - kept for future use
   // placeholderContainer: {

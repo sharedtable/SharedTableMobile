@@ -16,18 +16,35 @@ import React, { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthSyncProvider } from '@/components/AuthSyncProvider';
 import { PrivyProvider } from '@/lib/privy/PrivyProvider';
 import { RootNavigator } from '@/navigation/RootNavigator';
+import { NotificationWrapper } from '@/contexts/NotificationWrapper';
 import { useAuthStore } from '@/store/authStore';
 import { setLogLevel } from '@/utils/logger';
+import { deepLinkingConfig } from '@/config/deepLinking';
 
 // Hide the native splash screen immediately
 SplashScreen.hideAsync();
 
 // Configure logging - set to 'error' for production, 'info' for debugging
 setLogLevel(__DEV__ ? 'info' : 'error');
+
+// Create a QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
 export default function App() {
   const { initializeAuth } = useAuthStore();
@@ -59,13 +76,17 @@ export default function App() {
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaProvider>
         <StatusBar style="dark" />
-        <PrivyProvider>
-          <AuthSyncProvider>
-            <NavigationContainer>
-              <RootNavigator />
-            </NavigationContainer>
-          </AuthSyncProvider>
-        </PrivyProvider>
+        <QueryClientProvider client={queryClient}>
+          <PrivyProvider>
+            <AuthSyncProvider>
+              <NavigationContainer linking={deepLinkingConfig}>
+                <NotificationWrapper>
+                  <RootNavigator />
+                </NotificationWrapper>
+              </NavigationContainer>
+            </AuthSyncProvider>
+          </PrivyProvider>
+        </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
