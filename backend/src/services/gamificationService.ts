@@ -5,7 +5,7 @@ export class GamificationService {
   /**
    * Award points when a user attends a dinner
    */
-  static async onDinnerAttended(userId: string, eventId: string, isWeekend: boolean = false, isNewHost: boolean = false) {
+  static async onDinnerAttended(userId: string, eventId: string, _isWeekend: boolean = false, _isNewHost: boolean = false) {
     try {
       logger.info(`Awarding points for dinner attendance: ${userId} at event ${eventId}`);
       
@@ -89,7 +89,7 @@ export class GamificationService {
   /**
    * Award points when a user writes a review
    */
-  static async onReviewWritten(userId: string, reviewId: string, eventId: string) {
+  static async onReviewWritten(userId: string, reviewId: string, _eventId: string) {
     try {
       logger.info(`Awarding points for review: ${userId} wrote review ${reviewId}`);
       

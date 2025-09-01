@@ -76,7 +76,7 @@ async function testGroupedFlow() {
         console.log('');
 
         // 3. Check other members
-        const { data: allMembers, error: membersError } = await supabase
+        const { data: allMembers, error: _membersError } = await supabase
           .from('group_members')
           .select(`
             *,

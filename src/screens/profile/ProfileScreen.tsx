@@ -8,7 +8,8 @@ import {
   Pressable, 
   ScrollView,
   RefreshControl,
-  ActivityIndicator 
+  ActivityIndicator,
+  Image 
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -19,14 +20,21 @@ import { scaleHeight, scaleFont, scaleWidth } from '@/utils/responsive';
 import { ProfileStackParamList } from '@/navigation/ProfileNavigator';
 import { api } from '@/services/api';
 import { useNotificationStore } from '@/store/notificationStore';
+import { useGamificationStats } from '@/hooks/useGamification';
+import { TIER_CONFIG } from '@/types/gamification';
+import { ConnectionsView } from '@/components/profile/ConnectionsView';
 
 type ProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
 
 interface RestaurantItem {
   id: string;
   name: string;
+  address?: string;
+  cuisine?: string;
+  priceRange?: string;
+  imageUrl?: string;
   rating: number;
-  image?: string;
+  visitCount?: number;
 }
 
 interface TimeSlotSignup {
@@ -67,8 +75,49 @@ export function ProfileScreen() {
   const [reservations, setReservations] = useState<TimeSlotSignup[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'reservations' | 'connections'>('reservations');
   const [connections] = useState(0);
+  const [topRestaurants, setTopRestaurants] = useState<RestaurantItem[]>([]);
+  const [restaurantsLoading, setRestaurantsLoading] = useState(true);
   const { unreadCount, loadNotifications } = useNotificationStore();
+  const { stats, isLoading: statsLoading, refetch: refetchStats } = useGamificationStats();
+
+  // Helper function to get consistent restaurant images
+  const getRestaurantImage = (restaurantName: string): string => {
+    const restaurantImages: Record<string, string> = {
+      'Evvia Estiatorio': 'https://images.unsplash.com/photo-1544025162-d76694265947?w=200',
+      'Nobu Palo Alto': 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=200',
+      'Tamarine Restaurant': 'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=200',
+      'Protégé': 'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=200',
+      'Sundance The Steakhouse': 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=200',
+      'Oren\'s Hummus': 'https://images.unsplash.com/photo-1529042410759-befb1204b468?w=200',
+    };
+    
+    // Default restaurant images if not in the map
+    const defaultImages = [
+      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200',
+      'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=200',
+      'https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=200',
+      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200',
+    ];
+    
+    return restaurantImages[restaurantName] || 
+           defaultImages[Math.abs(restaurantName.charCodeAt(0)) % defaultImages.length];
+  };
+
+  const fetchTopRestaurants = async () => {
+    try {
+      setRestaurantsLoading(true);
+      const response = await api.getTopRatedRestaurants(5);
+      if (response.success && response.data) {
+        setTopRestaurants(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch top restaurants:', error);
+    } finally {
+      setRestaurantsLoading(false);
+    }
+  };
 
   const fetchReservations = async () => {
     try {
@@ -106,12 +155,19 @@ export function ProfileScreen() {
 
   useEffect(() => {
     fetchReservations();
+    fetchTopRestaurants();
     loadNotifications();
   }, []);
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    fetchReservations();
+    await Promise.all([
+      fetchReservations(),
+      fetchTopRestaurants(),
+      refetchStats(),
+      loadNotifications()
+    ]);
+    setRefreshing(false);
   };
 
   const handleSettingsPress = () => {
@@ -120,6 +176,16 @@ export function ProfileScreen() {
 
   const handleNotificationPress = () => {
     navigation.navigate('NotificationsList' as any);
+  };
+
+  const handleGrabSpot = () => {
+    // Navigate to Home screen (main tab)
+    navigation.navigate('Main' as any, { screen: 'Home' });
+  };
+
+  const handleRefine = () => {
+    // Navigate to Dining Preferences screen
+    navigation.navigate('DiningPreferences' as any);
   };
 
   const handleCancelReservation = async (signupId: string) => {
@@ -192,83 +258,99 @@ export function ProfileScreen() {
     }
   };
 
-  // Mock data for top rated restaurants
-  const topRatedRestaurants: RestaurantItem[] = [
-    { id: '1', name: 'Sotto Mare', rating: 4.8 },
-    { id: '2', name: 'Sotto Mare', rating: 4.6 },
-    { id: '3', name: 'Sotto Mare', rating: 4.5 },
-    { id: '4', name: 'Sotto Mare', rating: 4.8 },
-    { id: '5', name: 'Sotto Mare', rating: 4.9 },
-  ];
-
-  const userTier = 'Gourmand'; // TODO: Get from user metadata
-  const dinnerCount = 45; // TODO: Get from user metadata
+  // Get current tier info from stats
+  const currentTier = stats ? TIER_CONFIG.find(t => t.tier === Math.min(stats.currentTier, 5)) : TIER_CONFIG[0];
+  const userTierName = currentTier?.name || 'Newcomer';
+  const dinnerCount = stats?.dinnersAttended || 0;
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
-          <View style={styles.headerButtons}>
-            <Pressable style={styles.iconButton} onPress={handleNotificationPress}>
-              <Ionicons name="notifications-outline" size={24} color={theme.colors.text.primary} />
-              {unreadCount > 0 && (
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.notificationBadgeText}>
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </Text>
-                </View>
-              )}
-            </Pressable>
-            <Pressable style={styles.iconButton} onPress={handleSettingsPress}>
-              <Ionicons name="settings-outline" size={24} color={theme.colors.text.primary} />
-            </Pressable>
-          </View>
-        </View>
-
-        {/* User Info */}
-        <View style={styles.userSection}>
-          <View style={styles.avatarContainer}>
-            <Ionicons name="person-circle" size={60} color={theme.colors.primary.main} />
-          </View>
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>Welcome back, {user?.name || user?.email?.split('@')[0] || 'User'}</Text>
-            <View style={styles.userStats}>
-              <View style={styles.tierBadge}>
-                <Text style={styles.tierText}>Tier 4</Text>
+      {/* Header - Always visible */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Profile</Text>
+        <View style={styles.headerButtons}>
+          <Pressable style={styles.iconButton} onPress={handleNotificationPress}>
+            <Ionicons name="notifications-outline" size={24} color={theme.colors.text.primary} />
+            {unreadCount > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </Text>
               </View>
-              <Text style={styles.tierName}>{userTier}</Text>
-              <Text style={styles.statsText}>Dinners</Text>
-              <Text style={styles.statsNumber}>{dinnerCount}</Text>
-            </View>
+            )}
+          </Pressable>
+          <Pressable style={styles.iconButton} onPress={handleSettingsPress}>
+            <Ionicons name="settings-outline" size={24} color={theme.colors.text.primary} />
+          </Pressable>
+        </View>
+      </View>
+
+      {/* User Info - Always visible */}
+      <View style={styles.userSection}>
+        <View style={styles.avatarContainer}>
+          <Ionicons name="person-circle" size={60} color={theme.colors.primary.main} />
+        </View>
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>Welcome back, {user?.name || user?.email?.split('@')[0] || 'User'}</Text>
+          <View style={styles.userStats}>
+            {statsLoading ? (
+              <ActivityIndicator size="small" color={theme.colors.primary.main} />
+            ) : (
+              <>
+                <View style={styles.tierBadge}>
+                  <Text style={styles.tierText}>Tier {stats?.currentTier || 1}</Text>
+                </View>
+                <Text style={styles.tierName}>{userTierName}</Text>
+                <Text style={styles.statsText}>Dinners</Text>
+                <Text style={styles.statsNumber}>{dinnerCount}</Text>
+              </>
+            )}
           </View>
         </View>
+      </View>
 
-        {/* Tab Switcher */}
-        <View style={styles.tabContainer}>
-          <Pressable style={[styles.tab, styles.activeTab]}>
-            <Text style={[styles.tabText, styles.activeTabText]}>Reservations</Text>
-          </Pressable>
-          <Pressable style={styles.tab}>
-            <Text style={[styles.tabText, styles.connectionTabText]}>
-              Connections
-              {connections > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{connections}</Text>
-                </View>
-              )}
-            </Text>
-          </Pressable>
-        </View>
+      {/* Tab Switcher - Always visible */}
+      <View style={styles.tabContainer}>
+        <Pressable 
+          style={[styles.tab, activeTab === 'reservations' && styles.activeTab]}
+          onPress={() => setActiveTab('reservations')}
+        >
+          <Text style={[styles.tabText, activeTab === 'reservations' && styles.activeTabText]}>
+            Reservations
+          </Text>
+        </Pressable>
+        <Pressable 
+          style={[styles.tab, activeTab === 'connections' && styles.activeTab]}
+          onPress={() => setActiveTab('connections')}
+        >
+          <Text style={[styles.tabText, activeTab === 'connections' && styles.activeTabText]}>
+            Connections
+            {connections > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{connections}</Text>
+              </View>
+            )}
+          </Text>
+        </Pressable>
+      </View>
 
-        {/* Dinner Reservations */}
-        <View style={styles.section}>
+      {/* Content based on active tab */}
+      {activeTab === 'connections' ? (
+        // Connections tab - no ScrollView wrapper since ConnectionsView has its own FlatList
+        <ConnectionsView 
+          userId={user?.id} 
+          onAddFriend={() => navigation.navigate('FindFriends')}
+        />
+      ) : (
+        // Reservations tab - use ScrollView
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          {/* Dinner Reservations */}
+          <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>My Dinner Reservations</Text>
             {reservations.length > 0 && (
@@ -312,8 +394,22 @@ export function ProfileScreen() {
                   onPress={reservation.dinner_group ? handleSeeDetails : undefined}
                 >
                   <View style={styles.cardContent}>
-                    {/* Left: Square image placeholder */}
-                    <View style={styles.imageSquare} />
+                    {/* Left: Restaurant image or SharedTable logo */}
+                    {reservation.dinner_group?.restaurant_name ? (
+                      <Image 
+                        source={{ 
+                          uri: getRestaurantImage(reservation.dinner_group.restaurant_name)
+                        }}
+                        style={styles.imageSquare}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Image 
+                        source={require('@/assets/icon.png')}
+                        style={styles.imageSquare}
+                        resizeMode="cover"
+                      />
+                    )}
                     
                     {/* Center: Restaurant info */}
                     <View style={styles.restaurantInfo}>
@@ -362,10 +458,10 @@ export function ProfileScreen() {
 
         {/* Quick Action Buttons */}
         <View style={styles.actionButtons}>
-          <Pressable style={[styles.actionButton, styles.refineButton]}>
+          <Pressable style={[styles.actionButton, styles.refineButton]} onPress={handleRefine}>
             <Text style={styles.refineButtonText}>Refine</Text>
           </Pressable>
-          <Pressable style={[styles.actionButton, styles.grabButton]}>
+          <Pressable style={[styles.actionButton, styles.grabButton]} onPress={handleGrabSpot}>
             <Text style={styles.grabButtonText}>Grab a Spot</Text>
           </Pressable>
         </View>
@@ -384,20 +480,44 @@ export function ProfileScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.restaurantList}
           >
-            {topRatedRestaurants.map((restaurant) => (
-              <Pressable key={restaurant.id} style={styles.restaurantCard}>
-                <View style={styles.restaurantImage}>
-                  <Ionicons name="restaurant" size={30} color={theme.colors.primary.main} />
-                </View>
-                <Text style={styles.reservationName}>{restaurant.name}</Text>
-                <Text style={styles.restaurantRating}>★ {restaurant.rating}</Text>
-              </Pressable>
-            ))}
+            {restaurantsLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={theme.colors.primary.main} />
+              </View>
+            ) : topRestaurants.length > 0 ? (
+              topRestaurants.map((restaurant) => (
+                <Pressable key={restaurant.id} style={styles.restaurantCard}>
+                  {restaurant.imageUrl ? (
+                    <Image 
+                      source={{ uri: restaurant.imageUrl }}
+                      style={styles.restaurantImagePhoto}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={styles.restaurantImage}>
+                      <Ionicons name="restaurant" size={30} color={theme.colors.primary.main} />
+                    </View>
+                  )}
+                  <Text style={styles.reservationName} numberOfLines={1}>
+                    {restaurant.name}
+                  </Text>
+                  <Text style={styles.restaurantRating}>★ {restaurant.rating}</Text>
+                  {restaurant.visitCount && restaurant.visitCount > 0 && (
+                    <Text style={styles.restaurantVisits}>
+                      {restaurant.visitCount} {restaurant.visitCount === 1 ? 'visit' : 'visits'}
+                    </Text>
+                  )}
+                </Pressable>
+              ))
+            ) : (
+              <Text style={styles.noRestaurantsText}>No restaurants visited yet</Text>
+            )}
           </ScrollView>
         </View>
 
-        <View style={{ height: scaleHeight(20) }} />
-      </ScrollView>
+          <View style={{ height: scaleHeight(20) }} />
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -441,10 +561,6 @@ const styles = StyleSheet.create({
   cancelText: {
     color: theme.colors.text.secondary,
     fontSize: scaleFont(12),
-  },
-  connectionTabText: {
-    alignItems: 'center',
-    flexDirection: 'row',
   },
   container: {
     backgroundColor: theme.colors.white,
@@ -528,7 +644,6 @@ const styles = StyleSheet.create({
   imageSquare: {
     width: scaleWidth(48),
     height: scaleWidth(48),
-    backgroundColor: '#C4C4C4',
     borderRadius: scaleWidth(8),
     marginRight: scaleWidth(12),
   },
@@ -590,12 +705,35 @@ const styles = StyleSheet.create({
     marginBottom: scaleHeight(8),
     width: scaleWidth(70),
   },
+  restaurantImagePhoto: {
+    width: scaleWidth(70),
+    height: scaleWidth(70),
+    borderRadius: scaleWidth(35),
+    marginBottom: scaleHeight(8),
+    backgroundColor: '#f0f0f0',
+  },
   restaurantList: {
     paddingTop: scaleHeight(12),
   },
   restaurantRating: {
     color: theme.colors.text.secondary,
     fontSize: scaleFont(11),
+  },
+  restaurantVisits: {
+    color: theme.colors.text.tertiary,
+    fontSize: scaleFont(10),
+    marginTop: scaleHeight(2),
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: scaleHeight(40),
+  },
+  noRestaurantsText: {
+    color: theme.colors.text.secondary,
+    fontSize: scaleFont(14),
+    textAlign: 'center',
+    paddingVertical: scaleHeight(20),
   },
   section: {
     marginBottom: scaleHeight(24),
@@ -649,10 +787,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   tierBadge: {
-    backgroundColor: theme.colors.primary.light,
+    backgroundColor: theme.colors.primary.main,
     borderRadius: scaleWidth(12),
-    paddingHorizontal: scaleWidth(8),
-    paddingVertical: scaleHeight(2),
+    paddingHorizontal: scaleWidth(10),
+    paddingVertical: scaleHeight(4),
   },
   tierName: {
     color: theme.colors.text.primary,
@@ -661,9 +799,9 @@ const styles = StyleSheet.create({
     marginLeft: scaleWidth(6),
   },
   tierText: {
-    color: theme.colors.primary.main,
+    color: theme.colors.white,
     fontSize: scaleFont(12),
-    fontWeight: '600',
+    fontWeight: '700',
   },
   userInfo: {
     flex: 1,

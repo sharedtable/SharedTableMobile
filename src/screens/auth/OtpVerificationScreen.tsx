@@ -47,6 +47,37 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
   const [isLoading, setIsLoading] = useState(false);
   const inputRefs = useRef<(TextInput | null)[]>([]);
 
+  // Add function to clear all OTP
+  const clearOtp = () => {
+    setOtp(['', '', '', '', '', '']);
+    inputRefs.current[0]?.focus();
+  };
+
+  const handleVerifyOtp = React.useCallback(async (otpCode?: string) => {
+    const code = otpCode || otp.join('');
+
+    if (code.length !== 6 || isVerifying) {
+      return;
+    }
+
+    setIsVerifying(true);
+    Keyboard.dismiss();
+
+    try {
+      setIsLoading(true);
+      // Use Privy verification passed from parent
+      await privyVerifyCode(code);
+      // Navigation will be handled by parent component via Privy auth state changes
+    } catch (error) {
+      console.error('OTP verification error:', error);
+      clearOtp();
+      Alert.alert('Verification Failed', 'The code you entered is incorrect. Please try again.');
+    } finally {
+      setIsVerifying(false);
+      setIsLoading(false);
+    }
+  }, [otp, isVerifying, privyVerifyCode]);
+
   // Start countdown timer
   useEffect(() => {
     const timer = setInterval(() => {
@@ -103,7 +134,7 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
     };
 
     initializeOtpInput();
-  }, []);
+  }, [handleVerifyOtp]);
 
   const handleOtpChange = (text: string, index: number) => {
     // Only allow numeric input
@@ -163,7 +194,7 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
     }
   };
 
-  const handleKeyPress = (e: any, index: number) => {
+  const handleKeyPress = (e: { nativeEvent: { key: string } }, index: number) => {
     if (e.nativeEvent.key === 'Backspace') {
       if (!otp[index] && index > 0) {
         // Current field is empty, go back and clear previous
@@ -186,37 +217,6 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
       inputRefs.current[firstEmptyIndex]?.focus();
     } else {
       inputRefs.current[5]?.focus();
-    }
-  };
-
-  // Add function to clear all OTP
-  const clearOtp = () => {
-    setOtp(['', '', '', '', '', '']);
-    inputRefs.current[0]?.focus();
-  };
-
-  const handleVerifyOtp = async (otpCode?: string) => {
-    const code = otpCode || otp.join('');
-
-    if (code.length !== 6 || isVerifying) {
-      return;
-    }
-
-    setIsVerifying(true);
-    Keyboard.dismiss();
-
-    try {
-      setIsLoading(true);
-      // Use Privy verification passed from parent
-      await privyVerifyCode(code);
-      // Navigation will be handled by parent component via Privy auth state changes
-    } catch (error) {
-      console.error('OTP verification error:', error);
-      clearOtp();
-      Alert.alert('Verification Failed', 'The code you entered is incorrect. Please try again.');
-    } finally {
-      setIsVerifying(false);
-      setIsLoading(false);
     }
   };
 
@@ -340,7 +340,7 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
 
                 {/* Resend Section */}
                 <View style={styles.resendSection}>
-                  <Text style={styles.resendText}>Didn't receive the code?</Text>
+                  <Text style={styles.resendText}>Didn&apos;t receive the code?</Text>
 
                   {canResend ? (
                     <Pressable onPress={handleResendOtp} disabled={isLoading}>
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   otpInputFilled: {
-    backgroundColor: 'rgba(226, 72, 73, 0.05)',
+    backgroundColor: `${theme.colors.primary.main}0D`, // 0D is 5% opacity in hex
     borderColor: theme.colors.primary.main,
   },
   otpSection: {

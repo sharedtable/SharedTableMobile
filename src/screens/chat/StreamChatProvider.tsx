@@ -13,6 +13,7 @@ import { StreamChat } from 'stream-chat';
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { api } from '@/services/api';
 import { logger } from '@/utils/logger';
+import { notificationIntegration } from '@/services/notificationIntegration';
 
 const STREAM_API_KEY = process.env.EXPO_PUBLIC_STREAM_API_KEY || '';
 // Note: Never use STREAM_SECRET in client code! Only use the public key here.
@@ -103,8 +104,12 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         
         isConnected = true;
         lastConnectedUserId = streamUserId;
+        
+        // Initialize notification integration with Stream client
+        await notificationIntegration.initialize(streamUserId, client);
+        
         setClientReady(true);
-        logger.info('Stream Chat connected successfully');
+        logger.info('Stream Chat connected successfully with notifications');
       } catch (e) {
         // Handle error
         logger.error('Stream Chat connection failed', e);

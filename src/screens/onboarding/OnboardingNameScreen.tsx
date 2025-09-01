@@ -79,7 +79,7 @@ export const OnboardingNameScreen: React.FC<OnboardingNameScreenProps> = ({
       keyboardAvoiding
     >
       <View style={styles.container}>
-        <OnboardingTitle>Let's start with your name</OnboardingTitle>
+        <OnboardingTitle>Let&apos;s start with your name</OnboardingTitle>
 
         <OnboardingInput
           label="First Name"

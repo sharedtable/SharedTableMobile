@@ -24,7 +24,7 @@ async function simulateGrouping() {
 
   try {
     // 1. Get all pending signups for future time slots
-    const now = new Date();
+    const _now = new Date();
     const { data: pendingSignups, error: signupsError } = await supabase
       .from('slot_signups')
       .select(`

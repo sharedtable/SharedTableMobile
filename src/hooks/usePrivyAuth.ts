@@ -201,15 +201,14 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
         // Sync user with backend API (only once per user)
         const syncUser = async () => {
           try {
-            const authProvider = privyUser?.linked_accounts?.find(
-              (account) => account.type === 'google_oauth'
-            )
-              ? 'google'
-              : privyUser?.linked_accounts?.find((account) => account.type === 'apple_oauth')
-                ? 'apple'
-                : privyUser?.linked_accounts?.find((account) => account.type === 'phone')
-                  ? 'sms'
-                  : 'email';
+            let authProvider = 'email';
+            if (privyUser?.linked_accounts?.find((account) => account.type === 'google_oauth')) {
+              authProvider = 'google';
+            } else if (privyUser?.linked_accounts?.find((account) => account.type === 'apple_oauth')) {
+              authProvider = 'apple';
+            } else if (privyUser?.linked_accounts?.find((account) => account.type === 'phone')) {
+              authProvider = 'sms';
+            }
 
             const syncData = {
               id: user.id,

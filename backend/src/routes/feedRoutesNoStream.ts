@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { supabaseService } from '../config/supabase';
 import { z } from 'zod';
 import { verifyPrivyToken, AuthRequest } from '../middleware/auth';
@@ -260,7 +260,7 @@ router.get('/discover', verifyPrivyToken, async (req: AuthRequest, res: Response
     const { limit, offset } = paginationSchema.parse(req.query);
     
     // Same as timeline for MVP
-    const { data: dbPosts, error } = await supabaseService
+    const { data: dbPosts, error: _error } = await supabaseService
       .from('posts')
       .select('*')
       .order('created_at', { ascending: false })
