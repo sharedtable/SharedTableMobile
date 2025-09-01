@@ -210,9 +210,7 @@ export const OnboardingPhotoScreen: React.FC<OnboardingPhotoScreenProps> = ({
         >
         {/* Title */}
         <OnboardingTitle>
-          Say &quot;Cheese&quot;! Let&apos;s{'\n'}
-          showcase your radiance{'\n'}
-          with a selfie!
+          Say &quot;Cheese&quot;! Let&apos;s{'\n'}showcase your radiance{'\n'}with a selfie!
         </OnboardingTitle>
 
         {hasError && (

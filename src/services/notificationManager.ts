@@ -37,10 +37,15 @@ class NotificationManager {
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    this.initialize();
+    this.initializeManager();
   }
 
-  private async initialize() {
+  async initialize() {
+    // Public initialize method for external calls
+    // Already initialized in constructor, but can be called again if needed
+  }
+
+  private async initializeManager() {
     // Load queued notifications
     await this.loadQueuedNotifications();
 

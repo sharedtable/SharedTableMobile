@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { supabaseService } from '../config/supabase';
 import { verifyPrivyToken, AuthRequest } from '../middleware/auth';
 import multer from 'multer';
@@ -12,7 +12,7 @@ const upload = multer({
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
-  fileFilter: (req, file, cb) => {
+  fileFilter: (_req, file, cb) => {
     // Accept images only
     if (!file.mimetype.startsWith('image/')) {
       return cb(new Error('Only image files are allowed'));
@@ -38,7 +38,7 @@ router.post('/upload', verifyPrivyToken, upload.single('image'), async (req: Aut
     const fileName = `${privyUserId}/${uuidv4()}.${fileExt}`;
 
     // Upload to Supabase Storage
-    const { data, error } = await supabaseService.storage
+    const { data: _data, error } = await supabaseService.storage
       .from('post-images')
       .upload(fileName, req.file.buffer, {
         contentType: req.file.mimetype,

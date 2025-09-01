@@ -12,7 +12,7 @@ interface OnboardingPersonalityScreenProps {
   onNavigate?: (screen: string, data?: unknown) => void;
   currentStep?: number;
   totalSteps?: number;
-  userData?: any;
+  userData?: Record<string, unknown>;
 }
 
 interface PersonalityTraits {
@@ -241,7 +241,11 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
       <View style={styles.container}>
         {/* Page Title */}
         <OnboardingTitle>
-          {currentPage === 1 ? 'Tell us about yourself' : currentPage === 2 ? 'Your personality' : 'More about you'}
+          {(() => {
+            if (currentPage === 1) return 'Tell us about yourself';
+            if (currentPage === 2) return 'Your personality';
+            return 'More about you';
+          })()}
         </OnboardingTitle>
 
         {hasError && (
@@ -402,7 +406,11 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
         <View style={styles.bottomContainer}>
           <OnboardingButton
             onPress={handleNext}
-            label={saving ? 'Saving...' : isLastPage ? 'Next' : 'Continue'}
+            label={(() => {
+              if (saving) return 'Saving...';
+              if (isLastPage) return 'Next';
+              return 'Continue';
+            })()}
             loading={saving}
             disabled={saving}
           />
@@ -417,15 +425,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   errorContainer: {
-    backgroundColor: '#FEE2E2',
-    borderColor: '#FCA5A5',
+    backgroundColor: theme.colors.error[100],
+    borderColor: theme.colors.error[300],
     borderRadius: scaleWidth(8),
     borderWidth: 1,
     marginBottom: scaleHeight(16),
     padding: scaleWidth(12),
   },
   errorText: {
-    color: '#DC2626',
+    color: theme.colors.error.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
   },
@@ -452,8 +460,8 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   dropdownButton: {
-    backgroundColor: 'white',
-    borderColor: '#E5E7EB',
+    backgroundColor: theme.colors.background.default,
+    borderColor: theme.colors.neutral.gray[200],
     borderRadius: scaleWidth(12),
     borderWidth: 2,
     paddingVertical: scaleHeight(16),
@@ -463,14 +471,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   dropdownButtonSelected: {
-    backgroundColor: 'rgba(226, 72, 73, 0.08)',
+    backgroundColor: `${theme.colors.primary.main}14`, // 14 is hex for ~8% opacity
     borderColor: theme.colors.primary.main,
   },
   dropdownButtonActive: {
     borderColor: theme.colors.primary.main,
   },
   dropdownButtonText: {
-    color: '#9CA3AF',
+    color: theme.colors.text.tertiary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
     flex: 1,
@@ -480,13 +488,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   dropdown: {
-    backgroundColor: 'white',
-    borderColor: '#E5E7EB',
+    backgroundColor: theme.colors.background.default,
+    borderColor: theme.colors.neutral.gray[200],
     borderRadius: scaleWidth(12),
     borderWidth: 1,
     marginTop: scaleHeight(8),
     maxHeight: scaleHeight(250),
-    shadowColor: '#000',
+    shadowColor: theme.colors.black[1],
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -502,10 +510,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: theme.colors.neutral.gray[100],
   },
   dropdownOptionSelected: {
-    backgroundColor: 'rgba(226, 72, 73, 0.08)',
+    backgroundColor: `${theme.colors.primary.main}14`, // 14 is hex for ~8% opacity
   },
   mbtiOptionContent: {
     flex: 1,

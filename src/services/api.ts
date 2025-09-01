@@ -8,6 +8,25 @@
 import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import AuthAPI from './api/authApi';
+import { NotificationData, NotificationPreferences } from '@/types/notification.types';
+
+// Restaurant types
+interface RestaurantItem {
+  id: string;
+  name: string;
+  address?: string;
+  cuisine?: string;
+  priceRange?: string;
+  imageUrl?: string;
+  rating: number;
+  visitCount?: number;
+}
+
+interface RestaurantDetails extends RestaurantItem {
+  description?: string;
+  totalReviews?: number;
+  hours?: Record<string, string>;
+}
 
 // Get API URL from app.json config
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -818,6 +837,175 @@ class ApiService {
 
   getChatUserToken(): Promise<{ token: string; displayName?: string }> {
     return AuthAPI.getChatUserToken();
+  }
+
+  // ==========================================================================
+  // Additional Notification Endpoints
+  // ==========================================================================
+
+  async createNotification(notification: NotificationData): Promise<ApiResponse<NotificationData>> {
+    const response = await this.client.post('/notifications', notification);
+    return response.data;
+  }
+
+  async updateNotification(
+    notificationId: string,
+    updates: Partial<NotificationData>
+  ): Promise<ApiResponse<NotificationData>> {
+    const response = await this.client.patch(`/notifications/${notificationId}`, updates);
+    return response.data;
+  }
+
+  async markAllNotificationsAsRead(): Promise<ApiResponse<void>> {
+    const response = await this.client.put('/notifications/read-all');
+    return response.data;
+  }
+
+  async deleteNotification(notificationId: string): Promise<ApiResponse<void>> {
+    const response = await this.client.delete(`/notifications/${notificationId}`);
+    return response.data;
+  }
+
+  async unregisterPushToken(token: string): Promise<ApiResponse<void>> {
+    const response = await this.client.delete('/notifications/push-token', { data: { token } });
+    return response.data;
+  }
+
+  async getNotificationPreferences(): Promise<ApiResponse<NotificationPreferences>> {
+    const response = await this.client.get('/notifications/preferences');
+    return response.data;
+  }
+
+  async updateNotificationPreferences(
+    preferences: Partial<NotificationPreferences>
+  ): Promise<ApiResponse<NotificationPreferences>> {
+    const response = await this.client.put('/notifications/preferences', preferences);
+    return response.data;
+  }
+
+  // ============================================================================
+  // Connections Endpoints
+  // ============================================================================
+  
+  /**
+   * Get all accepted connections (friends)
+   */
+  async getConnections(): Promise<ApiResponse<any[]>> {
+    const response = await this.client.get('/connections');
+    return response.data;
+  }
+  
+  /**
+   * Get pending connection requests received
+   */
+  async getPendingConnections(): Promise<ApiResponse<any[]>> {
+    const response = await this.client.get('/connections/pending');
+    return response.data;
+  }
+  
+  /**
+   * @deprecated Use getPendingConnections instead
+   */
+  async getConnectionRequests(): Promise<ApiResponse<any[]>> {
+    return this.getPendingConnections();
+  }
+  
+  /**
+   * Send a new connection request
+   */
+  async sendConnectionRequest(userId: string, message?: string): Promise<ApiResponse<{ connectionId: string }>> {
+    const response = await this.client.post('/connections', {
+      userId,
+      message
+    });
+    return response.data;
+  }
+  
+  /**
+   * Accept a pending connection request
+   */
+  async acceptConnection(connectionId: string): Promise<ApiResponse<void>> {
+    const response = await this.client.put(`/connections/${connectionId}/accept`);
+    return response.data;
+  }
+  
+  /**
+   * @deprecated Use acceptConnection instead
+   */
+  async acceptConnectionRequest(connectionId: string): Promise<ApiResponse<void>> {
+    return this.acceptConnection(connectionId);
+  }
+  
+  /**
+   * Reject a pending connection request
+   */
+  async rejectConnection(connectionId: string): Promise<ApiResponse<void>> {
+    const response = await this.client.put(`/connections/${connectionId}/reject`);
+    return response.data;
+  }
+  
+  /**
+   * Remove an existing connection (unfriend)
+   */
+  async removeConnection(connectionId: string): Promise<ApiResponse<void>> {
+    const response = await this.client.delete(`/connections/${connectionId}`);
+    return response.data;
+  }
+  
+  /**
+   * @deprecated Use removeConnection for unfriending or rejectConnection for declining requests
+   */
+  async declineConnection(connectionId: string): Promise<ApiResponse<void>> {
+    return this.removeConnection(connectionId);
+  }
+  
+  /**
+   * Block a specific user
+   */
+  async blockUser(userId: string): Promise<ApiResponse<void>> {
+    const response = await this.client.post(`/connections/users/${userId}/block`);
+    return response.data;
+  }
+  
+  /**
+   * Search for users to connect with
+   */
+  async searchUsers(query: string): Promise<ApiResponse<any[]>> {
+    const response = await this.client.get('/connections/users/search', {
+      params: { q: query }
+    });
+    return response.data;
+  }
+  
+  /**
+   * Get mutual connections count with another user
+   */
+  async getMutualConnections(userId: string): Promise<ApiResponse<{ count: number }>> {
+    const response = await this.client.get(`/connections/users/${userId}/mutual`);
+    return response.data;
+  }
+  
+  /**
+   * @deprecated Use getMutualConnections instead
+   */
+  async getMutualConnectionsCount(userId: string): Promise<ApiResponse<{ count: number }>> {
+    return this.getMutualConnections(userId);
+  }
+
+  // ============================================================================
+  // Restaurant Endpoints
+  // ============================================================================
+  
+  async getTopRatedRestaurants(limit = 10): Promise<ApiResponse<RestaurantItem[]>> {
+    const response = await this.client.get('/restaurants/top-rated', {
+      params: { limit }
+    });
+    return response.data;
+  }
+  
+  async getRestaurantDetails(id: string): Promise<ApiResponse<RestaurantDetails>> {
+    const response = await this.client.get(`/restaurants/${id}`);
+    return response.data;
   }
 
   // ============================================================================

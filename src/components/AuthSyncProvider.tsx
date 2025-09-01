@@ -4,6 +4,8 @@ import React, { useEffect } from 'react';
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { useAuthStore } from '@/store/authStore';
 import { logger } from '@/utils/logger';
+import { notificationService } from '@/services/notificationService';
+import { notificationManager } from '@/services/notificationManager';
 
 interface AuthSyncProviderProps {
   children: React.ReactNode;
@@ -42,6 +44,15 @@ export function AuthSyncProvider({ children }: AuthSyncProviderProps) {
       };
 
       setPrivyUser(userData);
+
+      // Initialize notification services for authenticated user
+      notificationService.initialize().catch(error => {
+        logger.error('Failed to initialize notification service:', error);
+      });
+      
+      notificationManager.initialize().catch(error => {
+        logger.error('Failed to initialize notification manager:', error);
+      });
 
       logger.debug('User authenticated and synced to store', userData);
     } else {

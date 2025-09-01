@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { supabaseService } from '../config/supabase';
 import { z } from 'zod';
 import { verifyPrivyToken, AuthRequest } from '../middleware/auth';
@@ -36,7 +36,7 @@ router.post('/posts', verifyPrivyToken, async (req: AuthRequest, res: Response) 
     const { data: userData, error: userError } = await supabaseService
       .from('users')
       .select('id, email, display_name, first_name, last_name, phone')
-      .eq('external_auth_id', privyUserId)
+      .eq('external_auth_id', req.userId)
       .single();
 
     if (userError || !userData) {
@@ -149,7 +149,7 @@ router.get('/timeline', verifyPrivyToken, async (req: AuthRequest, res: Response
     const { data: currentUser } = await supabaseService
       .from('users')
       .select('id')
-      .eq('external_auth_id', privyUserId)
+      .eq('external_auth_id', req.userId)
       .single();
 
     // Get like counts and user's own likes for all posts
@@ -269,7 +269,7 @@ router.get('/discover', verifyPrivyToken, async (req: AuthRequest, res: Response
     const { data: currentUser } = await supabaseService
       .from('users')
       .select('id')
-      .eq('external_auth_id', privyUserId)
+      .eq('external_auth_id', req.userId)
       .single();
 
     // Get like counts and user's own likes for all posts
@@ -353,7 +353,7 @@ router.post('/posts/:postId/like', verifyPrivyToken, async (req: AuthRequest, re
     const { data: userData, error: userError } = await supabaseService
       .from('users')
       .select('id')
-      .eq('external_auth_id', privyUserId)
+      .eq('external_auth_id', req.userId)
       .single();
 
     if (userError || !userData) {
@@ -417,7 +417,7 @@ router.delete('/posts/:postId/like', verifyPrivyToken, async (req: AuthRequest, 
     const { data: userData, error: userError } = await supabaseService
       .from('users')
       .select('id')
-      .eq('external_auth_id', privyUserId)
+      .eq('external_auth_id', req.userId)
       .single();
 
     if (userError || !userData) {

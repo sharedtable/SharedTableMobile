@@ -21,7 +21,7 @@ interface NotificationData {
 // Get notifications for a user
 router.get('/', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = (req as any).user?.id || 'default-user';
     const limit = parseInt(req.query.limit as string) || 50;
     const unreadOnly = req.query.unreadOnly === 'true';
 
@@ -91,7 +91,7 @@ router.get('/', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
 router.put('/:notificationId/read', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
   try {
     const { notificationId } = req.params;
-    const userId = (req as any).user?.id;
+    const userId = (req as any).user?.id || 'default-user';
 
     // In production, this would update the database
     // For now, just return success
@@ -113,7 +113,7 @@ router.put('/:notificationId/read', verifyPrivyToken, async (req: AuthRequest, r
 // Get unread count
 router.get('/unread-count', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
+    const _userId = (req as any).user?.id || req.userId || 'default-user';
 
     // In production, this would query the database
     // For now, return a mock count
@@ -215,7 +215,7 @@ router.put('/push-token', verifyPrivyToken, async (req: AuthRequest, res: Respon
 // Send test notification
 router.post('/test', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = (req as any).user?.id || req.userId || 'default-user';
 
     // Get user's push token
     const { data: userData, error: userError } = await supabaseService.auth.admin.getUserById(userId);
@@ -253,7 +253,7 @@ router.post('/test', verifyPrivyToken, async (req: AuthRequest, res: Response) =
 // Get notification preferences
 router.get('/preferences', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = (req as any).user?.id || req.userId || 'default-user';
 
     // Get user preferences from metadata
     const { data: userData, error } = await supabaseService.auth.admin.getUserById(userId);
@@ -297,7 +297,7 @@ router.get('/preferences', verifyPrivyToken, async (req: AuthRequest, res: Respo
 // Update notification preferences
 router.put('/preferences', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = (req as any).user?.id || req.userId || 'default-user';
     const preferences = req.body;
 
     // Update user metadata with preferences
@@ -330,7 +330,7 @@ router.put('/preferences', verifyPrivyToken, async (req: AuthRequest, res: Respo
 // Schedule a notification
 router.post('/schedule', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = (req as any).user?.id || req.userId || 'default-user';
     const { type, title, body, scheduledFor, data } = req.body;
 
     if (!type || !title || !body || !scheduledFor) {
@@ -371,7 +371,7 @@ router.post('/schedule', verifyPrivyToken, async (req: AuthRequest, res: Respons
 router.delete('/scheduled/:notificationId', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
   try {
     const { notificationId } = req.params;
-    const userId = (req as any).user?.id;
+    const userId = (req as any).user?.id || req.userId || 'default-user';
 
     // In production, this would cancel the scheduled job
     logger.info(`Cancelling scheduled notification ${notificationId} for user ${userId}`);
@@ -392,7 +392,7 @@ router.delete('/scheduled/:notificationId', verifyPrivyToken, async (req: AuthRe
 // Get unread chat count (for badge)
 router.get('/chat/unread-count', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
+    const _userId = (req as any).user?.id || req.userId || 'default-user';
 
     // This would query the chat messages table
     // For now, return mock data
@@ -414,7 +414,7 @@ router.get('/chat/unread-count', verifyPrivyToken, async (req: AuthRequest, res:
 // Get unread feed count (for badge)
 router.get('/feed/unread-count', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
+    const _userId = (req as any).user?.id || req.userId || 'default-user';
 
     // This would query the feed activity table
     // For now, return mock data

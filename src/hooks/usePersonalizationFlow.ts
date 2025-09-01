@@ -90,7 +90,7 @@ export const usePersonalizationFlow = () => {
   /**
    * Save data for a specific step and mark it as completed
    */
-  const saveStepData = useCallback(async (step: string, stepData: any) => {
+  const saveStepData = useCallback(async (step: string, stepData: Record<string, unknown>) => {
     setSavingStep(step);
     setError(null);
 
@@ -103,36 +103,37 @@ export const usePersonalizationFlow = () => {
       // Map step to data structure
       switch (step) {
         case 'dietary':
-          updatedData.dietary = stepData;
+          updatedData.dietary = stepData as any;
           break;
         case 'cuisine':
-          updatedData.cuisine = stepData;
+          updatedData.cuisine = stepData as any;
           break;
         case 'dining-style':
         case 'dining_style':
-          updatedData.dining_style = stepData;
+          updatedData.dining_style = stepData as any;
           break;
         case 'social':
-          if (stepData.social_preferences) {
+          if ((stepData as any).social_preferences) {
+            const socialPrefs = (stepData as any).social_preferences;
             updatedData.social = {
-              social_level: stepData.social_preferences.social_level,
-              adventure_level: stepData.social_preferences.adventure_level,
-              formality_level: stepData.social_preferences.formality_level,
-              interests: stepData.social_preferences.interests,
-              goals: stepData.social_preferences.goals,
-              languages: stepData.social_preferences.languages,
-              social_media: stepData.social_preferences.social_media,
-            };
+              social_level: socialPrefs.social_level,
+              adventure_level: socialPrefs.adventure_level,
+              formality_level: socialPrefs.formality_level,
+              interests: socialPrefs.interests,
+              goals: socialPrefs.goals,
+              languages: socialPrefs.languages,
+              social_media: socialPrefs.social_media,
+            } as any;
           } else {
-            updatedData.social = stepData;
+            updatedData.social = stepData as any;
           }
           break;
         case 'foodie-profile':
         case 'foodie_profile':
-          if (stepData.foodie_profile) {
-            updatedData.foodie_profile = stepData.foodie_profile;
+          if ((stepData as any).foodie_profile) {
+            updatedData.foodie_profile = (stepData as any).foodie_profile;
           } else {
-            updatedData.foodie_profile = stepData;
+            updatedData.foodie_profile = stepData as any;
           }
           break;
       }
@@ -175,23 +176,23 @@ export const usePersonalizationFlow = () => {
   /**
    * Save specific step data to database
    */
-  const saveToDatabaseForStep = async (userId: string, step: string, stepData: any): Promise<boolean> => {
+  const saveToDatabaseForStep = async (userId: string, step: string, stepData: Record<string, unknown>): Promise<boolean> => {
     try {
       console.log(`📤 Saving ${step} to database for user ${userId}`);
       
       switch (step) {
         case 'dietary':
-          await userPreferencesAPI.saveDietaryPreferences(userId, stepData);
+          await userPreferencesAPI.saveDietaryPreferences(userId, stepData as any);
           break;
         case 'cuisine':
-          await userPreferencesAPI.saveCuisinePreferences(userId, stepData);
+          await userPreferencesAPI.saveCuisinePreferences(userId, stepData as any);
           break;
         case 'dining-style':
         case 'dining_style':
-          await userPreferencesAPI.saveDiningStylePreferences(userId, stepData);
+          await userPreferencesAPI.saveDiningStylePreferences(userId, stepData as any);
           break;
         case 'social': {
-          const socialData = stepData.social_preferences || stepData;
+          const socialData = (stepData.social_preferences || stepData) as any;
           await userPreferencesAPI.saveSocialPreferences(userId, {
             social_level: socialData.social_level || 5,
             adventure_level: socialData.adventure_level || 5,
@@ -205,8 +206,8 @@ export const usePersonalizationFlow = () => {
         }
         case 'foodie-profile':
         case 'foodie_profile': {
-          const foodieData = stepData.foodie_profile || stepData;
-          await userPreferencesAPI.saveFoodieProfile(userId, foodieData);
+          const foodieData = (stepData.foodie_profile || stepData) as any;
+          await userPreferencesAPI.saveFoodieProfile(userId, foodieData as any);
           break;
         }
       }

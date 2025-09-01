@@ -40,7 +40,7 @@ async function addGaryToGroup() {
     console.log(`User ID: ${garyUser.id}\n`);
 
     // 2. Get an available time slot (preferably one with existing groups)
-    const { data: existingGroup, error: groupError } = await supabase
+    const { data: existingGroup, error: _groupError } = await supabase
       .from('dinner_groups')
       .select(`
         *,

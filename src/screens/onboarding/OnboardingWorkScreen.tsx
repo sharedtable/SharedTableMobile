@@ -65,17 +65,18 @@ export const OnboardingWorkScreen: React.FC<OnboardingWorkScreenProps> = ({
 }) => {
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
 
+  const stepData = currentStepData as Record<string, unknown>;
   const [selectedWork, setSelectedWork] = useState<string | null>(
-    (currentStepData as any)?.lineOfWork || null
+    (stepData?.lineOfWork as string) || null
   );
   const [selectedEducation, setSelectedEducation] = useState<string | null>(
-    (currentStepData as any)?.educationLevel || null
+    (stepData?.educationLevel as string) || null
   );
   const [jobTitle, setJobTitle] = useState<string>(
-    (currentStepData as any)?.jobTitle || ''
+    (stepData?.jobTitle as string) || ''
   );
   const [school, setSchool] = useState<string>(
-    (currentStepData as any)?.school || ''
+    (stepData?.school as string) || ''
   );
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
   const [currentSection, setCurrentSection] = useState<'work' | 'education' | 'details'>('work');
@@ -195,7 +196,7 @@ export const OnboardingWorkScreen: React.FC<OnboardingWorkScreenProps> = ({
 
   return (
     <KeyboardAvoidingView 
-      style={{ flex: 1 }}
+      style={styles.flexOne}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <OnboardingLayout
@@ -381,15 +382,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   errorContainer: {
-    backgroundColor: '#FEE2E2',
-    borderColor: '#FCA5A5',
+    backgroundColor: theme.colors.error[100],
+    borderColor: theme.colors.error[300],
     borderRadius: scaleWidth(8),
     borderWidth: 1,
     marginBottom: scaleHeight(16),
     padding: scaleWidth(12),
   },
   errorText: {
-    color: '#DC2626',
+    color: theme.colors.error.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
   },
@@ -414,8 +415,8 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(16),
   },
   textInput: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E5E7EB',
+    backgroundColor: theme.colors.background.default,
+    borderColor: theme.colors.neutral.gray[200],
     borderRadius: scaleWidth(12),
     borderWidth: 1,
     color: theme.colors.text.primary,
@@ -425,7 +426,7 @@ const styles = StyleSheet.create({
     paddingVertical: scaleHeight(14),
   },
   inputError: {
-    borderColor: '#FCA5A5',
+    borderColor: theme.colors.error[300],
   },
   helperText: {
     color: theme.colors.text.tertiary,
@@ -433,7 +434,7 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(12),
   },
   summaryContainer: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.background.paper,
     borderRadius: scaleWidth(12),
     padding: scaleWidth(16),
     gap: scaleHeight(12),
@@ -457,5 +458,8 @@ const styles = StyleSheet.create({
   },
   spacer: {
     height: scaleHeight(40),
+  },
+  flexOne: {
+    flex: 1,
   },
 });

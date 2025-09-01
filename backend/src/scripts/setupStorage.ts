@@ -18,7 +18,7 @@ async function setupStorage() {
       console.log('✅ Bucket "post-images" already exists');
     } else {
       // Create the bucket
-      const { data, error: createError } = await supabaseService.storage.createBucket('post-images', {
+      const { data: _data, error: createError } = await supabaseService.storage.createBucket('post-images', {
         public: true,
         allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
         fileSizeLimit: 10485760, // 10MB

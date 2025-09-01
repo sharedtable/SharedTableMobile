@@ -1,0 +1,82 @@
+[
+  {
+    "email": "alice.chen@test.stanford.edu",
+    "userId": "4a9c2b42-37d7-4401-910f-1b9f26772fb0"
+  },
+  {
+    "email": "bob.kumar@test.stanford.edu",
+    "userId": "74828dd9-6ee9-48cb-aa39-97842408e008"
+  },
+  {
+    "email": "carol.smith@test.stanford.edu",
+    "userId": "f8ea3493-3abe-484e-a265-dcaf406d2d48"
+  },
+  {
+    "email": "david.johnson@test.stanford.edu",
+    "userId": "d9501024-c5b0-4037-a1dc-4ff18f0b246b"
+  },
+  {
+    "email": "emma.garcia@test.stanford.edu",
+    "userId": "21e1e595-5a70-4d23-b70b-dea0cae9f8c5"
+  },
+  {
+    "email": "frank.lee@test.stanford.edu",
+    "userId": "3941baea-091d-4adf-bfc3-1b1edf9712c2"
+  },
+  {
+    "email": "grace.wang@test.stanford.edu",
+    "userId": "5078aa5e-8103-4380-86d8-c6656c6a792e"
+  },
+  {
+    "email": "henry.taylor@test.stanford.edu",
+    "userId": "0b85362a-0f1b-43bf-a98b-69a87c3a6a5c"
+  },
+  {
+    "email": "iris.patel@test.stanford.edu",
+    "userId": "95c0bbba-4a03-430d-908d-fe0a807dce9c"
+  },
+  {
+    "email": "jack.brown@test.stanford.edu",
+    "userId": "f658c528-1a59-4ddb-ab56-6db21252ed5c"
+  },
+  {
+    "email": "kate.miller@test.stanford.edu",
+    "userId": "177757ce-3c8e-4fb0-ba15-8ef21a75cfa6"
+  },
+  {
+    "email": "liam.davis@test.stanford.edu",
+    "userId": "624e665c-4482-4c7d-8ac1-c261b4a25676"
+  },
+  {
+    "email": "maya.rodriguez@test.stanford.edu",
+    "userId": "cff53795-7831-4054-911f-e1dc7187b3d3"
+  },
+  {
+    "email": "noah.thompson@test.stanford.edu",
+    "userId": "ebab721b-32cc-4dd0-a47d-677e5c10e605"
+  },
+  {
+    "email": "olivia.martinez@test.stanford.edu",
+    "userId": "c12112b1-6a36-4e92-a62a-da597c8b5ee1"
+  },
+  {
+    "email": "peter.nguyen@test.stanford.edu",
+    "userId": "9ba28d25-00a1-46cf-920b-5ad367227c58"
+  },
+  {
+    "email": "quinn.anderson@test.stanford.edu",
+    "userId": "30b2e3d4-901d-4d1d-8805-8c176aa2d695"
+  },
+  {
+    "email": "rachel.kim@test.stanford.edu",
+    "userId": "65ad81b3-064b-45de-8a8f-26d447fff1d9"
+  },
+  {
+    "email": "samuel.wright@test.stanford.edu",
+    "userId": "581d043c-84a7-46d6-8378-1783a3869e9d"
+  },
+  {
+    "email": "tara.patel@test.stanford.edu",
+    "userId": "900bfa64-321d-467f-a10d-36db40dc3f6d"
+  }
+]

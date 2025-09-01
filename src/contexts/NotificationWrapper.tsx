@@ -1,6 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import React, { ReactNode, useState, useCallback, useEffect } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { useNotificationStore } from '@/store/notificationStore';
 import { NotificationData, NotificationType, NotificationPriority, NotificationChannel } from '@/types/notification.types';
 import { InAppNotification } from '@/components/notifications/InAppNotification';
@@ -10,10 +10,55 @@ interface NotificationWrapperProps {
 }
 
 export const NotificationWrapper: React.FC<NotificationWrapperProps> = ({ children }) => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation() as NavigationProp<Record<string, object | undefined>>;
   const [inAppNotification, setInAppNotification] = useState<NotificationData | null>(null);
   
   const { initialize } = useNotificationStore();
+
+  const showInAppNotification = useCallback((notification: NotificationData) => {
+    setInAppNotification(notification);
+  }, []);
+
+  const dismissInAppNotification = useCallback(() => {
+    setInAppNotification(null);
+  }, []);
+
+  const handleNotificationResponse = useCallback((response: Notifications.NotificationResponse) => {
+    const data = response.notification.request.content.data;
+    const notificationType = data?.type as NotificationType;
+
+    // Navigate based on notification type
+    switch (notificationType) {
+      case NotificationType.DINNER_REMINDER:
+      case NotificationType.DINNER_CONFIRMATION:
+      case NotificationType.DINNER_CANCELLATION:
+      case NotificationType.DINNER_STATUS_CHANGE:
+        if (data?.eventId) {
+          (navigation.navigate as unknown as (routeName: string, params?: object) => void)('EventDetails', { eventId: data.eventId });
+        }
+        break;
+      case NotificationType.CHAT_MESSAGE:
+      case NotificationType.CHAT_MENTION:
+        if (data?.eventId) {
+          (navigation.navigate as unknown as (routeName: string, params?: object) => void)('EventChat', { eventId: data.eventId });
+        }
+        break;
+      case NotificationType.FEED_POST:
+      case NotificationType.FEED_MENTION:
+      case NotificationType.FEED_REACTION:
+      case NotificationType.FEED_COMMENT:
+        (navigation.navigate as unknown as (routeName: string) => void)('Feed');
+        break;
+      case NotificationType.BOOKING_REQUEST:
+      case NotificationType.BOOKING_APPROVED:
+      case NotificationType.BOOKING_REJECTED:
+        (navigation.navigate as unknown as (routeName: string) => void)('Bookings');
+        break;
+      default:
+        (navigation.navigate as unknown as (routeName: string) => void)('Notifications');
+        break;
+    }
+  }, [navigation]);
 
   useEffect(() => {
     // Initialize notification system
@@ -49,52 +94,7 @@ export const NotificationWrapper: React.FC<NotificationWrapperProps> = ({ childr
       notificationListener.remove();
       responseListener.remove();
     };
-  }, []);
-
-  const showInAppNotification = useCallback((notification: NotificationData) => {
-    setInAppNotification(notification);
-  }, []);
-
-  const dismissInAppNotification = useCallback(() => {
-    setInAppNotification(null);
-  }, []);
-
-  const handleNotificationResponse = (response: Notifications.NotificationResponse) => {
-    const data = response.notification.request.content.data;
-    const notificationType = data?.type as NotificationType;
-
-    // Navigate based on notification type
-    switch (notificationType) {
-      case NotificationType.DINNER_REMINDER:
-      case NotificationType.DINNER_CONFIRMATION:
-      case NotificationType.DINNER_CANCELLATION:
-      case NotificationType.DINNER_STATUS_CHANGE:
-        if (data?.eventId) {
-          navigation.navigate('EventDetails', { eventId: data.eventId });
-        }
-        break;
-      case NotificationType.CHAT_MESSAGE:
-      case NotificationType.CHAT_MENTION:
-        if (data?.eventId) {
-          navigation.navigate('EventChat', { eventId: data.eventId });
-        }
-        break;
-      case NotificationType.FEED_POST:
-      case NotificationType.FEED_MENTION:
-      case NotificationType.FEED_REACTION:
-      case NotificationType.FEED_COMMENT:
-        navigation.navigate('Feed');
-        break;
-      case NotificationType.BOOKING_REQUEST:
-      case NotificationType.BOOKING_APPROVED:
-      case NotificationType.BOOKING_REJECTED:
-        navigation.navigate('Bookings');
-        break;
-      default:
-        navigation.navigate('Notifications');
-        break;
-    }
-  };
+  }, [handleNotificationResponse, initialize, showInAppNotification]);
 
   const handleInAppNotificationPress = () => {
     if (inAppNotification) {
@@ -110,28 +110,28 @@ export const NotificationWrapper: React.FC<NotificationWrapperProps> = ({ childr
         case NotificationType.DINNER_CANCELLATION:
         case NotificationType.DINNER_STATUS_CHANGE:
           if (data?.eventId) {
-            navigation.navigate('EventDetails', { eventId: data.eventId });
+            (navigation.navigate as unknown as (routeName: string, params?: object) => void)('EventDetails', { eventId: data.eventId });
           }
           break;
         case NotificationType.CHAT_MESSAGE:
         case NotificationType.CHAT_MENTION:
           if (data?.eventId) {
-            navigation.navigate('EventChat', { eventId: data.eventId });
+            (navigation.navigate as unknown as (routeName: string, params?: object) => void)('EventChat', { eventId: data.eventId });
           }
           break;
         case NotificationType.FEED_POST:
         case NotificationType.FEED_MENTION:
         case NotificationType.FEED_REACTION:
         case NotificationType.FEED_COMMENT:
-          navigation.navigate('Feed');
+          (navigation.navigate as unknown as (routeName: string) => void)('Feed');
           break;
         case NotificationType.BOOKING_REQUEST:
         case NotificationType.BOOKING_APPROVED:
         case NotificationType.BOOKING_REJECTED:
-          navigation.navigate('Bookings');
+          (navigation.navigate as unknown as (routeName: string) => void)('Bookings');
           break;
         default:
-          navigation.navigate('Notifications');
+          (navigation.navigate as unknown as (routeName: string) => void)('Notifications');
           break;
       }
     }

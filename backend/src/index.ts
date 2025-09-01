@@ -8,6 +8,8 @@ import 'express-async-errors';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
 import { logger } from './utils/logger';
+import { SharedTableMatchingService as MatchingJobService } from './services/sharedTableMatchingService';
+import { featureProcessingWorker } from './services/featureProcessingWorker';
 
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
@@ -20,12 +22,17 @@ import timeSlotsRoutes from './routes/timeSlots';
 import groupingRoutes from './routes/admin/grouping';
 import gamificationRoutes from './routes/gamification';
 import notificationRoutes from './routes/notifications';
+import restaurantsRoutes from './routes/restaurants';
+import connectionsRoutes from './routes/connections';
+import analyticsRoutes from './routes/analytics';
+import matchingRoutes from './routes/matching';
+import featuresRoutes from './routes/features';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
 // Security middleware
 app.use(helmet());
@@ -39,7 +46,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
 
 app.use(
   cors({
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    origin: (origin: string | undefined, callback: (_err: Error | null, _allow?: boolean) => void) => {
       // Allow requests with no origin (mobile apps)
       if (!origin) return callback(null, true);
 
@@ -90,6 +97,11 @@ app.use('/api/time-slots', timeSlotsRoutes);
 app.use('/api/admin/grouping', groupingRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/restaurants', restaurantsRoutes);
+app.use('/api/connections', connectionsRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/matching', matchingRoutes);
+app.use('/api/features', featuresRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
@@ -102,4 +114,29 @@ app.listen(PORT, () => {
   logger.info(`💬 Stream API Key: ${process.env.STREAM_API_KEY}`);
   logger.info(`💬 Stream API Secret: ${process.env.STREAM_API_SECRET ? '[set]' : '[missing]'}`);
   logger.info(`📲 Mobile access: http://192.168.1.5:${PORT}`);
+  
+  // Initialize matching job service
+  MatchingJobService.initialize();
+  logger.info(`🤝 Matching job service initialized`);
+  
+  // Start feature processing worker in production
+  if (process.env.NODE_ENV === 'production') {
+    featureProcessingWorker.start();
+    logger.info(`⚙️ Feature processing worker started`);
+  }
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM signal received: closing server');
+  MatchingJobService.shutdown();
+  featureProcessingWorker.stop();
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT signal received: closing server');
+  MatchingJobService.shutdown();
+  featureProcessingWorker.stop();
+  process.exit(0);
 });

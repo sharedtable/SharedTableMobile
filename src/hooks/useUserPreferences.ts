@@ -3,14 +3,14 @@ import { useState, useEffect } from 'react';
 
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { supabase } from '@/lib/supabase/client';
-import { UserPreferences, UserPreferencesUpdate } from '@/lib/supabase/types/database';
+import { UserPreferences } from '@/lib/supabase/types/database';
 
 interface UserPreferencesData {
   preferences: UserPreferences | null;
   loading: boolean;
   error: string | null;
-  updatePreference: (key: string, value: any) => Promise<boolean>;
-  getPreference: (key: string, defaultValue?: any) => any;
+  updatePreference: (key: string, value: unknown) => Promise<boolean>;
+  getPreference: <T = unknown>(key: string, defaultValue?: T) => T;
 }
 
 // Mapping of preference keys to storage locations
@@ -46,7 +46,7 @@ const PREFERENCE_STORAGE: Record<string, 'local' | 'database'> = {
 export const useUserPreferences = (): UserPreferencesData => {
   const { user } = usePrivyAuth();
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
-  const [localPreferences, setLocalPreferences] = useState<Record<string, any>>({});
+  const [localPreferences, setLocalPreferences] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dbUserId, setDbUserId] = useState<string | null>(null);
@@ -90,7 +90,7 @@ export const useUserPreferences = (): UserPreferencesData => {
       }
 
       // Load local preferences
-      const localPrefs: Record<string, any> = {};
+      const localPrefs: Record<string, unknown> = {};
       const localKeys = Object.keys(PREFERENCE_STORAGE).filter(
         (key) => PREFERENCE_STORAGE[key] === 'local'
       );
@@ -115,7 +115,7 @@ export const useUserPreferences = (): UserPreferencesData => {
     }
   };
 
-  const updatePreference = async (key: string, value: any): Promise<boolean> => {
+  const updatePreference = async (key: string, value: unknown): Promise<boolean> => {
     if (!user?.email || !dbUserId) {
       console.error('No user available for preference update');
       return false;
@@ -139,12 +139,14 @@ export const useUserPreferences = (): UserPreferencesData => {
 
         if (preferences) {
           // Update existing preferences
-          const { error } = await (supabase
-            .from('user_preferences') as any)
+          // Using type assertion due to Supabase type limitations
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { error } = await (supabase as any)
+            .from('user_preferences')
             .update({
               ...updateData,
               updated_at: new Date().toISOString(),
-            } as UserPreferencesUpdate)
+            })
             .eq('user_id', dbUserId);
 
           if (error) {
@@ -153,7 +155,9 @@ export const useUserPreferences = (): UserPreferencesData => {
           }
         } else {
           // Create new preferences record
-          const { error } = await (supabase.from('user_preferences') as any).insert([{
+          // Using type assertion due to Supabase type limitations
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { error } = await (supabase as any).from('user_preferences').insert([{
             user_id: dbUserId,
             ...updateData,
           }]);
@@ -174,16 +178,16 @@ export const useUserPreferences = (): UserPreferencesData => {
     }
   };
 
-  const getPreference = (key: string, defaultValue: any = null): any => {
+  const getPreference = <T = unknown>(key: string, defaultValue?: T): T => {
     const storageType = PREFERENCE_STORAGE[key];
 
     if (storageType === 'local') {
-      return localPreferences[key] ?? defaultValue;
+      return (localPreferences[key] as T) ?? (defaultValue as T);
     } else if (storageType === 'database' && preferences) {
-      return (preferences as any)[key] ?? defaultValue;
+      return ((preferences as Record<string, unknown>)[key] as T) ?? (defaultValue as T);
     }
 
-    return defaultValue;
+    return defaultValue as T;
   };
 
   return {

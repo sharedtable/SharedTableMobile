@@ -3,6 +3,7 @@ import React from 'react';
 
 import { ProfileScreen } from '@/screens/profile/ProfileScreen';
 import { DinnerDetailsScreen } from '@/screens/profile/DinnerDetailsScreen';
+import { FindFriendsScreen } from '@/screens/profile/FindFriendsScreen';
 import DiningPreferencesScreen from '@/screens/profile/DiningPreferencesScreen';
 import { 
   DietaryPreferencesScreen,
@@ -19,6 +20,7 @@ export type ProfileStackParamList = {
   DinnerDetails: {
     reservation: any; // You can type this more specifically based on your data structure
   };
+  FindFriends: undefined;
   DiningPreferences: undefined;
   PersonalizationDietary: undefined;
   PersonalizationCuisine: undefined;
@@ -50,6 +52,13 @@ export function ProfileNavigator() {
       <Stack.Screen 
         name="DinnerDetails" 
         component={DinnerDetailsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen 
+        name="FindFriends" 
+        component={FindFriendsScreen}
         options={{
           headerShown: false,
         }}

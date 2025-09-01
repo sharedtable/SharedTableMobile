@@ -619,14 +619,14 @@ router.post('/quests/progress', verifyPrivyToken, async (req: AuthRequest, res: 
     }
 
     // Get or create user quest record
-    const { data: userQuest, error: getError } = await supabaseService
+    const { data: userQuest, error: _getError } = await supabaseService
       .from('user_quests')
       .select('*')
       .eq('user_id', userId)
       .eq('quest_id', questId)
       .single();
 
-    let currentProgress = userQuest?.progress || {};
+    const currentProgress = userQuest?.progress || {};
     
     // Update progress
     currentProgress[action] = (currentProgress[action] || 0) + (value || 1);

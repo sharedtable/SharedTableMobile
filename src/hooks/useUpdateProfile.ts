@@ -20,12 +20,12 @@ export const useUpdateProfile = () => {
 
     setLoading(true);
     try {
-      const { error } = await (supabase
-        .from('users') as any)
+      const { error } = await (supabase as any)
+        .from('users')
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
-        } as UserUpdate)
+        })
         .eq('id', user.id);
 
       if (error) {

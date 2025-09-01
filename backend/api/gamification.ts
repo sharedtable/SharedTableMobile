@@ -9,7 +9,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/pages/api/auth/[...nextauth]';
 import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
+// import { z } from 'zod';
 
 // ============================================================================
 // Types and Schemas
@@ -696,9 +696,10 @@ function calculateQuestExpiry(questType: string): Date {
       return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     case 'biweekly':
       return new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
-    case 'monthly':
+    case 'monthly': {
       const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
       return nextMonth;
+    }
     default:
       return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   }

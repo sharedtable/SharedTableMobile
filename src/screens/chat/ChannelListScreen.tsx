@@ -238,26 +238,42 @@ export const ChannelListScreen: React.FC = () => {
     navigation.navigate('Channel', { channelId: channel.id });
   }, [navigation]);
 
+  const handleFriends = useCallback(() => {
+    // Navigate to Profile tab and then to FindFriends
+    navigation.getParent()?.navigate('Profile', {
+      screen: 'FindFriends',
+    });
+  }, [navigation]);
+
   React.useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <Pressable 
-          onPress={handleNewChat} 
-          style={styles.headerButton}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <LinearGradient
-            colors={['#667EEA', '#764BA2']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.newChatGradient}
+        <View style={styles.headerButtons}>
+          <Pressable 
+            onPress={handleFriends} 
+            style={styles.headerButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="add" size={20} color="white" />
-          </LinearGradient>
-        </Pressable>
+            <Ionicons name="people-outline" size={24} color={theme.colors.primary.main} />
+          </Pressable>
+          <Pressable 
+            onPress={handleNewChat} 
+            style={styles.headerButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <LinearGradient
+              colors={['#667EEA', '#764BA2']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.newChatGradient}
+            >
+              <Ionicons name="add" size={20} color="white" />
+            </LinearGradient>
+          </Pressable>
+        </View>
       ),
     });
-  }, [navigation, handleNewChat]);
+  }, [navigation, handleNewChat, handleFriends]);
 
   if (!userId) {
     return (
@@ -321,6 +337,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FAFAFA',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   headerButton: {
     padding: 8,

@@ -1,14 +1,15 @@
-import { Router, Request, Response } from 'express';
-import { supabaseService } from '../config/supabase';
-import * as streamFeeds from '../services/streamFeeds';
+import { Router, Response } from 'express';
+// import { supabaseService } from '../config/supabase';
+// import * as streamFeeds from '../services/streamFeeds';
+import { AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
 // Simple timeline endpoint for testing - no auth
-router.get('/timeline', async (req: Request, res: Response) => {
+router.get('/timeline', async (_req: AuthRequest, res: Response) => {
   try {
     // For testing, use a hardcoded user ID or create test data
-    const testUserId = 'test-user-123';
+    // const testUserId = 'test-user-123';
     
     // Return empty array for now since we haven't created posts yet
     res.json({
@@ -22,20 +23,20 @@ router.get('/timeline', async (req: Request, res: Response) => {
 });
 
 // Simple create post endpoint for testing - no auth
-router.post('/posts', async (req: Request, res: Response) => {
+router.post('/posts', async (req: AuthRequest, res: Response) => {
   try {
     const { content, imageUrl } = req.body;
-    const testUserId = 'test-user-123';
+    // const testUserId = 'test-user-123';
     
     // Create a simple post object
     const post = {
       id: Date.now().toString(),
-      user_id: testUserId,
+      user_id: req.userId || 'test-user-123',
       content,
       image_url: imageUrl,
       created_at: new Date().toISOString(),
       users: {
-        id: testUserId,
+        id: req.userId || 'test-user-123',
         name: 'Test User',
         avatar_url: null
       }
