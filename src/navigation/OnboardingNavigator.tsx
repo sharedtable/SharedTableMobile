@@ -1,18 +1,17 @@
 import { useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StackNavigationProp } from '@react-navigation/stack';
 import React from 'react';
 
-// Import only required onboarding screens
+// Import mandatory onboarding screens only
 import { OnboardingProvider } from '@/lib/onboarding/context-simple';
+import { OnboardingNameScreen } from '@/screens/onboarding/OnboardingNameScreen';
 import { OnboardingBirthdayScreen } from '@/screens/onboarding/OnboardingBirthdayScreen';
 import { OnboardingGenderScreen } from '@/screens/onboarding/OnboardingGenderScreen';
-import { OnboardingNameScreen } from '@/screens/onboarding/OnboardingNameScreen';
-import { AuthAPI } from '@/services/api/authApi';
 import { useAuthStore } from '@/store/authStore';
-import { __DEV__, devLog } from '@/utils/env';
+import { __DEV__ } from '@/utils/env';
 
 export type OnboardingStackParamList = {
+  // Mandatory screens only (1-3)
   OnboardingName: undefined;
   OnboardingBirthday: undefined;
   OnboardingGender: undefined;
@@ -20,68 +19,106 @@ export type OnboardingStackParamList = {
 
 const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 
-// Create a wrapper component for each screen that provides navigation
-const createScreenWrapper = (ScreenComponent: any, nextScreen?: string, currentStep?: number) => {
+// Wrapper to handle navigation between screens
+const createScreenWrapper = (
+  ScreenComponent: any,
+  nextScreen?: string,
+  currentStep?: number,
+  totalSteps: number = 3  // Only 3 mandatory steps
+) => {
   const ScreenWrapper = () => {
-    const navigation = useNavigation<StackNavigationProp<OnboardingStackParamList>>();
-    const { setNeedsOnboarding } = useAuthStore();
+    const navigation = useNavigation<any>();
 
-    const handleNavigate = async (screen: string, data?: any) => {
+    const handleNavigate = (screen: string, _data?: unknown) => {
       if (__DEV__) {
-        devLog('Onboarding navigation:', { from: ScreenComponent.name, to: screen, data });
+        console.log(`🔄 [OnboardingNavigator] Navigating from ${ScreenComponent.name} to ${screen}`);
       }
 
-      // Handle special navigation cases
-      if (screen === 'onboarding-birthday') {
-        navigation.navigate('OnboardingBirthday');
-      } else if (screen === 'onboarding-gender') {
-        navigation.navigate('OnboardingGender');
-      } else if (screen === 'onboarding-complete' || screen === 'home') {
-        // Mark onboarding as complete
-        try {
-          await AuthAPI.updateProfile({ onboarding_completed: true });
-          setNeedsOnboarding(false);
-          // Navigation to Main will happen automatically via RootNavigator
-        } catch (error) {
-          if (__DEV__) {
-            console.error('Failed to mark onboarding complete:', error);
+      switch (screen) {
+        case 'onboarding-birthday':
+          navigation.navigate('OnboardingBirthday');
+          break;
+        case 'onboarding-gender':
+          navigation.navigate('OnboardingGender');
+          break;
+        case 'back':
+          if (navigation.canGoBack()) {
+            navigation.goBack();
+          } else {
+            console.log('Cannot go back');
           }
-        }
-      } else if (screen === 'welcome') {
-        // Go back to previous screen
-        if (navigation.canGoBack()) {
-          navigation.goBack();
-        }
+          break;
+        case 'home':
+        case 'main':
+          // After mandatory completion, go to main (where optional prompt will show)
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Main' }],
+          });
+          break;
+        default:
+          if (__DEV__) {
+            console.warn(`Unknown navigation target: ${screen}`);
+          }
       }
     };
 
     return (
-      <ScreenComponent onNavigate={handleNavigate} currentStep={currentStep} totalSteps={3} />
+      <ScreenComponent
+        onNavigate={handleNavigate}
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+      />
     );
   };
 
   ScreenWrapper.displayName = `${ScreenComponent.name}Wrapper`;
-  
   return ScreenWrapper;
 };
 
 export function OnboardingNavigator() {
+  const { continueOnboardingScreen, setContinueOnboarding } = useAuthStore();
+  
+  // Determine initial route
+  let initialRouteName = 'OnboardingName';
+  
+  if (continueOnboardingScreen) {
+    switch (continueOnboardingScreen) {
+      case 'birthday':
+        initialRouteName = 'OnboardingBirthday';
+        break;
+      case 'gender':
+        initialRouteName = 'OnboardingGender';
+        break;
+      default:
+        initialRouteName = 'OnboardingName';
+    }
+  }
+  
+  // Clear the continue screen flag after using it
+  React.useEffect(() => {
+    if (continueOnboardingScreen) {
+      setContinueOnboarding(null);
+    }
+  }, [continueOnboardingScreen, setContinueOnboarding]);
+  
   return (
     <OnboardingProvider>
       <Stack.Navigator
-        initialRouteName="OnboardingName"
+        initialRouteName={initialRouteName as keyof OnboardingStackParamList}
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_right',
         }}
       >
+        {/* Mandatory screens only */}
         <Stack.Screen
           name="OnboardingName"
-          component={createScreenWrapper(OnboardingNameScreen, 'OnboardingBirthday', 1)}
+          component={createScreenWrapper(OnboardingNameScreen, 'onboarding-birthday', 1)}
         />
         <Stack.Screen
           name="OnboardingBirthday"
-          component={createScreenWrapper(OnboardingBirthdayScreen, 'OnboardingGender', 2)}
+          component={createScreenWrapper(OnboardingBirthdayScreen, 'onboarding-gender', 2)}
         />
         <Stack.Screen
           name="OnboardingGender"

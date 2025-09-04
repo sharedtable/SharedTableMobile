@@ -330,10 +330,16 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
   // Action implementations
   const saveStep = useCallback(
     async (step: OnboardingStep, data: any): Promise<boolean> => {
-      if (!user) return false;
+      console.log('🚀 [OnboardingContext] saveStep called:', { step, data });
+      
+      if (!user) {
+        console.log('❌ [OnboardingContext] No user available');
+        return false;
+      }
 
       // Use Supabase user ID if available, otherwise use Privy ID
       const userIdForSave = state.supabaseUserId || user.id;
+      console.log('🔑 [OnboardingContext] Using user ID:', userIdForSave);
 
       try {
         dispatch({ type: 'SET_SAVING', payload: true });
@@ -341,14 +347,25 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
 
         // Validate step data
         const validation = validateOnboardingStep(step, data);
+        console.log('✅ [OnboardingContext] Validation result:', validation);
+        
         if (!validation.success) {
+          console.log('❌ [OnboardingContext] Validation failed:', validation.errors);
           dispatch({ type: 'SET_STEP_ERRORS', payload: validation.errors || {} });
           return false;
         }
 
         // Save to database using the correct user ID
         if (validation.data) {
+          console.log('📤 [OnboardingContext] Calling OnboardingService.saveOnboardingStep with:', {
+            userId: userIdForSave,
+            data: validation.data
+          });
+          
           await OnboardingService.saveOnboardingStep(userIdForSave, validation.data);
+          
+          console.log('✅ [OnboardingContext] OnboardingService.saveOnboardingStep completed');
+          
           // Update local state
           dispatch({ type: 'MERGE_STEP_DATA', payload: validation.data });
         }
@@ -357,7 +374,7 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
         const progress = await OnboardingService.getOnboardingProgress(userIdForSave);
         dispatch({ type: 'SET_PROGRESS', payload: progress });
 
-        console.log('✅ [OnboardingProvider] Step saved:', step);
+        console.log('✅ [OnboardingProvider] Step saved successfully:', step);
         return true;
       } catch (error) {
         console.error('❌ [OnboardingProvider] Failed to save step:', error);

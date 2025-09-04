@@ -29,7 +29,6 @@ export function SettingsScreen() {
 
   const settingsItems = [
     { id: 'account', title: 'Account', icon: 'person-outline' },
-    { id: 'dining-preferences', title: 'Dining Preferences', icon: 'restaurant-outline' },
     { id: 'notifications', title: 'Notifications', icon: 'notifications-outline' },
     { id: 'privacy', title: 'Privacy & Security', icon: 'lock-closed-outline' },
     { id: 'language', title: 'Language', icon: 'language-outline' },
@@ -75,9 +74,6 @@ export function SettingsScreen() {
               style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
               onPress={() => {
                 switch (item.id) {
-                  case 'dining-preferences':
-                    navigation.navigate('DiningPreferences');
-                    break;
                   case 'about':
                     navigation.navigate('About');
                     break;

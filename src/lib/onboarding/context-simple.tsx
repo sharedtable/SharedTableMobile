@@ -54,45 +54,35 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const updatedData = { ...currentStepData, ...data };
       setCurrentStepData(updatedData);
 
-      // For the 3 required steps, save to backend
-      if (step === 'name' || step === 'birthday' || step === 'gender') {
-        try {
-          // Prepare data for backend based on step
-          const apiData: any = {};
-          if (step === 'name') {
-            apiData.firstName = data.firstName;
-            apiData.lastName = data.lastName;
-            apiData.nickname = data.nickname;
-          } else if (step === 'birthday') {
-            apiData.birthDate = data.birthDate?.toISOString ? data.birthDate.toISOString() : data.birthDate;
-          } else if (step === 'gender') {
-            apiData.gender = data.gender;
-          }
-
-          await OnboardingAPI.saveStep({ step, data: apiData });
-
-          // If this is the last step (gender), complete the onboarding
-          if (step === 'gender') {
-            if (!updatedData.firstName || !updatedData.lastName || !updatedData.nickname || !updatedData.birthDate || !updatedData.gender) {
-              throw new Error('Missing required onboarding data');
-            }
-            const completeData = {
-              firstName: updatedData.firstName,
-              lastName: updatedData.lastName,
-              nickname: updatedData.nickname,
-              birthDate: updatedData.birthDate?.toISOString ? updatedData.birthDate.toISOString() : updatedData.birthDate,
-              gender: updatedData.gender,
-            };
-            await OnboardingAPI.completeOnboarding(completeData);
-          }
-        } catch (error) {
-          if (__DEV__) {
-            console.error(`Error saving ${step} to backend:`, error);
-          }
-          setStepErrors({ general: 'Failed to save data to server. Please try again.' });
-          setSaving(false);
-          return false;
+      // Save ALL steps to backend, not just mandatory ones
+      try {
+        // Prepare data for backend - send all the data for this step
+        const apiData: any = { ...data };
+        
+        // Handle date conversion if needed
+        if (apiData.birthDate?.toISOString) {
+          apiData.birthDate = apiData.birthDate.toISOString();
         }
+        
+        console.log(`📤 Saving ${step} to backend:`, apiData);
+        await OnboardingAPI.saveStep({ step, data: apiData });
+        
+        // After gender step, mark mandatory onboarding as complete but don't call completeOnboarding
+        // The full onboarding completion will happen at the Photo screen (last optional step)
+        if (step === 'gender') {
+          if (!updatedData.firstName || !updatedData.lastName || !updatedData.nickname || !updatedData.birthDate || !updatedData.gender) {
+            throw new Error('Missing required onboarding data');
+          }
+          // Just validate that we have the mandatory data, but don't complete onboarding yet
+          console.log('✅ Mandatory onboarding data collected, continuing with optional screens');
+        }
+      } catch (error) {
+        if (__DEV__) {
+          console.error(`Error saving ${step} to backend:`, error);
+        }
+        setStepErrors({ general: 'Failed to save data to server. Please try again.' });
+        setSaving(false);
+        return false;
       }
 
       if (__DEV__) {

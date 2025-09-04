@@ -274,7 +274,8 @@ router.post('/sync', async (req: Request, res: Response, next: NextFunction) => 
       data: {
         user: userData,
         isNewUser,
-        needsOnboarding: !userData.onboarding_completed,
+        needsOnboarding: userData.onboarding_status === 'not_started', // For backward compatibility
+        onboardingStatus: userData.onboarding_status || 'not_started',
       },
     });
   } catch (error) {

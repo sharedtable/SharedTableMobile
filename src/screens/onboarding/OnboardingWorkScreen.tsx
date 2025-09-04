@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
   Alert, 
@@ -7,56 +7,28 @@ import {
   ScrollView, 
   TextInput,
   KeyboardAvoidingView,
-  Platform 
+  Platform,
+  Pressable,
+  TouchableOpacity,
+  Keyboard
 } from 'react-native';
 
 import {
   OnboardingLayout,
   OnboardingTitle,
-  SelectionCard,
   OnboardingButton,
 } from '@/components/onboarding';
 import { useOnboarding, validateOnboardingStep } from '@/lib/onboarding';
 import { theme } from '@/theme';
 import { scaleHeight, scaleWidth, scaleFont } from '@/utils/responsive';
-import { Ionicons } from '@expo/vector-icons';
+import { searchJobs, industryCategories } from '@/data/jobs';
+import { Colors } from '@/constants/colors';
 
 interface OnboardingWorkScreenProps {
   onNavigate?: (screen: string, data?: unknown) => void;
   currentStep?: number;
   totalSteps?: number;
 }
-
-const workOptions = [
-  { id: 'tech', label: 'Technology', icon: 'laptop-outline' },
-  { id: 'healthcare', label: 'Healthcare', icon: 'medical-outline' },
-  { id: 'finance', label: 'Finance', icon: 'cash-outline' },
-  { id: 'education', label: 'Education', icon: 'school-outline' },
-  { id: 'marketing', label: 'Marketing', icon: 'megaphone-outline' },
-  { id: 'creative', label: 'Creative/Arts', icon: 'color-palette-outline' },
-  { id: 'hospitality', label: 'Hospitality', icon: 'restaurant-outline' },
-  { id: 'legal', label: 'Legal', icon: 'briefcase-outline' },
-  { id: 'entrepreneurship', label: 'Entrepreneurship', icon: 'rocket-outline' },
-  { id: 'consulting', label: 'Consulting', icon: 'people-outline' },
-  { id: 'nonprofit', label: 'Non-profit', icon: 'heart-outline' },
-  { id: 'government', label: 'Government', icon: 'business-outline' },
-  { id: 'retail', label: 'Retail', icon: 'cart-outline' },
-  { id: 'real_estate', label: 'Real Estate', icon: 'home-outline' },
-  { id: 'student', label: 'Student', icon: 'book-outline' },
-  { id: 'retired', label: 'Retired', icon: 'happy-outline' },
-  { id: 'other', label: 'Other', icon: 'ellipsis-horizontal-outline' },
-];
-
-const educationLevels = [
-  { id: 'high_school', label: 'High School', icon: 'school-outline' },
-  { id: 'some_college', label: 'Some College', icon: 'book-outline' },
-  { id: 'associate', label: "Associate's Degree", icon: 'document-outline' },
-  { id: 'bachelor', label: "Bachelor's Degree", icon: 'school' },
-  { id: 'master', label: "Master's Degree", icon: 'ribbon-outline' },
-  { id: 'doctorate', label: 'Doctorate/PhD', icon: 'medal-outline' },
-  { id: 'professional', label: 'Professional Degree (MD, JD, etc.)', icon: 'medical-outline' },
-  { id: 'trade', label: 'Trade/Vocational', icon: 'construct-outline' },
-];
 
 export const OnboardingWorkScreen: React.FC<OnboardingWorkScreenProps> = ({
   onNavigate,
@@ -65,90 +37,89 @@ export const OnboardingWorkScreen: React.FC<OnboardingWorkScreenProps> = ({
 }) => {
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
 
-  const stepData = currentStepData as Record<string, unknown>;
-  const [selectedWork, setSelectedWork] = useState<string | null>(
-    (stepData?.lineOfWork as string) || null
-  );
-  const [selectedEducation, setSelectedEducation] = useState<string | null>(
-    (stepData?.educationLevel as string) || null
-  );
   const [jobTitle, setJobTitle] = useState<string>(
-    (stepData?.jobTitle as string) || ''
+    currentStepData.jobTitle || ''
   );
-  const [school, setSchool] = useState<string>(
-    (stepData?.school as string) || ''
+  const [industry, setIndustry] = useState<string>(
+    currentStepData.lineOfWork || ''
+  );
+  const [company, setCompany] = useState<string>(
+    currentStepData.company || ''
   );
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
-  const [currentSection, setCurrentSection] = useState<'work' | 'education' | 'details'>('work');
+  const [jobSuggestions, setJobSuggestions] = useState<string[]>([]);
+  const [showJobSuggestions, setShowJobSuggestions] = useState(false);
+  const [showIndustryOptions, setShowIndustryOptions] = useState(false);
+  
+  const jobInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     clearErrors();
   }, [clearErrors]);
+
+  const handleJobTitleChange = (text: string) => {
+    setJobTitle(text);
+    
+    if (text.length >= 2) {
+      const suggestions = searchJobs(text, 8);
+      setJobSuggestions(suggestions);
+      setShowJobSuggestions(suggestions.length > 0);
+    } else {
+      setJobSuggestions([]);
+      setShowJobSuggestions(false);
+    }
+  };
+
+  const handleSelectJob = (job: string) => {
+    setJobTitle(job);
+    setShowJobSuggestions(false);
+    setJobSuggestions([]);
+    Keyboard.dismiss();
+  };
+
+  const handleSelectIndustry = (selectedIndustry: string) => {
+    setIndustry(selectedIndustry);
+    setShowIndustryOptions(false);
+  };
 
   const handleNext = async () => {
     try {
       setLocalErrors({});
       clearErrors();
 
-      // Validate based on current section
-      if (currentSection === 'work' && !selectedWork) {
-        setLocalErrors({ lineOfWork: 'Please select your line of work' });
+      if (!jobTitle.trim()) {
+        setLocalErrors({ jobTitle: 'Please enter your job title or occupation' });
         return;
       }
 
-      if (currentSection === 'education' && !selectedEducation) {
-        setLocalErrors({ educationLevel: 'Please select your education level' });
+      if (!industry) {
+        setLocalErrors({ lineOfWork: 'Please select your industry' });
         return;
       }
 
-      if (currentSection === 'details') {
-        // Job title is optional for students and retired
-        const requiresJobTitle = selectedWork !== 'student' && selectedWork !== 'retired';
-        if (requiresJobTitle && !jobTitle.trim()) {
-          setLocalErrors({ jobTitle: 'Please enter your job title' });
-          return;
-        }
+      const workData = { 
+        jobTitle: jobTitle.trim(),
+        lineOfWork: industry,
+        company: company.trim()
+      };
 
-        // School is optional but recommended
-        if (school.trim() && school.trim().length < 2) {
-          setLocalErrors({ school: 'School name is too short' });
-          return;
-        }
+      const validation = validateOnboardingStep('work', workData);
+      if (!validation.success) {
+        setLocalErrors(validation.errors || {});
+        return;
+      }
 
-        // Save all data
-        const workData = { 
-          lineOfWork: selectedWork,
-          educationLevel: selectedEducation,
-          jobTitle: jobTitle.trim(),
-          school: school.trim()
-        };
+      const success = await saveStep('work', workData);
 
-        const validation = validateOnboardingStep('work', workData);
-        if (!validation.success) {
-          setLocalErrors(validation.errors || {});
-          return;
-        }
-
-        const success = await saveStep('work', workData);
-
-        if (success) {
-          console.log('✅ [OnboardingWorkScreen] Work & Education data saved successfully');
-          onNavigate?.('onboarding-ethnicity', workData);
+      if (success) {
+        console.log('✅ [OnboardingWorkScreen] Work data saved successfully');
+        onNavigate?.('onboarding-background', workData);
+      } else {
+        if (Object.keys(stepErrors).length > 0) {
+          setLocalErrors(stepErrors);
         } else {
-          if (Object.keys(stepErrors).length > 0) {
-            setLocalErrors(stepErrors);
-          } else {
-            Alert.alert('Error', 'Failed to save your information. Please try again.');
-          }
+          Alert.alert('Error', 'Failed to save your information. Please try again.');
         }
-        return;
-      }
-
-      // Move to next section
-      if (currentSection === 'work') {
-        setCurrentSection('education');
-      } else if (currentSection === 'education') {
-        setCurrentSection('details');
       }
     } catch (error) {
       console.error('❌ [OnboardingWorkScreen] Error saving work:', error);
@@ -157,42 +128,11 @@ export const OnboardingWorkScreen: React.FC<OnboardingWorkScreenProps> = ({
   };
 
   const handleBack = () => {
-    if (currentSection === 'education') {
-      setCurrentSection('work');
-    } else if (currentSection === 'details') {
-      setCurrentSection('education');
-    } else {
-      onNavigate?.('onboarding-dependents');
-    }
+    onNavigate?.('onboarding-education');
   };
 
-  const getSectionTitle = () => {
-    switch (currentSection) {
-      case 'work':
-        return 'What line of work are you in?';
-      case 'education':
-        return 'What\'s your education level?';
-      case 'details':
-        return 'Tell us a bit more';
-    }
-  };
-
-  const getButtonLabel = () => {
-    if (saving) return 'Saving...';
-    if (currentSection === 'details') return 'Next';
-    return 'Continue';
-  };
-
-  const isButtonDisabled = () => {
-    if (saving) return true;
-    if (currentSection === 'work') return !selectedWork;
-    if (currentSection === 'education') return !selectedEducation;
-    if (currentSection === 'details') {
-      const requiresJobTitle = selectedWork !== 'student' && selectedWork !== 'retired';
-      return requiresJobTitle && !jobTitle.trim();
-    }
-    return false;
-  };
+  const hasError = Object.keys(localErrors).length > 0 || Object.keys(stepErrors).length > 0;
+  const errorMessage = Object.values(localErrors)[0] || Object.values(stepErrors)[0];
 
   return (
     <KeyboardAvoidingView 
@@ -204,262 +144,314 @@ export const OnboardingWorkScreen: React.FC<OnboardingWorkScreenProps> = ({
         currentStep={currentStep}
         totalSteps={totalSteps}
         scrollable
+        keyboardAvoiding
       >
-        <View style={styles.container}>
-          <OnboardingTitle>{getSectionTitle()}</OnboardingTitle>
+        <Pressable 
+          style={styles.container}
+          onPress={() => {
+            setShowJobSuggestions(false);
+            setShowIndustryOptions(false);
+            Keyboard.dismiss();
+          }}
+        >
+          <OnboardingTitle>What do you do for work?</OnboardingTitle>
 
-          {(Object.keys(localErrors).length > 0 || Object.keys(stepErrors).length > 0) && (
+          {hasError && errorMessage && (
             <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>
-                {localErrors[Object.keys(localErrors)[0]] ||
-                  stepErrors[Object.keys(stepErrors)[0]]}
-              </Text>
+              <Text style={styles.errorText}>{errorMessage}</Text>
             </View>
           )}
 
-          {currentSection === 'work' && (
-            <ScrollView 
-              style={styles.scrollContainer}
-              showsVerticalScrollIndicator={false}
-            >
-              <View style={styles.optionsGrid}>
-                {workOptions.map((option) => (
-                  <SelectionCard
-                    key={option.id}
-                    label={option.label}
-                    icon={
-                      <Ionicons 
-                        name={option.icon as any} 
-                        size={24} 
-                        color={selectedWork === option.id ? '#FFFFFF' : theme.colors.text.primary}
-                      />
-                    }
-                    selected={selectedWork === option.id}
-                    onPress={() => {
-                      setSelectedWork(option.id);
-                      if (localErrors.lineOfWork || stepErrors.lineOfWork) {
-                        setLocalErrors((prev) => ({ ...prev, lineOfWork: '' }));
-                        clearErrors();
-                      }
-                    }}
-                    compact
-                  />
-                ))}
-              </View>
-            </ScrollView>
-          )}
-
-          {currentSection === 'education' && (
-            <ScrollView 
-              style={styles.scrollContainer}
-              showsVerticalScrollIndicator={false}
-            >
-              <View style={styles.optionsContainer}>
-                {educationLevels.map((level) => (
-                  <SelectionCard
-                    key={level.id}
-                    label={level.label}
-                    icon={
-                      <Ionicons 
-                        name={level.icon as any} 
-                        size={24} 
-                        color={selectedEducation === level.id ? '#FFFFFF' : theme.colors.text.primary}
-                      />
-                    }
-                    selected={selectedEducation === level.id}
-                    onPress={() => {
-                      setSelectedEducation(level.id);
-                      if (localErrors.educationLevel || stepErrors.educationLevel) {
-                        setLocalErrors((prev) => ({ ...prev, educationLevel: '' }));
-                        clearErrors();
-                      }
-                    }}
-                    fullWidth
-                  />
-                ))}
-              </View>
-            </ScrollView>
-          )}
-
-          {currentSection === 'details' && (
-            <View style={styles.detailsContainer}>
-              {selectedWork !== 'student' && selectedWork !== 'retired' && (
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Job Title *</Text>
-                  <TextInput
-                    style={[
-                      styles.textInput,
-                      (localErrors.jobTitle || stepErrors.jobTitle) && styles.inputError
-                    ]}
-                    placeholder="e.g., Software Engineer, Marketing Manager"
-                    placeholderTextColor="#9CA3AF"
-                    value={jobTitle}
-                    onChangeText={(text) => {
-                      setJobTitle(text);
-                      if (localErrors.jobTitle) {
-                        setLocalErrors((prev) => ({ ...prev, jobTitle: '' }));
-                      }
-                    }}
-                    maxLength={50}
-                    autoCapitalize="words"
-                    returnKeyType="next"
-                  />
-                  <Text style={styles.helperText}>
-                    {jobTitle.length}/50 characters
-                  </Text>
+          {/* Job Title Input */}
+          <View style={styles.inputSection}>
+            <Text style={styles.inputLabel}>Job Title / Occupation *</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                ref={jobInputRef}
+                style={styles.textInput}
+                placeholder="e.g., Software Engineer, Teacher, Doctor"
+                placeholderTextColor="#9CA3AF"
+                value={jobTitle}
+                onChangeText={handleJobTitleChange}
+                onFocus={() => {
+                  if (jobTitle.length >= 2) {
+                    const suggestions = searchJobs(jobTitle, 8);
+                    setJobSuggestions(suggestions);
+                    setShowJobSuggestions(suggestions.length > 0);
+                  }
+                }}
+                autoCapitalize="words"
+                returnKeyType="next"
+                onSubmitEditing={() => {
+                  setShowJobSuggestions(false);
+                }}
+              />
+              {showJobSuggestions && (
+                <View style={styles.suggestionsContainer}>
+                  <ScrollView 
+                    keyboardShouldPersistTaps="always"
+                    nestedScrollEnabled={true}
+                    showsVerticalScrollIndicator={false}
+                  >
+                    {jobSuggestions.map((job) => (
+                      <TouchableOpacity
+                        key={job}
+                        style={styles.suggestionItem}
+                        onPress={() => handleSelectJob(job)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.suggestionText}>{job}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
                 </View>
               )}
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>
-                  School/University {selectedWork === 'student' ? '*' : '(Optional)'}
-                </Text>
-                <TextInput
-                  style={[
-                    styles.textInput,
-                    (localErrors.school || stepErrors.school) && styles.inputError
-                  ]}
-                  placeholder="e.g., Stanford University, Harvard Business School"
-                  placeholderTextColor="#9CA3AF"
-                  value={school}
-                  onChangeText={(text) => {
-                    setSchool(text);
-                    if (localErrors.school) {
-                      setLocalErrors((prev) => ({ ...prev, school: '' }));
-                    }
-                  }}
-                  maxLength={100}
-                  autoCapitalize="words"
-                  returnKeyType="done"
-                />
-                <Text style={styles.helperText}>
-                  {school.length}/100 characters
-                </Text>
-              </View>
-
-              <View style={styles.summaryContainer}>
-                <Text style={styles.summaryTitle}>Your Professional Profile:</Text>
-                <View style={styles.summaryItem}>
-                  <Ionicons name="briefcase-outline" size={20} color={theme.colors.primary.main} />
-                  <Text style={styles.summaryText}>
-                    {workOptions.find(w => w.id === selectedWork)?.label || 'Not selected'}
-                  </Text>
-                </View>
-                <View style={styles.summaryItem}>
-                  <Ionicons name="school-outline" size={20} color={theme.colors.primary.main} />
-                  <Text style={styles.summaryText}>
-                    {educationLevels.find(e => e.id === selectedEducation)?.label || 'Not selected'}
-                  </Text>
-                </View>
-              </View>
             </View>
-          )}
+            <Text style={styles.helperText}>
+              Type your job title or select from suggestions
+            </Text>
+          </View>
+
+          {/* Industry Selection */}
+          <View style={styles.inputSection}>
+            <Text style={styles.inputLabel}>Industry *</Text>
+            <TouchableOpacity
+              style={styles.selectButton}
+              onPress={() => setShowIndustryOptions(!showIndustryOptions)}
+              activeOpacity={0.7}
+            >
+              <Text style={[
+                styles.selectButtonText,
+                !industry && styles.placeholderText
+              ]}>
+                {industry || 'Select your industry'}
+              </Text>
+              <Text style={styles.selectButtonArrow}>
+                {showIndustryOptions ? '▲' : '▼'}
+              </Text>
+            </TouchableOpacity>
+            
+            {showIndustryOptions && (
+              <View style={styles.optionsContainer}>
+                <ScrollView 
+                  style={styles.optionsScrollView}
+                  showsVerticalScrollIndicator={true}
+                  nestedScrollEnabled={true}
+                >
+                  {industryCategories.map((ind) => (
+                    <TouchableOpacity
+                      key={ind}
+                      style={[
+                        styles.optionItem,
+                        industry === ind && styles.optionItemSelected
+                      ]}
+                      onPress={() => handleSelectIndustry(ind)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[
+                        styles.optionText,
+                        industry === ind && styles.optionTextSelected
+                      ]}>
+                        {ind}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </View>
+
+          {/* Company Input (Optional) */}
+          <View style={styles.inputSection}>
+            <Text style={styles.inputLabel}>Company (Optional)</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="e.g., Google, Stanford University, Self-employed"
+              placeholderTextColor="#9CA3AF"
+              value={company}
+              onChangeText={setCompany}
+              autoCapitalize="words"
+              returnKeyType="done"
+              onSubmitEditing={() => Keyboard.dismiss()}
+            />
+            <Text style={styles.helperText}>
+              Where do you currently work?
+            </Text>
+          </View>
 
           <View style={styles.spacer} />
 
           <View style={styles.bottomContainer}>
             <OnboardingButton
               onPress={handleNext}
-              label={getButtonLabel()}
-              disabled={isButtonDisabled()}
+              label={saving ? 'Saving...' : 'Next'}
+              disabled={!jobTitle.trim() || !industry || saving}
               loading={saving}
             />
           </View>
-        </View>
+        </Pressable>
       </OnboardingLayout>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  bottomContainer: {
-    paddingBottom: scaleHeight(40),
+  flexOne: {
+    flex: 1,
   },
   container: {
     flex: 1,
   },
-  scrollContainer: {
-    flex: 1,
-  },
   errorContainer: {
-    backgroundColor: theme.colors.error[100],
-    borderColor: theme.colors.error[300],
+    backgroundColor: Colors.errorLighter,
+    borderColor: Colors.errorLight,
     borderRadius: scaleWidth(8),
     borderWidth: 1,
     marginBottom: scaleHeight(16),
     padding: scaleWidth(12),
   },
   errorText: {
-    color: theme.colors.error.main,
+    color: Colors.error,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
   },
-  optionsContainer: {
-    gap: scaleHeight(12),
-  },
-  optionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: scaleHeight(12),
-    justifyContent: 'space-between',
-  },
-  detailsContainer: {
-    gap: scaleHeight(24),
-  },
-  inputGroup: {
-    gap: scaleHeight(8),
+  inputSection: {
+    marginTop: scaleHeight(20),
   },
   inputLabel: {
     color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.medium,
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
+    fontWeight: '500',
+    marginBottom: scaleHeight(8),
+  },
+  inputContainer: {
+    position: 'relative',
+    zIndex: 1000,
   },
   textInput: {
-    backgroundColor: theme.colors.background.default,
-    borderColor: theme.colors.neutral.gray[200],
+    backgroundColor: Colors.backgroundGrayLight,
+    borderColor: Colors.borderLight,
     borderRadius: scaleWidth(12),
     borderWidth: 1,
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
     paddingHorizontal: scaleWidth(16),
-    paddingVertical: scaleHeight(14),
-  },
-  inputError: {
-    borderColor: theme.colors.error[300],
+    paddingVertical: scaleHeight(12),
   },
   helperText: {
-    color: theme.colors.text.tertiary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(12),
-  },
-  summaryContainer: {
-    backgroundColor: theme.colors.background.paper,
-    borderRadius: scaleWidth(12),
-    padding: scaleWidth(16),
-    gap: scaleHeight(12),
-  },
-  summaryTitle: {
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.medium,
-    fontSize: scaleFont(14),
-    marginBottom: scaleHeight(8),
-  },
-  summaryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: scaleWidth(12),
-  },
-  summaryText: {
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
+    fontSize: scaleFont(13),
+    marginTop: scaleHeight(6),
+  },
+  suggestionsContainer: {
+    position: 'absolute',
+    top: scaleHeight(52),
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.white,
+    borderRadius: scaleWidth(12),
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    maxHeight: scaleHeight(240),
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.shadowColor,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  suggestionItem: {
+    paddingHorizontal: scaleWidth(16),
+    paddingVertical: scaleHeight(14),
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.backgroundGrayLighter,
+  },
+  suggestionText: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(15),
+  },
+  selectButton: {
+    backgroundColor: Colors.backgroundGrayLight,
+    borderColor: Colors.borderLight,
+    borderRadius: scaleWidth(12),
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: scaleWidth(16),
+    paddingVertical: scaleHeight(12),
+  },
+  selectButtonText: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
     flex: 1,
+  },
+  placeholderText: {
+    color: '#9CA3AF',
+  },
+  selectButtonArrow: {
+    color: theme.colors.text.secondary,
+    fontSize: scaleFont(14),
+    marginLeft: scaleWidth(8),
+  },
+  optionsContainer: {
+    marginTop: scaleHeight(8),
+    backgroundColor: Colors.white,
+    borderRadius: scaleWidth(12),
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    maxHeight: scaleHeight(200),
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.shadowColor,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  optionsScrollView: {
+    maxHeight: scaleHeight(200),
+  },
+  optionItem: {
+    paddingHorizontal: scaleWidth(16),
+    paddingVertical: scaleHeight(12),
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.backgroundGrayLighter,
+  },
+  optionItemSelected: {
+    backgroundColor: Colors.primaryLight,
+  },
+  optionText: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(15),
+  },
+  optionTextSelected: {
+    color: theme.colors.primary.main,
+    fontWeight: '500',
   },
   spacer: {
-    height: scaleHeight(40),
-  },
-  flexOne: {
     flex: 1,
+    minHeight: scaleHeight(40),
+  },
+  bottomContainer: {
+    paddingBottom: scaleHeight(20),
+    paddingTop: scaleHeight(16),
   },
 });

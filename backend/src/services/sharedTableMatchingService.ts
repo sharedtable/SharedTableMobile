@@ -495,9 +495,9 @@ export class SharedTableMatchingService {
       
       // Get users signed up for the time slot
       const { data: signups, error: signupError } = await supabase
-        .from('slot_signups')
+        .from('dinner_bookings')
         .select('user_id')
-        .eq('slot_id', timeSlotId)
+        .eq('timeslot_id', timeSlotId)
         .eq('status', 'confirmed');
       
       if (signupError) {

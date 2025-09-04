@@ -47,13 +47,13 @@ interface TimeSlotSignup {
   signed_up_at: string;
   time_slot?: {
     id: string;
-    slot_date: string;
-    slot_time: string;
-    day_of_week: string;
+    datetime: string; // ISO string with date and time
     max_signups: number;
     current_signups: number;
     status: string;
     dinner_type?: 'regular' | 'singles';
+    created_at?: string;
+    updated_at?: string;
   };
   dinner_group?: {
     id: string;
@@ -129,18 +129,17 @@ export function ProfileScreen() {
         const upcoming = response.data
           .filter((signup: TimeSlotSignup) => {
             if (signup.status === 'cancelled' || !signup.time_slot) return false;
-            // Compare dates as strings since they're in YYYY-MM-DD format
-            const today = new Date().toISOString().split('T')[0];
-            return signup.time_slot.slot_date >= today;
+            // Compare datetime to filter out past slots
+            const now = new Date();
+            const slotDate = new Date(signup.time_slot.datetime);
+            return slotDate >= now;
           })
           .sort((a: TimeSlotSignup, b: TimeSlotSignup) => {
             if (!a.time_slot || !b.time_slot) return 0;
-            // Sort by date string (YYYY-MM-DD format sorts correctly as strings)
-            if (a.time_slot.slot_date !== b.time_slot.slot_date) {
-              return a.time_slot.slot_date.localeCompare(b.time_slot.slot_date);
-            }
-            // If same date, sort by time
-            return a.time_slot.slot_time.localeCompare(b.time_slot.slot_time);
+            // Sort by datetime
+            const dateA = new Date(a.time_slot.datetime);
+            const dateB = new Date(b.time_slot.datetime);
+            return dateA.getTime() - dateB.getTime();
           });
         
         setReservations(upcoming);
@@ -183,10 +182,6 @@ export function ProfileScreen() {
     navigation.navigate('Main' as any, { screen: 'Home' });
   };
 
-  const handleRefine = () => {
-    // Navigate to Dining Preferences screen
-    navigation.navigate('DiningPreferences' as any);
-  };
 
   const handleCancelReservation = async (signupId: string) => {
     try {
@@ -367,18 +362,21 @@ export function ProfileScreen() {
           ) : reservations.length > 0 ? (
             reservations.map((reservation) => {
               const formatReservationDate = () => {
-                if (!reservation.time_slot?.slot_date) return '';
-                // Date is already in local time (YYYY-MM-DD format)
-                const dateParts = reservation.time_slot.slot_date.split('-');
-                const _year = dateParts[0];
-                const month = dateParts[1];
-                const day = dateParts[2];
+                if (!reservation.time_slot?.datetime) return '';
+                const dateTime = new Date(reservation.time_slot.datetime);
+                if (isNaN(dateTime.getTime())) return '';
                 
-                // Format time (assuming it's in HH:MM:SS format)
-                const time = reservation.time_slot?.slot_time ? 
-                  reservation.time_slot.slot_time.substring(0, 5).split(':').map((t, i) => 
-                    i === 0 ? (parseInt(t) > 12 ? parseInt(t) - 12 : parseInt(t) === 0 ? 12 : parseInt(t)) : t
-                  ).join(':') + (parseInt(reservation.time_slot.slot_time.substring(0, 2)) >= 12 ? ' PM' : ' AM') : '';
+                // Extract date parts for display
+                const _year = dateTime.getFullYear().toString();
+                const month = (dateTime.getMonth() + 1).toString().padStart(2, '0');
+                const day = dateTime.getDate().toString().padStart(2, '0');
+                
+                const hours = dateTime.getHours();
+                const minutes = dateTime.getMinutes();
+                const period = hours >= 12 ? 'PM' : 'AM';
+                const displayHour = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+                const displayMinute = minutes.toString().padStart(2, '0');
+                const time = `${displayHour}:${displayMinute} ${period}`;
                 
                 return `${_year}-${month}-${day} at ${time}`;
               };
@@ -456,12 +454,9 @@ export function ProfileScreen() {
           )}
         </View>
 
-        {/* Quick Action Buttons */}
+        {/* Quick Action Button */}
         <View style={styles.actionButtons}>
-          <Pressable style={[styles.actionButton, styles.refineButton]} onPress={handleRefine}>
-            <Text style={styles.refineButtonText}>Refine</Text>
-          </Pressable>
-          <Pressable style={[styles.actionButton, styles.grabButton]} onPress={handleGrabSpot}>
+          <Pressable style={[styles.actionButton, styles.grabButton, styles.grabButtonFull]} onPress={handleGrabSpot}>
             <Text style={styles.grabButtonText}>Grab a Spot</Text>
           </Pressable>
         </View>
@@ -569,6 +564,9 @@ const styles = StyleSheet.create({
   grabButton: {
     backgroundColor: theme.colors.primary.main,
   },
+  grabButtonFull: {
+    flex: 1,
+  },
   grabButtonText: {
     color: theme.colors.white,
     fontSize: scaleFont(14),
@@ -616,17 +614,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     fontSize: scaleFont(14),
     paddingVertical: scaleHeight(20),
-    textAlign: 'center',
-  },
-  refineButton: {
-    backgroundColor: theme.colors.white,
-    borderColor: theme.colors.primary.main,
-    borderWidth: 1,
-  },
-  refineButtonText: {
-    color: theme.colors.primary.main,
-    fontSize: scaleFont(14),
-    fontWeight: '600',
     textAlign: 'center',
   },
   reservationCard: {

@@ -363,9 +363,9 @@ export class EmbeddingService {
   async processTimeSlotUsers(timeSlotId: string): Promise<void> {
     // Get all users signed up for this time slot
     const { data: signups } = await supabase
-      .from('time_slot_signups')
+      .from('dinner_bookings')
       .select('user_id')
-      .eq('time_slot_id', timeSlotId);
+      .eq('timeslot_id', timeSlotId);
     
     if (!signups || signups.length === 0) {
       throw new Error('No users found for time slot');

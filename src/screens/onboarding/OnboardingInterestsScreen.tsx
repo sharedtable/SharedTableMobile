@@ -1,11 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { View, Alert, StyleSheet, Text, Pressable } from 'react-native';
-
-import { Icon } from '@/components/base/Icon';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  Alert, 
+  TextInput, 
+  TouchableOpacity,
+  ScrollView,
+  Keyboard,
+  Pressable
+} from 'react-native';
 import { OnboardingLayout, OnboardingTitle, OnboardingButton } from '@/components/onboarding';
 import { useOnboarding, validateOnboardingStep } from '@/lib/onboarding';
 import { theme } from '@/theme';
 import { scaleHeight, scaleWidth, scaleFont } from '@/utils/responsive';
+import { searchInterests, getRandomSuggestions } from '@/data/interests';
+import { Colors } from '@/constants/colors';
 
 interface OnboardingInterestsScreenProps {
   onNavigate?: (screen: string, data?: unknown) => void;
@@ -13,49 +23,61 @@ interface OnboardingInterestsScreenProps {
   totalSteps?: number;
 }
 
-const interestOptions = [
-  'Creative & Arts',
-  'Entertainment & Media',
-  'Learning & Hobbies',
-  'Lifestyle & Wellness',
-  'Culture & Travel',
-  'Career & Personal Growth',
-  'Social & Community',
-  'Tech & Digital',
-  'Sports & Games',
-];
-
 export const OnboardingInterestsScreen: React.FC<OnboardingInterestsScreenProps> = ({
   onNavigate,
-  currentStep = 5,
-  totalSteps = 8,
+  currentStep = 9,
+  totalSteps = 10,
 }) => {
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
 
   const [selectedInterests, setSelectedInterests] = useState<string[]>(
     currentStepData.interests || []
   );
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchResults, setSearchResults] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+  
+  const searchInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
-    // Clear errors when component mounts
     clearErrors();
+    // Initialize with random suggestions
+    setSuggestions(getRandomSuggestions(12, selectedInterests));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clearErrors]);
 
-  const toggleInterest = (interest: string) => {
-    setSelectedInterests((prev) => {
-      const newInterests = prev.includes(interest)
-        ? prev.filter((i) => i !== interest)
-        : [...prev, interest];
+  useEffect(() => {
+    // Update suggestions when interests change
+    setSuggestions(getRandomSuggestions(12, selectedInterests));
+  }, [selectedInterests]);
 
-      // Clear errors when user makes selection
-      if (localErrors.interests || stepErrors.interests) {
-        setLocalErrors((prevErrors) => ({ ...prevErrors, interests: '' }));
-        clearErrors();
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    
+    if (query.length >= 1) {
+      const results = searchInterests(query, 10);
+      setSearchResults(results);
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  const addInterest = (interest: string) => {
+    if (!selectedInterests.includes(interest)) {
+      if (selectedInterests.length >= 10) {
+        Alert.alert('Maximum Reached', 'You can select up to 10 interests');
+        return;
       }
+      setSelectedInterests([...selectedInterests, interest]);
+    }
+    setSearchQuery('');
+    setSearchResults([]);
+    Keyboard.dismiss();
+  };
 
-      return newInterests;
-    });
+  const removeInterest = (interest: string) => {
+    setSelectedInterests(selectedInterests.filter(i => i !== interest));
   };
 
   const handleNext = async () => {
@@ -63,27 +85,30 @@ export const OnboardingInterestsScreen: React.FC<OnboardingInterestsScreenProps>
       setLocalErrors({});
       clearErrors();
 
+      if (selectedInterests.length === 0) {
+        setLocalErrors({ interests: 'Please select at least one interest' });
+        return;
+      }
+
       const interestsData = { interests: selectedInterests };
 
-      // Validate locally first
       const validation = validateOnboardingStep('interests', interestsData);
       if (!validation.success) {
         setLocalErrors(validation.errors || {});
         return;
       }
 
-      // Save to database
       const success = await saveStep('interests', interestsData);
 
       if (success) {
         console.log('✅ [OnboardingInterestsScreen] Interests saved successfully');
-        onNavigate?.('onboarding-personality', interestsData);
+        // Navigate to Final Touch screens
+        onNavigate?.('onboarding-hoping-to-meet', interestsData);
       } else {
-        // Handle step errors from context
         if (Object.keys(stepErrors).length > 0) {
           setLocalErrors(stepErrors);
         } else {
-          Alert.alert('Error', 'Failed to save your interests. Please try again.');
+          Alert.alert('Error', 'Failed to save your information. Please try again.');
         }
       }
     } catch (error) {
@@ -96,6 +121,9 @@ export const OnboardingInterestsScreen: React.FC<OnboardingInterestsScreenProps>
     onNavigate?.('onboarding-lifestyle');
   };
 
+  const hasError = Object.keys(localErrors).length > 0 || Object.keys(stepErrors).length > 0;
+  const errorMessage = Object.values(localErrors)[0] || Object.values(stepErrors)[0];
+
   return (
     <OnboardingLayout
       onBack={handleBack}
@@ -103,43 +131,113 @@ export const OnboardingInterestsScreen: React.FC<OnboardingInterestsScreenProps>
       totalSteps={totalSteps}
       scrollable
     >
-      <View style={styles.container}>
-        <OnboardingTitle>Choose your interests.</OnboardingTitle>
+      <Pressable 
+        style={styles.container}
+        onPress={() => {
+          Keyboard.dismiss();
+          setSearchResults([]);
+        }}
+      >
+        <OnboardingTitle>Your interests</OnboardingTitle>
 
-        {(Object.keys(localErrors).length > 0 || Object.keys(stepErrors).length > 0) && (
+        {hasError && errorMessage && (
           <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>
-              {localErrors.interests ||
-                stepErrors.interests ||
-                localErrors.general ||
-                stepErrors.general}
-            </Text>
+            <Text style={styles.errorText}>{errorMessage}</Text>
           </View>
         )}
 
-        <View style={styles.optionsContainer}>
-          {interestOptions.map((interest) => (
-            <Pressable
-              key={interest}
-              style={[
-                styles.interestCard,
-                selectedInterests.includes(interest) && styles.interestCardSelected,
-              ]}
-              onPress={() => toggleInterest(interest)}
+        {/* Search Input */}
+        <View style={styles.searchContainer}>
+          <TextInput
+            ref={searchInputRef}
+            style={styles.searchInput}
+            placeholder="Type to search interests..."
+            placeholderTextColor={theme.colors.text.secondary}
+            value={searchQuery}
+            onChangeText={handleSearch}
+            returnKeyType="search"
+            autoCapitalize="words"
+            autoCorrect={false}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity 
+              style={styles.clearButton}
+              onPress={() => {
+                setSearchQuery('');
+                setSearchResults([]);
+              }}
             >
-              <Text
+              <Text style={styles.clearButtonText}>×</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Search Results */}
+        {searchResults.length > 0 && (
+          <View style={styles.searchResultsContainer}>
+            <ScrollView 
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyboardShouldPersistTaps="always"
+            >
+              {searchResults.map((result) => (
+                <TouchableOpacity
+                  key={result}
+                  style={styles.searchResultItem}
+                  onPress={() => addInterest(result)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.searchResultText}>+ {result}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Selected Interests */}
+        {selectedInterests.length > 0 && (
+          <View style={styles.selectedSection}>
+            <View style={styles.selectedInterestsContainer}>
+              {selectedInterests.map((interest) => (
+                <View key={interest} style={styles.selectedInterest}>
+                  <Text style={styles.selectedInterestText}>{interest}</Text>
+                  <TouchableOpacity
+                    style={styles.removeButton}
+                    onPress={() => removeInterest(interest)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.removeButtonText}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Suggestions */}
+        <View style={styles.suggestionsSection}>
+          <Text style={styles.suggestionsTitle}>Suggestions</Text>
+          <View style={styles.suggestionsGrid}>
+            {suggestions.map((suggestion) => (
+              <TouchableOpacity
+                key={suggestion}
                 style={[
-                  styles.interestText,
-                  selectedInterests.includes(interest) && styles.interestTextSelected,
+                  styles.suggestionItem,
+                  selectedInterests.includes(suggestion) && styles.suggestionItemDisabled
                 ]}
+                onPress={() => !selectedInterests.includes(suggestion) && addInterest(suggestion)}
+                activeOpacity={0.7}
+                disabled={selectedInterests.includes(suggestion)}
               >
-                {interest}
-              </Text>
-              {selectedInterests.includes(interest) && (
-                <Icon name="checkmark" size={20} color={theme.colors.primary.main} />
-              )}
-            </Pressable>
-          ))}
+                <Text style={[
+                  styles.suggestionText,
+                  selectedInterests.includes(suggestion) && styles.suggestionTextDisabled
+                ]}>
+                  {suggestion} +
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         <View style={styles.spacer} />
@@ -147,68 +245,159 @@ export const OnboardingInterestsScreen: React.FC<OnboardingInterestsScreenProps>
         <View style={styles.bottomContainer}>
           <OnboardingButton
             onPress={handleNext}
-            label={saving ? 'Saving...' : 'Next'}
+            label={saving ? 'Completing...' : 'Next'}
             disabled={selectedInterests.length === 0 || saving}
             loading={saving}
           />
         </View>
-      </View>
+      </Pressable>
     </OnboardingLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  bottomContainer: {
-    paddingBottom: scaleHeight(40),
-    paddingTop: scaleHeight(20),
-  },
   container: {
     flex: 1,
   },
   errorContainer: {
-    backgroundColor: '#FEE2E2',
-    borderColor: '#FCA5A5',
+    backgroundColor: Colors.errorLighter,
+    borderColor: Colors.errorLight,
     borderRadius: scaleWidth(8),
     borderWidth: 1,
-    marginBottom: scaleHeight(16),
+    marginBottom: scaleHeight(12),
     padding: scaleWidth(12),
   },
   errorText: {
-    color: '#DC2626',
+    color: Colors.error,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
   },
-  interestCard: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(226, 72, 73, 0.1)', // 10% of brand color
-    borderColor: 'transparent',
-    borderRadius: scaleWidth(12),
+  searchContainer: {
+    position: 'relative',
+    marginBottom: scaleHeight(16),
+  },
+  searchInput: {
+    backgroundColor: Colors.white,
+    borderColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(25),
     borderWidth: 2,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: scaleWidth(20),
-    paddingVertical: scaleHeight(16),
-  },
-  interestCardSelected: {
-    backgroundColor: 'rgba(226, 72, 73, 0.3)',
-    borderColor: theme.colors.primary.main, // 30% of brand color
-  },
-  interestText: {
     color: theme.colors.text.primary,
-    flex: 1,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
+    paddingHorizontal: scaleWidth(20),
+    paddingVertical: scaleHeight(12),
+    paddingRight: scaleWidth(40),
+  },
+  clearButton: {
+    position: 'absolute',
+    right: scaleWidth(15),
+    top: '50%',
+    transform: [{ translateY: -scaleHeight(12) }],
+  },
+  clearButtonText: {
+    color: theme.colors.text.secondary,
+    fontSize: scaleFont(24),
+    fontWeight: '300',
+  },
+  searchResultsContainer: {
+    marginBottom: scaleHeight(16),
+  },
+  searchResultItem: {
+    backgroundColor: Colors.white,
+    borderColor: theme.colors.primary.main,
+    borderWidth: 1,
+    borderRadius: scaleWidth(20),
+    paddingHorizontal: scaleWidth(14),
+    paddingVertical: scaleHeight(8),
+    marginRight: scaleWidth(8),
+  },
+  searchResultText: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
     fontWeight: '500',
   },
-  interestTextSelected: {
-    color: theme.colors.primary.main,
-    fontWeight: '600',
+  selectedSection: {
+    marginBottom: scaleHeight(20),
   },
-  optionsContainer: {
-    gap: scaleHeight(12),
+  selectedInterestsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: scaleWidth(8),
+  },
+  selectedInterest: {
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(20),
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: scaleWidth(14),
+    paddingRight: scaleWidth(8),
+    paddingVertical: scaleHeight(8),
+    marginRight: scaleWidth(8),
+    marginBottom: scaleHeight(8),
+  },
+  selectedInterestText: {
+    color: Colors.white,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '500',
+    marginRight: scaleWidth(8),
+  },
+  removeButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: scaleWidth(10),
+    width: scaleWidth(20),
+    height: scaleWidth(20),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeButtonText: {
+    color: Colors.white,
+    fontSize: scaleFont(16),
+    fontWeight: '600',
+    lineHeight: scaleFont(18),
+  },
+  suggestionsSection: {
+    marginTop: scaleHeight(20),
+  },
+  suggestionsTitle: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    marginBottom: scaleHeight(12),
+  },
+  suggestionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: scaleWidth(10),
+  },
+  suggestionItem: {
+    backgroundColor: Colors.backgroundGrayLighter,
+    borderColor: Colors.borderLight,
+    borderRadius: scaleWidth(20),
+    borderWidth: 1,
+    paddingHorizontal: scaleWidth(14),
+    paddingVertical: scaleHeight(8),
+    marginRight: scaleWidth(8),
+    marginBottom: scaleHeight(8),
+  },
+  suggestionItemDisabled: {
+    opacity: 0.4,
+    backgroundColor: Colors.backgroundGrayLight,
+  },
+  suggestionText: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+  },
+  suggestionTextDisabled: {
+    color: theme.colors.text.secondary,
   },
   spacer: {
     flex: 1,
-    minHeight: scaleHeight(40),
+  },
+  bottomContainer: {
+    paddingBottom: scaleHeight(20),
+    paddingTop: scaleHeight(16),
   },
 });

@@ -11,12 +11,11 @@ router.get('/available', async (_req: AuthRequest, res: Response) => {
     // Get time slots that are in the future and still open
     const now = new Date();
     const { data: slots, error } = await supabaseService
-      .from('time_slots')
+      .from('timeslots')
       .select('*')
       .eq('status', 'open')
-      .gte('slot_date', now.toISOString().split('T')[0])
-      .order('slot_date', { ascending: true })
-      .order('slot_time', { ascending: true });
+      .gte('datetime', now.toISOString())
+      .order('datetime', { ascending: true });
 
     if (error) {
       logger.error('Error fetching time slots:', error);
@@ -77,7 +76,7 @@ router.post('/signup', verifyPrivyToken, async (req: AuthRequest, res: Response)
 
     // Check if slot is still available
     const { data: slot, error: slotError } = await supabaseService
-      .from('time_slots')
+      .from('timeslots')
       .select('*')
       .eq('id', timeSlotId)
       .eq('status', 'open')
@@ -92,9 +91,9 @@ router.post('/signup', verifyPrivyToken, async (req: AuthRequest, res: Response)
 
     // Check if user already signed up for this slot
     const { data: existingSignup } = await supabaseService
-      .from('slot_signups')
+      .from('dinner_bookings')
       .select('id')
-      .eq('time_slot_id', timeSlotId)
+      .eq('timeslot_id', timeSlotId)
       .eq('user_id', userId)
       .single();
 
@@ -107,13 +106,14 @@ router.post('/signup', verifyPrivyToken, async (req: AuthRequest, res: Response)
 
     // Create the signup
     const { data: signup, error: signupError } = await supabaseService
-      .from('slot_signups')
+      .from('dinner_bookings')
       .insert({
-        time_slot_id: timeSlotId,
+        timeslot_id: timeSlotId,
         user_id: userId,
         dietary_restrictions: dietaryRestrictions,
         preferences: preferences,
         status: 'pending',
+        signed_up_at: new Date().toISOString(),
       })
       .select()
       .single();
@@ -128,7 +128,7 @@ router.post('/signup', verifyPrivyToken, async (req: AuthRequest, res: Response)
 
     // Update the signup count
     const { error: updateError } = await supabaseService
-      .from('time_slots')
+      .from('timeslots')
       .update({ 
         current_signups: slot.current_signups + 1,
         updated_at: new Date().toISOString(),
@@ -173,6 +173,7 @@ router.get('/my-signups', verifyPrivyToken, async (req: AuthRequest, res: Respon
       .single();
 
     if (userError || !userData) {
+      logger.error('User not found:', { privyUserId, userError });
       return res.status(404).json({
         success: false,
         error: 'User not found in database',
@@ -180,50 +181,35 @@ router.get('/my-signups', verifyPrivyToken, async (req: AuthRequest, res: Respon
     }
 
     const userId = userData.id;
+    logger.info(`Fetching signups for user ${userId} (Privy: ${privyUserId})`);
 
-    // Get user's signups with time slot details
+    // Get user's dinner bookings
     const { data: signups, error } = await supabaseService
-      .from('slot_signups')
-      .select(`
-        *,
-        time_slot:time_slots(*)
-      `)
+      .from('dinner_bookings')
+      .select('*, timeslot:timeslots(*)')
       .eq('user_id', userId)
       .order('signed_up_at', { ascending: false });
 
     if (error) {
-      logger.error('Error fetching user signups:', error);
+      logger.error('Error fetching user signups:', {
+        error,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        userId,
+        privyUserId
+      });
       return res.status(500).json({
         success: false,
         error: 'Failed to fetch signups',
+        details: error.message // Add more details in response for debugging
       });
     }
 
     // For grouped signups, fetch the dinner group details
-    const enhancedSignups = await Promise.all(
-      (signups || []).map(async (signup) => {
-        if (signup.status === 'grouped') {
-          // Fetch the dinner group for this signup
-          const { data: groupMember } = await supabaseService
-            .from('group_members')
-            .select(`
-              *,
-              dinner_group:dinner_groups(*)
-            `)
-            .eq('user_id', userId)
-            .eq('dinner_group.time_slot_id', signup.time_slot_id)
-            .single();
-
-          if (groupMember?.dinner_group) {
-            return {
-              ...signup,
-              dinner_group: groupMember.dinner_group,
-            };
-          }
-        }
-        return signup;
-      })
-    );
+    // Note: group_members table doesn't exist yet, so we'll just return signups as-is
+    const enhancedSignups = signups || [];
 
     return res.json({
       success: true,
@@ -243,26 +229,13 @@ router.get('/group-members/:dinnerGroupId', verifyPrivyToken, async (req: AuthRe
   try {
     const { dinnerGroupId } = req.params;
 
-    // Get all members in the group
-    const { data: members, error } = await supabaseService
-      .from('group_members')
-      .select(`
-        *,
-        user:users(id, email, first_name, last_name, display_name)
-      `)
-      .eq('dinner_group_id', dinnerGroupId);
-
-    if (error) {
-      logger.error('Error fetching group members:', error);
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to fetch group members',
-      });
-    }
-
+    // Since group_members table doesn't exist yet, return empty array
+    // TODO: Implement when group_members table is created
+    logger.info(`Group members requested for dinner group ${dinnerGroupId} - table not yet implemented`);
+    
     return res.json({
       success: true,
-      data: members || [],
+      data: [],
     });
   } catch (error) {
     logger.error('Error in group-members endpoint:', error);
@@ -302,45 +275,13 @@ router.get('/my-group/:timeSlotId', verifyPrivyToken, async (req: AuthRequest, r
 
     const userId = userData.id;
 
-    // Get the user's group assignment
-    const { data: groupMember, error } = await supabaseService
-      .from('group_members')
-      .select(`
-        *,
-        dinner_group:dinner_groups(*),
-        user:users(id, name, email)
-      `)
-      .eq('user_id', userId)
-      .eq('dinner_group.time_slot_id', timeSlotId)
-      .single();
-
-    if (error || !groupMember) {
-      return res.status(404).json({
-        success: false,
-        error: 'No group assignment found for this time slot',
-      });
-    }
-
-    // Get all members in the same group
-    const { data: allMembers, error: membersError } = await supabaseService
-      .from('group_members')
-      .select(`
-        *,
-        user:users(id, name, email)
-      `)
-      .eq('dinner_group_id', groupMember.dinner_group_id);
-
-    if (membersError) {
-      logger.error('Error fetching group members:', membersError);
-    }
-
-    return res.json({
-      success: true,
-      data: {
-        group: groupMember.dinner_group,
-        myStatus: groupMember.status,
-        members: allMembers || [],
-      },
+    // Since group_members table doesn't exist yet, return not found
+    // TODO: Implement when group_members table is created
+    logger.info(`Group assignment requested for user ${userId} and time slot ${timeSlotId} - table not yet implemented`);
+    
+    return res.status(404).json({
+      success: false,
+      error: 'Group assignments not yet available',
     });
   } catch (error) {
     logger.error('Error in my-group endpoint:', error);
@@ -382,8 +323,8 @@ router.delete('/signup/:signupId', verifyPrivyToken, async (req: AuthRequest, re
 
     // Get the signup to verify ownership and status
     const { data: signup, error: signupError } = await supabaseService
-      .from('slot_signups')
-      .select('*, time_slot:time_slots(*)')
+      .from('dinner_bookings')
+      .select('*, timeslot:timeslots(*)')
       .eq('id', signupId)
       .eq('user_id', userId)
       .single();
@@ -404,7 +345,7 @@ router.delete('/signup/:signupId', verifyPrivyToken, async (req: AuthRequest, re
 
     // Delete the signup
     const { error: deleteError } = await supabaseService
-      .from('slot_signups')
+      .from('dinner_bookings')
       .delete()
       .eq('id', signupId);
 
@@ -418,12 +359,12 @@ router.delete('/signup/:signupId', verifyPrivyToken, async (req: AuthRequest, re
 
     // Update the signup count
     const { error: updateError } = await supabaseService
-      .from('time_slots')
+      .from('timeslots')
       .update({ 
-        current_signups: signup.time_slot.current_signups - 1,
+        current_signups: signup.timeslot.current_signups - 1,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', signup.time_slot_id);
+      .eq('id', signup.timeslot_id);
 
     if (updateError) {
       logger.error('Error updating signup count:', updateError);
