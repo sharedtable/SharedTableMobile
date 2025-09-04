@@ -58,21 +58,17 @@ export function DinnerDetailsScreen() {
   // Calculate countdown timer
   useEffect(() => {
     const calculateCountdown = () => {
-      if (!reservation.time_slot?.slot_date || !reservation.time_slot?.slot_time) {
+      if (!reservation.time_slot?.datetime) {
         return;
       }
 
-      const [_year, month, day] = reservation.time_slot.slot_date.split('-');
-      const [hour, minute] = reservation.time_slot.slot_time.split(':');
+      // Create date object for dinner time from ISO string
+      const dinnerDate = new Date(reservation.time_slot.datetime);
       
-      // Create date object for dinner time
-      const dinnerDate = new Date(
-        parseInt(_year),
-        parseInt(month) - 1,
-        parseInt(day),
-        parseInt(hour),
-        parseInt(minute)
-      );
+      if (isNaN(dinnerDate.getTime())) {
+        console.error('Invalid datetime:', reservation.time_slot.datetime);
+        return;
+      }
 
       const now = new Date();
       const diff = dinnerDate.getTime() - now.getTime();
@@ -162,19 +158,36 @@ export function DinnerDetailsScreen() {
   };
 
   const _formatDate = () => {
-    if (!reservation.time_slot?.slot_date) return '';
-    const [year, month, day] = reservation.time_slot.slot_date.split('-');
+    if (!reservation.time_slot?.datetime) return '';
+    
+    const date = new Date(reservation.time_slot.datetime);
+    if (isNaN(date.getTime())) return '';
+    
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return `${monthNames[parseInt(month) - 1]} ${parseInt(day)}, ${year}`;
+    return `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
   };
 
   const _formatTime = () => {
-    if (!reservation.time_slot?.slot_time) return '';
-    const [hours, minutes] = reservation.time_slot.slot_time.split(':');
-    const hour = parseInt(hours);
-    const period = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-    return `${displayHour}:${minutes.padStart(2, '0')} ${period}`;
+    if (!reservation.time_slot?.datetime) return '';
+    
+    const date = new Date(reservation.time_slot.datetime);
+    if (isNaN(date.getTime())) return '';
+    
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHour = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
+    const displayMinute = minutes.toString().padStart(2, '0');
+    return `${displayHour}:${displayMinute} ${period}`;
+  };
+
+  const _formatDayOfWeek = () => {
+    if (!reservation.time_slot?.datetime) return '';
+    
+    const date = new Date(reservation.time_slot.datetime);
+    if (isNaN(date.getTime())) return '';
+    
+    return date.toLocaleDateString('en-US', { weekday: 'long' });
   };
 
   return (
@@ -625,7 +638,7 @@ export function DinnerDetailsScreen() {
                   {reservation.dinner_group?.restaurant_name || 'Restaurant'}
                 </Text>
                 <Text style={styles.countdownEventTime}>
-                  {reservation.time_slot?.day_of_week}, {_formatTime()}
+                  {_formatDayOfWeek()}, {_formatTime()}
                 </Text>
               </View>
               <View style={styles.countdownTimeContainer}>

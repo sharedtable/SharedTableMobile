@@ -20,7 +20,7 @@ router.post(
 
       // Verify the time slot exists
       const { data: timeSlot, error: slotError } = await supabaseService
-        .from('time_slots')
+        .from('timeslots')
         .select('*')
         .eq('id', timeSlotId)
         .single();
@@ -115,7 +115,7 @@ router.get(
             location
           )
         `)
-        .eq('time_slot_id', timeSlotId);
+        .eq('slot_id', timeSlotId);
 
       if (error) {
         throw error;

@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Icon } from '@/components/base/Icon';
 import { InviteFriendsSection } from '@/components/home/InviteFriendsSection';
 import { TopBar } from '@/components/navigation/TopBar';
+import { OptionalOnboardingPrompt } from '@/components/OptionalOnboardingPrompt';
 // Removed BottomTabBar - now using React Navigation's tab bar
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { api } from '@/services/api';
@@ -32,13 +33,13 @@ const backgroundImage = require('@/assets/images/backgrounds/background.jpg');
 
 interface TimeSlot {
   id: string;
-  slot_date: string;
-  slot_time: string;
-  day_of_week: string;
+  datetime: string; // ISO string with date and time
   max_signups: number;
   current_signups: number;
   status: string;
   dinner_type?: 'regular' | 'singles';
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface Signup {
@@ -215,40 +216,85 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
     );
   }, [mySignups]);
 
-  const formatDate = useCallback((dateString: string) => {
+  const formatDateTime = useCallback((isoString: string) => {
     try {
-      // Date is in YYYY-MM-DD format, already local time
-      const [_year, month, day] = dateString.split('-');
+      const date = new Date(isoString);
+      if (isNaN(date.getTime())) {
+        console.error('Invalid datetime string:', isoString);
+        return { date: 'Invalid date', time: 'Invalid time', dayOfWeek: '' };
+      }
+      
+      const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return `${monthNames[parseInt(month, 10) - 1]} ${parseInt(day, 10)}`;
+      const dateStr = `${monthNames[date.getMonth()]} ${date.getDate()}`;
+      
+      const hours = date.getHours();
+      const minutes = date.getMinutes();
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const displayHour = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+      const displayMinute = minutes.toString().padStart(2, '0');
+      const timeStr = `${displayHour}:${displayMinute} ${period}`;
+      
+      return { date: dateStr, time: timeStr, dayOfWeek };
+    } catch (error) {
+      console.error('Error formatting datetime:', error);
+      return { date: 'Invalid date', time: 'Invalid time', dayOfWeek: '' };
+    }
+  }, []);
+
+  // Keep the old functions for backward compatibility if needed
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const formatDate = useCallback((dateString: string) => {
+    if (!dateString) return 'Invalid date';
+    try {
+      // Try to handle both old format (YYYY-MM-DD) and new format (ISO datetime)
+      if (dateString.includes('T')) {
+        // ISO datetime format
+        const { date } = formatDateTime(dateString);
+        return date;
+      } else {
+        // Old YYYY-MM-DD format
+        const [_year, month, day] = dateString.split('-');
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return `${monthNames[parseInt(month, 10) - 1]} ${parseInt(day, 10)}`;
+      }
     } catch (error) {
       console.error('Error formatting date:', error);
       return 'Invalid date';
     }
-  }, []);
+  }, [formatDateTime]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const formatTime = useCallback((timeString: string) => {
+    if (!timeString) return 'Invalid time';
     try {
-      // Time is in HH:MM:SS format, already local time
-      const [hours, minutes] = timeString.split(':');
-      const hour = parseInt(hours, 10);
-      const minute = parseInt(minutes, 10);
-      
-      if (isNaN(hour) || isNaN(minute)) {
-        console.error('Invalid time string:', timeString);
-        return 'Invalid time';
+      // Try to handle both old format (HH:MM:SS) and new format (ISO datetime)
+      if (timeString.includes('T')) {
+        // ISO datetime format
+        const { time } = formatDateTime(timeString);
+        return time;
+      } else {
+        // Old HH:MM:SS format
+        const [hours, minutes] = timeString.split(':');
+        const hour = parseInt(hours, 10);
+        const minute = parseInt(minutes, 10);
+        
+        if (isNaN(hour) || isNaN(minute)) {
+          console.error('Invalid time string:', timeString);
+          return 'Invalid time';
+        }
+        
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+        const displayMinute = minute.toString().padStart(2, '0');
+        
+        return `${displayHour}:${displayMinute} ${period}`;
       }
-      
-      const period = hour >= 12 ? 'PM' : 'AM';
-      const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-      const displayMinute = minute.toString().padStart(2, '0');
-      
-      return `${displayHour}:${displayMinute} ${period}`;
     } catch (error) {
       console.error('Error formatting time:', error);
       return 'Invalid time';
     }
-  }, []);
+  }, [formatDateTime]);
 
   const handleGrabSpot = async () => {
     if (!selectedTimeSlot) {
@@ -276,7 +322,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
 
     Alert.alert(
       'Confirm Signup',
-      `Sign up for ${timeSlot.day_of_week}, ${formatDate(timeSlot.slot_date)} at ${formatTime(timeSlot.slot_time)}?\n\nYou'll be notified 24 hours before with your dinner group and restaurant details.`,
+      (() => {
+        const { dayOfWeek, date, time } = formatDateTime(timeSlot.datetime);
+        return `Sign up for ${dayOfWeek}, ${date} at ${time}?\n\nYou'll be notified 24 hours before with your dinner group and restaurant details.`;
+      })(),
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -326,6 +375,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
+      
+      {/* Optional Onboarding Prompt */}
+      <OptionalOnboardingPrompt />
       
       {/* Top Bar with Notifications */}
       <TopBar
@@ -420,7 +472,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
                                     isSelected && styles.slotMainTextSelected,
                                     signedUp && styles.slotTextSignedUp,
                                   ]}>
-                                    {slot.day_of_week}, {formatDate(slot.slot_date)} {formatTime(slot.slot_time)}
+                                    {(() => {
+                                      const { dayOfWeek, date, time } = formatDateTime(slot.datetime);
+                                      return `${dayOfWeek}, ${date} ${time}`;
+                                    })()}
                                   </Text>
                                 </View>
                                 
@@ -472,7 +527,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
                                     isSelected && styles.slotMainTextSelected,
                                     signedUp && styles.slotTextSignedUp,
                                   ]}>
-                                    {slot.day_of_week}, {formatDate(slot.slot_date)} {formatTime(slot.slot_time)}
+                                    {(() => {
+                                      const { dayOfWeek, date, time } = formatDateTime(slot.datetime);
+                                      return `${dayOfWeek}, ${date} ${time}`;
+                                    })()}
                                   </Text>
                                 </View>
                                 

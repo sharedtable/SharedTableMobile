@@ -26,6 +26,7 @@ export class UserSyncService {
     userId?: string;
     isNewUser?: boolean;
     needsOnboarding?: boolean;
+    onboardingStatus?: string;
     error?: string;
   }> {
     try {
@@ -42,7 +43,11 @@ export class UserSyncService {
       if (response.success) {
         logger.info(
           response.data.isNewUser ? 'Created new user' : 'Updated existing user',
-          { userId: response.data.user.id, needsOnboarding: response.data.needsOnboarding }
+          { 
+            userId: response.data.user.id, 
+            onboardingStatus: response.data.onboardingStatus,
+            needsOnboarding: response.data.needsOnboarding // Keep for backward compatibility
+          }
         );
 
         return {
@@ -50,6 +55,7 @@ export class UserSyncService {
           userId: response.data.user.id,
           isNewUser: response.data.isNewUser,
           needsOnboarding: response.data.needsOnboarding,
+          onboardingStatus: response.data.onboardingStatus,
         };
       }
 

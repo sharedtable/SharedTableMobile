@@ -58,13 +58,78 @@ apiClient.interceptors.response.use(
 );
 
 export interface OnboardingStepData {
-  step: 'name' | 'birthday' | 'gender';
+  step: 'name' | 'birthday' | 'gender' | 'education' | 'work' | 'background' | 'ethnicity' | 'personality' | 'lifestyle' | 'foodPreferences' | 'interests' | 'finalTouch';
   data: {
+    // Mandatory fields
     firstName?: string;
     lastName?: string;
     nickname?: string;
     birthDate?: string;
     gender?: 'male' | 'female' | 'non_binary' | 'prefer_not_to_say';
+    
+    // Optional profile fields
+    educationLevel?: string;
+    fieldOfStudy?: string;
+    major?: string;
+    school?: string;
+    occupation?: string;
+    industry?: string;
+    lineOfWork?: string;
+    jobTitle?: string;
+    company?: string;
+    
+    // Background/Ethnicity fields
+    ethnicity?: string;
+    nationality?: string;
+    religion?: string;
+    relationshipStatus?: string;
+    height?: string;
+    heightFeet?: number;
+    heightInches?: number;
+    heightCm?: number;
+    
+    // Personality fields
+    personalityTraits?: string[];
+    mbti?: string;
+    mbtiType?: string;
+    leadConversations?: number;
+    willingCompromise?: number;
+    seekExperiences?: number;
+    roles?: string[];
+    conversationStyle?: string;
+    
+    // Lifestyle fields
+    lifestyle?: any;
+    beliefs?: string[];
+    smoking?: string;
+    drinking?: string;
+    earlyBirdNightOwl?: number;
+    activePerson?: number;
+    punctuality?: number;
+    workLifeBalance?: number;
+    substances?: string[];
+    
+    // Food preference fields
+    dietaryRestrictions?: string;
+    budget?: number;
+    spicyLevel?: number;
+    drinkingLevel?: number;
+    adventurousLevel?: number;
+    diningAtmospheres?: string[];
+    dinnerDuration?: string;
+    zipCode?: string;
+    travelDistance?: number;
+    foodCraving?: string;
+    cuisinesToTry?: string[];
+    cuisinesToAvoid?: string[];
+    
+    // Interests fields
+    interests?: string[];
+    hobbies?: string[];
+    
+    // Final Touch fields
+    hopingToMeet?: string;
+    interestingFact?: string;
   };
 }
 
@@ -87,16 +152,29 @@ interface OnboardingStatusResponse {
   completedAt?: string;
 }
 
+interface OnboardingResumeInfo {
+  success: boolean;
+  canResume: boolean;
+  lastCompletedStep: string | null;
+  nextStep: string;
+  nextScreen: string;
+  completedSteps: string[];
+  totalSteps: number;
+  percentComplete: number;
+  message: string;
+}
+
 export class OnboardingAPI {
   /**
-   * Save a single onboarding step
+   * Save a single onboarding step - SIMPLIFIED VERSION
    */
   static async saveStep(stepData: OnboardingStepData): Promise<OnboardingResponse> {
     try {
+      // Use the simpler endpoint that actually saves data
       const response = await retryWithBackoff(
         async () => {
           const res = await withTimeout(
-            apiClient.post<OnboardingResponse>('/onboarding/step', stepData),
+            apiClient.post<OnboardingResponse>('/onboarding-simple/save', stepData),
             15000,
             'Onboarding step save timed out'
           );
@@ -114,7 +192,13 @@ export class OnboardingAPI {
       return response.data;
     } catch (error) {
       logError('Failed to save onboarding step', error);
-      throw error;
+      // Try the original endpoint as fallback
+      try {
+        const fallbackResponse = await apiClient.post<OnboardingResponse>('/onboarding/step', stepData);
+        return fallbackResponse.data;
+      } catch (_fallbackError) {
+        throw error; // Throw original error
+      }
     }
   }
 
@@ -157,6 +241,19 @@ export class OnboardingAPI {
       return response.data;
     } catch (error) {
       logError('Failed to check onboarding status', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get resume information for optional onboarding
+   */
+  static async getResumeInfo(): Promise<OnboardingResumeInfo> {
+    try {
+      const response = await apiClient.get<OnboardingResumeInfo>('/onboarding-simple/resume-info');
+      return response.data;
+    } catch (error) {
+      logError('Failed to get onboarding resume info', error);
       throw error;
     }
   }

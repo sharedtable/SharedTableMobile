@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
-import { MaleIcon, FemaleIcon } from '@/components/icons/GenderIcons';
-import { OnboardingLayout, OnboardingTitle, OnboardingButton } from '@/components/onboarding';
+import { OnboardingLayout, OnboardingTitle, OnboardingButton, SingleChoiceOption } from '@/components/onboarding';
 import { useOnboarding, validateOnboardingStep } from '@/lib/onboarding';
+import { useAuthStore, OnboardingStatus } from '@/store/authStore';
+import { api } from '@/services/api';
 import { theme } from '@/theme';
-import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
+import { scaleHeight, scaleFont, scaleWidth } from '@/utils/responsive';
 
 interface OnboardingGenderScreenProps {
   onNavigate?: (screen: string, data?: unknown) => void;
@@ -15,10 +17,12 @@ interface OnboardingGenderScreenProps {
 
 export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
   onNavigate,
-  currentStep = 3,  // Last onboarding step (Name, Birthday, Gender)
-  totalSteps = 3,   // Total onboarding steps only
+  currentStep = 3,
+  totalSteps = 3,
 }) => {
+  const navigation = useNavigation();
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
+  const { privyUser, setNeedsOnboarding, setOnboardingStatus } = useAuthStore();
 
   const [selectedGender, setSelectedGender] = useState<
     'male' | 'female' | 'non_binary' | 'prefer_not_to_say' | null
@@ -26,7 +30,6 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Clear errors when component mounts
     clearErrors();
   }, [clearErrors]);
 
@@ -49,9 +52,48 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
 
       if (success) {
         console.log('✅ [OnboardingGenderScreen] Gender saved successfully');
-        onNavigate?.('personalization-dietary', genderData);
+        
+        // Complete mandatory onboarding
+        const userId = privyUser?.id;
+        if (userId) {
+          try {
+            // Complete onboarding with the mandatory data via backend API
+            const completeData = {
+              firstName: currentStepData.firstName || '',
+              lastName: currentStepData.lastName || '',
+              nickname: currentStepData.nickname || '',
+              birthDate: currentStepData.birthDate || new Date().toISOString(),
+              gender: selectedGender || 'prefer_not_to_say',
+            };
+            
+            console.log('📍 [OnboardingGenderScreen] Completing mandatory onboarding');
+            
+            // Call backend API to complete mandatory onboarding
+            const response = await api.request('POST', '/onboarding/complete', completeData);
+            
+            if (response.success) {
+              console.log('✅ [OnboardingGenderScreen] Mandatory onboarding complete');
+              
+              // Update local state
+              await setOnboardingStatus(OnboardingStatus.MANDATORY_COMPLETE);
+              setNeedsOnboarding(false);
+              
+              console.log('📍 [OnboardingGenderScreen] Navigating to Main screen');
+              
+              // Small delay to ensure state is fully updated
+              setTimeout(() => {
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Main' as never }],
+                });
+              }, 100);
+            }
+          } catch (error) {
+            console.error('Failed to complete mandatory onboarding:', error);
+            Alert.alert('Error', 'Failed to complete onboarding. Please try again.');
+          }
+        }
       } else {
-        // Handle step errors from context
         if (Object.keys(stepErrors).length > 0) {
           setLocalErrors(stepErrors);
         } else {
@@ -68,19 +110,24 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
     onNavigate?.('onboarding-birthday');
   };
 
+  const genderOptions = [
+    { id: 'female', label: 'Female' },
+    { id: 'male', label: 'Male' },
+    { id: 'non_binary', label: 'Non-binary' },
+    { id: 'prefer_not_to_say', label: 'Prefer not to say', special: true },
+  ];
+
   const hasError = Object.keys(localErrors).length > 0 || Object.keys(stepErrors).length > 0;
-  const errorMessage =
-    localErrors.gender || stepErrors.gender || localErrors.general || stepErrors.general;
+  const errorMessage = localErrors.gender || stepErrors.gender;
 
   return (
     <OnboardingLayout
       onBack={handleBack}
       currentStep={currentStep}
       totalSteps={totalSteps}
-      keyboardAvoiding
     >
       <View style={styles.container}>
-        <OnboardingTitle>{"What's your gender?"}</OnboardingTitle>
+        <OnboardingTitle>What's your gender?</OnboardingTitle>
 
         {hasError && (
           <View style={styles.errorContainer}>
@@ -88,130 +135,26 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
           </View>
         )}
 
-        {/* Gender Options */}
-        <View style={styles.optionsGrid}>
-          {/* First Row */}
-          <View style={styles.optionsRow}>
-            {/* Male Option */}
-            <Pressable
-              style={[styles.genderCard, selectedGender === 'male' && styles.genderCardSelected]}
+        <View style={styles.optionsContainer}>
+          {genderOptions.map((option) => (
+            <SingleChoiceOption
+              key={option.id}
+              label={option.label}
+              selected={selectedGender === option.id}
+              special={option.special}
               onPress={() => {
-                setSelectedGender('male');
+                setSelectedGender(option.id as any);
                 if (localErrors.gender || stepErrors.gender) {
-                  setLocalErrors((prev) => ({ ...prev, gender: '' }));
+                  setLocalErrors({});
                   clearErrors();
                 }
               }}
-            >
-              <View style={styles.iconContainer}>
-                <MaleIcon
-                  size={40}
-                  color={theme.colors.primary.main}
-                  isSelected={selectedGender === 'male'}
-                />
-              </View>
-              <Text
-                style={[styles.genderText, selectedGender === 'male' && styles.genderTextSelected]}
-              >
-                Male
-              </Text>
-            </Pressable>
-
-            {/* Female Option */}
-            <Pressable
-              style={[styles.genderCard, selectedGender === 'female' && styles.genderCardSelected]}
-              onPress={() => {
-                setSelectedGender('female');
-                if (localErrors.gender || stepErrors.gender) {
-                  setLocalErrors((prev) => ({ ...prev, gender: '' }));
-                  clearErrors();
-                }
-              }}
-            >
-              <View style={styles.iconContainer}>
-                <FemaleIcon
-                  size={40}
-                  color={theme.colors.primary.main}
-                  isSelected={selectedGender === 'female'}
-                />
-              </View>
-              <Text
-                style={[styles.genderText, selectedGender === 'female' && styles.genderTextSelected]}
-              >
-                Female
-              </Text>
-            </Pressable>
-          </View>
-
-          {/* Second Row */}
-          <View style={styles.optionsRow}>
-            {/* Non-binary Option */}
-            <Pressable
-              style={[
-                styles.genderCard,
-                styles.textOnlyCard,
-                selectedGender === 'non_binary' && styles.genderCardSelected
-              ]}
-              onPress={() => {
-                setSelectedGender('non_binary');
-                if (localErrors.gender || stepErrors.gender) {
-                  setLocalErrors((prev) => ({ ...prev, gender: '' }));
-                  clearErrors();
-                }
-              }}
-            >
-              <Text
-                style={[
-                  styles.genderText,
-                  styles.textOnlyText,
-                  selectedGender === 'non_binary' && styles.genderTextSelected
-                ]}
-              >
-                Non-binary
-              </Text>
-            </Pressable>
-
-            {/* Prefer not to say Option */}
-            <Pressable
-              style={[
-                styles.genderCard,
-                styles.textOnlyCard,
-                styles.preferNotToSayCard,
-                selectedGender === 'prefer_not_to_say' && styles.preferNotToSaySelected
-              ]}
-              onPress={() => {
-                setSelectedGender('prefer_not_to_say');
-                if (localErrors.gender || stepErrors.gender) {
-                  setLocalErrors((prev) => ({ ...prev, gender: '' }));
-                  clearErrors();
-                }
-              }}
-            >
-              <View style={styles.preferNotToSayContent}>
-                <Text
-                  style={[
-                    styles.genderText,
-                    styles.textOnlyText,
-                    styles.preferNotToSayText,
-                    selectedGender === 'prefer_not_to_say' && styles.preferNotToSayTextSelected
-                  ]}
-                >
-                  Prefer not to say
-                </Text>
-                {selectedGender === 'prefer_not_to_say' && (
-                  <View style={styles.checkmark}>
-                    <Text style={styles.checkmarkText}>✓</Text>
-                  </View>
-                )}
-              </View>
-            </Pressable>
-          </View>
+            />
+          ))}
         </View>
 
-        {/* Spacer */}
         <View style={styles.spacer} />
 
-        {/* Bottom Button */}
         <View style={styles.bottomContainer}>
           <OnboardingButton
             onPress={handleNext}
@@ -226,9 +169,6 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  bottomContainer: {
-    paddingBottom: scaleHeight(40),
-  },
   container: {
     flex: 1,
   },
@@ -245,84 +185,13 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
   },
-  genderCard: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(226, 72, 73, 0.1)', // 10% of brand color
-    borderColor: 'transparent',
-    borderRadius: scaleWidth(16),
-    borderWidth: 2,
-    flex: 1,
-    paddingVertical: scaleHeight(24),
-    justifyContent: 'center',
-  },
-  genderCardSelected: {
-    backgroundColor: 'rgba(226, 72, 73, 0.3)', // 30% of brand color
-    borderColor: theme.colors.primary.main,
-  },
-  genderText: {
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(15),
-    fontWeight: '500',
-  },
-  genderTextSelected: {
-    color: theme.colors.primary.main,
-    fontWeight: '600',
-  },
-  iconContainer: {
-    alignItems: 'center',
-    height: scaleWidth(45),
-    justifyContent: 'center',
-    marginBottom: scaleHeight(8),
-    width: scaleWidth(45),
-  },
-  optionsGrid: {
-    gap: scaleHeight(16),
-  },
-  optionsRow: {
-    flexDirection: 'row',
-    gap: scaleWidth(16),
-  },
-  textOnlyCard: {
-    paddingVertical: scaleHeight(28),
-  },
-  textOnlyText: {
-    fontSize: scaleFont(14),
-  },
-  preferNotToSayCard: {
-    backgroundColor: 'rgba(255, 182, 193, 0.15)', // Light pink background
-    borderColor: 'rgba(255, 182, 193, 0.5)',
-  },
-  preferNotToSaySelected: {
-    backgroundColor: 'rgba(255, 182, 193, 0.4)',
-    borderColor: '#FFB6C1',
-  },
-  preferNotToSayContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: scaleWidth(8),
-  },
-  preferNotToSayText: {
-    color: '#9CA3AF',
-  },
-  preferNotToSayTextSelected: {
-    color: '#E24849',
-    fontWeight: '600',
-  },
-  checkmark: {
-    width: scaleWidth(20),
-    height: scaleWidth(20),
-    borderRadius: scaleWidth(10),
-    backgroundColor: '#E24849',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkmarkText: {
-    color: 'white',
-    fontSize: scaleFont(12),
-    fontWeight: '600',
+  optionsContainer: {
+    marginTop: scaleHeight(8),
   },
   spacer: {
     flex: 1,
+  },
+  bottomContainer: {
+    paddingBottom: scaleHeight(40),
   },
 });

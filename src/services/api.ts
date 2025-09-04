@@ -210,6 +210,13 @@ class ApiService {
           const token = await this.getAuthToken();
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+            if (__DEV__ && config.url?.includes('notifications')) {
+              console.log(`🔑 [API] Auth header set for ${config.url}`);
+            }
+          } else {
+            if (__DEV__ && config.url?.includes('notifications')) {
+              console.log(`⚠️ [API] No token available for ${config.url}`);
+            }
           }
         } catch (error) {
           console.error('Error getting auth token:', error);
@@ -278,12 +285,26 @@ class ApiService {
       // Try Privy token first (current auth system)
       const privyToken = await SecureStore.getItemAsync('privy_auth_token');
       if (privyToken) {
-        // Check if we need to refresh the token
-        // This is a temporary solution - ideally Privy SDK should handle this
+        // Log token presence for debugging
+        if (__DEV__) {
+          console.log('📱 [API] Using Privy token (length:', privyToken.length, ')');
+        }
         return privyToken;
       }
+      
       // Fallback to old token key
-      return await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+      const fallbackToken = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+      if (fallbackToken) {
+        if (__DEV__) {
+          console.log('📱 [API] Using fallback token');
+        }
+        return fallbackToken;
+      }
+      
+      if (__DEV__) {
+        console.log('⚠️ [API] No auth token found');
+      }
+      return null;
     } catch (error) {
       console.error('Error retrieving auth token:', error);
       return null;
@@ -385,6 +406,75 @@ class ApiService {
     const response = await this.client.put('/user/profile', data);
     return response.data;
   }
+
+  // ============================================================================
+  // Onboarding Endpoints
+  // ============================================================================
+
+  async completeOnboarding(data: {
+    firstName: string;
+    lastName: string;
+    nickname: string;
+    birthDate: string;
+    gender: 'male' | 'female' | 'non_binary' | 'prefer_not_to_say';
+  }): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    const response = await this.client.post('/onboarding/complete', data);
+    return response.data;
+  }
+
+  async saveOnboardingStep(step: string, data: any): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    // Use the simplified endpoint that actually saves data
+    const response = await this.client.post('/onboarding-simple/save', { step, data });
+    return response.data;
+  }
+
+  async getOnboardingStatus(): Promise<{ 
+    success: boolean;
+    status: 'not_started' | 'mandatory_complete' | 'optional_complete' | 'fully_complete';
+    mandatoryComplete: boolean;
+    optionalComplete: boolean;
+    completedAt?: string;
+    missingFields?: {
+      mandatory: {
+        firstName: boolean;
+        lastName: boolean;
+        birthDate: boolean;
+        gender: boolean;
+      };
+      optional: {
+        interests: boolean;
+        dietaryPreferences: boolean;
+        occupation: boolean;
+        fieldOfStudy: boolean;
+      };
+    };
+  }> {
+    try {
+      const response = await this.client.get('/onboarding/status');
+      return response.data;
+    } catch (error) {
+      if (__DEV__) {
+        console.error('❌ [API] Error fetching onboarding status:', error);
+      }
+      // Return a default response on error
+      return {
+        success: false,
+        status: 'not_started',
+        mandatoryComplete: false,
+        optionalComplete: false,
+      };
+    }
+  }
+
+  async updateOnboardingStatus(status: string): Promise<ApiResponse<{ 
+    success: boolean; 
+    status: string;
+    message: string;
+  }>> {
+    const response = await this.client.post('/onboarding/update-status', { status });
+    return response.data;
+  }
+
 
   async uploadProfilePhoto(uri: string): Promise<ApiResponse<{ url: string }>> {
     const formData = new FormData();

@@ -1,116 +1,83 @@
 import Slider from '@react-native-community/slider';
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, ScrollView, Pressable } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  Alert, 
+  ScrollView, 
+  TouchableOpacity,
+  Platform
+} from 'react-native';
 
 import { OnboardingLayout, OnboardingTitle, OnboardingButton } from '@/components/onboarding';
 import { useOnboarding, validateOnboardingStep } from '@/lib/onboarding';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
+import { Colors } from '@/constants/colors';
 
 interface OnboardingPersonalityScreenProps {
   onNavigate?: (screen: string, data?: unknown) => void;
   currentStep?: number;
   totalSteps?: number;
-  userData?: Record<string, unknown>;
 }
 
 interface PersonalityTraits {
-  earlyBirdNightOwl: number;
-  activePerson: number;
-  enjoyGym: number;
-  workLifeBalance: number;
   leadConversations: number;
   willingCompromise: number;
   seekExperiences: number;
-  politicalViews: number;
 }
 
 const mbtiTypes = [
-  { code: 'INTJ', name: 'The Architect' },
-  { code: 'INTP', name: 'The Thinker' },
-  { code: 'ENTJ', name: 'The Commander' },
-  { code: 'ENTP', name: 'The Debater' },
-  { code: 'INFJ', name: 'The Advocate' },
-  { code: 'INFP', name: 'The Mediator' },
-  { code: 'ENFJ', name: 'The Protagonist' },
-  { code: 'ENFP', name: 'The Campaigner' },
-  { code: 'ISTJ', name: 'The Logistician' },
-  { code: 'ISFJ', name: 'The Protector' },
-  { code: 'ESTJ', name: 'The Executive' },
-  { code: 'ESFJ', name: 'The Consul' },
-  { code: 'ISTP', name: 'The Virtuoso' },
-  { code: 'ISFP', name: 'The Adventurer' },
-  { code: 'ESTP', name: 'The Entrepreneur' },
-  { code: 'ESFP', name: 'The Entertainer' },
+  'INTJ', 'INTP', 'ENTJ', 'ENTP',
+  'INFJ', 'INFP', 'ENFJ', 'ENFP',
+  'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ',
+  'ISTP', 'ISFP', 'ESTP', 'ESFP',
 ];
 
-const questionsPage1 = [
-  {
-    key: 'earlyBirdNightOwl',
-    question: 'Are you more of an early bird or night owl?',
-    leftLabel: 'Early Bird',
-    rightLabel: 'Night Owl',
-  },
-  {
-    key: 'activePerson',
-    question: 'Are you an active person?',
-    leftLabel: 'Not at all',
-    rightLabel: 'Extremely',
-  },
-  {
-    key: 'enjoyGym',
-    question: 'Do you enjoy going to the gym?',
-    leftLabel: 'Not at all',
-    rightLabel: 'Extremely',
-  },
-  {
-    key: 'workLifeBalance',
-    question: 'Is work-life balance important to you?',
-    leftLabel: 'Not important',
-    rightLabel: 'Very important',
-  },
+const roleOptions = [
+  'Connector',
+  'Storyteller',
+  'Question-asker',
+  'Quiet observer',
+  'Comic relief',
+  'Host',
 ];
 
-const questionsPage2 = [
+const personalityQuestions = [
   {
-    key: 'leadConversations',
+    key: 'leadConversations' as keyof PersonalityTraits,
     question: 'I often take the lead in starting conversations',
-    leftLabel: 'Disagree',
-    rightLabel: 'Agree',
+    leftLabel: 'Not at all',
+    rightLabel: 'Always',
   },
   {
-    key: 'willingCompromise',
+    key: 'willingCompromise' as keyof PersonalityTraits,
     question: "I'm willing to compromise to keep the peace",
     leftLabel: 'Not at all',
-    rightLabel: 'Extremely',
+    rightLabel: 'Always',
   },
   {
-    key: 'seekExperiences',
+    key: 'seekExperiences' as keyof PersonalityTraits,
     question: 'I actively seek out new experiences, even if they push me outside my comfort zone',
     leftLabel: 'Not at all',
-    rightLabel: 'Extremely',
-  },
-  {
-    key: 'politicalViews',
-    question: 'In terms of my political views, I am',
-    leftLabel: 'Liberal',
-    rightLabel: 'Conservative',
+    rightLabel: 'Always',
   },
 ];
 
 export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenProps> = ({
   onNavigate,
-  currentStep = 10,
+  currentStep = 7,
   totalSteps = 11,
 }) => {
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedMbti, setSelectedMbti] = useState<string | null>(
-    currentStepData.mbtiType || null
+  const [selectedMbti, setSelectedMbti] = useState<string>(
+    currentStepData.mbtiType || ''
   );
-  const [punctuality, setPunctuality] = useState<number>(currentStepData.punctuality || 5);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>(
+    currentStepData.roles || []
+  );
   const [showMbtiDropdown, setShowMbtiDropdown] = useState(false);
   const [traits, setTraits] = useState<PersonalityTraits>(() => {
     // Check if personalityTraits is an array (from database) and convert back to object
@@ -123,80 +90,78 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
         }
       });
       return {
-        earlyBirdNightOwl: 5,
-        activePerson: 5,
-        enjoyGym: 5,
-        workLifeBalance: 5,
         leadConversations: 5,
         willingCompromise: 5,
         seekExperiences: 5,
-        politicalViews: 5,
         ...traitsFromArray,
       };
     }
 
     return {
-      earlyBirdNightOwl: 5,
-      activePerson: 5,
-      enjoyGym: 5,
-      workLifeBalance: 5,
-      leadConversations: 5,
-      willingCompromise: 5,
-      seekExperiences: 5,
-      politicalViews: 5,
+      leadConversations: currentStepData.leadConversations || 5,
+      willingCompromise: currentStepData.willingCompromise || 5,
+      seekExperiences: currentStepData.seekExperiences || 5,
     };
   });
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Clear errors when component mounts
     clearErrors();
   }, [clearErrors]);
 
-  const handleNext = async () => {
-    if (currentPage === 1) {
-      setCurrentPage(2);
-      return;
-    }
-    
-    if (currentPage === 2) {
-      setCurrentPage(3);
-      return;
-    }
+  const handleTraitChange = (key: keyof PersonalityTraits, value: number) => {
+    setTraits(prev => ({ ...prev, [key]: Math.round(value) }));
+  };
 
+  const toggleRole = (role: string) => {
+    setSelectedRoles(prev => {
+      if (prev.includes(role)) {
+        return prev.filter(r => r !== role);
+      }
+      if (prev.length >= 3) {
+        Alert.alert('Maximum Selection', 'You can select up to 3 roles');
+        return prev;
+      }
+      return [...prev, role];
+    });
+  };
+
+  const handleNext = async () => {
     try {
       setLocalErrors({});
       clearErrors();
 
-      // Convert personality traits to array format for validation
-      const personalityTraits = Object.keys(traits).map(
-        (key) => `${key}: ${traits[key as keyof PersonalityTraits]}`
-      );
-      const personalityData = { 
-        personalityTraits,
-        mbtiType: selectedMbti,
-        punctuality,
+      // Validation
+      if (selectedRoles.length === 0) {
+        setLocalErrors({ roles: 'Please select at least one role' });
+        return;
+      }
+
+      // Send traits as individual fields for proper database storage
+      const personalityData = {
+        leadConversations: traits.leadConversations,
+        willingCompromise: traits.willingCompromise,
+        seekExperiences: traits.seekExperiences,
+        mbtiType: selectedMbti || null,
+        roles: selectedRoles,
       };
 
-      // Validate locally first
       const validation = validateOnboardingStep('personality', personalityData);
       if (!validation.success) {
         setLocalErrors(validation.errors || {});
         return;
       }
 
-      // Save to database
       const success = await saveStep('personality', personalityData);
 
       if (success) {
         console.log('✅ [OnboardingPersonalityScreen] Personality saved successfully');
-        onNavigate?.('onboarding-photo', personalityData);
+        onNavigate?.('onboarding-lifestyle', personalityData);
       } else {
-        // Handle step errors from context
         if (Object.keys(stepErrors).length > 0) {
           setLocalErrors(stepErrors);
         } else {
-          Alert.alert('Error', 'Failed to save your personality profile. Please try again.');
+          Alert.alert('Error', 'Failed to save your information. Please try again.');
         }
       }
     } catch (error) {
@@ -206,30 +171,11 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
   };
 
   const handleBack = () => {
-    if (currentPage === 3) {
-      setCurrentPage(2);
-    } else if (currentPage === 2) {
-      setCurrentPage(1);
-    } else {
-      onNavigate?.('onboarding-interests');
-    }
+    onNavigate?.('onboarding-background');
   };
 
-  const updateTrait = (key: string, value: number) => {
-    setTraits((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  const questions = currentPage === 1 ? questionsPage1 : questionsPage2;
-  const isLastPage = currentPage === 3;
   const hasError = Object.keys(localErrors).length > 0 || Object.keys(stepErrors).length > 0;
-  const errorMessage =
-    localErrors.personalityTraits ||
-    stepErrors.personalityTraits ||
-    localErrors.general ||
-    stepErrors.general;
+  const errorMessage = Object.values(localErrors)[0] || Object.values(stepErrors)[0];
 
   return (
     <OnboardingLayout
@@ -239,180 +185,137 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
       scrollable
     >
       <View style={styles.container}>
-        {/* Page Title */}
-        <OnboardingTitle>
-          {(() => {
-            if (currentPage === 1) return 'Tell us about yourself';
-            if (currentPage === 2) return 'Your personality';
-            return 'More about you';
-          })()}
-        </OnboardingTitle>
+        <OnboardingTitle>Your Personality & Passions</OnboardingTitle>
+        
+        <Text style={styles.subtitle}>
+          Tell us how you connect with others, what drives you, and how you spend your time.
+        </Text>
 
-        {hasError && (
+        {hasError && errorMessage && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{errorMessage}</Text>
           </View>
         )}
 
-        {/* Content based on current page */}
-        {currentPage === 3 ? (
-          <View>
-            {/* MBTI Section */}
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>MBTI Personality Type <Text style={styles.optional}>(Optional)</Text></Text>
-              <Text style={styles.sectionSubtitle}>
-                If you know your Myers-Briggs personality type, select it below.
-              </Text>
+        {/* Personality Sliders */}
+        <View style={styles.section}>
+          {personalityQuestions.map((q) => (
+            <View key={q.key} style={styles.sliderContainer}>
+              <Text style={styles.question}>{q.question}</Text>
               
-              <Pressable
+              <View style={styles.sliderWrapper}>
+                <Slider
+                  style={styles.slider}
+                  value={traits[q.key]}
+                  onValueChange={(value) => handleTraitChange(q.key, value)}
+                  minimumValue={1}
+                  maximumValue={5}
+                  step={1}
+                  minimumTrackTintColor={theme.colors.primary.main}
+                  maximumTrackTintColor={Colors.borderLight}
+                  thumbTintColor={theme.colors.primary.main}
+                />
+                
+                <View style={styles.sliderLabels}>
+                  <Text style={styles.sliderLabel}>{q.leftLabel}</Text>
+                  <Text style={styles.sliderValue}>{traits[q.key]}</Text>
+                  <Text style={styles.sliderLabel}>{q.rightLabel}</Text>
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* Role Selection */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Which role(s) best describes you?</Text>
+          <Text style={styles.sectionSubtitle}>Multi-select allowed</Text>
+          
+          <View style={styles.rolesGrid}>
+            {roleOptions.map((role) => (
+              <TouchableOpacity
+                key={role}
                 style={[
-                  styles.dropdownButton,
-                  selectedMbti && styles.dropdownButtonSelected,
-                  showMbtiDropdown && styles.dropdownButtonActive,
+                  styles.roleButton,
+                  selectedRoles.includes(role) && styles.roleButtonSelected
                 ]}
-                onPress={() => setShowMbtiDropdown(!showMbtiDropdown)}
+                onPress={() => toggleRole(role)}
+                activeOpacity={0.7}
               >
                 <Text style={[
-                  styles.dropdownButtonText,
-                  selectedMbti && styles.dropdownButtonTextSelected,
+                  styles.roleButtonText,
+                  selectedRoles.includes(role) && styles.roleButtonTextSelected
                 ]}>
-                  {selectedMbti ? `${selectedMbti} - ${mbtiTypes.find(t => t.code === selectedMbti)?.name}` : 'Select your MBTI type (optional)'}
+                  {role}
                 </Text>
-                <Ionicons 
-                  name={showMbtiDropdown ? 'chevron-up' : 'chevron-down'} 
-                  size={20} 
-                  color={selectedMbti ? theme.colors.primary.main : '#9CA3AF'} 
-                />
-              </Pressable>
-              
-              {showMbtiDropdown && (
-                <View style={styles.dropdown}>
-                  <ScrollView style={styles.dropdownScroll} nestedScrollEnabled>
-                    {mbtiTypes.map((type) => (
-                      <Pressable
-                        key={type.code}
-                        style={[
-                          styles.dropdownOption,
-                          selectedMbti === type.code && styles.dropdownOptionSelected,
-                        ]}
-                        onPress={() => {
-                          setSelectedMbti(type.code);
-                          setShowMbtiDropdown(false);
-                        }}
-                      >
-                        <View style={styles.mbtiOptionContent}>
-                          <Text style={[
-                            styles.mbtiCode,
-                            selectedMbti === type.code && styles.mbtiCodeSelected,
-                          ]}>
-                            {type.code}
-                          </Text>
-                          <Text style={[
-                            styles.mbtiName,
-                            selectedMbti === type.code && styles.mbtiNameSelected,
-                          ]}>
-                            {type.name}
-                          </Text>
-                        </View>
-                        {selectedMbti === type.code && (
-                          <Ionicons name="checkmark" size={16} color={theme.colors.primary.main} />
-                        )}
-                      </Pressable>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
-            </View>
-
-            {/* Punctuality Section */}
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Punctuality</Text>
-              <Text style={styles.sectionSubtitle}>
-                How would you describe your punctuality?
-              </Text>
-              
-              <View style={styles.sliderContainer}>
-                <View style={styles.sliderWrapper}>
-                  <Slider
-                    style={styles.slider}
-                    minimumValue={1}
-                    maximumValue={10}
-                    value={punctuality}
-                    onValueChange={(value) => setPunctuality(Math.round(value))}
-                    minimumTrackTintColor={theme.colors.primary.main}
-                    maximumTrackTintColor="rgba(226, 72, 73, 0.1)"
-                    thumbTintColor={theme.colors.primary.main}
-                  />
-                  <View
-                    style={[
-                      styles.valueOnBottom,
-                      { left: `${((punctuality - 1) / 9) * 100}%` },
-                    ]}
-                    pointerEvents="none"
-                  >
-                    <Text style={styles.valueText}>{punctuality}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.labelsContainer}>
-                  <Text style={styles.labelLeft}>Always late</Text>
-                  <Text style={styles.labelRight}>Always early</Text>
-                </View>
-              </View>
-            </View>
+              </TouchableOpacity>
+            ))}
           </View>
-        ) : (
-          /* Questions for pages 1 and 2 */
-          questions.map((q, _index) => (
-            <View key={q.key} style={styles.questionContainer}>
-              <Text style={styles.question}>{q.question}</Text>
+        </View>
 
-              <View style={styles.sliderContainer}>
-                <View style={styles.sliderWrapper}>
-                  <Slider
-                    style={styles.slider}
-                    minimumValue={1}
-                    maximumValue={10}
-                    value={traits[q.key as keyof PersonalityTraits]}
-                    onValueChange={(value) => updateTrait(q.key, Math.round(value))}
-                    minimumTrackTintColor={theme.colors.primary.main}
-                    maximumTrackTintColor="rgba(226, 72, 73, 0.1)"
-                    thumbTintColor={theme.colors.primary.main}
-                  />
-                  <View
+        {/* MBTI Selection */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>What is your MBTI personality type?</Text>
+          <Text style={styles.sectionSubtitle}>Leave empty if unsure</Text>
+          
+          <TouchableOpacity
+            style={styles.selectButton}
+            onPress={() => setShowMbtiDropdown(!showMbtiDropdown)}
+            activeOpacity={0.7}
+          >
+            <Text style={[
+              styles.selectButtonText,
+              !selectedMbti && styles.placeholderText
+            ]}>
+              {selectedMbti || 'Select MBTI type (optional)'}
+            </Text>
+            <Text style={styles.selectButtonArrow}>
+              {showMbtiDropdown ? '▲' : '▼'}
+            </Text>
+          </TouchableOpacity>
+          
+          {showMbtiDropdown && (
+            <View style={styles.dropdown}>
+              <ScrollView 
+                showsVerticalScrollIndicator={true}
+                nestedScrollEnabled
+                bounces={false}
+              >
+                {mbtiTypes.map((type, index) => (
+                  <TouchableOpacity
+                    key={type}
                     style={[
-                      styles.valueOnBottom,
-                      {
-                        left: `${((traits[q.key as keyof PersonalityTraits] - 1) / 9) * 100}%`,
-                      },
+                      styles.dropdownItem,
+                      selectedMbti === type && styles.dropdownItemSelected,
+                      index === mbtiTypes.length - 1 && styles.dropdownItemLast
                     ]}
-                    pointerEvents="none"
+                    onPress={() => {
+                      setSelectedMbti(type);
+                      setShowMbtiDropdown(false);
+                    }}
+                    activeOpacity={0.6}
                   >
-                    <Text style={styles.valueText}>{traits[q.key as keyof PersonalityTraits]}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.labelsContainer}>
-                  <Text style={styles.labelLeft}>{q.leftLabel}</Text>
-                  <Text style={styles.labelRight}>{q.rightLabel}</Text>
-                </View>
-              </View>
+                    <Text style={[
+                      styles.dropdownItemText,
+                      selectedMbti === type && styles.dropdownItemTextSelected
+                    ]}>
+                      {type}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             </View>
-          ))
-        )}
+          )}
+        </View>
 
         <View style={styles.spacer} />
 
         <View style={styles.bottomContainer}>
           <OnboardingButton
             onPress={handleNext}
-            label={(() => {
-              if (saving) return 'Saving...';
-              if (isLastPage) return 'Next';
-              return 'Continue';
-            })()}
+            label={saving ? 'Saving...' : 'Next'}
+            disabled={selectedRoles.length === 0 || saving}
             loading={saving}
-            disabled={saving}
           />
         </View>
       </View>
@@ -424,173 +327,174 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  errorContainer: {
-    backgroundColor: theme.colors.error[100],
-    borderColor: theme.colors.error[300],
-    borderRadius: scaleWidth(8),
-    borderWidth: 1,
-    marginBottom: scaleHeight(16),
-    padding: scaleWidth(12),
-  },
-  errorText: {
-    color: theme.colors.error.main,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
-  },
-  sectionContainer: {
-    marginBottom: scaleHeight(32),
-  },
-  sectionTitle: {
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.semibold,
-    fontSize: scaleFont(18),
-    marginBottom: scaleHeight(8),
-  },
-  sectionSubtitle: {
+  subtitle: {
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
     lineHeight: scaleFont(20),
-    marginBottom: scaleHeight(16),
-  },
-  optional: {
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(16),
-    fontWeight: '400',
-  },
-  dropdownButton: {
-    backgroundColor: theme.colors.background.default,
-    borderColor: theme.colors.neutral.gray[200],
-    borderRadius: scaleWidth(12),
-    borderWidth: 2,
-    paddingVertical: scaleHeight(16),
-    paddingHorizontal: scaleWidth(16),
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  dropdownButtonSelected: {
-    backgroundColor: `${theme.colors.primary.main}14`, // 14 is hex for ~8% opacity
-    borderColor: theme.colors.primary.main,
-  },
-  dropdownButtonActive: {
-    borderColor: theme.colors.primary.main,
-  },
-  dropdownButtonText: {
-    color: theme.colors.text.tertiary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(16),
-    flex: 1,
-  },
-  dropdownButtonTextSelected: {
-    color: theme.colors.text.primary,
-    fontWeight: '600',
-  },
-  dropdown: {
-    backgroundColor: theme.colors.background.default,
-    borderColor: theme.colors.neutral.gray[200],
-    borderRadius: scaleWidth(12),
-    borderWidth: 1,
     marginTop: scaleHeight(8),
-    maxHeight: scaleHeight(250),
-    shadowColor: theme.colors.black[1],
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
+    marginBottom: scaleHeight(20),
   },
-  dropdownScroll: {
-    maxHeight: scaleHeight(250),
+  errorContainer: {
+    backgroundColor: Colors.errorLighter,
+    borderColor: Colors.errorLight,
+    borderRadius: scaleWidth(8),
+    borderWidth: 1,
+    marginBottom: scaleHeight(12),
+    padding: scaleWidth(12),
   },
-  dropdownOption: {
-    paddingVertical: scaleHeight(12),
-    paddingHorizontal: scaleWidth(16),
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.neutral.gray[100],
-  },
-  dropdownOptionSelected: {
-    backgroundColor: `${theme.colors.primary.main}14`, // 14 is hex for ~8% opacity
-  },
-  mbtiOptionContent: {
-    flex: 1,
-  },
-  mbtiCode: {
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(16),
-    fontWeight: '700',
-  },
-  mbtiCodeSelected: {
-    color: theme.colors.primary.main,
-  },
-  mbtiName: {
-    color: theme.colors.text.secondary,
+  errorText: {
+    color: Colors.error,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
-    marginTop: scaleHeight(2),
   },
-  mbtiNameSelected: {
+  section: {
+    marginBottom: scaleHeight(24),
+  },
+  sectionTitle: {
     color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    fontWeight: '600',
+    marginBottom: scaleHeight(4),
   },
-  labelLeft: {
+  sectionSubtitle: {
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(13),
+    marginBottom: scaleHeight(12),
   },
-  labelRight: {
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(13),
-  },
-  labelsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: scaleHeight(20), // Add space for the value below slider
+  sliderContainer: {
+    marginBottom: scaleHeight(20),
   },
   question: {
     color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.heading,
-    fontSize: scaleFont(18),
-    fontWeight: '600',
-    lineHeight: scaleHeight(24),
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
     marginBottom: scaleHeight(12),
-  },
-  questionContainer: {
-    marginBottom: scaleHeight(24),
-  },
-  slider: {
-    height: scaleHeight(30),
-    width: '100%',
-  },
-  sliderContainer: {
-    paddingHorizontal: scaleWidth(8),
+    lineHeight: scaleFont(20),
   },
   sliderWrapper: {
-    position: 'relative',
+    paddingHorizontal: scaleWidth(8),
   },
-  spacer: {
-    flex: 1,
-    minHeight: scaleHeight(20),
+  slider: {
+    width: '100%',
+    height: scaleHeight(40),
   },
-  valueOnBottom: {
+  sliderLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    bottom: scaleHeight(-25), // Position below the slider
-    marginLeft: -scaleWidth(10), // Center the number
-    position: 'absolute',
-    width: scaleWidth(20),
+    marginTop: scaleHeight(-8),
   },
-  valueText: {
+  sliderLabel: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
+  },
+  sliderValue: {
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '700',
+    fontWeight: '600',
+  },
+  rolesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: scaleWidth(10),
+  },
+  roleButton: {
+    paddingHorizontal: scaleWidth(16),
+    paddingVertical: scaleHeight(10),
+    borderRadius: scaleWidth(20),
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    backgroundColor: Colors.white,
+  },
+  roleButtonSelected: {
+    backgroundColor: theme.colors.primary.main,
+    borderColor: theme.colors.primary.main,
+  },
+  roleButtonText: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+  },
+  roleButtonTextSelected: {
+    color: Colors.white,
+    fontWeight: '500',
+  },
+  selectButton: {
+    backgroundColor: Colors.backgroundGrayLight,
+    borderColor: Colors.borderLight,
+    borderRadius: scaleWidth(8),
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: scaleWidth(14),
+    paddingVertical: scaleHeight(12),
+  },
+  selectButtonText: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(15),
+    flex: 1,
+  },
+  placeholderText: {
+    color: theme.colors.text.secondary,
+  },
+  selectButtonArrow: {
+    color: theme.colors.text.secondary,
+    fontSize: scaleFont(14),
+    marginLeft: scaleWidth(8),
+  },
+  dropdown: {
+    marginTop: scaleHeight(8),
+    backgroundColor: Colors.white,
+    borderRadius: scaleWidth(8),
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    maxHeight: scaleHeight(200),
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.shadowColor,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  dropdownItem: {
+    paddingHorizontal: scaleWidth(14),
+    paddingVertical: scaleHeight(10),
+    borderBottomWidth: 0.5,
+    borderBottomColor: Colors.backgroundGrayLighter,
+  },
+  dropdownItemSelected: {
+    backgroundColor: Colors.primaryLight,
+  },
+  dropdownItemLast: {
+    borderBottomWidth: 0,
+  },
+  dropdownItemText: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+  },
+  dropdownItemTextSelected: {
+    color: theme.colors.primary.main,
+    fontWeight: '600',
+  },
+  spacer: {
+    flex: 1,
   },
   bottomContainer: {
-    paddingBottom: scaleHeight(40),
-    paddingTop: scaleHeight(10),
+    paddingBottom: scaleHeight(20),
+    paddingTop: scaleHeight(16),
   },
 });

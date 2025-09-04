@@ -82,6 +82,20 @@ export const relationshipSchema = z.object({
     .max(50, 'Time since must be less than 50 characters'),
 });
 
+// Education Information
+export const educationSchema = z.object({
+  educationLevel: z
+    .string()
+    .min(1, 'Please select your education level')
+    .max(100, 'Education level must be less than 100 characters'),
+  school: z
+    .string()
+    .max(100, 'School must be less than 100 characters')
+    .optional()
+    .nullable()
+    .transform(val => val === null ? undefined : val),
+});
+
 // Academic Information
 export const academicSchema = z.object({
   major: z.string().min(1, 'Major is required').max(100, 'Major must be less than 100 characters'),
@@ -119,12 +133,18 @@ export const personalitySchema = z.object({
 
 // Lifestyle and Preferences (matching the actual screen)
 export const lifestyleSchema = z.object({
-  wantChildren: z.enum(['Yes', 'No', 'Maybe'], {
-    errorMap: () => ({ message: 'Please select if you want children' }),
-  }),
-  smokingHabit: z.enum(['Rarely', 'Sometimes', 'Always'], {
-    errorMap: () => ({ message: 'Please select your smoking/vaping habits' }),
-  }),
+  substances: z
+    .array(z.string())
+    .min(1, 'Please select at least one option')
+    .optional(),
+  earlyBirdNightOwl: z.number().min(1).max(5).optional(),
+  activePerson: z.number().min(1).max(5).optional(),
+  punctuality: z.number().min(1).max(5).optional(),
+  workLifeBalance: z.number().min(1).max(5).optional(),
+  // Keep these as optional for backward compatibility
+  alcoholUse: z.string().optional(),
+  cannabisUse: z.string().optional(),
+  otherDrugsUse: z.string().optional(),
 });
 
 // Additional lifestyle info for future use
@@ -146,6 +166,41 @@ export const additionalLifestyleSchema = z.object({
     .transform((val) => val || null),
 });
 
+// Food Preferences validation
+export const foodPreferencesSchema = z.object({
+  dietaryRestrictions: z.string().optional(),
+  budget: z.number().min(10).max(100).optional(),
+  spicyLevel: z.number().min(1).max(5).optional(),
+  drinkingLevel: z.number().min(1).max(5).optional(),
+  adventurousLevel: z.number().min(1).max(5).optional(),
+  diningAtmospheres: z.array(z.string()).optional(),
+  dinnerDuration: z.string().optional(),
+  zipCode: z.string().max(10).optional(),
+  travelDistance: z.number().min(0.5).max(50).optional(),
+  foodCraving: z.string().max(200).optional(),
+  cuisinesToTry: z.array(z.string()).max(3).optional(),
+  cuisinesToAvoid: z.array(z.string()).max(3).optional(),
+});
+
+// Final Touch screens validation
+export const finalTouchSchema = z.object({
+  hopingToMeet: z
+    .string()
+    .min(10, 'Please provide more detail (at least 10 characters)')
+    .max(300, 'Please keep it under 300 characters')
+    .optional(),
+  hobbies: z
+    .string()
+    .min(10, 'Please provide more detail (at least 10 characters)')
+    .max(300, 'Please keep it under 300 characters')
+    .optional(),
+  interestingFact: z
+    .string()
+    .min(10, 'Please provide more detail (at least 10 characters)')
+    .max(300, 'Please keep it under 300 characters')
+    .optional(),
+});
+
 // Photo Upload
 export const photoSchema = z.object({
   avatarUrl: z
@@ -155,10 +210,26 @@ export const photoSchema = z.object({
     .transform((val) => val || null),
 });
 
-// Complete onboarding data schema (simplified to only required fields)
+// Complete onboarding data schema (includes both required and optional fields)
 export const completeOnboardingSchema = nameSchema
   .merge(birthdaySchema)
-  .merge(genderSchema);
+  .merge(genderSchema)
+  .merge(educationSchema.partial())  // Make education fields optional
+  .merge(workSchema.partial())       // Make work fields optional
+  .merge(ethnicitySchema.partial())  // Make ethnicity fields optional
+  .merge(relationshipSchema.partial()) // Make relationship fields optional
+  .merge(lifestyleSchema.partial())  // Make lifestyle fields optional
+  .merge(interestsSchema.partial())  // Make interests optional
+  .merge(personalitySchema.partial()) // Make personality optional
+  .extend({
+    // Additional optional fields
+    nationality: z.string().optional(),
+    religion: z.string().optional(),
+    heightFeet: z.number().optional(),
+    heightInches: z.number().optional(),
+    heightCm: z.number().optional(),
+    conversationStyle: z.string().optional(),
+  });
 
 // Full onboarding data schema (all optional fields)
 export const fullOnboardingSchema = nameSchema
@@ -180,20 +251,22 @@ export const onboardingStepSchemas = {
   name: nameSchema,
   birthday: birthdaySchema,
   gender: genderSchema,
-  dependents: dependentsSchema,
+  education: educationSchema,
   work: workSchema,
+  background: ethnicitySchema, // Using ethnicitySchema for background step
   ethnicity: ethnicitySchema,
-  relationship: relationshipSchema,
   lifestyle: lifestyleSchema,
+  foodPreferences: foodPreferencesSchema,
   interests: interestsSchema,
   personality: personalitySchema,
-  photo: photoSchema,
+  finalTouch: finalTouchSchema,
 } as const;
 
 // Types for onboarding data
 export type NameData = z.infer<typeof nameSchema>;
 export type BirthdayData = z.infer<typeof birthdaySchema>;
 export type GenderData = z.infer<typeof genderSchema>;
+export type EducationData = z.infer<typeof educationSchema>;
 export type DependentsData = z.infer<typeof dependentsSchema>;
 export type WorkData = z.infer<typeof workSchema>;
 export type EthnicityData = z.infer<typeof ethnicitySchema>;
@@ -218,24 +291,50 @@ export type ExtendedOnboardingData = CompleteOnboardingData & {
   ethnicity?: string;
   nationality?: string;
   religion?: string;
+  relationshipStatus?: string;
+  company?: string;
   heightFeet?: number;
   heightInches?: number;
   heightCm?: number;
   relationshipType?: string;
+  roles?: string[];
+  leadConversations?: number;
+  willingCompromise?: number;
+  seekExperiences?: number;
   wantChildren?: 'Yes' | 'No' | 'Maybe';
   smokingHabit?: 'Rarely' | 'Sometimes' | 'Always';
   alcoholUse?: string;
   cannabisUse?: string;
+  substances?: string[];
+  earlyBirdNightOwl?: number;
+  activePerson?: number;
+  punctuality?: number;
+  workLifeBalance?: number;
   otherDrugsUse?: string;
   timeSinceLastRelationship?: string;
   personalityTraits?: string[];
   mbtiType?: string;
-  punctuality?: number;
   avatarUrl?: string | null;
   bio?: string | null;
-  dietaryRestrictions?: string[] | null;
   location?: string | null;
   universityYear?: string;
+  // Food preferences
+  dietaryRestrictions?: string | string[] | null;
+  budget?: number;
+  spicyLevel?: number;
+  drinkingLevel?: number;
+  adventurousLevel?: number;
+  diningAtmospheres?: string[];
+  dinnerDuration?: string;
+  zipCode?: string;
+  travelDistance?: number;
+  foodCraving?: string;
+  cuisinesToTry?: string[];
+  cuisinesToAvoid?: string[];
+  // Final Touch
+  hopingToMeet?: string;
+  hobbies?: string;
+  interestingFact?: string;
 };
 
 // Validation step type

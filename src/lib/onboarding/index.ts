@@ -34,7 +34,7 @@ export type {
 } from './validation';
 
 // Export service
-export { OnboardingService, OnboardingError } from './service';
+export { OnboardingService, OnboardingError, OnboardingStage } from './service';
 export type { OnboardingProgress } from './service';
 
 // Export context and provider - using simplified version

@@ -5,6 +5,7 @@ import { logger } from '../utils/logger';
 
 export interface AuthRequest extends Request {
   userId?: string;
+  userEmail?: string;
   user?: {
     id: string;
     email?: string;
@@ -22,6 +23,15 @@ export const verifyPrivyToken = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    // Allow test mode for development
+    const testUserId = req.headers['x-test-user-id'] as string;
+    if (testUserId && process.env.NODE_ENV === 'development') {
+      req.userId = testUserId;
+      req.userEmail = 'test@example.com';
+      next();
+      return;
+    }
+    
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

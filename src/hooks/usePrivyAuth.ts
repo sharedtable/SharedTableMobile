@@ -10,7 +10,7 @@ import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 
 import { AuthAPI } from '@/services/api/authApi';
 import { UserSyncService } from '@/services/userSyncService';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore, OnboardingStatus } from '@/store/authStore';
 import { __DEV__, devLog, logError } from '@/utils/env';
 import { logger } from '@/utils/logger';
 
@@ -55,7 +55,7 @@ interface UsePrivyAuthReturn {
 
 export const usePrivyAuth = (): UsePrivyAuthReturn => {
   const [isLoading, setIsLoading] = useState(false);
-  const { setNeedsOnboarding } = useAuthStore();
+  const { setNeedsOnboarding, setOnboardingStatus } = useAuthStore();
 
   // Core Privy hooks
   const { user: privyUser, isReady, logout: privyLogout, getAccessToken } = usePrivy();
@@ -190,12 +190,16 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
             const token = await getAccessToken();
             if (token) {
               await AuthAPI.storeAuthToken(token);
+              console.log('✅ [usePrivyAuth] Auth token stored successfully');
+            } else {
+              console.warn('⚠️ [usePrivyAuth] No access token available from Privy');
             }
           } catch (error) {
             logError('Failed to store auth token', error);
           }
         };
 
+        // Store token - call without await since we're not in an async context
         storeAuthToken();
 
         // Sync user with backend API (only once per user)
@@ -228,11 +232,33 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
             if (!result.success) {
               logError('Failed to sync user with database', result.error);
             } else {
-              // Set onboarding status in the store (either new user or incomplete profile)
-              if (result.needsOnboarding) {
-                setNeedsOnboarding(true);
-              } else {
-                setNeedsOnboarding(false);
+              // Use onboardingStatus from sync response
+              const syncedStatus = result.onboardingStatus || 'not_started';
+              
+              // Set needsOnboarding based on status (for backward compatibility)
+              const needsOnboarding = syncedStatus === 'not_started';
+              setNeedsOnboarding(needsOnboarding);
+              
+              // Set the actual onboarding status
+              switch (syncedStatus) {
+                case 'not_started':
+                  await setOnboardingStatus(OnboardingStatus.NOT_STARTED);
+                  console.log('✅ [usePrivyAuth] Onboarding status from DB: NOT_STARTED');
+                  break;
+                case 'mandatory_complete':
+                  await setOnboardingStatus(OnboardingStatus.MANDATORY_COMPLETE);
+                  console.log('✅ [usePrivyAuth] Onboarding status from DB: MANDATORY_COMPLETE');
+                  break;
+                case 'optional_complete':
+                  await setOnboardingStatus(OnboardingStatus.OPTIONAL_COMPLETE);
+                  console.log('✅ [usePrivyAuth] Onboarding status from DB: OPTIONAL_COMPLETE');
+                  break;
+                case 'fully_complete':
+                  await setOnboardingStatus(OnboardingStatus.FULLY_COMPLETE);
+                  console.log('✅ [usePrivyAuth] Onboarding status from DB: FULLY_COMPLETE');
+                  break;
+                default:
+                  console.log('✅ [usePrivyAuth] Onboarding status from DB:', syncedStatus);
               }
               
               // Only fetch profile if sync was successful and user exists

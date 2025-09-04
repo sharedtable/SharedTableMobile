@@ -93,6 +93,7 @@ interface SyncUserResponse {
     user: User;
     isNewUser: boolean;
     needsOnboarding: boolean;
+    onboardingStatus?: string;
   };
 }
 

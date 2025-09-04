@@ -34,7 +34,6 @@ export const deepLinkingConfig: LinkingOptions<any> = {
             screens: {
               ProfileMain: 'profile',
               EditProfile: 'profile/edit',
-              DiningPreferences: 'profile/preferences',
               DinnerHistory: 'profile/history',
               DinnerDetails: 'profile/dinner/:dinnerId',
             },

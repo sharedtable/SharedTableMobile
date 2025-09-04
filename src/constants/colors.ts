@@ -65,6 +65,7 @@ export const Colors = {
   
   // UI specific colors
   borderGray: '#E1E1E1',
+  borderLight: '#E5E7EB',
   textPrimary: '#262626',
   textSecondary: '#8E8E93',
   textTertiary: '#8B4513',
@@ -72,7 +73,13 @@ export const Colors = {
   borderYellow: '#FFE5B4',
   googleBlue: '#4285F4',
   backgroundGray: '#F8F8F8',
+  backgroundGrayLight: '#F9FAFB',
+  backgroundGrayLighter: '#F3F4F6',
   textDarkGray: '#1C1C1E',
+  
+  // Pink colors
+  pinkBackground: '#FFF0F1',
+  pinkBorder: '#FFB6C1',
 } as const;
 
 export type ColorKey = keyof typeof Colors;

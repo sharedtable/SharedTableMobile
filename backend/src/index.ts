@@ -90,6 +90,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/onboarding', onboardingRoutes);
+app.use('/api/onboarding-simple', require('./routes/onboarding-simple').default);
 app.use('/api/feed', feedRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/bookings', bookingsRoutes);
@@ -97,6 +98,12 @@ app.use('/api/time-slots', timeSlotsRoutes);
 app.use('/api/admin/grouping', groupingRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/notifications', notificationRoutes);
+
+// Debug routes (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  const debugRoutes = require('./routes/debug').default;
+  app.use('/api/debug', debugRoutes);
+}
 app.use('/api/restaurants', restaurantsRoutes);
 app.use('/api/connections', connectionsRoutes);
 app.use('/api/analytics', analyticsRoutes);

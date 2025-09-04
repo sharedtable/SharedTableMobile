@@ -62,7 +62,7 @@ router.post('/group-timeslot/:timeSlotId', async (req: Request, res: Response) =
     
     // Get the time slot
     const { data: timeSlot, error: slotError } = await supabaseService
-      .from('time_slots')
+      .from('timeslots')
       .select('*')
       .eq('id', timeSlotId)
       .single();
@@ -83,12 +83,12 @@ router.post('/group-timeslot/:timeSlotId', async (req: Request, res: Response) =
 
     // Get all signups for this time slot
     const { data: signups, error: signupsError } = await supabaseService
-      .from('slot_signups')
+      .from('dinner_bookings')
       .select(`
         *,
         user:users(*)
       `)
-      .eq('time_slot_id', timeSlotId)
+      .eq('timeslot_id', timeSlotId)
       .eq('status', 'pending');
 
     if (signupsError) {
@@ -127,12 +127,12 @@ router.post('/group-timeslot/:timeSlotId', async (req: Request, res: Response) =
       const { data: dinnerGroup, error: groupError } = await supabaseService
         .from('dinner_groups')
         .insert({
-          time_slot_id: timeSlotId,
+          slot_id: timeSlotId,
           restaurant_name: restaurant.name,
           restaurant_address: restaurant.address,
           restaurant_cuisine: restaurant.cuisine,
-          reservation_time: timeSlot.slot_time,
-          reservation_date: timeSlot.slot_date,
+          reservation_date: timeSlot.datetime ? new Date(timeSlot.datetime).toISOString().split('T')[0] : null,
+          reservation_time: timeSlot.datetime ? new Date(timeSlot.datetime).toTimeString().split(' ')[0] : null,
           group_size: group.length,
           status: 'confirmed',
         })
@@ -163,7 +163,7 @@ router.post('/group-timeslot/:timeSlotId', async (req: Request, res: Response) =
       // Update signup status to 'grouped'
       const signupIds = group.map(s => s.id);
       const { error: updateError } = await supabaseService
-        .from('slot_signups')
+        .from('dinner_bookings')
         .update({ status: 'grouped' })
         .in('id', signupIds);
 
@@ -179,7 +179,7 @@ router.post('/group-timeslot/:timeSlotId', async (req: Request, res: Response) =
 
     // Update time slot status
     const { error: slotUpdateError } = await supabaseService
-      .from('time_slots')
+      .from('timeslots')
       .update({ 
         status: 'grouped',
         updated_at: new Date().toISOString(),
@@ -217,7 +217,7 @@ router.get('/status/:timeSlotId', async (req: Request, res: Response) => {
     
     // Get time slot info
     const { data: timeSlot, error: slotError } = await supabaseService
-      .from('time_slots')
+      .from('timeslots')
       .select('*')
       .eq('id', timeSlotId)
       .single();
@@ -236,7 +236,7 @@ router.get('/status/:timeSlotId', async (req: Request, res: Response) => {
         *,
         members:group_members(count)
       `)
-      .eq('time_slot_id', timeSlotId);
+      .eq('slot_id', timeSlotId);
 
     if (groupsError) {
       logger.error('Error fetching groups:', groupsError);

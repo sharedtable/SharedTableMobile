@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   View,
+  Text,
   StyleSheet,
   Pressable,
   ScrollView,
@@ -18,19 +19,23 @@ import { ProgressBar } from './ProgressBar';
 interface OnboardingLayoutProps {
   children: React.ReactNode;
   onBack?: () => void;
+  onSkip?: () => void;
   currentStep?: number;
   totalSteps?: number;
   scrollable?: boolean;
   keyboardAvoiding?: boolean;
+  showSkip?: boolean;
 }
 
 export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
   children,
   onBack,
+  onSkip,
   currentStep,
   totalSteps,
   scrollable = false,
   keyboardAvoiding = false,
+  showSkip = false,
 }) => {
   const content = (
     <>
@@ -39,6 +44,11 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
         <Pressable onPress={onBack} style={styles.headerButton}>
           <Icon name="back" size={24} color={theme.colors.text.primary} />
         </Pressable>
+        {showSkip && onSkip && (
+          <Pressable onPress={onSkip} style={styles.skipButton}>
+            <Text style={styles.skipText}>Skip</Text>
+          </Pressable>
+        )}
       </View>
 
       {/* Progress Bar */}
@@ -89,12 +99,21 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     flexDirection: 'row',
+    justifyContent: 'space-between',
     marginHorizontal: -scaleWidth(4),
     paddingBottom: scaleHeight(20),
     paddingTop: scaleHeight(12),
   },
   headerButton: {
     padding: scaleWidth(4),
+  },
+  skipButton: {
+    padding: scaleWidth(8),
+  },
+  skipText: {
+    color: theme.colors.text.secondary,
+    fontSize: 16,
+    fontWeight: '500',
   },
   keyboardView: {
     flex: 1,
