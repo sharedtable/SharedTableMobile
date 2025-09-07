@@ -8,6 +8,7 @@ import {
   StatusBar,
   SafeAreaView,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 import { Icon } from '@/components/base/Icon';
 import { theme } from '@/theme';
@@ -49,9 +50,11 @@ const steps = [
   },
 ];
 
-export const HowItWorksScreen: React.FC<HowItWorksScreenProps> = ({ onNavigate }) => {
+export const HowItWorksScreen: React.FC<HowItWorksScreenProps> = ({ onNavigate: _onNavigate }) => {
+  const navigation = useNavigation();
+  
   const handleClose = () => {
-    onNavigate?.('home');
+    navigation.goBack();
   };
 
   return (

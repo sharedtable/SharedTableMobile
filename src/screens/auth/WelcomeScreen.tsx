@@ -16,7 +16,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
-import { AppleIcon } from '@/components/icons/AppleIcon';
+// import { AppleIcon } from '@/components/icons/AppleIcon'; // Commented out until Apple Sign-In is enabled
 import { GoogleIcon } from '@/components/icons/GoogleIcon';
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { useAuthStore } from '@/store/authStore';
@@ -38,6 +38,7 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [showOtpScreen, setShowOtpScreen] = useState(false);
   const [verificationType, setVerificationType] = useState<'email' | 'sms'>('email');
+  const [localLoading, setLocalLoading] = useState(false);
 
   const {
     user: privyUser,
@@ -47,8 +48,7 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
     sendSMSCode,
     verifySMSCode: privyVerifySMSCode,
     loginWithGoogle: privyGoogleLogin,
-    loginWithApple: privyAppleLogin,
-    isLoading: privyLoading,
+    // loginWithApple: privyAppleLogin, // Commented out until Apple Sign-In is enabled
   } = usePrivyAuth();
   const { setPrivyUser } = useAuthStore();
 
@@ -119,11 +119,14 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
     Keyboard.dismiss();
 
     try {
+      setLocalLoading(true);
       await sendEmailCode(email);
       setVerificationType('email');
       setShowOtpScreen(true);
     } catch (error) {
       Alert.alert('Error', (error as Error).message || 'Failed to send verification code');
+    } finally {
+      setLocalLoading(false);
     }
   };
 
@@ -142,12 +145,15 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
     Keyboard.dismiss();
 
     try {
+      setLocalLoading(true);
       const formattedPhone = formatPhoneNumber(phoneNumber);
       await sendSMSCode(formattedPhone);
       setVerificationType('sms');
       setShowOtpScreen(true);
     } catch (error) {
       Alert.alert('Error', (error as Error).message || 'Failed to send verification code');
+    } finally {
+      setLocalLoading(false);
     }
   };
 
@@ -161,6 +167,7 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
 
   const handleGoogleSignIn = async () => {
     try {
+      setLocalLoading(true);
       await privyGoogleLogin();
       // Navigation will be handled by useEffect when user state updates
     } catch (error) {
@@ -195,25 +202,44 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
 
         Alert.alert('Google Sign In Error', `${displayMessage}\n\nError: ${errorMessage}`);
       }
+    } finally {
+      setLocalLoading(false);
     }
   };
 
-  const handleAppleSignIn = async () => {
-    if (Platform.OS !== 'ios') {
-      Alert.alert('Not Available', 'Apple Sign In is only available on iOS');
-      return;
-    }
+  // Apple Sign-In handler - commented out until enabled in Privy
+  // const handleAppleSignIn = async () => {
+  //   if (Platform.OS !== 'ios') {
+  //     Alert.alert('Not Available', 'Apple Sign In is only available on iOS');
+  //     return;
+  //   }
 
-    try {
-      await privyAppleLogin();
-      // Navigation will be handled by useEffect when user state updates
-    } catch (error) {
-      console.error('Apple Sign In Error:', error);
-      Alert.alert('Error', 'Failed to sign in with Apple. Please try again.');
-    }
-  };
+  //   try {
+  //     setLocalLoading(true);
+  //     await privyAppleLogin();
+  //     // Navigation will be handled by useEffect when user state updates
+  //   } catch (error) {
+  //     const errorMessage = (error as Error).message || '';
+      
+  //     // Check if it's a configuration issue
+  //     if (errorMessage.toLowerCase().includes('not allowed')) {
+  //       Alert.alert(
+  //         'Configuration Required',
+  //         'Apple Sign-In needs to be enabled for this app. Please contact support or use email/phone sign-in instead.',
+  //         [{ text: 'OK' }]
+  //       );
+  //     } else if (errorMessage.toLowerCase().includes('cancel')) {
+  //       // User cancelled - don't show error
+  //     } else {
+  //       console.error('Apple Sign In Error:', error);
+  //       Alert.alert('Error', 'Failed to sign in with Apple. Please try again.');
+  //     }
+  //   } finally {
+  //     setLocalLoading(false);
+  //   }
+  // };
 
-  const isLoading = privyLoading;
+  const isLoading = localLoading;
   const canContinue = activeTab === 'email' ? !!email : !!phoneNumber;
 
   // Show OTP screen if needed
@@ -224,7 +250,12 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
         phoneNumber={verificationType === 'sms' ? formatPhoneNumber(phoneNumber) : undefined}
         verificationType={verificationType}
         onNavigate={onNavigate}
-        onBack={() => setShowOtpScreen(false)}
+        onBack={() => {
+          setShowOtpScreen(false);
+          // Reset loading state when coming back
+          setLocalLoading(false);
+          // Keep the input fields so user doesn't have to re-type
+        }}
         privyVerifyCode={verificationType === 'email' ? privyVerifyCode : privyVerifySMSCode}
         privySendCode={verificationType === 'email' ? sendEmailCode : sendSMSCode}
       />
@@ -248,7 +279,7 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
             <View style={styles.content}>
               {/* Title */}
               <View style={styles.titleSection}>
-                <Text style={styles.title}>Welcome to SharedTable</Text>
+                <Text style={styles.title}>Welcome to Fare</Text>
                 <Text style={styles.subtitle}>Sign in or create an account</Text>
               </View>
 
@@ -352,8 +383,8 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
                     )}
                   </Pressable>
 
-                  {/* Apple Button */}
-                  {Platform.OS === 'ios' && (
+                  {/* Apple Button - Hidden for now until enabled in Privy */}
+                  {/* {Platform.OS === 'ios' && (
                     <Pressable
                       style={({ pressed }) => [
                         styles.socialButton,
@@ -372,7 +403,7 @@ export const WelcomeScreen = memo<WelcomeScreenProps>((props) => {
                         </>
                       )}
                     </Pressable>
-                  )}
+                  )} */}
                 </View>
 
                 {/* Bottom spacing to ensure buttons are visible */}

@@ -5,6 +5,8 @@ import { LoadingScreen } from '@/screens/LoadingScreen';
 import { useAuthStore, OnboardingStatus } from '@/store/authStore';
 import { NotificationsListScreen } from '@/screens/notifications/NotificationsListScreen';
 import EventDetailsScreen from '@/screens/events/EventDetailsScreen';
+import { HowItWorksScreen } from '@/screens/info/HowItWorksScreen';
+import { FAQsScreen } from '@/screens/info/FAQsScreen';
 
 // Navigators
 import { AuthNavigator } from './AuthNavigator';
@@ -24,6 +26,8 @@ export type RootStackParamList = {
   EventDetails: {
     eventId: string;
   };
+  HowItWorks: undefined;
+  FAQs: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -73,6 +77,24 @@ export function RootNavigator() {
               animation: 'slide_from_bottom',
               headerShown: true,
               headerTitle: 'Event Details',
+            }}
+          />
+          <Stack.Screen 
+            name="HowItWorks" 
+            component={HowItWorksScreen}
+            options={{
+              presentation: 'modal',
+              animation: 'slide_from_bottom',
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen 
+            name="FAQs" 
+            component={FAQsScreen}
+            options={{
+              presentation: 'modal',
+              animation: 'slide_from_bottom',
+              headerShown: false,
             }}
           />
         </>
