@@ -3,7 +3,8 @@
  */
 
 import { Alert } from 'react-native';
-import * as Sentry from '@sentry/react-native';
+// Sentry integration - optional, uncomment if Sentry is installed
+// import * as Sentry from '@sentry/react-native';
 import { ERROR_MESSAGES } from './constants';
 
 export enum OnboardingErrorType {
@@ -54,20 +55,21 @@ export class OnboardingErrorHandler {
       });
     }
 
-    // Log to Sentry in production
-    if (!this.isDevelopment) {
-      Sentry.captureException(error, {
-        tags: {
-          component: 'onboarding',
-          type: (error as OnboardingError).type || 'unknown',
-        },
-        extra: {
-          field: (error as OnboardingError).field,
-          ...context,
-          ...(error as OnboardingError).context,
-        },
-      });
-    }
+    // Log to Sentry in production (if available)
+    // Uncomment when Sentry is installed:
+    // if (!this.isDevelopment) {
+    //   Sentry.captureException(error, {
+    //     tags: {
+    //       component: 'onboarding',
+    //       type: (error as OnboardingError).type || 'unknown',
+    //     },
+    //     extra: {
+    //       field: (error as OnboardingError).field,
+    //       ...context,
+    //       ...(error as OnboardingError).context,
+    //     },
+    //   });
+    // }
 
     // Show user-friendly alert
     this.showUserAlert(error);
@@ -213,14 +215,15 @@ export class OnboardingErrorHandler {
       console.log('📊 Performance metric:', metric);
     }
 
-    // Send to analytics in production
-    if (!this.isDevelopment) {
-      Sentry.addBreadcrumb({
-        category: 'performance',
-        message: `Onboarding step ${step}`,
-        level: 'info',
-        data: metric,
-      });
-    }
+    // Send to analytics in production (if available)
+    // Uncomment when Sentry is installed:
+    // if (!this.isDevelopment) {
+    //   Sentry.addBreadcrumb({
+    //     category: 'performance',
+    //     message: `Onboarding step ${step}`,
+    //     level: 'info',
+    //     data: metric,
+    //   });
+    // }
   }
 }
