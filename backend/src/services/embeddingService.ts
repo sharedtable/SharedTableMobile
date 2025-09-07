@@ -229,13 +229,7 @@ export class EmbeddingService {
   async processUserProfile(userId: string): Promise<UserFeatures> {
     // Fetch user data from database
     const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-    
-    const { data: preferences } = await supabase
-      .from('user_preferences')
+      .from('onboarding_profiles')
       .select('*')
       .eq('user_id', userId)
       .single();
@@ -258,25 +252,25 @@ export class EmbeddingService {
     }
     
     // Process interests embeddings
-    if (preferences?.social_preferences?.interests) {
+    if (profile?.interests) {
       features.interestsEmbeddings = {};
-      for (const interest of preferences.social_preferences.interests) {
+      for (const interest of profile.interests) {
         features.interestsEmbeddings[interest] = await this.generateTextEmbedding(interest);
       }
     }
     
     // Process cuisine embeddings
-    if (preferences?.preferred_cuisines) {
+    if (profile?.cuisines) {
       features.cuisineEmbeddings = {};
-      for (const cuisine of preferences.preferred_cuisines) {
+      for (const cuisine of profile.cuisines) {
         features.cuisineEmbeddings[cuisine] = await this.generateTextEmbedding(cuisine);
       }
     }
     
     // Multi-hot encode preferences
-    if (preferences?.dining_atmospheres) {
+    if (profile?.dining_atmospheres) {
       features.diningAtmospheresVector = this.multiHotEncode(
-        preferences.dining_atmospheres,
+        profile.dining_atmospheres,
         VOCABULARIES.diningAtmospheres
       );
     }

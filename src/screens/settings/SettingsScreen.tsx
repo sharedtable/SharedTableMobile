@@ -29,6 +29,7 @@ export function SettingsScreen() {
 
   const settingsItems = [
     { id: 'account', title: 'Account', icon: 'person-outline' },
+    { id: 'payment', title: 'Payment Methods', icon: 'card-outline' },
     { id: 'notifications', title: 'Notifications', icon: 'notifications-outline' },
     { id: 'privacy', title: 'Privacy & Security', icon: 'lock-closed-outline' },
     { id: 'language', title: 'Language', icon: 'language-outline' },
@@ -76,6 +77,9 @@ export function SettingsScreen() {
                 switch (item.id) {
                   case 'about':
                     navigation.navigate('About');
+                    break;
+                  case 'payment':
+                    navigation.navigate('PaymentMethods');
                     break;
                   case 'account':
                   case 'notifications':

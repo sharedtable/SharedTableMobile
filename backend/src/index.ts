@@ -18,7 +18,7 @@ import onboardingRoutes from './routes/onboarding';
 import feedRoutes from './routes/feedRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import bookingsRoutes from './routes/bookings';
-import timeSlotsRoutes from './routes/timeSlots';
+import dinnersRoutes from './routes/dinners';
 import groupingRoutes from './routes/admin/grouping';
 import gamificationRoutes from './routes/gamification';
 import notificationRoutes from './routes/notifications';
@@ -27,6 +27,8 @@ import connectionsRoutes from './routes/connections';
 import analyticsRoutes from './routes/analytics';
 import matchingRoutes from './routes/matching';
 import featuresRoutes from './routes/features';
+import paymentsRoutes from './routes/payments';
+import webhooksRoutes from './routes/webhooks';
 
 // Load environment variables
 dotenv.config();
@@ -69,7 +71,8 @@ const limiter = rateLimit({
 
 app.use('/api/', limiter);
 
-// Body parsing middleware
+// Body parsing middleware - note: webhook routes need raw body
+app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -94,7 +97,7 @@ app.use('/api/onboarding-simple', require('./routes/onboarding-simple').default)
 app.use('/api/feed', feedRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/bookings', bookingsRoutes);
-app.use('/api/time-slots', timeSlotsRoutes);
+app.use('/api/dinners', dinnersRoutes);
 app.use('/api/admin/grouping', groupingRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -109,6 +112,8 @@ app.use('/api/connections', connectionsRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/matching', matchingRoutes);
 app.use('/api/features', featuresRoutes);
+app.use('/api/payments', paymentsRoutes);
+app.use('/api/webhooks', webhooksRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

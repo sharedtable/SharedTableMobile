@@ -37,7 +37,7 @@ router.get('/my-bookings', verifyPrivyToken, async (req: AuthRequest, res: Respo
     // Now fetch bookings with the internal user ID
     // First, let's just get bookings without the join
     const { data: bookings, error } = await supabaseService
-      .from('bookings')
+      .from('dinner_bookings')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -120,7 +120,7 @@ router.get('/upcoming', verifyPrivyToken, async (req: AuthRequest, res: Response
 
     // Fetch upcoming bookings with related event data
     const { data: bookings, error } = await supabaseService
-      .from('bookings')
+      .from('dinner_bookings')
       .select(`
         *,
         event:events (
@@ -197,7 +197,7 @@ router.get('/:bookingId', verifyPrivyToken, async (req: AuthRequest, res: Respon
 
     // Fetch booking with related event data
     const { data: booking, error } = await supabaseService
-      .from('bookings')
+      .from('dinner_bookings')
       .select(`
         *,
         event:events (
@@ -280,7 +280,7 @@ router.delete('/:bookingId', verifyPrivyToken, async (req: AuthRequest, res: Res
 
     // Update booking status to cancelled
     const { data: booking, error } = await supabaseService
-      .from('bookings')
+      .from('dinner_bookings')
       .update({ 
         status: 'cancelled',
         cancelled_at: new Date().toISOString()

@@ -5,10 +5,9 @@ import {
   StyleSheet, 
   Alert, 
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
   Keyboard,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
+  ScrollView
 } from 'react-native';
 
 import { OnboardingLayout, OnboardingButton } from '@/components/onboarding';
@@ -88,19 +87,20 @@ export const OnboardingHobbiesScreen: React.FC<OnboardingHobbiesScreenProps> = (
   const errorMessage = Object.values(localErrors)[0] || Object.values(stepErrors)[0];
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.flexOne}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <OnboardingLayout
+      onBack={handleBack}
+      currentStep={currentStep}
+      totalSteps={totalSteps}
+      scrollable
+      keyboardAvoiding
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.flexOne}>
-          <OnboardingLayout
-            onBack={handleBack}
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-            scrollable={false}
-          >
-            <View style={styles.container}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.container}>
               <View style={styles.headerSection}>
                 <Text style={styles.title}>Final Touch! (2/3)</Text>
                 <Text style={styles.subtitle}>Help us tailor things just right for you.</Text>
@@ -135,8 +135,6 @@ export const OnboardingHobbiesScreen: React.FC<OnboardingHobbiesScreenProps> = (
                 <Text style={styles.charCount}>{hobbies.length}/300</Text>
               </View>
 
-              <View style={styles.spacer} />
-
               <View style={styles.bottomContainer}>
                 <OnboardingButton
                   onPress={handleNext}
@@ -145,20 +143,20 @@ export const OnboardingHobbiesScreen: React.FC<OnboardingHobbiesScreenProps> = (
                   loading={saving}
                 />
               </View>
-            </View>
-          </OnboardingLayout>
-        </View>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
+      </ScrollView>
+    </OnboardingLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  flexOne: {
-    flex: 1,
+  scrollContainer: {
+    flexGrow: 1,
   },
   container: {
     flex: 1,
+    paddingBottom: scaleHeight(20),
   },
   headerSection: {
     marginBottom: scaleHeight(24),
@@ -177,7 +175,7 @@ const styles = StyleSheet.create({
     lineHeight: scaleFont(20),
   },
   questionSection: {
-    flex: 1,
+    marginBottom: scaleHeight(30),
   },
   question: {
     color: theme.colors.text.primary,
@@ -225,12 +223,7 @@ const styles = StyleSheet.create({
     marginTop: scaleHeight(8),
     textAlign: 'right',
   },
-  spacer: {
-    flex: 1,
-    minHeight: scaleHeight(20),
-  },
   bottomContainer: {
-    paddingBottom: scaleHeight(20),
-    paddingTop: scaleHeight(16),
+    marginTop: scaleHeight(30),
   },
 });

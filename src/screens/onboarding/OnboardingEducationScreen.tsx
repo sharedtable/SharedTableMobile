@@ -4,8 +4,7 @@ import {
   Text, 
   StyleSheet, 
   Alert, 
-  TextInput, 
-  Pressable,
+  TextInput,
   Keyboard,
   Platform,
   ScrollView,
@@ -69,7 +68,8 @@ export const OnboardingEducationScreen: React.FC<OnboardingEducationScreenProps>
     setSchool(schoolName);
     setShowSuggestions(false);
     setSchoolSuggestions([]);
-    Keyboard.dismiss();
+    // Don't dismiss keyboard at all - let user continue if they want
+    // They can dismiss it manually or by pressing Next
   };
 
   const handleNext = async () => {
@@ -135,13 +135,7 @@ export const OnboardingEducationScreen: React.FC<OnboardingEducationScreenProps>
       scrollable
       keyboardAvoiding
     >
-      <Pressable 
-        style={styles.container}
-        onPress={() => {
-          setShowSuggestions(false);
-          Keyboard.dismiss();
-        }}
-      >
+      <View style={styles.container}>
         <OnboardingTitle>What is your highest level of education? *</OnboardingTitle>
 
         {hasError && errorMessage && (
@@ -192,20 +186,21 @@ export const OnboardingEducationScreen: React.FC<OnboardingEducationScreenProps>
               }}
             />
             {showSuggestions && (
-              <View style={styles.suggestionsContainer}>
+              <View style={styles.suggestionsContainer} pointerEvents="box-none">
                 <ScrollView 
                   keyboardShouldPersistTaps="always"
                   nestedScrollEnabled={true}
                   showsVerticalScrollIndicator={false}
+                  contentContainerStyle={{ flexGrow: 1 }}
                 >
                   {schoolSuggestions.map((schoolName) => (
                     <TouchableOpacity
                       key={schoolName}
                       style={styles.suggestionItem}
+                      activeOpacity={0.7}
                       onPress={() => {
                         handleSelectSchool(schoolName);
                       }}
-                      activeOpacity={0.7}
                     >
                       <Text style={styles.suggestionText}>{schoolName}</Text>
                     </TouchableOpacity>
@@ -224,7 +219,7 @@ export const OnboardingEducationScreen: React.FC<OnboardingEducationScreenProps>
             loading={saving}
           />
         </View>
-      </Pressable>
+      </View>
     </OnboardingLayout>
   );
 };
@@ -281,24 +276,24 @@ const styles = StyleSheet.create({
   },
   suggestionsContainer: {
     position: 'absolute',
-    top: scaleHeight(52),
+    bottom: scaleHeight(52), // Position above the input instead of below
     left: 0,
     right: 0,
-    backgroundColor: Colors.white,
+    backgroundColor: '#F8F9FA', // Light gray background for distinction
     borderRadius: scaleWidth(12),
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    maxHeight: scaleHeight(240),
+    borderWidth: 1.5,
+    borderColor: theme.colors.primary.main, // Primary color border for visibility
+    maxHeight: scaleHeight(200), // Slightly reduced height
     overflow: 'hidden',
     ...Platform.select({
       ios: {
-        shadowColor: Colors.shadowColor,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -4 }, // Stronger shadow
+        shadowOpacity: 0.25,
+        shadowRadius: 12,
       },
       android: {
-        elevation: 8,
+        elevation: 12,
       },
     }),
   },
@@ -306,7 +301,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(14),
     borderBottomWidth: 1,
-    borderBottomColor: Colors.backgroundGrayLighter,
+    borderBottomColor: '#E5E7EB', // Lighter border for items
+    backgroundColor: 'transparent',
   },
   // suggestionPressed: { // Removed unused style
   //   backgroundColor: Colors.backgroundGrayLight,
@@ -315,5 +311,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(15),
+    fontWeight: '500', // Slightly bolder for better readability
   },
 });

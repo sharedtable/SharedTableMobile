@@ -58,15 +58,15 @@ export function DinnerDetailsScreen() {
   // Calculate countdown timer
   useEffect(() => {
     const calculateCountdown = () => {
-      if (!reservation.time_slot?.datetime) {
+      if (!reservation.dinner?.datetime) {
         return;
       }
 
       // Create date object for dinner time from ISO string
-      const dinnerDate = new Date(reservation.time_slot.datetime);
+      const dinnerDate = new Date(reservation.dinner.datetime);
       
       if (isNaN(dinnerDate.getTime())) {
-        console.error('Invalid datetime:', reservation.time_slot.datetime);
+        console.error('Invalid datetime:', reservation.dinner.datetime);
         return;
       }
 
@@ -123,7 +123,7 @@ export function DinnerDetailsScreen() {
     } catch (error) {
       console.error('Error fetching group members:', error);
       // Handle auth expiry gracefully
-      if ((error as any)?.response?.status === 401) {
+      if ((error as { response?: { status?: number } })?.response?.status === 401) {
         console.log('Authentication expired - please log in again');
         // Don't show error to user, just use cached/mock data
       }
@@ -158,9 +158,9 @@ export function DinnerDetailsScreen() {
   };
 
   const _formatDate = () => {
-    if (!reservation.time_slot?.datetime) return '';
+    if (!reservation.dinner?.datetime) return '';
     
-    const date = new Date(reservation.time_slot.datetime);
+    const date = new Date(reservation.dinner.datetime);
     if (isNaN(date.getTime())) return '';
     
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -168,23 +168,30 @@ export function DinnerDetailsScreen() {
   };
 
   const _formatTime = () => {
-    if (!reservation.time_slot?.datetime) return '';
+    if (!reservation.dinner?.datetime) return '';
     
-    const date = new Date(reservation.time_slot.datetime);
+    const date = new Date(reservation.dinner.datetime);
     if (isNaN(date.getTime())) return '';
     
     const hours = date.getHours();
     const minutes = date.getMinutes();
     const period = hours >= 12 ? 'PM' : 'AM';
-    const displayHour = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
+    let displayHour;
+    if (hours > 12) {
+      displayHour = hours - 12;
+    } else if (hours === 0) {
+      displayHour = 12;
+    } else {
+      displayHour = hours;
+    }
     const displayMinute = minutes.toString().padStart(2, '0');
     return `${displayHour}:${displayMinute} ${period}`;
   };
 
   const _formatDayOfWeek = () => {
-    if (!reservation.time_slot?.datetime) return '';
+    if (!reservation.dinner?.datetime) return '';
     
-    const date = new Date(reservation.time_slot.datetime);
+    const date = new Date(reservation.dinner.datetime);
     if (isNaN(date.getTime())) return '';
     
     return date.toLocaleDateString('en-US', { weekday: 'long' });
@@ -402,10 +409,14 @@ export function DinnerDetailsScreen() {
               <View style={styles.membersList}>
                 {groupMembers.length > 0 ? (
                   groupMembers.map((member, index) => {
-                    const displayName = member.user?.display_name || 
-                                       (member.user?.first_name && member.user?.last_name 
-                                         ? `${member.user.first_name} ${member.user.last_name}`
-                                         : member.user?.email?.split('@')[0] || 'Member');
+                    let displayName = member.user?.display_name;
+                    if (!displayName) {
+                      if (member.user?.first_name && member.user?.last_name) {
+                        displayName = `${member.user.first_name} ${member.user.last_name}`;
+                      } else {
+                        displayName = member.user?.email?.split('@')[0] || 'Member';
+                      }
+                    }
                     const isExpanded = expandedMemberId === member.id;
                     const isCurrentUser = member.user?.email === 'garyxuejingzhou@gmail.com'; // You can get this from auth context
                     
@@ -497,13 +508,11 @@ export function DinnerDetailsScreen() {
                                   onPress={() => {
                                     // Navigate to chat with this user
                                     // Create or open a direct message channel
+                                    // Using type assertion for navigation until proper typing is established
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                     (navigation as any).navigate('Chat', {
-                                      screen: 'NewChat',
-                                      params: {
-                                        recipientId: member.user?.id,
-                                        recipientName: displayName,
-                                        isDirect: true
-                                      }
+                                      userId: member.user?.id,
+                                      userName: displayName,
                                     });
                                   }}
                                 >
@@ -528,10 +537,14 @@ export function DinnerDetailsScreen() {
                       </Pressable>
                     );
                   })
-                ) : reservation.dinner_group?.group_size ? (
-                  <Text style={styles.emptyText}>Loading group members...</Text>
                 ) : (
-                  <Text style={styles.emptyText}>Group members will appear here once confirmed</Text>
+                  (() => {
+                    if (reservation.dinner_group?.group_size) {
+                      return <Text style={styles.emptyText}>Loading group members...</Text>;
+                    } else {
+                      return <Text style={styles.emptyText}>Group members will appear here once confirmed</Text>;
+                    }
+                  })()
                 )}
               </View>
             </View>
@@ -568,7 +581,7 @@ export function DinnerDetailsScreen() {
               <View style={styles.tipItem}>
                 <Text style={styles.tipBullet}>🍝</Text>
                 <Text style={styles.tipText}>
-                  <Text style={styles.tipTextBold}>Sharing is the norm here!</Text> We encourage family-style dining—it's the best way to try more flavors and spark conversation
+                  <Text style={styles.tipTextBold}>Sharing is the norm here!</Text> We encourage family-style dining—it&apos;s the best way to try more flavors and spark conversation
                 </Text>
               </View>
               <View style={styles.tipItem}>
@@ -589,7 +602,7 @@ export function DinnerDetailsScreen() {
               </View>
               <View style={styles.tipItem}>
                 <Text style={styles.tipBullet}>💳</Text>
-                <Text style={styles.tipText}>Split the bill equally - it's simpler and keeps things social</Text>
+                <Text style={styles.tipText}>Split the bill equally - it&apos;s simpler and keeps things social</Text>
               </View>
             </View>
           </View>
@@ -678,12 +691,15 @@ export function DinnerDetailsScreen() {
                 />
               </View>
               <Text style={styles.countdownProgressText}>
-                {countdownTime.totalSeconds > 0 && countdownTime.totalSeconds < 3600 
-                  ? '🎉 Almost time!' 
-                  : countdownTime.totalSeconds > 0
-                  ? `${Math.round((1 - countdownTime.progress) * 100)}% time remaining`
-                  : 'Time to dine!'
-                }
+                {(() => {
+                  if (countdownTime.totalSeconds > 0 && countdownTime.totalSeconds < 3600) {
+                    return '🎉 Almost time!';
+                  } else if (countdownTime.totalSeconds > 0) {
+                    return `${Math.round((1 - countdownTime.progress) * 100)}% time remaining`;
+                  } else {
+                    return 'Time to dine!';
+                  }
+                })()}
               </Text>
             </View>
           </>
@@ -696,7 +712,7 @@ export function DinnerDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: theme.colors.gray[100],
   },
   header: {
     flexDirection: 'row',
@@ -722,14 +738,14 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
     paddingHorizontal: scaleWidth(20),
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: theme.colors.gray[100],
   },
   tab: {
     flex: 1,
     paddingVertical: scaleHeight(14),
     alignItems: 'center',
     borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    borderBottomColor: theme.colors.gray[100],
   },
   activeTab: {
     borderBottomColor: theme.colors.primary.main,
@@ -758,7 +774,7 @@ const styles = StyleSheet.create({
     borderRadius: scaleWidth(16),
     padding: scaleWidth(16),
     marginBottom: scaleHeight(20),
-    shadowColor: '#000',
+    shadowColor: theme.colors.black[1],
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
@@ -772,7 +788,7 @@ const styles = StyleSheet.create({
     width: scaleWidth(80),
     height: scaleWidth(80),
     borderRadius: scaleWidth(12),
-    backgroundColor: '#E0F7F5',
+    backgroundColor: theme.colors.state.info,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: scaleWidth(12),
@@ -795,7 +811,7 @@ const styles = StyleSheet.create({
   restaurantRating: {
     fontSize: scaleFont(14),
     fontWeight: '600',
-    color: '#FFA500',
+    color: theme.colors.warning.main,
     marginBottom: scaleHeight(8),
   },
   restaurantTagline: {
@@ -834,7 +850,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
     borderRadius: scaleWidth(8),
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: theme.colors.gray[200],
     marginBottom: scaleHeight(8),
   },
   historyItem: {
@@ -843,7 +859,7 @@ const styles = StyleSheet.create({
     padding: scaleWidth(10),
     marginBottom: scaleHeight(8),
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: theme.colors.gray[200],
   },
   historyItemTitle: {
     fontSize: scaleFont(12),
@@ -867,7 +883,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
     borderRadius: scaleWidth(8),
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: theme.colors.gray[200],
     overflow: 'hidden',
     marginBottom: scaleHeight(8),
   },
@@ -899,8 +915,8 @@ const styles = StyleSheet.create({
     padding: scaleWidth(20),
     paddingBottom: Platform.OS === 'ios' ? scaleHeight(34) : scaleHeight(20),
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    shadowColor: '#000',
+    borderTopColor: theme.colors.gray[100],
+    shadowColor: theme.colors.black[1],
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -933,7 +949,7 @@ const styles = StyleSheet.create({
   miniProgressBar: {
     width: scaleWidth(60),
     height: scaleHeight(4),
-    backgroundColor: '#F0F0F0',
+    backgroundColor: theme.colors.gray[100],
     borderRadius: scaleWidth(2),
     overflow: 'hidden',
   },
@@ -972,7 +988,7 @@ const styles = StyleSheet.create({
   countdownTimeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F8F8',
+    backgroundColor: theme.colors.gray[50],
     borderRadius: scaleWidth(12),
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(12),
@@ -1002,7 +1018,7 @@ const styles = StyleSheet.create({
   },
   countdownProgressBar: {
     height: scaleHeight(4),
-    backgroundColor: '#F0F0F0',
+    backgroundColor: theme.colors.gray[100],
     borderRadius: scaleWidth(2),
     overflow: 'hidden',
     marginBottom: scaleHeight(8),
@@ -1093,7 +1109,7 @@ const styles = StyleSheet.create({
     borderRadius: scaleWidth(12),
     padding: scaleWidth(12),
     marginBottom: scaleHeight(12),
-    shadowColor: '#000',
+    shadowColor: theme.colors.black[1],
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -1152,7 +1168,7 @@ const styles = StyleSheet.create({
     marginTop: scaleHeight(16),
     paddingTop: scaleHeight(16),
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: theme.colors.gray[100],
   },
   memberDetailSection: {
     marginBottom: scaleHeight(12),
@@ -1173,7 +1189,7 @@ const styles = StyleSheet.create({
     gap: scaleWidth(6),
   },
   interestTag: {
-    backgroundColor: '#F0F7FF',
+    backgroundColor: theme.colors.primary[50],
     paddingHorizontal: scaleWidth(10),
     paddingVertical: scaleHeight(4),
     borderRadius: scaleWidth(12),
@@ -1188,7 +1204,7 @@ const styles = StyleSheet.create({
     marginTop: scaleHeight(16),
     paddingTop: scaleHeight(16),
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: theme.colors.gray[100],
   },
   memberActionButton: {
     flex: 1,
@@ -1235,7 +1251,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
   },
   tipsSection: {
-    backgroundColor: '#F8F8F8',
+    backgroundColor: theme.colors.gray[50],
     borderRadius: scaleWidth(12),
     padding: scaleWidth(16),
   },

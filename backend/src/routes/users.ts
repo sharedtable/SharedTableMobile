@@ -112,7 +112,7 @@ router.put('/profile', verifyPrivyToken, async (req: AuthRequest, res: Response,
     if (validatedData.preferences) profileUpdates.preferences = validatedData.preferences;
 
     // Upsert profile (create if doesn't exist)
-    const { error: updateProfileError } = await supabaseService.from('user_profiles').upsert({
+    const { error: updateProfileError } = await supabaseService.from('onboarding_profiles').upsert({
       user_id: user.id,
       ...profileUpdates,
     });

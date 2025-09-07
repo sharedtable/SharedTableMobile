@@ -6,7 +6,7 @@ import { logger } from '../utils/logger';
 const router = Router();
 
 // Get user's gamification stats
-router.get('/stats/:userId?', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
+router.get('/stats', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
   try {
     const privyUserId = req.userId;
     
@@ -18,18 +18,42 @@ router.get('/stats/:userId?', verifyPrivyToken, async (req: AuthRequest, res: Re
     }
 
     // Get the internal user ID from Privy ID
-    const { data: userData, error: userError } = await supabaseService
+    let { data: userData, error: userError } = await supabaseService
       .from('users')
       .select('id')
       .eq('external_auth_id', privyUserId)
       .single();
 
+    // If user doesn't exist, create them
     if (userError || !userData) {
-      logger.error('User not found for stats:', privyUserId);
-      return res.status(404).json({
-        success: false,
-        error: 'User not found'
-      });
+      logger.info('User not found, creating new user for Privy ID:', privyUserId);
+      
+      // Create a new user
+      const { data: newUser, error: createUserError } = await supabaseService
+        .from('users')
+        .insert({
+          external_auth_id: privyUserId,
+          email: req.auth?.email || `${privyUserId}@placeholder.com`,
+          full_name: req.auth?.name || 'New User',
+          onboarding_status: 'not_started',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select('id')
+        .single();
+
+      if (createUserError) {
+        logger.error('Failed to create user:', {
+          error: createUserError,
+          privyUserId
+        });
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to create user profile'
+        });
+      }
+
+      userData = newUser;
     }
 
     const userId = userData.id;
@@ -42,11 +66,19 @@ router.get('/stats/:userId?', verifyPrivyToken, async (req: AuthRequest, res: Re
       .single();
 
     if (statsError && statsError.code !== 'PGRST116') {
+      logger.error('Error fetching user stats:', {
+        error: statsError,
+        userId,
+        code: statsError.code,
+        message: statsError.message
+      });
       throw statsError;
     }
 
     // If no stats exist, create default stats for user
     if (!stats) {
+      logger.info('Creating default stats for user:', { userId });
+      
       const { data: newStats, error: createError } = await supabaseService
         .from('user_stats')
         .insert({
@@ -66,39 +98,130 @@ router.get('/stats/:userId?', verifyPrivyToken, async (req: AuthRequest, res: Re
         .single();
 
       if (createError) {
+        logger.error('Failed to create user stats:', {
+          error: createError,
+          userId,
+          code: createError.code,
+          message: createError.message,
+          details: createError.details
+        });
+        
+        // If foreign key constraint fails, return default stats without persisting
+        if (createError.code === '23503') {
+          logger.warn('Foreign key constraint issue, returning default stats without persistence');
+          
+          // Get tier information for default stats
+          const { data: tierData } = await supabaseService
+            .from('tiers')
+            .select('*')
+            .eq('tier_level', 1)
+            .single();
+          
+          return res.json({ 
+            success: true, 
+            data: {
+              userId: userId,
+              totalPoints: 0,
+              currentTier: 1,
+              currentTierName: tierData?.name || 'Newcomer',
+              pointsToNextTier: tierData?.points_required || 100,
+              weeklyStreak: 0,
+              monthlyRank: 0,
+              allTimeRank: 0,
+              dinnersAttended: 0,
+              totalBadges: 0,
+              lastUpdated: new Date().toISOString()
+            }
+          });
+        }
+        
         throw createError;
       }
 
       // Get tier information
       if (newStats) {
-        const { data: tierData } = await supabaseService
+        const { data: tierData, error: tierError } = await supabaseService
           .from('tiers')
           .select('*')
-          .eq('tier_level', newStats.current_tier)
+          .eq('tier_level', newStats.current_tier || 1)
           .single();
+        
+        if (tierError) {
+          logger.error('Error fetching tier data:', {
+            error: tierError,
+            tierLevel: newStats.current_tier || 1
+          });
+        }
         
         return res.json({ 
           success: true, 
-          data: { ...newStats, tier: tierData } 
+          data: {
+            userId: newStats.user_id,
+            totalPoints: newStats.total_points || 0,
+            currentTier: newStats.current_tier || 1,
+            currentTierName: tierData?.name || 'Newcomer',
+            pointsToNextTier: tierData?.points_required || 100,
+            weeklyStreak: newStats.current_streak || 0,
+            monthlyRank: 0,
+            allTimeRank: 0,
+            dinnersAttended: newStats.dinners_attended || 0,
+            totalBadges: 0,
+            lastUpdated: newStats.updated_at || new Date().toISOString()
+          }
         });
       }
     }
 
     // Get tier information for existing stats
     if (stats) {
-      const { data: tierData } = await supabaseService
+      const { data: tierData, error: tierError } = await supabaseService
         .from('tiers')
         .select('*')
-        .eq('tier_level', stats.current_tier)
+        .eq('tier_level', stats.current_tier || 1)
         .single();
+      
+      if (tierError) {
+        logger.error('Error fetching tier data for existing stats:', {
+          error: tierError,
+          tierLevel: stats.current_tier || 1
+        });
+      }
       
       return res.json({ 
         success: true, 
-        data: { ...stats, tier: tierData } 
+        data: {
+          userId: stats.user_id,
+          totalPoints: stats.total_points || 0,
+          currentTier: stats.current_tier || 1,
+          currentTierName: tierData?.name || 'Newcomer',
+          pointsToNextTier: tierData?.points_required || 100,
+          weeklyStreak: stats.current_streak || 0,
+          monthlyRank: 0,
+          allTimeRank: 0,
+          dinnersAttended: stats.dinners_attended || 0,
+          totalBadges: 0,
+          lastUpdated: stats.updated_at || new Date().toISOString()
+        }
       });
     }
 
-    res.json({ success: true, data: stats });
+    // Should not reach here, but return empty stats as fallback
+    return res.json({ 
+      success: true, 
+      data: {
+        userId: userId,
+        totalPoints: 0,
+        currentTier: 1,
+        currentTierName: 'Newcomer',
+        pointsToNextTier: 100,
+        weeklyStreak: 0,
+        monthlyRank: 0,
+        allTimeRank: 0,
+        dinnersAttended: 0,
+        totalBadges: 0,
+        lastUpdated: new Date().toISOString()
+      }
+    });
   } catch (error) {
     logger.error('Error fetching gamification stats:', error);
     res.status(500).json({ 
@@ -109,7 +232,7 @@ router.get('/stats/:userId?', verifyPrivyToken, async (req: AuthRequest, res: Re
 });
 
 // Get user's achievements
-router.get('/achievements/:userId?', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
+router.get('/achievements', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
   try {
     const privyUserId = req.userId;
     

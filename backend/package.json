@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@gorhom/bottom-sheet": "^5.2.5",
     "@privy-io/server-auth": "^1.31.1",
     "@react-native-async-storage/async-storage": "^2.1.2",
     "@react-native-community/slider": "^4.5.6",
@@ -38,6 +39,7 @@
     "multer": "^2.0.2",
     "react-native-image-viewing": "^0.2.2",
     "stream-chat": "^9.17.0",
+    "stripe": "^18.5.0",
     "winston": "^3.17.0",
     "zod": "^3.22.4"
   },

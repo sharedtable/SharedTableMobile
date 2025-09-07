@@ -5,23 +5,23 @@ import { logger } from '../utils/logger';
 
 const router = express.Router();
 
-// Get all available time slots for signup
+// Get all available dinners for signup
 router.get('/available', async (_req: AuthRequest, res: Response) => {
   try {
     // Get time slots that are in the future and still open
     const now = new Date();
     const { data: slots, error } = await supabaseService
-      .from('timeslots')
+      .from('dinners')
       .select('*')
       .eq('status', 'open')
       .gte('datetime', now.toISOString())
       .order('datetime', { ascending: true });
 
     if (error) {
-      logger.error('Error fetching time slots:', error);
+      logger.error('Error fetching dinners:', error);
       return res.status(500).json({
         success: false,
-        error: 'Failed to fetch available time slots',
+        error: 'Failed to fetch available dinners',
       });
     }
 
@@ -30,7 +30,7 @@ router.get('/available', async (_req: AuthRequest, res: Response) => {
       data: slots || [],
     });
   } catch (error) {
-    logger.error('Error in available time slots endpoint:', error);
+    logger.error('Error in available dinners endpoint:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
@@ -38,11 +38,11 @@ router.get('/available', async (_req: AuthRequest, res: Response) => {
   }
 });
 
-// Sign up for a time slot
+// Sign up for a dinner
 router.post('/signup', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
   try {
     const privyUserId = req.userId;
-    const { timeSlotId, dietaryRestrictions, preferences } = req.body;
+    const { dinnerId, dietaryRestrictions, preferences } = req.body;
 
     if (!privyUserId) {
       return res.status(401).json({
@@ -51,10 +51,10 @@ router.post('/signup', verifyPrivyToken, async (req: AuthRequest, res: Response)
       });
     }
 
-    if (!timeSlotId) {
+    if (!dinnerId) {
       return res.status(400).json({
         success: false,
-        error: 'Time slot ID is required',
+        error: 'Dinner ID is required',
       });
     }
 
@@ -74,18 +74,18 @@ router.post('/signup', verifyPrivyToken, async (req: AuthRequest, res: Response)
 
     const userId = userData.id;
 
-    // Check if slot is still available
+    // Check if dinner is still available
     const { data: slot, error: slotError } = await supabaseService
-      .from('timeslots')
+      .from('dinners')
       .select('*')
-      .eq('id', timeSlotId)
+      .eq('id', dinnerId)
       .eq('status', 'open')
       .single();
 
     if (slotError || !slot) {
       return res.status(404).json({
         success: false,
-        error: 'Time slot not available',
+        error: 'Dinner not available',
       });
     }
 
@@ -93,14 +93,14 @@ router.post('/signup', verifyPrivyToken, async (req: AuthRequest, res: Response)
     const { data: existingSignup } = await supabaseService
       .from('dinner_bookings')
       .select('id')
-      .eq('timeslot_id', timeSlotId)
+      .eq('dinner_id', dinnerId)
       .eq('user_id', userId)
       .single();
 
     if (existingSignup) {
       return res.status(409).json({
         success: false,
-        error: 'You have already signed up for this time slot',
+        error: 'You have already signed up for this dinner',
       });
     }
 
@@ -108,7 +108,7 @@ router.post('/signup', verifyPrivyToken, async (req: AuthRequest, res: Response)
     const { data: signup, error: signupError } = await supabaseService
       .from('dinner_bookings')
       .insert({
-        timeslot_id: timeSlotId,
+        dinner_id: dinnerId,
         user_id: userId,
         dietary_restrictions: dietaryRestrictions,
         preferences: preferences,
@@ -128,12 +128,12 @@ router.post('/signup', verifyPrivyToken, async (req: AuthRequest, res: Response)
 
     // Update the signup count
     const { error: updateError } = await supabaseService
-      .from('timeslots')
+      .from('dinners')
       .update({ 
         current_signups: slot.current_signups + 1,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', timeSlotId);
+      .eq('id', dinnerId);
 
     if (updateError) {
       logger.error('Error updating signup count:', updateError);
@@ -142,7 +142,7 @@ router.post('/signup', verifyPrivyToken, async (req: AuthRequest, res: Response)
     return res.json({
       success: true,
       data: signup,
-      message: 'Successfully signed up for the time slot',
+      message: 'Successfully signed up for the dinner',
     });
   } catch (error) {
     logger.error('Error in signup endpoint:', error);
@@ -186,9 +186,27 @@ router.get('/my-signups', verifyPrivyToken, async (req: AuthRequest, res: Respon
     // Get user's dinner bookings
     const { data: signups, error } = await supabaseService
       .from('dinner_bookings')
-      .select('*, timeslot:timeslots(*)')
+      .select('*')
       .eq('user_id', userId)
       .order('signed_up_at', { ascending: false });
+    
+    // If we have signups, fetch the dinner details separately
+    let enhancedSignups = signups || [];
+    if (signups && signups.length > 0) {
+      const dinnerIds = [...new Set(signups.map(s => s.dinner_id))];
+      const { data: dinners } = await supabaseService
+        .from('dinners')
+        .select('*')
+        .in('id', dinnerIds);
+      
+      if (dinners) {
+        const dinnerMap = new Map(dinners.map(d => [d.id, d]));
+        enhancedSignups = signups.map(signup => ({
+          ...signup,
+          dinner: dinnerMap.get(signup.dinner_id) || null
+        }));
+      }
+    }
 
     if (error) {
       logger.error('Error fetching user signups:', {
@@ -206,10 +224,6 @@ router.get('/my-signups', verifyPrivyToken, async (req: AuthRequest, res: Respon
         details: error.message // Add more details in response for debugging
       });
     }
-
-    // For grouped signups, fetch the dinner group details
-    // Note: group_members table doesn't exist yet, so we'll just return signups as-is
-    const enhancedSignups = signups || [];
 
     return res.json({
       success: true,
@@ -247,10 +261,10 @@ router.get('/group-members/:dinnerGroupId', verifyPrivyToken, async (req: AuthRe
 });
 
 // Get user's assigned dinner group (after grouping algorithm runs)
-router.get('/my-group/:timeSlotId', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
+router.get('/my-group/:dinnerId', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
   try {
     const privyUserId = req.userId;
-    const { timeSlotId } = req.params;
+    const { dinnerId } = req.params;
 
     if (!privyUserId) {
       return res.status(401).json({
@@ -277,7 +291,7 @@ router.get('/my-group/:timeSlotId', verifyPrivyToken, async (req: AuthRequest, r
 
     // Since group_members table doesn't exist yet, return not found
     // TODO: Implement when group_members table is created
-    logger.info(`Group assignment requested for user ${userId} and time slot ${timeSlotId} - table not yet implemented`);
+    logger.info(`Group assignment requested for user ${userId} and dinner ${dinnerId} - table not yet implemented`);
     
     return res.status(404).json({
       success: false,
@@ -324,7 +338,7 @@ router.delete('/signup/:signupId', verifyPrivyToken, async (req: AuthRequest, re
     // Get the signup to verify ownership and status
     const { data: signup, error: signupError } = await supabaseService
       .from('dinner_bookings')
-      .select('*, timeslot:timeslots(*)')
+      .select('*')
       .eq('id', signupId)
       .eq('user_id', userId)
       .single();
@@ -342,6 +356,13 @@ router.delete('/signup/:signupId', verifyPrivyToken, async (req: AuthRequest, re
         error: 'Cannot cancel signup after groups have been formed',
       });
     }
+    
+    // Get the dinner details to update signup count
+    const { data: dinner } = await supabaseService
+      .from('dinners')
+      .select('current_signups')
+      .eq('id', signup.dinner_id)
+      .single();
 
     // Delete the signup
     const { error: deleteError } = await supabaseService
@@ -358,16 +379,18 @@ router.delete('/signup/:signupId', verifyPrivyToken, async (req: AuthRequest, re
     }
 
     // Update the signup count
-    const { error: updateError } = await supabaseService
-      .from('timeslots')
-      .update({ 
-        current_signups: signup.timeslot.current_signups - 1,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', signup.timeslot_id);
-
-    if (updateError) {
-      logger.error('Error updating signup count:', updateError);
+    if (dinner) {
+      const { error: updateError } = await supabaseService
+        .from('dinners')
+        .update({ 
+          current_signups: (dinner.current_signups || 1) - 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', signup.dinner_id);
+      
+      if (updateError) {
+        logger.error('Error updating signup count:', updateError);
+      }
     }
 
     return res.json({

@@ -392,7 +392,7 @@ router.get('/profile', verifyPrivyToken, async (req: AuthRequest, res: Response,
 
     // Get user profile
     const { data: profile, error: profileError } = await supabaseService
-      .from('user_profiles')
+      .from('onboarding_profiles')
       .select('*')
       .eq('user_id', user.id)
       .single();
@@ -438,7 +438,7 @@ router.get('/status', verifyPrivyToken, async (req: AuthRequest, res: Response, 
 
     // Get user profile to check optional fields
     const { data: profile } = await supabaseService
-      .from('user_profiles')
+      .from('onboarding_profiles')
       .select('birth_date, gender, interests, dietary_preferences, job_title, field_of_study')
       .eq('user_id', user.id)
       .single();
@@ -559,7 +559,7 @@ router.post('/update-status', verifyPrivyToken, async (req: AuthRequest, res: Re
       
     if (user) {
       await supabaseService
-        .from('user_info')
+        .from('onboarding_profiles')
         .update({
           onboarding_status: status,
           onboarding_completed_at: status === 'fully_complete' ? new Date().toISOString() : null,
@@ -617,7 +617,7 @@ router.post('/test-save', verifyPrivyToken, async (req: AuthRequest, res: Respon
 
     // Check if user_info exists
     const { data: existing } = await supabaseService
-      .from('user_info')
+      .from('onboarding_profiles')
       .select('user_id')
       .eq('user_id', user.id)
       .single();
@@ -626,7 +626,7 @@ router.post('/test-save', verifyPrivyToken, async (req: AuthRequest, res: Respon
     if (existing) {
       // Update
       const { data, error } = await supabaseService
-        .from('user_info')
+        .from('onboarding_profiles')
         .update(userInfoData)
         .eq('user_id', user.id)
         .select();
@@ -636,7 +636,7 @@ router.post('/test-save', verifyPrivyToken, async (req: AuthRequest, res: Respon
       // Insert
       userInfoData.created_at = new Date().toISOString();
       const { data, error } = await supabaseService
-        .from('user_info')
+        .from('onboarding_profiles')
         .insert(userInfoData)
         .select();
       result = { data, error };
@@ -691,7 +691,7 @@ router.post('/dining-preferences', verifyPrivyToken, async (req: AuthRequest, re
 
     // Update user_info with dining preferences
     const { error: updateInfoError } = await supabaseService
-      .from('user_info')
+      .from('onboarding_profiles')
       .upsert({
         user_id: user.id,
         cuisine_preferences: cuisinePreferences || [],

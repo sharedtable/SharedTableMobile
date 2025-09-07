@@ -37,15 +37,17 @@ interface RestaurantItem {
   visitCount?: number;
 }
 
-interface TimeSlotSignup {
+interface DinnerSignup {
   id: string;
-  time_slot_id: string;
+  dinner_id: string;
   user_id: string;
   status: 'pending' | 'confirmed' | 'grouped' | 'cancelled';
   dietary_restrictions?: string;
   preferences?: string;
   signed_up_at: string;
-  time_slot?: {
+  created_at?: string;
+  updated_at?: string;
+  dinner?: {
     id: string;
     datetime: string; // ISO string with date and time
     max_signups: number;
@@ -57,7 +59,7 @@ interface TimeSlotSignup {
   };
   dinner_group?: {
     id: string;
-    time_slot_id: string;
+    dinner_id: string;
     group_name: string;
     restaurant_name: string;
     restaurant_address: string;
@@ -72,7 +74,7 @@ interface TimeSlotSignup {
 export function ProfileScreen() {
   const navigation = useNavigation<ProfileNavigationProp>();
   const { user } = usePrivyAuth();
-  const [reservations, setReservations] = useState<TimeSlotSignup[]>([]);
+  const [reservations, setReservations] = useState<DinnerSignup[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'reservations' | 'connections'>('reservations');
@@ -127,18 +129,18 @@ export function ProfileScreen() {
         
         // Filter upcoming signups (not cancelled) and sort by date
         const upcoming = response.data
-          .filter((signup: TimeSlotSignup) => {
-            if (signup.status === 'cancelled' || !signup.time_slot) return false;
+          .filter((signup: DinnerSignup) => {
+            if (signup.status === 'cancelled' || !signup.dinner) return false;
             // Compare datetime to filter out past slots
             const now = new Date();
-            const slotDate = new Date(signup.time_slot.datetime);
-            return slotDate >= now;
+            const dinnerDate = new Date(signup.dinner.datetime);
+            return dinnerDate >= now;
           })
-          .sort((a: TimeSlotSignup, b: TimeSlotSignup) => {
-            if (!a.time_slot || !b.time_slot) return 0;
+          .sort((a: DinnerSignup, b: DinnerSignup) => {
+            if (!a.dinner || !b.dinner) return 0;
             // Sort by datetime
-            const dateA = new Date(a.time_slot.datetime);
-            const dateB = new Date(b.time_slot.datetime);
+            const dateA = new Date(a.dinner.datetime);
+            const dateB = new Date(b.dinner.datetime);
             return dateA.getTime() - dateB.getTime();
           });
         
@@ -218,7 +220,7 @@ export function ProfileScreen() {
     });
   };
 
-  const _getStatusLabel = (signup: TimeSlotSignup) => {
+  const _getStatusLabel = (signup: DinnerSignup) => {
     if (signup.status === 'grouped' && signup.dinner_group) {
       return 'MATCHED';
     }
@@ -362,8 +364,8 @@ export function ProfileScreen() {
           ) : reservations.length > 0 ? (
             reservations.map((reservation) => {
               const formatReservationDate = () => {
-                if (!reservation.time_slot?.datetime) return '';
-                const dateTime = new Date(reservation.time_slot.datetime);
+                if (!reservation.dinner?.datetime) return '';
+                const dateTime = new Date(reservation.dinner.datetime);
                 if (isNaN(dateTime.getTime())) return '';
                 
                 // Extract date parts for display
