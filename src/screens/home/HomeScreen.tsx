@@ -15,11 +15,11 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { NavigationProp, RouteProp, useNavigation } from '@react-navigation/native';
+import { RootStackParamList } from '@/navigation/RootNavigator';
 
 import { Ionicons } from '@expo/vector-icons';
 import { Icon } from '@/components/base/Icon';
 import { InviteFriendsSection } from '@/components/home/InviteFriendsSection';
-import { TopBar } from '@/components/navigation/TopBar';
 import { OptionalOnboardingPrompt } from '@/components/OptionalOnboardingPrompt';
 // Removed BottomTabBar - now using React Navigation's tab bar
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
@@ -31,8 +31,8 @@ import { usePaymentStore } from '@/store/paymentStore';
 import { CheckoutModal } from '@/components/payment/CheckoutModal';
 
 // Images
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const backgroundImage = require('@/assets/images/backgrounds/background.jpg');
+// @ts-ignore - Image asset
+import backgroundImage from '@/assets/images/backgrounds/background.jpg';
 
 interface TimeSlot {
   id: string;
@@ -52,18 +52,11 @@ interface Signup {
   dinner?: TimeSlot;
 }
 
-// Define proper navigation types
-type RootStackParamList = {
-  Home: undefined;
-  EventDetails: { eventId: string };
-  Profile: undefined;
-  NotificationsList: undefined;
-  // Add other screens as needed
-};
+// Navigation types are imported from RootNavigator now
 
 interface HomeScreenProps {
   navigation?: NavigationProp<RootStackParamList>;
-  route?: RouteProp<RootStackParamList, 'Home'>;
+  route?: RouteProp<RootStackParamList, 'Main'>;
   onNavigate?: (screen: string, data?: unknown) => void;
 }
 
@@ -74,10 +67,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
 }) => {
   const { user } = usePrivyAuth();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const { unreadCount, loadNotifications } = useNotificationStore();
+  const { loadNotifications } = useNotificationStore();
   const { 
     initializePayments
   } = usePaymentStore();
+  const [activeTab, setActiveTab] = useState<'dinners' | 'events'>('dinners');
   const [selectedDinner, setSelectedDinner] = useState<string | null>(null);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
@@ -90,10 +84,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
   const lastFetchTimeRef = useRef<number>(0);
   const retryCountRef = useRef(0);
   const hasInitialLoadRef = useRef(false);
-  
-  const handleNotificationPress = () => {
-    navigation.navigate('NotificationsList');
-  };
+  const scrollViewRef = useRef<ScrollView>(null);
 
   // Fetch available time slots and user's signups with debouncing and retry logic
   const fetchData = useCallback(async (isRefreshing = false, retryCount = 0) => {
@@ -261,63 +252,61 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
   }, []);
 
   // Keep the old functions for backward compatibility if needed
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const formatDate = useCallback((dateString: string) => {
-    if (!dateString) return 'Invalid date';
-    try {
-      // Try to handle both old format (YYYY-MM-DD) and new format (ISO datetime)
-      if (dateString.includes('T')) {
-        // ISO datetime format
-        const { date } = formatDateTime(dateString);
-        return date;
-      } else {
-        // Old YYYY-MM-DD format
-        const [_year, month, day] = dateString.split('-');
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        return `${monthNames[parseInt(month, 10) - 1]} ${parseInt(day, 10)}`;
-      }
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'Invalid date';
-    }
-  }, [formatDateTime]);
+  // const formatDate = useCallback((dateString: string) => {
+  //   if (!dateString) return 'Invalid date';
+  //   try {
+  //     // Try to handle both old format (YYYY-MM-DD) and new format (ISO datetime)
+  //     if (dateString.includes('T')) {
+  //       // ISO datetime format
+  //       const { date } = formatDateTime(dateString);
+  //       return date;
+  //     } else {
+  //       // Old YYYY-MM-DD format
+  //       const [_year, month, day] = dateString.split('-');
+  //       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  //       return `${monthNames[parseInt(month, 10) - 1]} ${parseInt(day, 10)}`;
+  //     }
+  //   } catch (error) {
+  //     console.error('Error formatting date:', error);
+  //     return 'Invalid date';
+  //   }
+  // }, [formatDateTime]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const formatTime = useCallback((timeString: string) => {
-    if (!timeString) return 'Invalid time';
-    try {
-      // Try to handle both old format (HH:MM:SS) and new format (ISO datetime)
-      if (timeString.includes('T')) {
-        // ISO datetime format
-        const { time } = formatDateTime(timeString);
-        return time;
-      } else {
-        // Old HH:MM:SS format
-        const [hours, minutes] = timeString.split(':');
-        const hour = parseInt(hours, 10);
-        const minute = parseInt(minutes, 10);
-        
-        if (isNaN(hour) || isNaN(minute)) {
-          console.error('Invalid time string:', timeString);
-          return 'Invalid time';
-        }
-        
-        const period = hour >= 12 ? 'PM' : 'AM';
-        let displayHour = hour;
-        if (hour > 12) {
-          displayHour = hour - 12;
-        } else if (hour === 0) {
-          displayHour = 12;
-        }
-        const displayMinute = minute.toString().padStart(2, '0');
-        
-        return `${displayHour}:${displayMinute} ${period}`;
-      }
-    } catch (error) {
-      console.error('Error formatting time:', error);
-      return 'Invalid time';
-    }
-  }, [formatDateTime]);
+  // const formatTime = useCallback((timeString: string) => {
+  //   if (!timeString) return 'Invalid time';
+  //   try {
+  //     // Try to handle both old format (HH:MM:SS) and new format (ISO datetime)
+  //     if (timeString.includes('T')) {
+  //       // ISO datetime format
+  //       const { time } = formatDateTime(timeString);
+  //       return time;
+  //     } else {
+  //       // Old HH:MM:SS format
+  //       const [hours, minutes] = timeString.split(':');
+  //       const hour = parseInt(hours, 10);
+  //       const minute = parseInt(minutes, 10);
+  //       
+  //       if (isNaN(hour) || isNaN(minute)) {
+  //         console.error('Invalid time string:', timeString);
+  //         return 'Invalid time';
+  //       }
+  //       
+  //       const period = hour >= 12 ? 'PM' : 'AM';
+  //       let displayHour = hour;
+  //       if (hour > 12) {
+  //         displayHour = hour - 12;
+  //       } else if (hour === 0) {
+  //         displayHour = 12;
+  //       }
+  //       const displayMinute = minute.toString().padStart(2, '0');
+  //       
+  //       return `${displayHour}:${displayMinute} ${period}`;
+  //     }
+  //   } catch (error) {
+  //     console.error('Error formatting time:', error);
+  //     return 'Invalid time';
+  //   }
+  // }, [formatDateTime]);
 
   const handleGrabSpot = async () => {
     if (!selectedDinner) {
@@ -412,25 +401,18 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="dark-content" backgroundColor="white" />
       
       {/* Optional Onboarding Prompt */}
       <OptionalOnboardingPrompt />
-      
-      {/* Top Bar with Notifications */}
-      <TopBar
-        title="Home"
-        showNotification
-        notificationCount={unreadCount}
-        onNotification={handleNotificationPress}
-      />
 
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        keyboardVerticalOffset={0}
       >
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -447,13 +429,66 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
 
           {/* Content Card */}
           <View style={styles.contentCard}>
-            {/* Title Section */}
-            <View style={styles.titleSection}>
+            {/* Header Section with Links and Location */}
+            <View style={styles.headerSection}>
               <View style={styles.locationContainer}>
-                <Icon name="map-pin" size={14} color={theme.colors.text.secondary} />
+                <Icon name="map-pin" size={14} color="#999999" />
                 <Text style={styles.locationText}>SAN FRANCISCO</Text>
               </View>
-              <Text style={styles.heroTitle}>BOOK YOUR NEXT CULINARY JOURNEY</Text>
+              <View style={styles.headerLinks}>
+                <Pressable 
+                  style={styles.headerLink} 
+                  onPress={() => navigation.navigate('HowItWorks')}
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel="How it works"
+                >
+                  <Text style={styles.headerLinkText}>How it works</Text>
+                </Pressable>
+                <Pressable 
+                  style={styles.headerLink} 
+                  onPress={() => navigation.navigate('FAQs')}
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel="FAQs"
+                >
+                  <Text style={styles.headerLinkText}>FAQs</Text>
+                </Pressable>
+              </View>
+            </View>
+
+            {/* Tabs Section */}
+            <View style={styles.tabsWrapper}>
+              <View style={styles.tabsContainer}>
+                <Pressable
+                  style={[styles.tab, activeTab === 'dinners' && styles.activeTab]}
+                  onPress={() => setActiveTab('dinners')}
+                  accessible={true}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: activeTab === 'dinners' }}
+                  accessibilityLabel="Dinners tab"
+                >
+                  <Text style={[styles.tabText, activeTab === 'dinners' && styles.activeTabText]}>Dinners</Text>
+                </Pressable>
+                <View style={styles.tabDivider} />
+                <Pressable
+                  style={[styles.tab, activeTab === 'events' && styles.activeTab]}
+                  onPress={() => setActiveTab('events')}
+                  accessible={true}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: activeTab === 'events' }}
+                  accessibilityLabel="Events tab"
+                >
+                  <Text style={[styles.tabText, activeTab === 'events' && styles.activeTabText]}>Events</Text>
+                </Pressable>
+              </View>
+            </View>
+
+            {/* Title Section */}
+            <View style={styles.titleSection}>
+              <Text style={styles.heroTitle}>
+                {activeTab === 'dinners' ? 'RESERVE YOUR DINING EXPERIENCE' : 'JOIN OUR SPECIAL EVENTS'}
+              </Text>
               <Text style={styles.heroSubtitle}>MEET BETTER. EAT BETTER.</Text>
             </View>
 
@@ -477,7 +512,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
             )}
 
             {/* Time Slots Section */}
-            {!loading && !error && (
+            {!loading && !error && activeTab === 'dinners' && (
               <View style={styles.eventsSection}>
                 {/* Group time slots by dinner type */}
                 {(() => {
@@ -489,7 +524,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
                       {/* Regular Dinners Section */}
                       {regularSlots.length > 0 && (
                         <>
-                          <Text style={styles.categoryTitle}>Regular Dinners</Text>
+                          <Text style={styles.sectionTitle}>Dinners</Text>
                           {regularSlots.map((slot) => {
                             const signedUp = isSignedUp(slot.id);
                             const isSelected = selectedDinner === slot.id;
@@ -615,9 +650,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
                         <>
                           <Text style={styles.grabSpotText}>
                             {(() => {
-                              if (!user) return 'Login to Sign Up';
+                              if (!user) return 'Login to Grab a Spot';
                               if (selectedDinner && isSignedUp(selectedDinner)) return 'Already Signed Up';
-                              return 'Sign Up for Dinner';
+                              return 'Grab a Spot';
                             })()}
                           </Text>
                           <Icon name="chevron-right" size={20} color={theme.colors.white} />
@@ -637,33 +672,38 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
               </View>
             )}
 
-            {/* Invite Friends Section */}
-            <InviteFriendsSection onInvite={handleInviteFriend} />
+            {/* Events Tab Content */}
+            {!loading && !error && activeTab === 'events' && (
+              <View style={styles.eventsSection}>
+                <Text style={styles.sectionTitle}>Upcoming Events</Text>
+                
+                {/* Event Cards */}
+                <View style={styles.eventCard}>
+                  <Pressable style={styles.joinEventButton}>
+                    <Text style={styles.joinEventText}>Join Event</Text>
+                    <Icon name="chevron-right" size={20} color={theme.colors.white} />
+                  </Pressable>
+                </View>
+                
+                <View style={styles.eventCard}>
+                  <Pressable style={styles.joinEventButton}>
+                    <Text style={styles.joinEventText}>Join Event</Text>
+                    <Icon name="chevron-right" size={20} color={theme.colors.white} />
+                  </Pressable>
+                </View>
+              </View>
+            )}
 
-            {/* Footer Links */}
-            <View style={styles.footerLinks}>
-              <Pressable 
-                style={styles.footerLink} 
-                onPress={() => _onNavigate?.('how-it-works')}
-                accessible={true}
-                accessibilityRole="link"
-                accessibilityLabel="Learn how SharedTable works"
-              >
-                <Text style={styles.footerLinkText}>How it works</Text>
-              </Pressable>
-              <Pressable 
-                style={styles.footerLink} 
-                onPress={() => _onNavigate?.('faqs')}
-                accessible={true}
-                accessibilityRole="link"
-                accessibilityLabel="Frequently asked questions"
-              >
-                <Text style={styles.footerLinkText}>FAQs</Text>
-              </Pressable>
-            </View>
+            {/* Invite Friends Section - Only show on Dinners tab */}
+            {activeTab === 'dinners' && (
+              <InviteFriendsSection 
+                onInvite={handleInviteFriend} 
+                scrollViewRef={scrollViewRef}
+              />
+            )}
 
             {/* Bottom Padding */}
-            <View style={{ height: scaleHeight(20) }} />
+            <View style={{ height: scaleHeight(100) }} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -685,6 +725,119 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
 HomeScreen.displayName = 'HomeScreen';
 
 const styles = StyleSheet.create({
+  headerSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: scaleWidth(24),
+    marginBottom: scaleHeight(20),
+    marginTop: scaleHeight(8),
+  },
+  headerLinks: {
+    flexDirection: 'row',
+    gap: scaleWidth(24),
+  },
+  headerLink: {
+    paddingVertical: scaleHeight(4),
+  },
+  headerLinkText: {
+    color: '#666666',
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
+    fontWeight: '400',
+  },
+  tabsWrapper: {
+    paddingHorizontal: scaleWidth(24),
+    marginBottom: scaleHeight(24),
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F5F5F5',
+    borderRadius: scaleWidth(25),
+    padding: scaleWidth(4),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: scaleHeight(10),
+    paddingHorizontal: scaleWidth(20),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeTab: {
+    backgroundColor: theme.colors.white,
+    borderRadius: scaleWidth(22),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tabText: {
+    color: '#999999',
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(15),
+    fontWeight: '500',
+  },
+  activeTabText: {
+    color: theme.colors.text.primary,
+    fontWeight: '600',
+  },
+  tabDivider: {
+    width: 1,
+    height: scaleHeight(20),
+    backgroundColor: '#E0E0E0',
+    marginHorizontal: scaleWidth(4),
+  },
+  sectionTitle: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.heading,
+    fontSize: scaleFont(22),
+    fontWeight: '700',
+    marginBottom: scaleHeight(20),
+    letterSpacing: 0.3,
+  },
+  eventCard: {
+    backgroundColor: theme.colors.white,
+    borderRadius: scaleWidth(28),
+    marginBottom: scaleHeight(12),
+    paddingVertical: scaleHeight(24),
+    paddingHorizontal: scaleWidth(20),
+    borderWidth: 2,
+    borderColor: theme.colors.primary.main,
+    minHeight: scaleHeight(140),
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  joinEventButton: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(26),
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingHorizontal: scaleWidth(28),
+    paddingVertical: scaleHeight(15),
+    width: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  joinEventText: {
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(16),
+    fontWeight: '600',
+    marginRight: scaleWidth(8),
+    letterSpacing: 0.3,
+  },
   categoryTitle: {
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.heading,
@@ -731,31 +884,21 @@ const styles = StyleSheet.create({
   eventsSection: {
     paddingHorizontal: scaleWidth(24),
   },
-  footerLink: {
-    paddingVertical: scaleHeight(4),
-  },
-  footerLinkText: {
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
-    fontWeight: '500',
-  },
-  footerLinks: {
-    flexDirection: 'row',
-    gap: scaleWidth(80),
-    justifyContent: 'center',
-    paddingHorizontal: scaleWidth(24),
-    paddingVertical: scaleHeight(32),
-  },
   grabSpotButton: {
     alignItems: 'center',
     backgroundColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(24),
+    borderRadius: scaleWidth(26),
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: scaleHeight(8),
-    paddingHorizontal: scaleWidth(24),
-    paddingVertical: scaleHeight(14),
+    marginTop: scaleHeight(20),
+    marginBottom: scaleHeight(8),
+    paddingHorizontal: scaleWidth(28),
+    paddingVertical: scaleHeight(15),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   grabSpotButtonDisabled: {
     backgroundColor: theme.colors.text.disabled,
@@ -767,6 +910,7 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(16),
     fontWeight: '600',
     marginRight: scaleWidth(8),
+    letterSpacing: 0.3,
   },
   heroImage: {
     height: '100%',
@@ -776,20 +920,24 @@ const styles = StyleSheet.create({
   heroSection: {
     height: scaleHeight(240),
     position: 'relative',
+    marginTop: Platform.OS === 'ios' ? scaleHeight(48) : scaleHeight(24), // Respect status bar height
   },
   heroSubtitle: {
-    color: theme.colors.text.secondary,
+    color: '#666666',
     fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
+    fontSize: scaleFont(13),
     textAlign: 'center',
+    letterSpacing: 0.3,
   },
   heroTitle: {
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.heading,
-    fontSize: scaleFont(20),
+    fontSize: scaleFont(18),
     fontWeight: '700',
     marginBottom: scaleHeight(8),
     textAlign: 'center',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   // Loading & Error States
   keyboardView: {
@@ -812,10 +960,10 @@ const styles = StyleSheet.create({
     marginBottom: scaleHeight(16),
   },
   locationText: {
-    color: theme.colors.text.secondary,
+    color: '#999999',
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(12),
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
     marginLeft: scaleWidth(4),
     textDecorationLine: 'underline',
   },
@@ -862,22 +1010,25 @@ const styles = StyleSheet.create({
   // Time slot styles
   timeSlotCard: {
     backgroundColor: theme.colors.white,
-    borderRadius: scaleWidth(30),
+    borderRadius: scaleWidth(28),
     marginBottom: scaleHeight(12),
-    paddingVertical: scaleHeight(20),
+    paddingVertical: scaleHeight(18),
     paddingHorizontal: scaleWidth(20),
-    borderTopWidth: 1,
-    borderBottomWidth: 3,
-    borderLeftWidth: 2,
-    borderRightWidth: 2,
+    borderWidth: 2,
     borderColor: theme.colors.primary.main,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   timeSlotCardSelected: {
-    backgroundColor: theme.colors.error[50],
+    backgroundColor: '#FFF5F5',
     borderColor: theme.colors.primary.main,
+    borderWidth: 2.5,
   },
   timeSlotCardSignedUp: {
     opacity: 0.7,
@@ -889,10 +1040,11 @@ const styles = StyleSheet.create({
     paddingRight: scaleWidth(12),
   },
   slotMainText: {
-    fontSize: scaleFont(16),
+    fontSize: scaleFont(15),
     fontWeight: '500',
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
+    letterSpacing: 0.2,
   },
   slotMainTextSelected: {
     color: theme.colors.text.primary,
@@ -905,15 +1057,15 @@ const styles = StyleSheet.create({
     marginLeft: scaleWidth(8),
   },
   selectionCircle: {
-    width: scaleWidth(24),
-    height: scaleWidth(24),
-    borderRadius: scaleWidth(12),
+    width: scaleWidth(22),
+    height: scaleWidth(22),
+    borderRadius: scaleWidth(11),
     borderWidth: 2,
-    borderColor: theme.colors.text.primary,
+    borderColor: '#CCCCCC',
     backgroundColor: theme.colors.white,
   },
   selectionCircleSelected: {
-    backgroundColor: theme.colors.text.secondary,
-    borderColor: theme.colors.text.secondary,
+    backgroundColor: theme.colors.primary.main,
+    borderColor: theme.colors.primary.main,
   },
 });

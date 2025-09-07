@@ -8,6 +8,7 @@ import {
   StatusBar,
   SafeAreaView,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 import { Icon } from '@/components/base/Icon';
 import { theme } from '@/theme';
@@ -45,11 +46,12 @@ const faqs: FAQItem[] = [
   },
 ];
 
-export const FAQsScreen: React.FC<FAQsScreenProps> = ({ onNavigate }) => {
+export const FAQsScreen: React.FC<FAQsScreenProps> = ({ onNavigate: _onNavigate }) => {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
+  const navigation = useNavigation();
 
   const handleClose = () => {
-    onNavigate?.('home');
+    navigation.goBack();
   };
 
   const toggleExpanded = (index: number) => {

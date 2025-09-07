@@ -316,8 +316,18 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
                   ))}
                 </Pressable>
 
-                {/* Paste hint */}
-                <Text style={styles.pasteHint}>Tap to focus • Long press to paste</Text>
+                {/* Resend Section - Moved up */}
+                <View style={styles.resendSection}>
+                  <Text style={styles.resendText}>Didn&apos;t receive the code?</Text>
+
+                  {canResend ? (
+                    <Pressable onPress={handleResendOtp} disabled={isLoading}>
+                      <Text style={styles.resendButton}>Resend Code</Text>
+                    </Pressable>
+                  ) : (
+                    <Text style={styles.resendTimer}>Resend in {resendTimer}s</Text>
+                  )}
+                </View>
 
                 {/* Verify Button */}
                 <Pressable
@@ -337,19 +347,6 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
                     </Text>
                   )}
                 </Pressable>
-
-                {/* Resend Section */}
-                <View style={styles.resendSection}>
-                  <Text style={styles.resendText}>Didn&apos;t receive the code?</Text>
-
-                  {canResend ? (
-                    <Pressable onPress={handleResendOtp} disabled={isLoading}>
-                      <Text style={styles.resendButton}>Resend Code</Text>
-                    </Pressable>
-                  ) : (
-                    <Text style={styles.resendTimer}>Resend in {resendTimer}s</Text>
-                  )}
-                </View>
               </View>
 
               {/* Bottom Spacing */}
@@ -405,7 +402,7 @@ const styles = StyleSheet.create({
   otpContainer: {
     flexDirection: 'row',
     gap: scaleWidth(12),
-    marginBottom: scaleHeight(40),
+    marginBottom: scaleHeight(24),
   },
   otpInput: {
     backgroundColor: theme.colors.white,
@@ -429,14 +426,6 @@ const styles = StyleSheet.create({
   otpSection: {
     alignItems: 'center',
   },
-  pasteHint: {
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(12),
-    marginBottom: scaleHeight(24),
-    marginTop: scaleHeight(8),
-    textAlign: 'center',
-  },
   resendButton: {
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
@@ -445,6 +434,7 @@ const styles = StyleSheet.create({
   },
   resendSection: {
     alignItems: 'center',
+    marginBottom: scaleHeight(32),
   },
   resendText: {
     color: theme.colors.text.secondary,

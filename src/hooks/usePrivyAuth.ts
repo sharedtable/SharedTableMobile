@@ -69,8 +69,15 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
     state: emailState,
   } = useLoginWithEmail({
     onError: (error) => {
-      if (__DEV__) {
+      const errorMessage = error?.message || '';
+      const isCancellation = 
+        errorMessage.toLowerCase().includes('cancel') ||
+        errorMessage.toLowerCase().includes('cancelled');
+      
+      if (__DEV__ && !isCancellation) {
         console.error('Email login error:', error);
+      } else if (__DEV__ && isCancellation) {
+        devLog('Email login cancelled');
       }
       setIsLoading(false);
     },
@@ -83,8 +90,15 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
     state: smsState,
   } = useLoginWithSMS({
     onError: (error) => {
-      if (__DEV__) {
+      const errorMessage = error?.message || '';
+      const isCancellation = 
+        errorMessage.toLowerCase().includes('cancel') ||
+        errorMessage.toLowerCase().includes('cancelled');
+      
+      if (__DEV__ && !isCancellation) {
         console.error('SMS login error:', error);
+      } else if (__DEV__ && isCancellation) {
+        devLog('SMS login cancelled');
       }
       setIsLoading(false);
     },
@@ -93,8 +107,26 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
   // OAuth login hook
   const { login: oauthLogin } = useLoginWithOAuth({
     onError: (error) => {
-      if (__DEV__) {
+      // Check if error is due to user cancellation or configuration
+      const errorMessage = error?.message || '';
+      const isCancellation = 
+        errorMessage.toLowerCase().includes('cancel') ||
+        errorMessage.toLowerCase().includes('cancelled') ||
+        errorMessage.toLowerCase().includes('abort') ||
+        errorMessage.toLowerCase().includes('user closed') ||
+        errorMessage.toLowerCase().includes('user denied');
+      
+      const isConfigurationIssue = 
+        errorMessage.toLowerCase().includes('not allowed') ||
+        errorMessage.toLowerCase().includes('not enabled') ||
+        errorMessage.toLowerCase().includes('not configured');
+      
+      if (__DEV__ && !isCancellation && !isConfigurationIssue) {
         console.error('OAuth login error:', error);
+      } else if (__DEV__ && isCancellation) {
+        devLog('OAuth login cancelled by user');
+      } else if (__DEV__ && isConfigurationIssue) {
+        devLog('OAuth login not configured:', errorMessage);
       }
       setIsLoading(false);
     },
