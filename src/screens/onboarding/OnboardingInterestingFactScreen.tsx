@@ -5,10 +5,9 @@ import {
   StyleSheet, 
   Alert, 
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
   Keyboard,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
+  ScrollView
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
@@ -33,7 +32,7 @@ export const OnboardingInterestingFactScreen: React.FC<OnboardingInterestingFact
   totalSteps = 12,
 }) => {
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
-  const navigation = useNavigation<NavigationProp<any>>();
+  const navigation = useNavigation<NavigationProp<Record<string, unknown>>>();
   const { setNeedsOnboarding } = useAuthStore();
 
   const [interestingFact, setInterestingFact] = useState<string>(
@@ -132,19 +131,20 @@ export const OnboardingInterestingFactScreen: React.FC<OnboardingInterestingFact
   const errorMessage = Object.values(localErrors)[0] || Object.values(stepErrors)[0];
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.flexOne}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <OnboardingLayout
+      onBack={handleBack}
+      currentStep={currentStep}
+      totalSteps={totalSteps}
+      scrollable
+      keyboardAvoiding
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.flexOne}>
-          <OnboardingLayout
-            onBack={handleBack}
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-            scrollable={false}
-          >
-            <View style={styles.container}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.container}>
               <View style={styles.headerSection}>
                 <Text style={styles.title}>Final Touch! (3/3)</Text>
                 <Text style={styles.subtitle}>One last thing...</Text>
@@ -153,7 +153,7 @@ export const OnboardingInterestingFactScreen: React.FC<OnboardingInterestingFact
               <View style={styles.questionSection}>
                 <Text style={styles.question}>Tell us one interesting fact about yourself!</Text>
                 <Text style={styles.hint}>
-                  The more unique, the better! It's a great conversation starter.
+                  The more unique, the better! It&apos;s a great conversation starter.
                 </Text>
 
                 {hasError && errorMessage && (
@@ -177,8 +177,6 @@ export const OnboardingInterestingFactScreen: React.FC<OnboardingInterestingFact
                 <Text style={styles.charCount}>{interestingFact.length}/300</Text>
               </View>
 
-              <View style={styles.spacer} />
-
               <View style={styles.bottomContainer}>
                 <OnboardingButton
                   onPress={handleNext}
@@ -187,20 +185,20 @@ export const OnboardingInterestingFactScreen: React.FC<OnboardingInterestingFact
                   loading={saving}
                 />
               </View>
-            </View>
-          </OnboardingLayout>
-        </View>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
+      </ScrollView>
+    </OnboardingLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  flexOne: {
-    flex: 1,
+  scrollContainer: {
+    flexGrow: 1,
   },
   container: {
     flex: 1,
+    paddingBottom: scaleHeight(20),
   },
   headerSection: {
     marginBottom: scaleHeight(24),
@@ -219,7 +217,7 @@ const styles = StyleSheet.create({
     lineHeight: scaleFont(20),
   },
   questionSection: {
-    flex: 1,
+    marginBottom: scaleHeight(30),
   },
   question: {
     color: theme.colors.text.primary,
@@ -267,12 +265,7 @@ const styles = StyleSheet.create({
     marginTop: scaleHeight(8),
     textAlign: 'right',
   },
-  spacer: {
-    flex: 1,
-    minHeight: scaleHeight(20),
-  },
   bottomContainer: {
-    paddingBottom: scaleHeight(20),
-    paddingTop: scaleHeight(16),
+    marginTop: scaleHeight(30),
   },
 });

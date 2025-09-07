@@ -5,10 +5,9 @@ import {
   StyleSheet, 
   Alert, 
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
   Keyboard,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
+  ScrollView
 } from 'react-native';
 
 import { OnboardingLayout, OnboardingButton } from '@/components/onboarding';
@@ -88,75 +87,74 @@ export const OnboardingHopingToMeetScreen: React.FC<OnboardingHopingToMeetScreen
   const errorMessage = Object.values(localErrors)[0] || Object.values(stepErrors)[0];
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.flexOne}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <OnboardingLayout
+      onBack={handleBack}
+      currentStep={currentStep}
+      totalSteps={totalSteps}
+      scrollable
+      keyboardAvoiding
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.flexOne}>
-          <OnboardingLayout
-            onBack={handleBack}
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-            scrollable={false}
-          >
-            <View style={styles.container}>
-              <View style={styles.headerSection}>
-                <Text style={styles.title}>Final Touch! (1/3)</Text>
-                <Text style={styles.subtitle}>Help us tailor things just right for you.</Text>
-              </View>
-
-              <View style={styles.questionSection}>
-                <Text style={styles.question}>Who are you hoping to meet?</Text>
-                <Text style={styles.hint}>
-                  Maybe a gym buddy, a hiking partner, or a future co-founder? Be specific! List up to 3.
-                </Text>
-
-                {hasError && errorMessage && (
-                  <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>{errorMessage}</Text>
-                  </View>
-                )}
-
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="e.g. Fellow entrepreneurs who are passionate about sustainability, hiking enthusiasts for weekend adventures, or creative minds to collaborate on art projects..."
-                  placeholderTextColor={theme.colors.text.secondary}
-                  multiline
-                  numberOfLines={6}
-                  value={hopingToMeet}
-                  onChangeText={setHopingToMeet}
-                  textAlignVertical="top"
-                  maxLength={300}
-                />
-
-                <Text style={styles.charCount}>{hopingToMeet.length}/300</Text>
-              </View>
-
-              <View style={styles.spacer} />
-
-              <View style={styles.bottomContainer}>
-                <OnboardingButton
-                  onPress={handleNext}
-                  label={saving ? 'Saving...' : 'Next'}
-                  disabled={!hopingToMeet.trim() || saving}
-                  loading={saving}
-                />
-              </View>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.container}>
+            <View style={styles.headerSection}>
+              <Text style={styles.title}>Final Touch! (1/3)</Text>
+              <Text style={styles.subtitle}>Help us tailor things just right for you.</Text>
             </View>
-          </OnboardingLayout>
-        </View>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+
+            <View style={styles.questionSection}>
+              <Text style={styles.question}>Who are you hoping to meet?</Text>
+              <Text style={styles.hint}>
+                Maybe a gym buddy, a hiking partner, or a future co-founder? Be specific! List up to 3.
+              </Text>
+
+              {hasError && errorMessage && (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{errorMessage}</Text>
+                </View>
+              )}
+
+              <TextInput
+                style={styles.textInput}
+                placeholder="e.g. Fellow entrepreneurs who are passionate about sustainability, hiking enthusiasts for weekend adventures, or creative minds to collaborate on art projects..."
+                placeholderTextColor={theme.colors.text.secondary}
+                multiline
+                numberOfLines={6}
+                value={hopingToMeet}
+                onChangeText={setHopingToMeet}
+                textAlignVertical="top"
+                maxLength={300}
+              />
+
+              <Text style={styles.charCount}>{hopingToMeet.length}/300</Text>
+            </View>
+
+            <View style={styles.bottomContainer}>
+              <OnboardingButton
+                onPress={handleNext}
+                label={saving ? 'Saving...' : 'Next'}
+                disabled={!hopingToMeet.trim() || saving}
+                loading={saving}
+              />
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </ScrollView>
+    </OnboardingLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  flexOne: {
-    flex: 1,
+  scrollContainer: {
+    flexGrow: 1,
   },
   container: {
     flex: 1,
+    paddingBottom: scaleHeight(20),
   },
   headerSection: {
     marginBottom: scaleHeight(24),
@@ -175,7 +173,7 @@ const styles = StyleSheet.create({
     lineHeight: scaleFont(20),
   },
   questionSection: {
-    flex: 1,
+    marginBottom: scaleHeight(30),
   },
   question: {
     color: theme.colors.text.primary,
@@ -223,12 +221,7 @@ const styles = StyleSheet.create({
     marginTop: scaleHeight(8),
     textAlign: 'right',
   },
-  spacer: {
-    flex: 1,
-    minHeight: scaleHeight(20),
-  },
   bottomContainer: {
-    paddingBottom: scaleHeight(20),
-    paddingTop: scaleHeight(16),
+    marginTop: scaleHeight(30),
   },
 });

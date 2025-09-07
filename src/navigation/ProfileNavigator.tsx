@@ -6,6 +6,7 @@ import { DinnerDetailsScreen } from '@/screens/profile/DinnerDetailsScreen';
 import { FindFriendsScreen } from '@/screens/profile/FindFriendsScreen';
 import { SettingsScreen } from '@/screens/settings/SettingsScreen';
 import { AboutScreen } from '@/screens/settings/AboutScreen';
+import { PaymentMethodsScreen } from '@/screens/settings/PaymentMethodsScreen';
 
 export type ProfileStackParamList = {
   ProfileMain: undefined;
@@ -16,6 +17,7 @@ export type ProfileStackParamList = {
   Settings: undefined;
   About: undefined;
   Help: undefined;
+  PaymentMethods: undefined;
 };
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
@@ -59,6 +61,13 @@ export function ProfileNavigator() {
       <Stack.Screen 
         name="About" 
         component={AboutScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen 
+        name="PaymentMethods" 
+        component={PaymentMethodsScreen}
         options={{
           headerShown: false,
         }}

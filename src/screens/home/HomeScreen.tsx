@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   Image,
+  ImageStyle,
   Pressable,
   StatusBar,
   KeyboardAvoidingView,
@@ -26,6 +27,8 @@ import { api } from '@/services/api';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 import { useNotificationStore } from '@/store/notificationStore';
+import { usePaymentStore } from '@/store/paymentStore';
+import { CheckoutModal } from '@/components/payment/CheckoutModal';
 
 // Images
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -44,9 +47,9 @@ interface TimeSlot {
 
 interface Signup {
   id: string;
-  time_slot_id: string;
+  dinner_id: string;
   status: string;
-  time_slot?: TimeSlot;
+  dinner?: TimeSlot;
 }
 
 // Define proper navigation types
@@ -54,6 +57,7 @@ type RootStackParamList = {
   Home: undefined;
   EventDetails: { eventId: string };
   Profile: undefined;
+  NotificationsList: undefined;
   // Add other screens as needed
 };
 
@@ -69,10 +73,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
   onNavigate: _onNavigate,
 }) => {
   const { user } = usePrivyAuth();
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { unreadCount, loadNotifications } = useNotificationStore();
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
+  const { 
+    initializePayments
+  } = usePaymentStore();
+  const [selectedDinner, setSelectedDinner] = useState<string | null>(null);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [mySignups, setMySignups] = useState<Signup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -124,7 +132,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
       if (__DEV__) {
         console.log('📍 [HomeScreen] Fetching time slots...');
       }
-      const slotsResponse = await api.getAvailableTimeSlots();
+      const slotsResponse = await api.getAvailableDinners();
       if (__DEV__) {
         console.log('✅ [HomeScreen] Time slots response:', slotsResponse.success, slotsResponse.data?.length);
       }
@@ -134,8 +142,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
         retryCountRef.current = 0; // Reset retry count on success
         
         // Select first available slot by default
-        if (!selectedTimeSlot && slotsResponse.data.length > 0) {
-          setSelectedTimeSlot(slotsResponse.data[0].id);
+        if (!selectedDinner && slotsResponse.data.length > 0) {
+          setSelectedDinner(slotsResponse.data[0].id);
         }
       }
 
@@ -154,13 +162,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
           setMySignups([]);
         }
       }
-    } catch (err: any) {
+    } catch (err) {
       if (__DEV__) {
         console.error('Error fetching data:', err);
       }
       
       // Handle rate limiting with exponential backoff
-      if (err?.response?.status === 429 && retryCount < 3) {
+      if ((err as any)?.response?.status === 429 && retryCount < 3) {
         const retryDelay = Math.min(Math.pow(2, retryCount) * 3000, 30000); // Max 30s
         if (__DEV__) {
           console.log(`⏰ [HomeScreen] Rate limited, retrying in ${retryDelay}ms...`);
@@ -175,13 +183,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
         return () => clearTimeout(timeoutId);
       } else {
         // Provide user-friendly error messages
-        const errorMessage = err?.response?.status === 500 
-          ? 'Server error. Please try again later.'
-          : err?.response?.status === 404
-          ? 'Service not found. Please contact support.'
-          : err?.message?.includes('Network')
-          ? 'Network error. Please check your connection.'
-          : 'Failed to load available times';
+        let errorMessage = 'Failed to load available times';
+        if ((err as any)?.response?.status === 500) {
+          errorMessage = 'Server error. Please try again later.';
+        } else if ((err as any)?.response?.status === 404) {
+          errorMessage = 'Service not found. Please contact support.';
+        } else if ((err as any)?.message?.includes('Network')) {
+          errorMessage = 'Network error. Please check your connection.';
+        }
         
         setError(errorMessage);
         setTimeSlots([]); // Set empty array on error
@@ -203,16 +212,20 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
       hasInitialLoadRef.current = true;
       fetchData();
       loadNotifications();
+      // Initialize payment methods if user is logged in
+      if (user) {
+        initializePayments();
+      }
     }
-  }, [fetchData]);
+  }, [fetchData, user, initializePayments, loadNotifications]);
 
   const refreshEvents = useCallback(async () => {
     await fetchData(true);
   }, [fetchData]);
 
-  const isSignedUp = useCallback((timeSlotId: string) => {
+  const isSignedUp = useCallback((dinnerId: string) => {
     return mySignups.some(
-      signup => signup.time_slot_id === timeSlotId && signup.status !== 'cancelled'
+      signup => signup.dinner_id === dinnerId && signup.status !== 'cancelled'
     );
   }, [mySignups]);
 
@@ -231,7 +244,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
       const hours = date.getHours();
       const minutes = date.getMinutes();
       const period = hours >= 12 ? 'PM' : 'AM';
-      const displayHour = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+      let displayHour = hours;
+      if (hours > 12) {
+        displayHour = hours - 12;
+      } else if (hours === 0) {
+        displayHour = 12;
+      }
       const displayMinute = minutes.toString().padStart(2, '0');
       const timeStr = `${displayHour}:${displayMinute} ${period}`;
       
@@ -285,7 +303,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
         }
         
         const period = hour >= 12 ? 'PM' : 'AM';
-        const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+        let displayHour = hour;
+        if (hour > 12) {
+          displayHour = hour - 12;
+        } else if (hour === 0) {
+          displayHour = 12;
+        }
         const displayMinute = minute.toString().padStart(2, '0');
         
         return `${displayHour}:${displayMinute} ${period}`;
@@ -297,7 +320,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
   }, [formatDateTime]);
 
   const handleGrabSpot = async () => {
-    if (!selectedTimeSlot) {
+    if (!selectedDinner) {
       Alert.alert('No Time Selected', 'Please select a time slot first.');
       return;
     }
@@ -308,60 +331,75 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
     }
 
     // Check if already signed up
-    if (isSignedUp(selectedTimeSlot)) {
+    if (isSignedUp(selectedDinner)) {
       Alert.alert('Already Signed Up', 'You have already signed up for this time slot.');
       return;
     }
 
     // Find the selected time slot
-    const timeSlot = timeSlots.find((slot) => slot.id === selectedTimeSlot);
-    if (!timeSlot) {
-      Alert.alert('Error', 'Selected time slot not found.');
+    const dinner = timeSlots.find((slot) => slot.id === selectedDinner);
+    if (!dinner) {
+      Alert.alert('Error', 'Selected dinner not found.');
       return;
     }
 
-    Alert.alert(
-      'Confirm Signup',
-      (() => {
-        const { dayOfWeek, date, time } = formatDateTime(timeSlot.datetime);
-        return `Sign up for ${dayOfWeek}, ${date} at ${time}?\n\nYou'll be notified 24 hours before with your dinner group and restaurant details.`;
-      })(),
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Up',
-          onPress: async () => {
-            try {
-              setBookingLoading(true);
-              const response = await api.signupForTimeSlot({
-                timeSlotId: selectedTimeSlot,
-              });
-
-              if (response.success) {
-                Alert.alert(
-                  'Success! 🎉',
-                  'You have successfully signed up. You will be notified 24 hours before with your dinner group details.'
-                );
-                // Add a small delay before refreshing to avoid rate limiting
-                setTimeout(() => {
-                  fetchData();
-                }, 1000);
-              } else {
-                Alert.alert('Signup Failed', response.error || 'Failed to sign up');
-              }
-            } catch (error) {
-              Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-              if (__DEV__) {
-                console.error('❌ [HomeScreen] Signup error:', error);
-              }
-            } finally {
-              setBookingLoading(false);
-            }
-          },
-        },
-      ]
-    );
+    // Open checkout modal for payment and booking
+    setShowCheckoutModal(true);
   };
+
+  const handleCheckoutSuccess = useCallback(async (paymentMethodId: string, shouldSave: boolean) => {
+    if (!selectedDinner) return;
+    
+    try {
+      setBookingLoading(true);
+      setShowCheckoutModal(false);
+      
+      // Get dinner details for display
+      const dinner = timeSlots.find((slot) => slot.id === selectedDinner);
+      if (!dinner) {
+        Alert.alert('Error', 'Selected dinner not found.');
+        return;
+      }
+      
+      // Call the new unified booking endpoint
+      const response = await api.createBookingWithPayment({
+        dinnerId: selectedDinner,
+        paymentMethodId,
+        savePaymentMethod: shouldSave,
+      });
+
+      if (response.success) {
+        const { dayOfWeek, date, time } = formatDateTime(dinner.datetime);
+        Alert.alert(
+          'Success! 🎉',
+          `You're confirmed for ${dayOfWeek}, ${date} at ${time}.\n\nA $30 hold has been placed on your card and will be released after you attend.`
+        );
+        
+        // Refresh payment methods if a new card was saved
+        if (shouldSave) {
+          await initializePayments();
+        }
+        
+        // Add a small delay before refreshing to avoid rate limiting
+        setTimeout(() => {
+          fetchData();
+        }, 1000);
+      } else {
+        Alert.alert('Booking Failed', response.error || 'Failed to complete booking. Please try again.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      if (__DEV__) {
+        console.error('❌ [HomeScreen] Booking error:', error);
+      }
+    } finally {
+      setBookingLoading(false);
+    }
+  }, [selectedDinner, timeSlots, formatDateTime, fetchData, initializePayments]);
+
+  const handleCheckoutCancel = useCallback(() => {
+    setShowCheckoutModal(false);
+  }, []);
 
   const handleInviteFriend = useCallback((email: string) => {
     // TODO: Implement invite friend functionality
@@ -403,7 +441,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
           <View style={styles.heroSection}>
             <Image
               source={backgroundImage}
-              style={styles.heroImage as any}
+              style={styles.heroImage as ImageStyle}
             />
           </View>
 
@@ -454,7 +492,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
                           <Text style={styles.categoryTitle}>Regular Dinners</Text>
                           {regularSlots.map((slot) => {
                             const signedUp = isSignedUp(slot.id);
-                            const isSelected = selectedTimeSlot === slot.id;
+                            const isSelected = selectedDinner === slot.id;
                             return (
                               <Pressable
                                 key={slot.id}
@@ -463,7 +501,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
                                   isSelected && styles.timeSlotCardSelected,
                                   signedUp && styles.timeSlotCardSignedUp,
                                 ]}
-                                onPress={() => !signedUp && setSelectedTimeSlot(slot.id)}
+                                onPress={() => !signedUp && setSelectedDinner(slot.id)}
                                 disabled={signedUp}
                               >
                                 <View style={styles.slotContent}>
@@ -504,12 +542,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
                       {/* Singles Dinners Section */}
                       {singlesSlots.length > 0 && (
                         <>
-                          <Text style={[styles.categoryTitle, { marginTop: regularSlots.length > 0 ? scaleHeight(24) : 0 }]}>
+                          <Text style={[styles.categoryTitle, regularSlots.length > 0 && styles.categoryTitleWithMargin]}>
                             Singles Dinners
                           </Text>
                           {singlesSlots.map((slot) => {
                             const signedUp = isSignedUp(slot.id);
-                            const isSelected = selectedTimeSlot === slot.id;
+                            const isSelected = selectedDinner === slot.id;
                             return (
                               <Pressable
                                 key={slot.id}
@@ -518,7 +556,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
                                   isSelected && styles.timeSlotCardSelected,
                                   signedUp && styles.timeSlotCardSignedUp,
                                 ]}
-                                onPress={() => !signedUp && setSelectedTimeSlot(slot.id)}
+                                onPress={() => !signedUp && setSelectedDinner(slot.id)}
                                 disabled={signedUp}
                               >
                                 <View style={styles.slotContent}>
@@ -566,10 +604,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
                     <Pressable
                       style={[
                         styles.grabSpotButton,
-                        (!selectedTimeSlot || bookingLoading || !user) && styles.grabSpotButtonDisabled,
+                        (!selectedDinner || bookingLoading || !user) && styles.grabSpotButtonDisabled,
                       ]}
                       onPress={handleGrabSpot}
-                      disabled={!selectedTimeSlot || bookingLoading || !user}
+                      disabled={!selectedDinner || bookingLoading || !user}
                     >
                       {bookingLoading ? (
                         <ActivityIndicator size="small" color={theme.colors.white} />
@@ -578,7 +616,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
                           <Text style={styles.grabSpotText}>
                             {(() => {
                               if (!user) return 'Login to Sign Up';
-                              if (selectedTimeSlot && isSignedUp(selectedTimeSlot)) return 'Already Signed Up';
+                              if (selectedDinner && isSignedUp(selectedDinner)) return 'Already Signed Up';
                               return 'Sign Up for Dinner';
                             })()}
                           </Text>
@@ -631,6 +669,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
       </KeyboardAvoidingView>
 
       {/* Bottom Tab Bar removed - using React Navigation's tab bar */}
+      
+      {/* Checkout Modal */}
+      <CheckoutModal
+        visible={showCheckoutModal}
+        amount={3000} // Fixed $30 hold amount
+        onSuccess={handleCheckoutSuccess}
+        onCancel={handleCheckoutCancel}
+        loading={bookingLoading}
+      />
     </View>
   );
 });
@@ -645,6 +692,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: scaleHeight(16),
     letterSpacing: 0.5,
+  },
+  categoryTitleWithMargin: {
+    marginTop: scaleHeight(24),
   },
   container: {
     backgroundColor: theme.colors.background?.paper || '#F9F9F9',
@@ -826,13 +876,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   timeSlotCardSelected: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: theme.colors.error[50],
     borderColor: theme.colors.primary.main,
   },
   timeSlotCardSignedUp: {
     opacity: 0.7,
     backgroundColor: theme.colors.background?.paper || '#F9F9F9',
-    borderColor: '#E5E5E5',
+    borderColor: theme.colors.gray[200],
   },
   slotContent: {
     flex: 1,

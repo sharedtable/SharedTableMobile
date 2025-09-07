@@ -25,6 +25,8 @@ import { NotificationWrapper } from '@/contexts/NotificationWrapper';
 import { useAuthStore } from '@/store/authStore';
 import { setLogLevel } from '@/utils/logger';
 import { deepLinkingConfig } from '@/config/deepLinking';
+import { StripeProvider } from '@stripe/stripe-react-native';
+import Constants from 'expo-constants';
 
 // Hide the native splash screen immediately
 SplashScreen.hideAsync();
@@ -72,20 +74,30 @@ export default function App() {
     return null;
   }
 
+  const stripePublishableKey = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || 
+    Constants.expoConfig?.extra?.stripePublishableKey || 
+    'pk_test_51RbygLGUDucRA4CwK6qX0cbghcjUfakoX0z02FiuQLSJ4E5mpzWAyO7KNVpCIC18H67hyIWly6cLn05gy3dfSOrC00d48w6M27';
+
   return (
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaProvider>
         <StatusBar style="dark" />
         <QueryClientProvider client={queryClient}>
-          <PrivyProvider>
-            <AuthSyncProvider>
-              <NavigationContainer linking={deepLinkingConfig}>
-                <NotificationWrapper>
-                  <RootNavigator />
-                </NotificationWrapper>
-              </NavigationContainer>
-            </AuthSyncProvider>
-          </PrivyProvider>
+          <StripeProvider
+            publishableKey={stripePublishableKey}
+            merchantIdentifier="merchant.com.sharedtable.app"
+            urlScheme="sharedtable"
+          >
+            <PrivyProvider>
+              <AuthSyncProvider>
+                <NavigationContainer linking={deepLinkingConfig}>
+                  <NotificationWrapper>
+                    <RootNavigator />
+                  </NotificationWrapper>
+                </NavigationContainer>
+              </AuthSyncProvider>
+            </PrivyProvider>
+          </StripeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

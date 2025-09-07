@@ -93,6 +93,9 @@ export const colors = {
     paper: '#F9FAFB',
   },
 
+  // Border color
+  border: '#E5E7EB',
+
   // Neutral Colors (for compatibility)
   neutral: {
     white: '#FFFFFF',

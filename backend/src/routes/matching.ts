@@ -7,28 +7,28 @@ import { logger } from '../utils/logger';
 const router = Router();
 
 /**
- * Run matching algorithm for a specific time slot
- * @route POST /api/matching/time-slots/:timeSlotId/match
+ * Run matching algorithm for a specific dinner
+ * @route POST /api/matching/dinners/:dinnerId/match
  * @authenticated
  */
 router.post(
-  '/time-slots/:timeSlotId/match',
+  '/dinners/:dinnerId/match',
   verifyPrivyToken,
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      const { timeSlotId } = req.params;
+      const { dinnerId } = req.params;
 
-      // Verify the time slot exists
-      const { data: timeSlot, error: slotError } = await supabaseService
-        .from('timeslots')
+      // Verify the dinner exists
+      const { data: dinner, error: dinnerError } = await supabaseService
+        .from('dinners')
         .select('*')
-        .eq('id', timeSlotId)
+        .eq('id', dinnerId)
         .single();
 
-      if (slotError || !timeSlot) {
+      if (dinnerError || !dinner) {
         res.status(404).json({ 
           success: false,
-          error: 'Time slot not found' 
+          error: 'Dinner not found' 
         });
         return;
       }
@@ -37,20 +37,20 @@ router.post(
       const { data: existingGroups } = await supabaseService
         .from('dinner_groups')
         .select('id')
-        .eq('time_slot_id', timeSlotId)
+        .eq('time_slot_id', dinnerId)
         .limit(1);
 
       if (existingGroups && existingGroups.length > 0) {
         res.status(400).json({ 
           success: false,
-          error: 'Matching already completed for this time slot' 
+          error: 'Matching already completed for this dinner' 
         });
         return;
       }
 
       // Run the matching pipeline
-      logger.info(`Starting matching for time slot ${timeSlotId} by user ${req.userId}`);
-      const result = await SharedTableMatchingService.runCompleteMatching(timeSlotId);
+      logger.info(`Starting matching for dinner ${dinnerId} by user ${req.userId}`);
+      const result = await SharedTableMatchingService.runCompleteMatching(dinnerId);
 
       if (!result.success) {
         res.status(500).json({
@@ -84,16 +84,16 @@ router.post(
 );
 
 /**
- * Get matching results for a time slot
- * @route GET /api/matching/time-slots/:timeSlotId/groups
+ * Get matching results for a dinner
+ * @route GET /api/matching/dinners/:dinnerId/groups
  * @authenticated
  */
 router.get(
-  '/time-slots/:timeSlotId/groups',
+  '/dinners/:dinnerId/groups',
   verifyPrivyToken,
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      const { timeSlotId } = req.params;
+      const { dinnerId } = req.params;
 
       const { data: groups, error } = await supabaseService
         .from('dinner_groups')

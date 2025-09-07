@@ -44,7 +44,6 @@ router.post('/save', verifyPrivyToken, async (req: AuthRequest, res: Response, n
     const userInfoData: any = {
       user_id: user.id,
       updated_at: new Date().toISOString(),
-      last_completed_step: step, // Track which step was last completed
     };
 
     // Direct field mapping to actual database columns
@@ -462,7 +461,7 @@ router.get('/resume-info', verifyPrivyToken, async (req: AuthRequest, res: Respo
     return res.json({
       success: true,
       canResume: completedSteps.length > 0 && completedSteps.length < allSteps.length,
-      lastCompletedStep: profile.last_completed_step || (completedSteps.length > 0 ? completedSteps[completedSteps.length - 1] : null),
+      lastCompletedStep: completedSteps.length > 0 ? completedSteps[completedSteps.length - 1] : null,
       nextStep: nextStep,
       nextScreen: stepToScreen[nextStep],
       completedSteps: completedSteps,

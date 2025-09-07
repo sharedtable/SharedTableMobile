@@ -137,8 +137,16 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
         return;
       }
 
-      // Send traits as individual fields for proper database storage
+      // Convert traits to the expected array format for validation
+      const personalityTraits = [
+        `leadConversations: ${traits.leadConversations}`,
+        `willingCompromise: ${traits.willingCompromise}`,
+        `seekExperiences: ${traits.seekExperiences}`,
+      ];
+
       const personalityData = {
+        personalityTraits, // This is what the validation expects
+        // Also include individual fields for backward compatibility with database
         leadConversations: traits.leadConversations,
         willingCompromise: traits.willingCompromise,
         seekExperiences: traits.seekExperiences,

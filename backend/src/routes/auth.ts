@@ -229,9 +229,9 @@ router.post('/sync', async (req: Request, res: Response, next: NextFunction) => 
           }
         }
 
-        // Create user profile (only for new users)
+        // Create onboarding profile (only for new users)
         if (isNewUser) {
-          const { error: profileError } = await supabaseService.from('user_profiles').insert({
+          const { error: profileError } = await supabaseService.from('onboarding_profiles').insert({
             user_id: userId,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),

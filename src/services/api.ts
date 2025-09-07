@@ -648,40 +648,41 @@ class ApiService {
   }
 
   // ============================================================================
-  // Time Slots Endpoints
+  // Dinners Endpoints
   // ============================================================================
 
-  async getAvailableTimeSlots(): Promise<ApiResponse<any[]>> {
-    const response = await this.client.get('/time-slots/available');
+  async getAvailableDinners(): Promise<ApiResponse<any[]>> {
+    const response = await this.client.get('/dinners/available');
     return response.data;
   }
 
-  async signupForTimeSlot(data: {
-    timeSlotId: string;
+  async signupForDinner(data: {
+    dinnerId: string;
     dietaryRestrictions?: string;
     preferences?: string;
+    paymentMethodId?: string;
   }): Promise<ApiResponse<any>> {
-    const response = await this.client.post('/time-slots/signup', data);
+    const response = await this.client.post('/dinners/signup', data);
     return response.data;
   }
 
   async getMySignups(): Promise<ApiResponse<any[]>> {
-    const response = await this.client.get('/time-slots/my-signups');
+    const response = await this.client.get('/dinners/my-signups');
     return response.data;
   }
 
-  async getMyDinnerGroup(timeSlotId: string): Promise<ApiResponse<any>> {
-    const response = await this.client.get(`/time-slots/my-group/${timeSlotId}`);
+  async getMyDinnerGroup(dinnerId: string): Promise<ApiResponse<any>> {
+    const response = await this.client.get(`/dinners/my-group/${dinnerId}`);
     return response.data;
   }
 
   async getGroupMembers(dinnerGroupId: string): Promise<ApiResponse<any[]>> {
-    const response = await this.client.get(`/time-slots/group-members/${dinnerGroupId}`);
+    const response = await this.client.get(`/dinners/group-members/${dinnerGroupId}`);
     return response.data;
   }
 
   async cancelSignup(signupId: string): Promise<ApiResponse<void>> {
-    const response = await this.client.delete(`/time-slots/signup/${signupId}`);
+    const response = await this.client.delete(`/dinners/signup/${signupId}`);
     return response.data;
   }
 
@@ -918,6 +919,21 @@ class ApiService {
     const response = await this.client.post('/stripe/confirm-payment', {
       paymentIntentId,
     });
+    return response.data;
+  }
+
+  async createBookingWithPayment(data: {
+    dinnerId: string;
+    paymentMethodId: string;
+    savePaymentMethod?: boolean;
+    dietaryRestrictions?: string;
+    preferences?: string;
+  }): Promise<ApiResponse<{
+    booking: any;
+    paymentIntent: any;
+    message: string;
+  }>> {
+    const response = await this.client.post('/payments/create-booking', data);
     return response.data;
   }
 

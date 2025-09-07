@@ -325,7 +325,7 @@ export class SharedTableMatchingService {
         .single();
       
       const { data: preferences } = await supabase
-        .from('user_profiles')
+        .from('onboarding_profiles')
         .select('dietary_restrictions, preferred_price_range, location_zip_code')
         .eq('user_id', userId)
         .single();
@@ -381,7 +381,7 @@ export class SharedTableMatchingService {
         if (!preferenceVector) continue;
         
         const { data: preferences } = await supabase
-          .from('user_profiles')
+          .from('onboarding_profiles')
           .select('dietary_restrictions, preferred_price_range')
           .eq('user_id', userId)
           .single();
@@ -437,7 +437,7 @@ export class SharedTableMatchingService {
       const locations = await Promise.all(
         group.members.map(async (userId) => {
           const { data: prefs } = await supabase
-            .from('user_profiles')
+            .from('onboarding_profiles')
             .select('location_zip_code')
             .eq('user_id', userId)
             .single();
