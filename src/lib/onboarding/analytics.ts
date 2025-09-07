@@ -4,7 +4,8 @@
  */
 
 import { createClient } from '@segment/analytics-react-native';
-import * as Sentry from '@sentry/react-native';
+// Sentry integration - optional, uncomment if Sentry is installed
+// import * as Sentry from '@sentry/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OnboardingStepType } from './constants';
 
@@ -58,7 +59,7 @@ export class OnboardingAnalytics {
    * Generate unique session ID
    */
   private generateSessionId(): string {
-    return `onboarding_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `onboarding_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**
@@ -77,13 +78,14 @@ export class OnboardingAnalytics {
 
     this.sendEvent(event);
     
-    // Add breadcrumb for Sentry
-    Sentry.addBreadcrumb({
-      category: 'onboarding',
-      message: isResume ? 'Resumed onboarding' : 'Started onboarding',
-      level: 'info',
-      data: event.properties,
-    });
+    // Add breadcrumb for Sentry (if available)
+    // Uncomment when Sentry is installed:
+    // Sentry.addBreadcrumb({
+    //   category: 'onboarding',
+    //   message: isResume ? 'Resumed onboarding' : 'Started onboarding',
+    //   level: 'info',
+    //   data: event.properties,
+    // });
   }
 
   /**
@@ -183,15 +185,16 @@ export class OnboardingAnalytics {
 
     this.sendEvent(event);
 
-    // Log to Sentry
-    Sentry.captureException(error, {
-      tags: {
-        component: 'onboarding',
-        step,
-        sessionId: this.sessionId,
-      },
-      extra: context,
-    });
+    // Log to Sentry (if available)
+    // Uncomment when Sentry is installed:
+    // Sentry.captureException(error, {
+    //   tags: {
+    //     component: 'onboarding',
+    //     step,
+    //     sessionId: this.sessionId,
+    //   },
+    //   extra: context,
+    // });
   }
 
   /**
@@ -362,8 +365,9 @@ export class OnboardingAnalytics {
       analytics.track('Onboarding Session Metrics', metrics);
     }
 
-    // Log to Sentry as context
-    Sentry.setContext('onboarding_session', metrics);
+    // Log to Sentry as context (if available)
+    // Uncomment when Sentry is installed:
+    // Sentry.setContext('onboarding_session', metrics);
   }
 
   /**
