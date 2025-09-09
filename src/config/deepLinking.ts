@@ -1,8 +1,9 @@
 import { LinkingOptions } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import { NotificationType } from '@/types/notification.types';
+import { RootStackParamList } from '@/navigation/RootNavigator';
 
-export const deepLinkingConfig: LinkingOptions<any> = {
+export const deepLinkingConfig: LinkingOptions<RootStackParamList> = {
   prefixes: [
     Linking.createURL('/'),
     'sharedtable://',
@@ -43,40 +44,40 @@ export const deepLinkingConfig: LinkingOptions<any> = {
       
       // Event screens
       EventDetails: 'events/:eventId',
-      EventChat: 'events/:eventId/chat',
-      EventAttendees: 'events/:eventId/attendees',
-      CreateEvent: 'events/create',
+      // EventChat: 'events/:eventId/chat', // Commented out as not in RootStackParamList
+      // EventAttendees: 'events/:eventId/attendees', // Commented out as not in RootStackParamList
+      // CreateEvent: 'events/create', // Commented out as not in RootStackParamList
       
-      // Booking screens
-      Bookings: 'bookings',
-      BookingDetails: 'bookings/:bookingId',
+      // Booking screens (commented out as not in RootStackParamList)
+      // Bookings: 'bookings',
+      // BookingDetails: 'bookings/:bookingId',
       
       // Chat screens
-      ChatList: 'chats',
-      ChatRoom: 'chats/:chatId',
+      // ChatList: 'chats', // Commented out as not in RootStackParamList
+      // ChatRoom: 'chats/:chatId', // Commented out as not in RootStackParamList
       
       // Notification screens
-      Notifications: 'notifications',
-      NotificationSettings: 'notifications/settings',
+      NotificationsList: 'notifications',
+      // NotificationSettings: 'notifications/settings', // Commented out as not in RootStackParamList
       
-      // Settings screens
-      Settings: 'settings',
-      AccountSettings: 'settings/account',
-      PrivacySettings: 'settings/privacy',
-      SecuritySettings: 'settings/security',
+      // Settings screens (commented out as not in RootStackParamList)
+      // Settings: 'settings',
+      // AccountSettings: 'settings/account',
+      // PrivacySettings: 'settings/privacy',
+      // SecuritySettings: 'settings/security',
       
-      // Auth screens
-      Login: 'login',
-      SignUp: 'signup',
-      ForgotPassword: 'forgot-password',
-      ResetPassword: 'reset-password',
+      // Auth screens (commented out as not in RootStackParamList)
+      // Login: 'login',
+      // SignUp: 'signup',
+      // ForgotPassword: 'forgot-password',
+      // ResetPassword: 'reset-password',
       
-      // Review screen
-      Review: 'review/:eventId',
+      // Review screen (commented out as not in RootStackParamList)
+      // Review: 'review/:eventId',
       
-      // Security
-      VerifyLogin: 'security/verify-login',
-      TwoFactorAuth: 'security/2fa',
+      // Security (commented out as not in RootStackParamList)
+      // VerifyLogin: 'security/verify-login',
+      // TwoFactorAuth: 'security/2fa',
     },
   },
   
@@ -112,13 +113,18 @@ export const deepLinkingConfig: LinkingOptions<any> = {
 };
 
 // Helper functions for notification deep linking
-async function getInitialNotification(): Promise<any> {
+interface NotificationPayload {
+  type: NotificationType;
+  data?: Record<string, string | number>;
+}
+
+async function getInitialNotification(): Promise<NotificationPayload | null> {
   // This would be implemented to get the initial notification
   // that opened the app
   return null;
 }
 
-function getDeepLinkFromNotification(notification: any): string {
+function getDeepLinkFromNotification(notification: NotificationPayload): string {
   const { type, data } = notification;
   
   switch (type) {
@@ -126,28 +132,28 @@ function getDeepLinkFromNotification(notification: any): string {
     case NotificationType.DINNER_CONFIRMATION:
     case NotificationType.DINNER_CANCELLATION:
     case NotificationType.DINNER_STATUS_CHANGE:
-      return `sharedtable://events/${data.eventId}`;
+      return data?.eventId ? `sharedtable://events/${data.eventId}` : 'sharedtable://events';
       
     case NotificationType.DINNER_GROUP_MATCHED:
-      return `sharedtable://profile/dinner/${data.groupId}`;
+      return data?.groupId ? `sharedtable://profile/dinner/${data.groupId}` : 'sharedtable://profile';
       
     case NotificationType.CHAT_MESSAGE:
     case NotificationType.CHAT_MENTION:
-      return `sharedtable://chats/${data.chatId}`;
+      return data?.chatId ? `sharedtable://chats/${data.chatId}` : 'sharedtable://chats';
       
     case NotificationType.FEED_POST:
     case NotificationType.FEED_COMMENT:
     case NotificationType.FEED_REACTION:
     case NotificationType.FEED_MENTION:
-      return data.postId 
-        ? `sharedtable://feed/post/${data.postId}`
+      return data?.postId 
+        ? `sharedtable://feed/post/${data?.postId}`
         : 'sharedtable://feed';
       
     case NotificationType.BOOKING_REQUEST:
     case NotificationType.BOOKING_APPROVED:
     case NotificationType.BOOKING_REJECTED:
-      return data.bookingId
-        ? `sharedtable://bookings/${data.bookingId}`
+      return data?.bookingId
+        ? `sharedtable://bookings/${data?.bookingId}`
         : 'sharedtable://bookings';
       
     case NotificationType.ACHIEVEMENT_UNLOCKED:
@@ -161,7 +167,7 @@ function getDeepLinkFromNotification(notification: any): string {
       return 'sharedtable://dashboard/leaderboard';
       
     case NotificationType.DINNER_REVIEW_REQUEST:
-      return `sharedtable://review/${data.eventId}`;
+      return data?.eventId ? `sharedtable://review/${data.eventId}` : 'sharedtable://review';
       
     case NotificationType.SECURITY_ALERT:
     case NotificationType.LOGIN_NEW_DEVICE:
@@ -171,10 +177,10 @@ function getDeepLinkFromNotification(notification: any): string {
       return 'sharedtable://profile/edit';
       
     case NotificationType.EVENT_INVITATION:
-      return `sharedtable://events/${data.eventId}`;
+      return data?.eventId ? `sharedtable://events/${data.eventId}` : 'sharedtable://events';
       
     case NotificationType.MATCH_FOUND:
-      return `sharedtable://profile/${data.matchedUserId}`;
+      return data?.matchedUserId ? `sharedtable://profile/${data.matchedUserId}` : 'sharedtable://profile';
       
     default:
       return 'sharedtable://notifications';

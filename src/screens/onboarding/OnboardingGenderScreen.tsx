@@ -127,7 +127,7 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
       totalSteps={totalSteps}
     >
       <View style={styles.container}>
-        <OnboardingTitle>What's your gender?</OnboardingTitle>
+        <OnboardingTitle>What&apos;s your gender?</OnboardingTitle>
 
         {hasError && (
           <View style={styles.errorContainer}>
@@ -173,15 +173,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   errorContainer: {
-    backgroundColor: '#FEE2E2',
-    borderColor: '#FCA5A5',
+    backgroundColor: theme.colors.error['100'],
+    borderColor: theme.colors.error['300'],
     borderRadius: scaleWidth(8),
     borderWidth: 1,
     marginBottom: scaleHeight(16),
     padding: scaleWidth(12),
   },
   errorText: {
-    color: '#DC2626',
+    color: theme.colors.error['600'],
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
   },

@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     marginRight: scaleWidth(8),
   },
   removeButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: theme.colors.overlay.white30,
     borderRadius: scaleWidth(10),
     width: scaleWidth(20),
     height: scaleWidth(20),

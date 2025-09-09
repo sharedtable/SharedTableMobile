@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   placeholderText: {
-    color: '#9CA3AF',
+    color: theme.colors.gray['400'],
   },
   selectButtonArrow: {
     color: theme.colors.text.secondary,

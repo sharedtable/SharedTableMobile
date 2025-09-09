@@ -456,10 +456,10 @@ const CommentsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
   },
   safeContainer: {
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
   },
   header: {
     flexDirection: 'row',
@@ -468,12 +468,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleWidth(20),
     paddingVertical: scaleHeight(16),
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.colors.border,
   },
   headerTitle: {
     fontSize: scaleFont(18),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   loadingContainer: {
     flex: 1,
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatarText: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: scaleFont(14),
     fontWeight: '600',
   },
@@ -524,11 +524,11 @@ const styles = StyleSheet.create({
   username: {
     fontSize: scaleFont(14),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   timeAgo: {
     fontSize: scaleFont(12),
-    color: '#8E8E93',
+    color: theme.colors.text.secondary,
   },
   replyingTo: {
     fontSize: scaleFont(13),
@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
   },
   commentText: {
     fontSize: scaleFont(14),
-    color: '#374151',
+    color: theme.colors.gray['700'],
     lineHeight: scaleFont(18),
   },
   commentActions: {
@@ -552,13 +552,13 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: scaleFont(13),
-    color: '#8E8E93',
+    color: theme.colors.text.secondary,
   },
   likedText: {
-    color: '#FF3B30',
+    color: theme.colors.ios.red,
   },
   deleteText: {
-    color: '#EF4444',
+    color: theme.colors.error['500'],
   },
   emptyContainer: {
     flex: 1,
@@ -569,12 +569,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: scaleFont(18),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
     marginTop: scaleHeight(16),
   },
   emptySubtext: {
     fontSize: scaleFont(14),
-    color: '#8E8E93',
+    color: theme.colors.text.secondary,
     marginTop: scaleHeight(4),
   },
   replyingBar: {
@@ -583,13 +583,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(8),
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.gray['100'],
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: theme.colors.border,
   },
   replyingText: {
     fontSize: scaleFont(13),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   inputContainer: {
     flexDirection: 'row',
@@ -597,8 +597,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(12),
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    backgroundColor: 'white',
+    borderTopColor: theme.colors.border,
+    backgroundColor: theme.colors.white,
   },
   inputAvatar: {
     width: scaleWidth(32),
@@ -610,14 +610,14 @@ const styles = StyleSheet.create({
     marginBottom: scaleHeight(6),
   },
   inputAvatarText: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: scaleFont(14),
     fontWeight: '600',
   },
   inputWrapper: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.border,
     borderRadius: scaleWidth(20),
     paddingHorizontal: scaleWidth(16),
     marginRight: scaleWidth(12),
@@ -625,7 +625,7 @@ const styles = StyleSheet.create({
   },
   input: {
     fontSize: scaleFont(14),
-    color: '#111827',
+    color: theme.colors.gray['900'],
     maxHeight: scaleHeight(120),
     paddingVertical: scaleHeight(10),
   },
@@ -639,7 +639,7 @@ const styles = StyleSheet.create({
     marginBottom: scaleHeight(4),
   },
   sendButtonDisabled: {
-    backgroundColor: '#D1D5DB',
+    backgroundColor: theme.colors.gray['300'],
   },
 });
 

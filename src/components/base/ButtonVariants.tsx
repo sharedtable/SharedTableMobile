@@ -59,13 +59,13 @@ export const SquareButton = memo<SquareButtonProps>(
       primary: {
         backgroundColor: theme.colors.brand.primary,
         borderWidth: 0,
-        borderColor: 'transparent',
+        borderColor: theme.colors.transparent,
         textColor: theme.colors.white,
       },
       secondary: {
         backgroundColor: theme.colors.state.action,
         borderWidth: 0,
-        borderColor: 'transparent',
+        borderColor: theme.colors.transparent,
         textColor: theme.colors.white,
       },
       outline: {
@@ -75,9 +75,9 @@ export const SquareButton = memo<SquareButtonProps>(
         textColor: theme.colors.text.primary,
       },
       ghost: {
-        backgroundColor: 'transparent',
+        backgroundColor: theme.colors.transparent,
         borderWidth: 0,
-        borderColor: 'transparent',
+        borderColor: theme.colors.transparent,
         textColor: theme.colors.text.primary,
       },
     };
@@ -172,13 +172,13 @@ export const RoundedButton = memo<RoundedButtonProps>(
       primary: {
         backgroundColor: theme.colors.brand.primary,
         borderWidth: 0,
-        borderColor: 'transparent',
+        borderColor: theme.colors.transparent,
         textColor: theme.colors.white,
       },
       secondary: {
         backgroundColor: theme.colors.state.action,
         borderWidth: 0,
-        borderColor: 'transparent',
+        borderColor: theme.colors.transparent,
         textColor: theme.colors.white,
       },
       outline: {
@@ -188,9 +188,9 @@ export const RoundedButton = memo<RoundedButtonProps>(
         textColor: theme.colors.gray['4'],
       },
       ghost: {
-        backgroundColor: 'transparent',
+        backgroundColor: theme.colors.transparent,
         borderWidth: 0,
-        borderColor: 'transparent',
+        borderColor: theme.colors.transparent,
         textColor: theme.colors.text.primary,
       },
     };
@@ -277,12 +277,12 @@ export const FAB = memo<FABProps>(
       primary: {
         backgroundColor: theme.colors.brand.primary,
         borderWidth: 0,
-        borderColor: 'transparent',
+        borderColor: theme.colors.transparent,
       },
       secondary: {
         backgroundColor: theme.colors.state.action,
         borderWidth: 0,
-        borderColor: 'transparent',
+        borderColor: theme.colors.transparent,
       },
       outline: {
         backgroundColor: theme.colors.white,

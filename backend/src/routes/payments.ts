@@ -317,8 +317,8 @@ router.post('/create-booking', verifyPrivyToken, async (req: AuthRequest, res: R
     const holdAmount = 3000; // $30 USD
     const paymentIntent = await StripeService.createPaymentIntent({
       amount: holdAmount,
-      customerId: stripeCustomerId,
-      paymentMethodId,
+      customer: stripeCustomerId,
+      payment_method: paymentMethodId,
       metadata: {
         user_id: userData.id,
         dinner_id: dinnerId,
@@ -326,13 +326,10 @@ router.post('/create-booking', verifyPrivyToken, async (req: AuthRequest, res: R
         city: dinner.city,
         hold_type: 'booking_guarantee',
       },
-      captureMethod: 'manual',
+      capture_method: 'manual',
     });
 
-    await StripeService.confirmPaymentIntent(
-      paymentIntent.id,
-      paymentMethodId
-    );
+    // Payment intent is auto-confirmed when payment_method is provided
 
     // Create booking
     const { data: booking, error: bookingError } = await supabaseService

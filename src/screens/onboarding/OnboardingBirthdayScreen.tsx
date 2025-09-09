@@ -267,15 +267,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   errorContainer: {
-    backgroundColor: '#FEE2E2',
-    borderColor: '#FCA5A5',
+    backgroundColor: theme.colors.error['100'],
+    borderColor: theme.colors.error['300'],
     borderRadius: scaleWidth(8),
     borderWidth: 1,
     marginBottom: scaleHeight(16),
     padding: scaleWidth(12),
   },
   errorText: {
-    color: '#DC2626',
+    color: theme.colors.error['600'],
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
   },
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(16),
   },
   pickerTextSelected: {
-    color: '#000000',
+    color: theme.colors.black['1'],
     fontSize: scaleFont(18),
     fontWeight: '700', // Pure black for selected text
   },
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   selectionHighlight: {
-    backgroundColor: 'rgba(226, 72, 73, 0.1)', // 30% opacity of #E24849 (primary color)
+    backgroundColor: theme.colors.overlay.primary10, // 30% opacity of #E24849 (primary color)
     borderRadius: scaleWidth(8),
     height: ITEM_HEIGHT,
     left: 0,

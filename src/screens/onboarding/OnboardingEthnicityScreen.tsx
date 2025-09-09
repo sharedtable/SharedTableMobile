@@ -892,7 +892,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pickerItemSelected: {
-    backgroundColor: 'transparent',
+    backgroundColor: theme.colors.transparent,
   },
   pickerItemText: {
     color: theme.colors.text.secondary,

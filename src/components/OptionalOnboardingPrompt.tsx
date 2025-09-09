@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Alert, View, Text, StyleSheet, Pressable, Modal, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
@@ -43,19 +43,7 @@ export const OptionalOnboardingPrompt: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    console.log('🚀 [OptionalOnboardingPrompt] Component mounted/updated');
-    console.log('🚀 [OptionalOnboardingPrompt] Current onboardingStatus:', onboardingStatus);
-    
-    // Clear dismiss key for testing (remove this in production)
-    if (onboardingStatus === OnboardingStatus.MANDATORY_COMPLETE) {
-      clearDismissKey();
-    }
-    
-    checkShouldShowPrompt();
-  }, [onboardingStatus]);
-
-  const checkShouldShowPrompt = async () => {
+  const checkShouldShowPrompt = useCallback(async () => {
     console.log('🔍 [OptionalOnboardingPrompt] Checking prompt - Status:', onboardingStatus);
     console.log('🔍 [OptionalOnboardingPrompt] Status type:', typeof onboardingStatus);
     console.log('🔍 [OptionalOnboardingPrompt] MANDATORY_COMPLETE value:', OnboardingStatus.MANDATORY_COMPLETE);
@@ -118,7 +106,19 @@ export const OptionalOnboardingPrompt: React.FC = () => {
     } catch (error) {
       console.error('❌ [OptionalOnboardingPrompt] Error checking prompt status:', error);
     }
-  };
+  }, [onboardingStatus]);
+
+  useEffect(() => {
+    console.log('🚀 [OptionalOnboardingPrompt] Component mounted/updated');
+    console.log('🚀 [OptionalOnboardingPrompt] Current onboardingStatus:', onboardingStatus);
+    
+    // Clear dismiss key for testing (remove this in production)
+    if (onboardingStatus === OnboardingStatus.MANDATORY_COMPLETE) {
+      clearDismissKey();
+    }
+    
+    checkShouldShowPrompt();
+  }, [onboardingStatus, checkShouldShowPrompt]);
 
   const handleCompleteProfile = () => {
     setIsModalVisible(false);
@@ -223,19 +223,21 @@ export const OptionalOnboardingPrompt: React.FC = () => {
           </View>
           
           <Text style={styles.title}>
-            {resumeInfo?.canResume 
-              ? 'Continue Your Profile'
-              : onboardingStatus === OnboardingStatus.MANDATORY_COMPLETE 
-                ? 'Complete Your Profile'
-                : 'Set Your Dining Preferences'}
+            {(() => {
+              if (resumeInfo?.canResume) return 'Continue Your Profile';
+              if (onboardingStatus === OnboardingStatus.MANDATORY_COMPLETE) return 'Complete Your Profile';
+              return 'Set Your Dining Preferences';
+            })()}
           </Text>
           
           <Text style={styles.description}>
-            {resumeInfo?.canResume 
-              ? resumeInfo.message
-              : onboardingStatus === OnboardingStatus.MANDATORY_COMPLETE 
-                ? 'Answer a few optional questions to help us find your perfect dining matches! It only takes 2 minutes.'
-                : 'Tell us about your dining preferences to get personalized restaurant recommendations and better matches.'}
+            {(() => {
+              if (resumeInfo?.canResume) return resumeInfo.message;
+              if (onboardingStatus === OnboardingStatus.MANDATORY_COMPLETE) {
+                return 'Answer a few optional questions to help us find your perfect dining matches! It only takes 2 minutes.';
+              }
+              return 'Tell us about your dining preferences to get personalized restaurant recommendations and better matches.';
+            })()}
           </Text>
 
           {resumeInfo?.canResume && resumeInfo.percentComplete != null && resumeInfo.percentComplete > 0 && (
@@ -285,7 +287,7 @@ export const OptionalOnboardingPrompt: React.FC = () => {
             style={styles.textButton}
             onPress={handleNeverAsk}
           >
-            <Text style={styles.textButtonText}>Don't Ask Again</Text>
+            <Text style={styles.textButtonText}>Don&apos;t Ask Again</Text>
           </Pressable>
         </View>
       </View>
@@ -296,13 +298,13 @@ export const OptionalOnboardingPrompt: React.FC = () => {
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: theme.colors.overlay.medium,
     justifyContent: 'center',
     alignItems: 'center',
     padding: scaleWidth(20),
   },
   modalContent: {
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     borderRadius: scaleWidth(20),
     padding: scaleWidth(24),
     alignItems: 'center',
@@ -356,7 +358,7 @@ const styles = StyleSheet.create({
     marginBottom: scaleHeight(12),
   },
   primaryButtonText: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: scaleFont(16),
     fontWeight: '600',
     fontFamily: theme.typography.fontFamily.heading,

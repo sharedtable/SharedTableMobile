@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
   activeTab: {
     backgroundColor: theme.colors.white,
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: theme.colors.black['1'],
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
     paddingVertical: scaleHeight(12),
   },
   tabContainer: {
-    backgroundColor: '#F3F4F6', // Light gray background for tabs
+    backgroundColor: theme.colors.gray['100'], // Light gray background for tabs
     borderRadius: scaleWidth(12),
     flexDirection: 'row',
     marginBottom: scaleHeight(24),

@@ -7,7 +7,7 @@
  * @param dateInput - Date, string, number or undefined
  * @returns Valid Date object or current date as fallback
  */
-export function safeParseDate(dateInput: any): Date {
+export function safeParseDate(dateInput: Date | string | number | null | undefined): Date {
   // If already a valid Date object, return it
   if (dateInput instanceof Date && !isNaN(dateInput.getTime())) {
     return dateInput;
@@ -42,7 +42,7 @@ export function safeParseDate(dateInput: any): Date {
  * @returns Formatted date string or fallback
  */
 export function safeFormatDate(
-  dateInput: any,
+  dateInput: Date | string | number | null | undefined,
   formatter: (date: Date) => string,
   fallback: string = 'Recently'
 ): string {

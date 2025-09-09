@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     bottom: scaleHeight(52), // Position above the input instead of below
     left: 0,
     right: 0,
-    backgroundColor: '#F8F9FA', // Light gray background for distinction
+    backgroundColor: theme.colors.ui.offWhite, // Light gray background for distinction
     borderRadius: scaleWidth(12),
     borderWidth: 1.5,
     borderColor: theme.colors.primary.main, // Primary color border for visibility
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: theme.colors.black['1'],
         shadowOffset: { width: 0, height: -4 }, // Stronger shadow
         shadowOpacity: 0.25,
         shadowRadius: 12,
@@ -301,8 +301,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(14),
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB', // Lighter border for items
-    backgroundColor: 'transparent',
+    borderBottomColor: theme.colors.border, // Lighter border for items
+    backgroundColor: theme.colors.transparent,
   },
   // suggestionPressed: { // Removed unused style
   //   backgroundColor: Colors.backgroundGrayLight,

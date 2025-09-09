@@ -145,17 +145,17 @@ const MyEventsScreen: React.FC = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return { text: 'Confirmed', color: '#10B981' };
+        return { text: 'Confirmed', color: theme.colors.success['500'] };
       case 'pending':
-        return { text: 'Pending', color: '#F59E0B' };
+        return { text: 'Pending', color: theme.colors.ui.yellowOrange };
       case 'waitlisted':
-        return { text: 'Waitlisted', color: '#6B7280' };
+        return { text: 'Waitlisted', color: theme.colors.gray['500'] };
       case 'cancelled':
-        return { text: 'Cancelled', color: '#EF4444' };
+        return { text: 'Cancelled', color: theme.colors.error['500'] };
       case 'completed':
-        return { text: 'Completed', color: '#3B82F6' };
+        return { text: 'Completed', color: theme.colors.ui.blueLight };
       default:
-        return { text: status, color: '#6B7280' };
+        return { text: status, color: theme.colors.gray['500'] };
     }
   };
 
@@ -213,7 +213,7 @@ const MyEventsScreen: React.FC = () => {
             {event.role === 'host' ? (
               <View style={styles.hostBadge}>
                 <Ionicons name="star" size={12} color="#F59E0B" />
-                <Text style={styles.hostText}>You're hosting</Text>
+                <Text style={styles.hostText}>You&apos;re hosting</Text>
               </View>
             ) : (
               <View style={styles.hostInfo}>
@@ -361,7 +361,7 @@ const MyEventsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.gray['50'],
   },
   header: {
     flexDirection: 'row',
@@ -369,21 +369,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: scaleWidth(20),
     paddingVertical: scaleHeight(16),
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.colors.border,
   },
   headerTitle: {
     fontSize: scaleFont(24),
     fontWeight: '700',
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   tabs: {
     flexDirection: 'row',
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     paddingHorizontal: scaleWidth(20),
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.colors.border,
   },
   tab: {
     flex: 1,
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
     paddingVertical: scaleHeight(14),
     gap: scaleWidth(6),
     borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    borderBottomColor: theme.colors.transparent,
   },
   tabActive: {
     borderBottomColor: theme.colors.primary.main,
@@ -401,14 +401,14 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: scaleFont(14),
     fontWeight: '500',
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   tabTextActive: {
     color: theme.colors.primary.main,
     fontWeight: '600',
   },
   tabBadge: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.gray['100'],
     paddingHorizontal: scaleWidth(6),
     paddingVertical: scaleHeight(2),
     borderRadius: scaleWidth(10),
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
   tabBadgeText: {
     fontSize: scaleFont(11),
     fontWeight: '600',
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   tabBadgeTextActive: {
     color: theme.colors.primary.main,
@@ -434,11 +434,11 @@ const styles = StyleSheet.create({
   },
   eventCard: {
     flexDirection: 'row',
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     borderRadius: scaleWidth(12),
     marginBottom: scaleHeight(12),
     padding: scaleWidth(16),
-    shadowColor: '#000',
+    shadowColor: theme.colors.black['1'],
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: scaleFont(16),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
     flex: 1,
     marginRight: scaleWidth(8),
   },
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: scaleFont(12),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     flex: 1,
   },
   eventFooter: {
@@ -512,7 +512,7 @@ const styles = StyleSheet.create({
   },
   hostLabel: {
     fontSize: scaleFont(12),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   hostBadge: {
     flexDirection: 'row',
@@ -522,18 +522,18 @@ const styles = StyleSheet.create({
   },
   hostText: {
     fontSize: scaleFont(12),
-    color: '#F59E0B',
+    color: theme.colors.ui.yellowOrange,
     fontWeight: '500',
   },
   actionButton: {
     paddingHorizontal: scaleWidth(12),
     paddingVertical: scaleHeight(6),
     borderRadius: scaleWidth(6),
-    backgroundColor: '#FEE2E2',
+    backgroundColor: theme.colors.error['100'],
   },
   actionButtonText: {
     fontSize: scaleFont(12),
-    color: '#DC2626',
+    color: theme.colors.error['600'],
     fontWeight: '500',
   },
   reviewButton: {
@@ -559,12 +559,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: scaleFont(18),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
     marginTop: scaleHeight(16),
   },
   emptyText: {
     fontSize: scaleFont(14),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginTop: scaleHeight(8),
     textAlign: 'center',
     paddingHorizontal: scaleWidth(40),
@@ -577,7 +577,7 @@ const styles = StyleSheet.create({
     borderRadius: scaleWidth(24),
   },
   emptyButtonText: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: scaleFont(14),
     fontWeight: '600',
   },

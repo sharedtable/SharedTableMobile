@@ -274,7 +274,7 @@ const EventsListScreen: React.FC = () => {
             <Ionicons 
               name={item.icon as any} 
               size={16} 
-              color={filter === item.key ? '#FFFFFF' : '#6B7280'} 
+              color={filter === item.key ? '#FFFFFF' : theme.colors.gray['500']} 
             />
             <Text style={[
               styles.filterText,
@@ -339,7 +339,7 @@ const EventsListScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.gray['50'],
   },
   header: {
     flexDirection: 'row',
@@ -347,20 +347,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: scaleWidth(20),
     paddingVertical: scaleHeight(16),
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.colors.border,
   },
   headerTitle: {
     fontSize: scaleFont(24),
     fontWeight: '700',
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   filterContainer: {
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     maxHeight: scaleHeight(60),
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.colors.border,
   },
   filterContent: {
     paddingHorizontal: scaleWidth(20),
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(8),
     borderRadius: scaleWidth(20),
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.gray['100'],
     marginRight: scaleWidth(8),
     gap: scaleWidth(6),
   },
@@ -382,11 +382,11 @@ const styles = StyleSheet.create({
   },
   filterText: {
     fontSize: scaleFont(14),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     fontWeight: '500',
   },
   filterTextActive: {
-    color: 'white',
+    color: theme.colors.white,
   },
   eventsContainer: {
     flex: 1,
@@ -395,11 +395,11 @@ const styles = StyleSheet.create({
     padding: scaleWidth(20),
   },
   eventCard: {
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     borderRadius: scaleWidth(16),
     marginBottom: scaleHeight(16),
     padding: scaleWidth(16),
-    shadowColor: '#000',
+    shadowColor: theme.colors.black['1'],
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -425,21 +425,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   hostInitial: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: scaleFont(16),
     fontWeight: '600',
   },
   hostName: {
     fontSize: scaleFont(14),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   hostLabel: {
     fontSize: scaleFont(11),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   dateTag: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: theme.colors.ui.yellowLight,
     paddingHorizontal: scaleWidth(12),
     paddingVertical: scaleHeight(6),
     borderRadius: scaleWidth(8),
@@ -448,11 +448,11 @@ const styles = StyleSheet.create({
   dateTagText: {
     fontSize: scaleFont(12),
     fontWeight: '600',
-    color: '#92400E',
+    color: theme.colors.ui.yellowDark,
   },
   timeText: {
     fontSize: scaleFont(11),
-    color: '#92400E',
+    color: theme.colors.ui.yellowDark,
   },
   eventContent: {
     marginBottom: scaleHeight(12),
@@ -460,12 +460,12 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: scaleFont(18),
     fontWeight: '700',
-    color: '#111827',
+    color: theme.colors.gray['900'],
     marginBottom: scaleHeight(6),
   },
   eventDescription: {
     fontSize: scaleFont(14),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     lineHeight: scaleFont(20),
     marginBottom: scaleHeight(12),
   },
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: scaleFont(13),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   tagsContainer: {
     flexDirection: 'row',
@@ -488,14 +488,14 @@ const styles = StyleSheet.create({
     marginTop: scaleHeight(10),
   },
   tag: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: theme.colors.ui.bluePale,
     paddingHorizontal: scaleWidth(10),
     paddingVertical: scaleHeight(4),
     borderRadius: scaleWidth(12),
   },
   tagText: {
     fontSize: scaleFont(11),
-    color: '#3B82F6',
+    color: theme.colors.ui.blueLight,
   },
   eventFooter: {
     flexDirection: 'row',
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: scaleHeight(12),
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: theme.colors.gray['100'],
   },
   spotsContainer: {
     flexDirection: 'row',
@@ -518,10 +518,10 @@ const styles = StyleSheet.create({
   spotsText: {
     fontSize: scaleFont(13),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   spotsTextFull: {
-    color: '#DC2626',
+    color: theme.colors.error['600'],
   },
   attendeesContainer: {
     flexDirection: 'row',
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
   },
   attendeesText: {
     fontSize: scaleFont(13),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   loadingContainer: {
     flex: 1,
@@ -547,12 +547,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: scaleFont(18),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
     marginTop: scaleHeight(16),
   },
   emptyText: {
     fontSize: scaleFont(14),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginTop: scaleHeight(8),
     marginBottom: scaleHeight(24),
   },
@@ -563,7 +563,7 @@ const styles = StyleSheet.create({
     borderRadius: scaleWidth(24),
   },
   createFirstText: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: scaleFont(14),
     fontWeight: '600',
   },
@@ -575,7 +575,7 @@ const styles = StyleSheet.create({
     height: scaleWidth(56),
     borderRadius: scaleWidth(28),
     elevation: 8,
-    shadowColor: '#000',
+    shadowColor: theme.colors.black['1'],
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

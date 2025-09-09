@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     paddingRight: scaleWidth(36),
   },
   answerText: {
-    color: '#6B6B6B',
+    color: theme.colors.gray['500'],
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(15),
     fontWeight: '400',
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   faqItem: {
-    borderBottomColor: '#EFEFEF',
+    borderBottomColor: theme.colors.gray['100'],
     borderBottomWidth: 1,
     paddingVertical: scaleHeight(18),
   },

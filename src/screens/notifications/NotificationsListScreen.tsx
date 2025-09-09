@@ -127,7 +127,7 @@ export const NotificationsListScreen: React.FC = () => {
       </View>
       <Text style={styles.emptyTitle}>No Notifications</Text>
       <Text style={styles.emptyText}>
-        You're all caught up! Check back later for updates.
+        You&apos;re all caught up! Check back later for updates.
       </Text>
     </View>
   );
@@ -212,7 +212,7 @@ export const NotificationsListScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9F9F9',
+    backgroundColor: theme.colors.background.paper,
   },
   titleHeader: {
     flexDirection: 'row',
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     paddingBottom: scaleHeight(16),
     backgroundColor: theme.colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: theme.colors.ui.lighterGray,
   },
   backButton: {
     padding: scaleWidth(8),
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     paddingVertical: scaleHeight(12),
     backgroundColor: theme.colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: theme.colors.ui.lighterGray,
   },
   headerText: {
     fontFamily: theme.typography.fontFamily.body,

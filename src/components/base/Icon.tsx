@@ -83,9 +83,12 @@ export type IconName =
 
   // Booking & Payment
   | 'ticket'
+  | 'tag'
   | 'credit-card'
   | 'gift'
   | 'shopping-bag'
+  | 'grid'
+  | 'inbox'
 
   // Communication
   | 'phone'
@@ -188,9 +191,12 @@ const iconMap: Record<IconName, { library: string; name: string }> = {
 
   // Booking & Payment
   ticket: { library: 'Feather', name: 'tag' },
+  tag: { library: 'Feather', name: 'tag' },
   'credit-card': { library: 'Feather', name: 'credit-card' },
   gift: { library: 'Feather', name: 'gift' },
   'shopping-bag': { library: 'Feather', name: 'shopping-bag' },
+  grid: { library: 'Feather', name: 'grid' },
+  inbox: { library: 'Feather', name: 'inbox' },
 
   // Communication
   phone: { library: 'Feather', name: 'phone' },

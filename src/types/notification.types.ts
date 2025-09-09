@@ -143,7 +143,7 @@ export interface NotificationSchedule {
   notificationId: string;
   scheduledFor: Date;
   type: NotificationType;
-  data: any;
+  data: Record<string, unknown>;
   status: 'pending' | 'sent' | 'failed' | 'cancelled';
 }
 

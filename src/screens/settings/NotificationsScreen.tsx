@@ -231,7 +231,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onNavi
                 }
                 onValueChange={(enabled) => updateSetting(setting.key, enabled)}
                 trackColor={{
-                  false: '#E5E5E5',
+                  false: theme.colors.ui.lightGray,
                   true: theme.colors.primary.main,
                 }}
                 thumbColor={Platform.OS === 'ios' ? undefined : '#FFFFFF'}
@@ -279,7 +279,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onNavi
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor: theme.colors.background.paper,
     flex: 1,
   },
   disabledItem: {
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   },
   infoSection: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(16),
     borderWidth: 1,
     marginHorizontal: scaleWidth(16),
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   permissionBanner: {
-    backgroundColor: '#FFF3CD',
+    backgroundColor: theme.colors.ui.orangePale,
     borderColor: '#FFEAA7',
     borderRadius: scaleWidth(12),
     borderWidth: 1,
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     padding: scaleWidth(16),
   },
   permissionText: {
-    color: '#856404',
+    color: theme.colors.warning['800'],
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
     textAlign: 'center',
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
   },
   settingsItem: {
     alignItems: 'center',
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: theme.colors.ui.lighterGray,
     borderBottomWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
   },
   settingsList: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(16),
     borderWidth: 1,
     marginHorizontal: scaleWidth(16),

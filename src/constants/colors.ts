@@ -12,12 +12,12 @@ export const Colors = {
   black: '#000000',
   gray50: '#FAFAFA',
   gray100: '#F5F5F5',
-  gray200: '#F0F0F0',
+  gray200: '#F5F5F5',
   gray300: '#E5E5E5',
   gray400: '#CCCCCC',
   gray500: '#999999',
   gray600: '#666666',
-  gray700: '#333333',
+  gray700: '#374151',
   
   // Background colors
   backgroundLight: '#F9F9F9',
@@ -43,7 +43,7 @@ export const Colors = {
   google: '#4285F4',
   
   // Special colors
-  shadowColor: '#000',
+  shadowColor: '#000000',
   textDark: '#000000',
   orange: '#FF8800',
   orangeLight: '#FFF3E0',
@@ -66,7 +66,7 @@ export const Colors = {
   // UI specific colors
   borderGray: '#E1E1E1',
   borderLight: '#E5E7EB',
-  textPrimary: '#262626',
+  textPrimary: '#666666',
   textSecondary: '#8E8E93',
   textTertiary: '#8B4513',
   backgroundYellow: '#FFF9E6',
@@ -74,7 +74,7 @@ export const Colors = {
   googleBlue: '#4285F4',
   backgroundGray: '#F8F8F8',
   backgroundGrayLight: '#F9FAFB',
-  backgroundGrayLighter: '#F3F4F6',
+  backgroundGrayLighter: '#F7F7F7',
   textDarkGray: '#1C1C1E',
   
   // Pink colors

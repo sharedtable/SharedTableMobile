@@ -376,7 +376,7 @@ const CreateEventScreen: React.FC = () => {
       </View>
 
       <View style={styles.row}>
-        <View style={[styles.inputGroup, { flex: 1 }]}>
+        <View style={[styles.inputGroup, styles.flexOne]}>
           <Text style={styles.label}>Start Time *</Text>
           <TouchableOpacity 
             style={styles.dateInput}
@@ -447,7 +447,7 @@ const CreateEventScreen: React.FC = () => {
       <Text style={styles.stepTitle}>Pricing & Capacity</Text>
       
       <View style={styles.row}>
-        <View style={[styles.inputGroup, { flex: 1 }]}>
+        <View style={[styles.inputGroup, styles.flexOne]}>
           <Text style={styles.label}>Min Guests</Text>
           <View style={styles.numberInput}>
             <TouchableOpacity 
@@ -501,7 +501,7 @@ const CreateEventScreen: React.FC = () => {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>What's Included in Price</Text>
+        <Text style={styles.label}>What&apos;s Included in Price</Text>
         <TextInput
           style={styles.input}
           placeholder="e.g., Appetizers, main course, dessert, tea"
@@ -610,7 +610,7 @@ const CreateEventScreen: React.FC = () => {
           <Switch
             value={formData.visibility === 'public'}
             onValueChange={(value) => updateFormData('visibility', value ? 'public' : 'friends_only')}
-            trackColor={{ false: '#D1D5DB', true: theme.colors.primary.light }}
+            trackColor={{ false: theme.colors.gray['300'], true: theme.colors.primary.light }}
             thumbColor={formData.visibility === 'public' ? theme.colors.primary.main : '#9CA3AF'}
           />
         </View>
@@ -698,7 +698,7 @@ const CreateEventScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
   },
   keyboardView: {
     flex: 1,
@@ -710,16 +710,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleWidth(20),
     paddingVertical: scaleHeight(16),
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.colors.border,
   },
   headerTitle: {
     fontSize: scaleFont(18),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   cancelText: {
     fontSize: scaleFont(14),
-    color: '#EF4444',
+    color: theme.colors.error['500'],
   },
   progressContainer: {
     paddingHorizontal: scaleWidth(20),
@@ -727,7 +727,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: scaleHeight(4),
-    backgroundColor: '#E5E7EB',
+    backgroundColor: theme.colors.gray['200'],
     borderRadius: scaleWidth(2),
     overflow: 'hidden',
   },
@@ -737,7 +737,7 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: scaleFont(12),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginTop: scaleHeight(8),
   },
   scrollView: {
@@ -752,7 +752,7 @@ const styles = StyleSheet.create({
   stepTitle: {
     fontSize: scaleFont(20),
     fontWeight: '700',
-    color: '#111827',
+    color: theme.colors.gray['900'],
     marginBottom: scaleHeight(20),
   },
   inputGroup: {
@@ -761,17 +761,17 @@ const styles = StyleSheet.create({
   label: {
     fontSize: scaleFont(14),
     fontWeight: '500',
-    color: '#374151',
+    color: theme.colors.gray['700'],
     marginBottom: scaleHeight(8),
   },
   input: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: theme.colors.gray['300'],
     borderRadius: scaleWidth(8),
     paddingHorizontal: scaleWidth(12),
     paddingVertical: scaleHeight(12),
     fontSize: scaleFont(14),
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   textArea: {
     minHeight: scaleHeight(100),
@@ -779,7 +779,7 @@ const styles = StyleSheet.create({
   },
   charCount: {
     fontSize: scaleFont(11),
-    color: '#9CA3AF',
+    color: theme.colors.gray['400'],
     marginTop: scaleHeight(4),
     textAlign: 'right',
   },
@@ -791,9 +791,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(8),
     borderRadius: scaleWidth(20),
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.gray['100'],
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.border,
   },
   chipSelected: {
     backgroundColor: theme.colors.primary.light,
@@ -801,7 +801,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: scaleFont(14),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   chipTextSelected: {
     color: theme.colors.primary.main,
@@ -810,12 +810,12 @@ const styles = StyleSheet.create({
   imageUpload: {
     height: scaleHeight(150),
     borderWidth: 2,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.border,
     borderStyle: 'dashed',
     borderRadius: scaleWidth(12),
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.gray['50'],
   },
   uploadedImage: {
     width: '100%',
@@ -824,14 +824,14 @@ const styles = StyleSheet.create({
   },
   uploadText: {
     fontSize: scaleFont(14),
-    color: '#9CA3AF',
+    color: theme.colors.gray['400'],
     marginTop: scaleHeight(8),
   },
   dateInput: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: theme.colors.gray['300'],
     borderRadius: scaleWidth(8),
     paddingHorizontal: scaleWidth(12),
     paddingVertical: scaleHeight(12),
@@ -839,7 +839,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: scaleFont(14),
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   row: {
     flexDirection: 'row',
@@ -848,7 +848,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: theme.colors.gray['300'],
     borderRadius: scaleWidth(8),
     paddingHorizontal: scaleWidth(8),
   },
@@ -858,26 +858,26 @@ const styles = StyleSheet.create({
   numberValue: {
     fontSize: scaleFont(16),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
     paddingHorizontal: scaleWidth(16),
   },
   priceInput: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: theme.colors.gray['300'],
     borderRadius: scaleWidth(8),
     paddingHorizontal: scaleWidth(12),
   },
   currencySymbol: {
     fontSize: scaleFont(16),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginRight: scaleWidth(4),
   },
   priceField: {
     flex: 1,
     fontSize: scaleFont(16),
-    color: '#111827',
+    color: theme.colors.gray['900'],
     paddingVertical: scaleHeight(12),
   },
   radioOption: {
@@ -890,7 +890,7 @@ const styles = StyleSheet.create({
     height: scaleWidth(20),
     borderRadius: scaleWidth(10),
     borderWidth: 2,
-    borderColor: '#D1D5DB',
+    borderColor: theme.colors.gray['300'],
     marginRight: scaleWidth(12),
     alignItems: 'center',
     justifyContent: 'center',
@@ -903,7 +903,7 @@ const styles = StyleSheet.create({
   },
   radioLabel: {
     fontSize: scaleFont(14),
-    color: '#374151',
+    color: theme.colors.gray['700'],
   },
   checkboxContainer: {
     gap: scaleHeight(8),
@@ -918,19 +918,19 @@ const styles = StyleSheet.create({
     height: scaleWidth(20),
     borderRadius: scaleWidth(4),
     borderWidth: 2,
-    borderColor: '#D1D5DB',
+    borderColor: theme.colors.gray['300'],
     marginRight: scaleWidth(12),
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxLabel: {
     fontSize: scaleFont(14),
-    color: '#374151',
+    color: theme.colors.gray['700'],
   },
   segmentedControl: {
     flexDirection: 'row',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: theme.colors.gray['300'],
     borderRadius: scaleWidth(8),
     overflow: 'hidden',
   },
@@ -938,14 +938,14 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: scaleHeight(10),
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
   },
   segmentSelected: {
     backgroundColor: theme.colors.primary.light,
   },
   segmentText: {
     fontSize: scaleFont(14),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   segmentTextSelected: {
     color: theme.colors.primary.main,
@@ -960,17 +960,17 @@ const styles = StyleSheet.create({
   visibilityTitle: {
     fontSize: scaleFont(14),
     fontWeight: '500',
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   visibilityDesc: {
     fontSize: scaleFont(12),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginTop: scaleHeight(2),
   },
   bottomActions: {
     padding: scaleWidth(20),
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: theme.colors.border,
   },
   nextButton: {
     backgroundColor: theme.colors.primary.main,
@@ -981,10 +981,10 @@ const styles = StyleSheet.create({
   nextButtonText: {
     fontSize: scaleFont(16),
     fontWeight: '600',
-    color: 'white',
+    color: theme.colors.white,
   },
   createButton: {
-    backgroundColor: '#10B981',
+    backgroundColor: theme.colors.success['500'],
     paddingVertical: scaleHeight(14),
     borderRadius: scaleWidth(12),
     alignItems: 'center',
@@ -992,10 +992,13 @@ const styles = StyleSheet.create({
   createButtonText: {
     fontSize: scaleFont(16),
     fontWeight: '600',
-    color: 'white',
+    color: theme.colors.white,
   },
   buttonDisabled: {
     opacity: 0.5,
+  },
+  flexOne: {
+    flex: 1,
   },
 });
 

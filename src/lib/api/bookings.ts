@@ -5,7 +5,7 @@
  */
 
 import { supabase } from '../supabase/client';
-import type { Event } from '../supabase/types/database';
+import type { Event, Booking } from '../supabase/types/database';
 
 export interface BookingRequest {
   eventId: string;
@@ -64,8 +64,8 @@ export class BookingsService {
       }
 
       // First, get the current event data
-      const { data: event, error: eventError } = await (supabase
-        .from('events') as any)
+      const { data: event, error: eventError } = await supabase
+        .from('events')
         .select('*')
         .eq('id', booking.eventId)
         .single();
@@ -122,9 +122,9 @@ export class BookingsService {
         booking_source: 'mobile_app',
       };
 
-      const { data: bookingRecord, error: bookingError } = await (supabase
-        .from('bookings') as any)
-        .insert(bookingData)
+      const { data: bookingRecord, error: bookingError } = await supabase
+        .from('bookings')
+        .insert(bookingData as any)
         .select()
         .single();
 
@@ -148,17 +148,17 @@ export class BookingsService {
       }
 
       // Update event participant count
-      const { error: updateError } = await (supabase
-        .from('events') as any)
+      const { error: updateError } = await supabase
+        .from('events')
         .update({
           current_capacity: (event as any).current_capacity + 1,
           updated_at: new Date().toISOString(),
-        })
+        } as unknown as never)
         .eq('id', booking.eventId);
 
       if (updateError) {
         // Rollback the booking if event update fails
-        await (supabase.from('bookings') as any).delete().eq('id', (bookingRecord as any).id);
+        await supabase.from('bookings').delete().eq('id', (bookingRecord as any).id);
 
         return {
           success: false,
@@ -218,12 +218,12 @@ export class BookingsService {
       }
 
       // Update booking status to cancelled
-      const { error: updateBookingError } = await (supabase
-        .from('bookings') as any)
+      const { error: updateBookingError } = await supabase
+        .from('bookings')
         .update({
           status: 'cancelled',
           updated_at: new Date().toISOString(),
-        } as any)
+        } as unknown as never)
         .eq('id', (booking as any).id);
 
       if (updateBookingError) {
@@ -249,12 +249,12 @@ export class BookingsService {
       }
 
       // Decrease participant count
-      const { error: updateEventError } = await (supabase
-        .from('events') as any)
+      const { error: updateEventError } = await supabase
+        .from('events')
         .update({
           current_capacity: Math.max(0, (event as any)?.current_capacity - 1),
           updated_at: new Date().toISOString(),
-        } as any)
+        } as unknown as never)
         .eq('id', eventId);
 
       if (updateEventError) {
@@ -292,8 +292,8 @@ export class BookingsService {
         return [];
       }
 
-      const { data: bookings, error } = await (supabase
-        .from('bookings') as any)
+      const { data: bookings, error } = await supabase
+        .from('bookings')
         .select(
           `
           id,
@@ -316,11 +316,11 @@ export class BookingsService {
 
       // Transform the data to match UserBooking interface
       const userBookings: UserBooking[] = bookings
-        .filter((booking: any) => booking.events) // Filter out bookings without event data
-        .map((booking: any) => ({
+        .filter((booking: Booking & { events?: Event }) => booking.events) // Filter out bookings without event data
+        .map((booking: Booking & { events: Event }) => ({
           id: booking.id,
           event: booking.events as unknown as Event, // Cast properly from join result
-          status: booking.status,
+          status: booking.status as 'confirmed' | 'cancelled' | 'waitlisted',
           createdAt: booking.created_at,
           specialRequests: booking.special_requests || undefined,
         }));

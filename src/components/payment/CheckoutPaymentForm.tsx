@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -37,44 +37,24 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
   loading = false,
 }) => {
   const stripe = useStripe();
-  const { paymentMethods, createSetupIntent, currentSetupIntent } = usePaymentStore();
+  const { createSetupIntent, currentSetupIntent } = usePaymentStore();
   
   // State management
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(
-    paymentMethods.length > 0 ? paymentMethods[0].id : null
-  );
-  const [useNewCard, setUseNewCard] = useState(paymentMethods.length === 0);
+  const [_selectedPaymentMethod, _setSelectedPaymentMethod] = useState<string | null>(null);
+  const [_useNewCard, _setUseNewCard] = useState(true);
+  const useNewCard = _useNewCard; // Always use new card for now
+  const selectedPaymentMethod = _selectedPaymentMethod;
   const [cardDetails, setCardDetails] = useState<CardFieldInput.Details | null>(null);
   const [saveCard, setSaveCard] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const hasSavedCards = paymentMethods.length > 0;
   const isLoading = loading || processing;
 
-  const formattedAmount = useMemo(() => {
-    return `$${(amount / 100).toFixed(2)}`;
-  }, [amount]);
 
   const handleCardChange = useCallback((details: CardFieldInput.Details) => {
     setCardDetails(details);
-    if (error) {
-      setError(null);
-    }
-  }, [error]);
-
-  const handleSelectSavedCard = useCallback((cardId: string) => {
-    setSelectedPaymentMethod(cardId);
-    setUseNewCard(false);
-    if (error) {
-      setError(null);
-    }
-  }, [error]);
-
-  const handleUseNewCard = useCallback(() => {
-    setUseNewCard(true);
-    setSelectedPaymentMethod(null);
-    if (error) {
+    if (error && details.complete) {
       setError(null);
     }
   }, [error]);
@@ -97,7 +77,7 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
           throw new Error('Please enter valid card details');
         }
 
-        // Validate US zip code
+        // Validate US zip code if provided
         if (cardDetails.postalCode) {
           const zipCode = cardDetails.postalCode.replace(/\s/g, '');
           if (!/^\d{5}$/.test(zipCode)) {
@@ -189,199 +169,157 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Payment Details</Text>
-        <Text style={styles.amount}>Hold Amount: {formattedAmount}</Text>
-      </View>
+      <Pressable style={styles.closeButton} onPress={onCancel}>
+        <Ionicons name="close" size={24} color={theme.colors.text.primary} />
+      </Pressable>
+      
+      <Text style={styles.title}>DEPOSIT PAYMENT</Text>
+      <Text style={styles.subtitle}>
+        ${(amount / 100).toFixed(0)} will be held but not charged.
+      </Text>
+      <Text style={styles.description}>
+        The deposit will only be charged for no shows.
+      </Text>
 
       <ScrollView 
         style={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {hasSavedCards && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Payment Method</Text>
-            
-            {paymentMethods.map((method) => (
-              <Pressable
-                key={method.id}
-                style={[
-                  styles.savedCard,
-                  selectedPaymentMethod === method.id && !useNewCard && styles.savedCardSelected,
-                ]}
-                onPress={() => handleSelectSavedCard(method.id)}
-                disabled={isLoading}
-              >
-                <View style={styles.savedCardLeft}>
-                  <View style={styles.radioOuter}>
-                    {selectedPaymentMethod === method.id && !useNewCard && (
-                      <View style={styles.radioInner} />
-                    )}
-                  </View>
-                  <Ionicons 
-                    name="card" 
-                    size={24} 
-                    color={theme.colors.text.secondary}
-                    style={styles.cardIcon}
-                  />
-                  <View>
-                    <Text style={styles.cardBrand}>
-                      {method.card?.brand?.toUpperCase() || 'Card'}
-                    </Text>
-                    <Text style={styles.cardLast4}>
-                      •••• {method.card?.last4 || '****'}
-                    </Text>
-                  </View>
-                </View>
-                {method.card?.expMonth && method.card?.expYear && (
-                  <Text style={styles.cardExpiry}>
-                    {String(method.card.expMonth).padStart(2, '0')}/{String(method.card.expYear).slice(-2)}
-                  </Text>
-                )}
-              </Pressable>
-            ))}
-
-            <Pressable
-              style={[
-                styles.newCardOption,
-                useNewCard && styles.newCardOptionSelected,
-              ]}
-              onPress={handleUseNewCard}
-              disabled={isLoading}
-            >
-              <View style={styles.radioOuter}>
-                {useNewCard && <View style={styles.radioInner} />}
+        <View style={styles.section}>
+              {/* Card Input with Camera Button */}
+              <View style={styles.cardFieldWrapper}>
+                <CardField
+                  postalCodeEnabled={false}
+                  placeholders={{
+                    number: '4242 4242 4242 4242',
+                  }}
+                  onCardChange={handleCardChange}
+                  cardStyle={cardFieldStyles}
+                  style={styles.cardField}
+                />
+                <Pressable 
+                  style={styles.cameraButton}
+                  onPress={() => {
+                    // TODO: Implement card scanner
+                    console.log('Open card scanner');
+                  }}
+                >
+                  <Ionicons name="camera" size={24} color="#FFFFFF" />
+                </Pressable>
               </View>
-              <Text style={styles.newCardText}>Use a different card</Text>
-            </Pressable>
-          </View>
-        )}
 
-        {useNewCard && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {hasSavedCards ? 'New Card Details' : 'Card Details'}
-            </Text>
-            
-            <CardField
-              postalCodeEnabled={true}
-              countryCode="US"
-              placeholders={{
-                number: '4242 4242 4242 4242',
-                postalCode: '12345',
-              }}
-              cardStyle={cardFieldStyles}
-              style={styles.cardField}
-              onCardChange={handleCardChange}
-              // editable={!isLoading} // Note: CardField doesn't support editable prop
-            />
+              <View style={styles.saveOption}>
+                <Switch
+                  value={saveCard}
+                  onValueChange={setSaveCard}
+                  disabled={isLoading}
+                  trackColor={{ 
+                    false: theme.colors.gray[300], 
+                    true: theme.colors.primary.main 
+                  }}
+                  thumbColor={theme.colors.white}
+                />
+                <Text style={styles.saveText}>Save card for future bookings</Text>
+              </View>
+            </View>
 
-            <View style={styles.saveOption}>
-              <Text style={styles.saveText}>Save card for future bookings</Text>
-              <Switch
-                value={saveCard}
-                onValueChange={setSaveCard}
-                disabled={isLoading}
-                trackColor={{ 
-                  false: theme.colors.gray[300], 
-                  true: theme.colors.primary.main 
-                }}
-                thumbColor={theme.colors.white}
-              />
+          {error && (
+            <View style={styles.errorContainer}>
+              <Ionicons name="alert-circle" size={20} color={theme.colors.error.main} />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+
+          <View style={styles.infoSection}>
+            <View style={styles.securityBadges}>
+              <View style={styles.badge}>
+                <Ionicons name="lock-closed" size={14} color={theme.colors.text.secondary} />
+                <Text style={styles.badgeText}>PCI Compliant</Text>
+              </View>
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>Powered by</Text>
+                <Text style={styles.stripeBrand}>Stripe</Text>
+              </View>
             </View>
           </View>
-        )}
+        </ScrollView>
 
-        {error && (
-          <View style={styles.errorContainer}>
-            <Ionicons name="alert-circle" size={20} color={theme.colors.error.main} />
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        )}
-
-        <View style={styles.infoSection}>
-          <View style={styles.infoItem}>
-            <Ionicons name="lock-closed" size={16} color={theme.colors.text.secondary} />
-            <Text style={styles.infoText}>
-              Your payment info is encrypted and secure
-            </Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Ionicons name="information-circle" size={16} color={theme.colors.text.secondary} />
-            <Text style={styles.infoText}>
-              You&apos;ll only be charged for no-shows or late cancellations
-            </Text>
-          </View>
+        <View style={styles.footer}>
+          <Pressable
+            style={[
+              styles.confirmButton,
+              (!useNewCard || !cardDetails?.complete || isLoading) && 
+              !selectedPaymentMethod && 
+              styles.confirmButtonDisabled,
+            ]}
+            onPress={validateAndProcess}
+            disabled={
+              isLoading || 
+              (useNewCard && !cardDetails?.complete) ||
+              (!useNewCard && !selectedPaymentMethod)
+            }
+          >
+            {isLoading ? (
+              <ActivityIndicator color={theme.colors.white} />
+            ) : (
+              <Text style={styles.confirmButtonText}>Reserve Now (Deposit Hold Only)</Text>
+            )}
+          </Pressable>
         </View>
-      </ScrollView>
-
-      <View style={styles.footer}>
-        <Pressable
-          style={[styles.button, styles.cancelButton]}
-          onPress={onCancel}
-          disabled={isLoading}
-        >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
-        </Pressable>
-        
-        <Pressable
-          style={[
-            styles.button,
-            styles.confirmButton,
-            (!useNewCard || !cardDetails?.complete || isLoading) && 
-            !selectedPaymentMethod && 
-            styles.confirmButtonDisabled,
-          ]}
-          onPress={validateAndProcess}
-          disabled={
-            isLoading || 
-            (useNewCard && !cardDetails?.complete) ||
-            (!useNewCard && !selectedPaymentMethod)
-          }
-        >
-          {isLoading ? (
-            <ActivityIndicator color={theme.colors.white} />
-          ) : (
-            <Text style={styles.confirmButtonText}>Confirm Booking</Text>
-          )}
-        </Pressable>
-      </View>
     </View>
   );
 };
 
 const cardFieldStyles = {
-  backgroundColor: '#FFFFFF',
+  backgroundColor: '#F8F8F8',
   textColor: '#000000',
   placeholderColor: '#999999',
-  borderRadius: 8,
-  borderWidth: 1,
-  borderColor: '#E0E0E0',
+  borderColor: '#F8F8F8',
+  borderWidth: 0,
+  borderRadius: 12,
   fontSize: 16,
+  cursorColor: '#000000',
+  fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background.paper,
-  },
-  header: {
-    padding: scaleWidth(20),
     backgroundColor: theme.colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.gray[200],
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: scaleHeight(20),
+    right: scaleWidth(20),
+    padding: scaleWidth(8),
+    zIndex: 10,
   },
   title: {
-    fontSize: scaleFont(20),
-    fontWeight: '600',
+    fontSize: scaleFont(18),
+    fontWeight: '700',
+    color: theme.colors.text.primary,
+    marginTop: scaleHeight(50),
+    marginBottom: scaleHeight(12),
+    letterSpacing: 0.5,
+    textAlign: 'center',
+    paddingHorizontal: scaleWidth(20),
+  },
+  subtitle: {
+    fontSize: scaleFont(15),
     color: theme.colors.text.primary,
     marginBottom: scaleHeight(4),
+    textAlign: 'center',
+    paddingHorizontal: scaleWidth(20),
   },
-  amount: {
-    fontSize: scaleFont(16),
-    color: theme.colors.primary.main,
-    fontWeight: '500',
+  description: {
+    fontSize: scaleFont(14),
+    color: theme.colors.text.secondary,
+    marginBottom: scaleHeight(20),
+    textAlign: 'center',
+    paddingHorizontal: scaleWidth(20),
   },
   content: {
     flex: 1,
@@ -389,95 +327,38 @@ const styles = StyleSheet.create({
   section: {
     backgroundColor: theme.colors.white,
     padding: scaleWidth(20),
-    marginBottom: scaleHeight(12),
   },
-  sectionTitle: {
-    fontSize: scaleFont(16),
-    fontWeight: '600',
-    color: theme.colors.text.primary,
-    marginBottom: scaleHeight(16),
-  },
-  savedCard: {
+  cardFieldWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: scaleWidth(16),
-    borderWidth: 1,
-    borderColor: theme.colors.gray[300],
-    borderRadius: 12,
-    marginBottom: scaleHeight(12),
-  },
-  savedCardSelected: {
-    borderColor: theme.colors.primary.main,
-    backgroundColor: `${theme.colors.primary.light}10`,
-  },
-  savedCardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  radioOuter: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: theme.colors.gray[400],
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: scaleWidth(12),
-  },
-  radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: theme.colors.primary.main,
-  },
-  cardIcon: {
-    marginRight: scaleWidth(12),
-  },
-  cardBrand: {
-    fontSize: scaleFont(14),
-    fontWeight: '600',
-    color: theme.colors.text.primary,
-  },
-  cardLast4: {
-    fontSize: scaleFont(13),
-    color: theme.colors.text.secondary,
-    marginTop: scaleHeight(2),
-  },
-  cardExpiry: {
-    fontSize: scaleFont(13),
-    color: theme.colors.text.secondary,
-  },
-  newCardOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: scaleWidth(16),
-    borderWidth: 1,
-    borderColor: theme.colors.gray[300],
-    borderRadius: 12,
-  },
-  newCardOptionSelected: {
-    borderColor: theme.colors.primary.main,
-    backgroundColor: `${theme.colors.primary.light}10`,
-  },
-  newCardText: {
-    fontSize: scaleFont(15),
-    color: theme.colors.text.primary,
-    fontWeight: '500',
+    marginBottom: scaleHeight(20),
+    position: 'relative',
   },
   cardField: {
-    height: scaleHeight(50),
-    marginBottom: scaleHeight(16),
+    flex: 1,
+    height: scaleHeight(56),
+    marginRight: scaleWidth(48),
+  },
+  cameraButton: {
+    backgroundColor: theme.colors.error.main,
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    right: scaleWidth(4),
+    top: scaleHeight(8),
   },
   saveOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: scaleHeight(8),
+    marginBottom: scaleHeight(20),
   },
   saveText: {
-    fontSize: scaleFont(15),
-    color: theme.colors.text.primary,
+    fontSize: scaleFont(14),
+    color: theme.colors.text.secondary,
+    marginLeft: scaleWidth(12),
   },
   errorContainer: {
     flexDirection: 'row',
@@ -496,60 +377,52 @@ const styles = StyleSheet.create({
   },
   infoSection: {
     padding: scaleWidth(20),
+    alignItems: 'center',
   },
-  infoItem: {
+  securityBadges: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: scaleHeight(12),
+    alignItems: 'center',
+    gap: scaleWidth(20),
   },
-  infoText: {
-    fontSize: scaleFont(13),
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scaleWidth(4),
+  },
+  badgeText: {
+    fontSize: scaleFont(12),
     color: theme.colors.text.secondary,
-    marginLeft: scaleWidth(8),
-    flex: 1,
+  },
+  stripeBrand: {
+    fontSize: scaleFont(13),
+    fontWeight: '600',
+    color: theme.colors.primary.main,
   },
   footer: {
-    flexDirection: 'row',
     padding: scaleWidth(20),
+    paddingBottom: scaleHeight(30),
     backgroundColor: theme.colors.white,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.gray[200],
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
-  },
-  button: {
-    flex: 1,
-    height: scaleHeight(48),
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButton: {
-    backgroundColor: theme.colors.gray[200],
-    marginRight: scaleWidth(12),
-  },
-  cancelButtonText: {
-    fontSize: scaleFont(16),
-    fontWeight: '600',
-    color: theme.colors.text.secondary,
+    borderTopColor: theme.colors.gray[100],
   },
   confirmButton: {
-    backgroundColor: theme.colors.primary.main,
+    backgroundColor: theme.colors.error.main,
+    height: scaleHeight(56),
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: theme.colors.error.main,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   confirmButtonDisabled: {
     backgroundColor: theme.colors.gray[300],
+    shadowOpacity: 0,
   },
   confirmButtonText: {
-    fontSize: scaleFont(16),
+    fontSize: scaleFont(17),
     fontWeight: '600',
     color: theme.colors.white,
   },

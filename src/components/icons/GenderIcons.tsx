@@ -54,6 +54,7 @@ export const MaleIcon: React.FC<GenderIconProps> = ({
         <View
           style={[
             styles.absolutePosition,
+            styles.arrowLine,
             {
               width: arrowLength,
               height: strokeWidth,
@@ -61,7 +62,6 @@ export const MaleIcon: React.FC<GenderIconProps> = ({
               top: size * 0.12,
               right: -size * 0.02,
               transform: [{ rotate: '-45deg' }],
-              transformOrigin: 'center',
             },
           ]}
         />
@@ -187,6 +187,9 @@ const styles = StyleSheet.create({
   },
   absolutePosition: {
     position: 'absolute' as const,
+  },
+  arrowLine: {
+    transformOrigin: 'center' as const, // Used for web compatibility
   },
   arrowHeadTop: {
     top: 0,

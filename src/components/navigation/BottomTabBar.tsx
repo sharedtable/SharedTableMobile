@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary.main,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: theme.colors.black['1'],
         shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,

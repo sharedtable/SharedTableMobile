@@ -136,7 +136,7 @@ export class StripeService {
     currency?: string;
     customer?: string;
     payment_method?: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, string>;
     capture_method?: 'automatic' | 'manual';
   }): Promise<Stripe.PaymentIntent> {
     try {
@@ -157,7 +157,7 @@ export class StripeService {
 
       if (payment_method) {
         params.payment_method = payment_method;
-        params.confirm = false; 
+        params.confirm = true; // Auto-confirm when payment method is provided
       }
 
       const paymentIntent = await stripe.paymentIntents.create(params);

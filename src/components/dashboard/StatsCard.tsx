@@ -1,13 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-import { Icon } from '@/components/base/Icon';
+import { Icon, IconName } from '@/components/base/Icon';
 import { Colors } from '@/constants/colors';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface StatsCardProps {
-  icon: string; // TODO: Update to proper IconName type when Icon component is available
+  icon: IconName;
   iconColor?: string;
   value: string | number;
   label: string;
@@ -26,7 +26,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
-        <Icon name={icon as any} size={20} color={iconColor} />
+        <Icon name={icon} size={20} color={iconColor} />
       </View>
       <View style={styles.content}>
         <View style={styles.valueRow}>

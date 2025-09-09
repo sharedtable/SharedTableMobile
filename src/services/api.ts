@@ -9,6 +9,7 @@ import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import AuthAPI from './api/authApi';
 import { NotificationData, NotificationPreferences } from '@/types/notification.types';
+import { Booking } from '@/types';
 
 // Restaurant types
 interface RestaurantItem {
@@ -422,7 +423,7 @@ class ApiService {
     return response.data;
   }
 
-  async saveOnboardingStep(step: string, data: any): Promise<ApiResponse<{ success: boolean; message: string }>> {
+  async saveOnboardingStep(step: string, data: Record<string, unknown>): Promise<ApiResponse<{ success: boolean; message: string }>> {
     // Use the simplified endpoint that actually saves data
     const response = await this.client.post('/onboarding-simple/save', { step, data });
     return response.data;
@@ -929,8 +930,13 @@ class ApiService {
     dietaryRestrictions?: string;
     preferences?: string;
   }): Promise<ApiResponse<{
-    booking: any;
-    paymentIntent: any;
+    booking: Booking;
+    paymentIntent: {
+      id: string;
+      client_secret: string;
+      amount: number;
+      status: string;
+    };
     message: string;
   }>> {
     const response = await this.client.post('/payments/create-booking', data);

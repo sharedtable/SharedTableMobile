@@ -22,8 +22,8 @@ Notifications.setNotificationHandler({
 
 class NotificationService {
   private expoPushToken: string | null = null;
-  private notificationListener: any = null;
-  private responseListener: any = null;
+  private notificationListener: Notifications.Subscription | null = null;
+  private responseListener: Notifications.Subscription | null = null;
   private preferences: NotificationPreferences | null = null;
 
   async initialize() {
@@ -224,7 +224,7 @@ class NotificationService {
       case NotificationType.DINNER_REMINDER:
         // Check if second reminder is needed
         if (this.preferences?.secondReminderEnabled) {
-          await this.scheduleSecondReminder(data);
+          await this.scheduleSecondReminder(data as unknown as NotificationPayload);
         }
         break;
       case NotificationType.FEED_MENTION:
@@ -268,7 +268,7 @@ class NotificationService {
         break;
       default:
         // Default action - open app to relevant screen
-        this.navigateToScreen(notificationType, data);
+        this.navigateToScreen(notificationType, data as unknown as NotificationPayload);
         break;
     }
   }
@@ -307,7 +307,7 @@ class NotificationService {
     return notificationId;
   }
 
-  private async scheduleSecondReminder(data: any) {
+  private async scheduleSecondReminder(data: NotificationPayload) {
     if (!this.preferences?.secondReminderEnabled) return;
 
     const secondReminderTime = this.preferences.secondReminderTime || 15;
@@ -443,7 +443,7 @@ class NotificationService {
     }
   }
 
-  async updatePreference(key: keyof NotificationPreferences, value: any) {
+  async updatePreference(key: keyof NotificationPreferences, value: boolean | string) {
     if (!this.preferences) return;
     
     ;(this.preferences as any)[key] = value;
@@ -527,7 +527,7 @@ class NotificationService {
     }
   }
 
-  private navigateToScreen(type: NotificationType, data: any) {
+  private navigateToScreen(type: NotificationType, data: NotificationPayload) {
     // This will be implemented when we have navigation context
     console.log('Navigate to screen:', type, data);
   }

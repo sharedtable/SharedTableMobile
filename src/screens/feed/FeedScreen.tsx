@@ -1,3 +1,4 @@
+import { theme } from "@/theme";
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -686,14 +687,14 @@ const FeedScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: theme.colors.gray['50'],
   },
   header: {
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     paddingHorizontal: 16,
     paddingBottom: 12,
-    borderBottomColor: '#E1E1E1',
-    shadowColor: '#000',
+    borderBottomColor: theme.colors.ui.borderLight,
+    shadowColor: theme.colors.black['1'],
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 3,
@@ -708,7 +709,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#262626',
+    color: theme.colors.ui.darkGray,
     fontFamily: Platform.select({
       ios: 'System',
       android: 'Roboto',
@@ -727,7 +728,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 4,
     right: 4,
-    backgroundColor: '#FF3B30',
+    backgroundColor: theme.colors.ios.red,
     borderRadius: 10,
     minWidth: 18,
     height: 18,
@@ -736,7 +737,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   notificationBadgeText: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: 10,
     fontWeight: '600',
   },
@@ -757,24 +758,24 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#262626',
+    color: theme.colors.ui.darkGray,
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#8E8E93',
+    color: theme.colors.text.secondary,
     textAlign: 'center',
     marginBottom: 24,
   },
   emptyButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: theme.colors.ios.blue,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 24,
   },
   emptyButtonText: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -790,7 +791,7 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     elevation: 8,
-    shadowColor: '#000',
+    shadowColor: theme.colors.black['1'],
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

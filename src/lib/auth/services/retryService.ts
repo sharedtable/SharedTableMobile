@@ -4,7 +4,7 @@ export interface RetryOptions {
   maxAttempts?: number;
   delay?: number;
   backoffFactor?: number;
-  onRetry?: (attempt: number, error: any) => void;
+  onRetry?: (attempt: number, error: unknown) => void;
 }
 
 export class RetryService {
@@ -19,7 +19,7 @@ export class RetryService {
       onRetry,
     } = options;
 
-    let lastError: any;
+    let lastError: unknown;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
@@ -55,26 +55,28 @@ export class RetryService {
   /**
    * Check if error is retryable
    */
-  static isRetryableError(error: any): boolean {
+  static isRetryableError(error: unknown): boolean {
     if (!error) return false;
 
+    const err = error as { name?: string; code?: string; status?: number; message?: string };
+
     // Network errors are retryable
-    if (error.name === 'NetworkError' || error.code === 'NETWORK_ERROR') {
+    if (err.name === 'NetworkError' || err.code === 'NETWORK_ERROR') {
       return true;
     }
 
     // Rate limiting errors are retryable
-    if (error.status === 429 || error.message?.includes('rate limit')) {
+    if (err.status === 429 || err.message?.includes('rate limit')) {
       return true;
     }
 
     // Temporary server errors are retryable
-    if (error.status >= 500 && error.status < 600) {
+    if (err.status && err.status >= 500 && err.status < 600) {
       return true;
     }
 
     // Timeout errors are retryable
-    if (error.name === 'TimeoutError' || error.code === 'TIMEOUT') {
+    if (err.name === 'TimeoutError' || err.code === 'TIMEOUT') {
       return true;
     }
 

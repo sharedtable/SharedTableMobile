@@ -127,12 +127,12 @@ const EventAttendeesScreen: React.FC = () => {
       case 'pending':
         return '#F59E0B';
       case 'waitlisted':
-        return '#6B7280';
+        return theme.colors.gray['500'];
       case 'declined':
       case 'cancelled':
         return '#EF4444';
       default:
-        return '#6B7280';
+        return theme.colors.gray['500'];
     }
   };
 
@@ -309,7 +309,7 @@ const EventAttendeesScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.gray['50'],
   },
   header: {
     flexDirection: 'row',
@@ -317,9 +317,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: scaleWidth(20),
     paddingVertical: scaleHeight(16),
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.colors.border,
   },
   headerCenter: {
     alignItems: 'center',
@@ -327,33 +327,33 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: scaleFont(18),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   headerSubtitle: {
     fontSize: scaleFont(12),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginTop: scaleHeight(2),
   },
   tabs: {
     flexDirection: 'row',
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     paddingHorizontal: scaleWidth(20),
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.colors.border,
   },
   tab: {
     flex: 1,
     paddingVertical: scaleHeight(12),
     alignItems: 'center',
     borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    borderBottomColor: theme.colors.transparent,
   },
   tabActive: {
     borderBottomColor: theme.colors.primary.main,
   },
   tabText: {
     fontSize: scaleFont(14),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   tabTextActive: {
     color: theme.colors.primary.main,
@@ -371,11 +371,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   attendeeCard: {
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     borderRadius: scaleWidth(12),
     padding: scaleWidth(16),
     marginBottom: scaleHeight(12),
-    shadowColor: '#000',
+    shadowColor: theme.colors.black['1'],
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -402,12 +402,12 @@ const styles = StyleSheet.create({
   attendeeName: {
     fontSize: scaleFont(16),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   guestBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.gray['100'],
     paddingHorizontal: scaleWidth(8),
     paddingVertical: scaleHeight(2),
     borderRadius: scaleWidth(12),
@@ -415,21 +415,21 @@ const styles = StyleSheet.create({
   },
   guestCount: {
     fontSize: scaleFont(12),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   attendeeEmail: {
     fontSize: scaleFont(13),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginTop: scaleHeight(2),
   },
   attendeeBio: {
     fontSize: scaleFont(13),
-    color: '#374151',
+    color: theme.colors.gray['700'],
     marginTop: scaleHeight(4),
     lineHeight: scaleFont(18),
   },
   attendeeNotes: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.gray['50'],
     borderRadius: scaleWidth(8),
     padding: scaleWidth(12),
     marginBottom: scaleHeight(12),
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
   },
   noteText: {
     fontSize: scaleFont(13),
-    color: '#374151',
+    color: theme.colors.gray['700'],
     marginLeft: scaleWidth(6),
     flex: 1,
   },
@@ -462,12 +462,12 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: scaleFont(13),
-    color: '#374151',
+    color: theme.colors.gray['700'],
     fontWeight: '500',
   },
   dateText: {
     fontSize: scaleFont(12),
-    color: '#9CA3AF',
+    color: theme.colors.gray['400'],
     marginLeft: scaleWidth(4),
   },
   actions: {
@@ -477,13 +477,13 @@ const styles = StyleSheet.create({
   actionButton: {
     padding: scaleWidth(8),
     borderRadius: scaleWidth(8),
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.gray['100'],
   },
   approveButton: {
-    backgroundColor: '#D1FAE5',
+    backgroundColor: theme.colors.ui.greenLight,
   },
   declineButton: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: theme.colors.error['100'],
   },
   emptyState: {
     alignItems: 'center',
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: scaleFont(16),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginTop: scaleHeight(12),
   },
 });

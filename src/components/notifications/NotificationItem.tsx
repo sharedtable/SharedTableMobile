@@ -97,7 +97,7 @@ export const NotificationItem = memo<NotificationItemProps>(({
     >
       <View style={styles.iconContainer}>
         <Ionicons
-          name={getIcon() as any}
+          name={getIcon() as React.ComponentProps<typeof Ionicons>['name']}
           size={24}
           color={getIconColor()}
         />
@@ -147,11 +147,11 @@ const styles = StyleSheet.create({
     padding: scaleWidth(16),
     backgroundColor: theme.colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: theme.colors.gray['100'],
     minHeight: scaleHeight(80),
   },
   unread: {
-    backgroundColor: '#F8F9FF',
+    backgroundColor: theme.colors.primary['50'],
   },
   pressed: {
     opacity: 0.7,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     width: scaleWidth(40),
     height: scaleWidth(40),
     borderRadius: scaleWidth(20),
-    backgroundColor: '#F5F5F5',
+    backgroundColor: theme.colors.gray['100'],
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: scaleWidth(12),

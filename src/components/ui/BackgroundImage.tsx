@@ -1,11 +1,12 @@
+import { theme } from "@/theme";
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { memo } from 'react';
-import { ImageBackground, View, StyleSheet, Dimensions, ViewStyle } from 'react-native';
+import { ImageBackground, View, StyleSheet, Dimensions, ViewStyle, ImageSourcePropType } from 'react-native';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface BackgroundImageProps {
-  source?: any; // Can be require() or {uri: string}
+  source?: ImageSourcePropType;
   overlay?: boolean;
   overlayColor?: string;
   overlayOpacity?: number;
@@ -60,7 +61,7 @@ BackgroundImage.displayName = 'BackgroundImage';
 
 // Screen with background image (full screen)
 interface ScreenWithBackgroundProps {
-  imageSource?: any;
+  imageSource?: ImageSourcePropType;
   darkOverlay?: boolean;
   children: React.ReactNode;
 }
@@ -91,7 +92,7 @@ ScreenWithBackground.displayName = 'ScreenWithBackground';
 
 // Hero section with background (partial screen)
 interface HeroBackgroundProps {
-  imageSource?: any;
+  imageSource?: ImageSourcePropType;
   height?: number;
   children?: React.ReactNode;
 }
@@ -132,7 +133,7 @@ const styles = StyleSheet.create({
   },
   darkOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: theme.colors.overlay.light,
   },
   fullScreen: {
     flex: 1,

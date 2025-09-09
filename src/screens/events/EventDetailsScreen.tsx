@@ -397,7 +397,7 @@ const EventDetailsScreen: React.FC = () => {
 
           {/* Attendees */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Who's Going</Text>
+            <Text style={styles.sectionTitle}>Who&apos;s Going</Text>
             <View style={styles.attendeesList}>
               {event.attendees.map((attendee, index) => renderAttendee(attendee, index))}
               {spotsLeft > 0 && (
@@ -436,7 +436,7 @@ const EventDetailsScreen: React.FC = () => {
           </TouchableOpacity>
         ) : event.my_status === 'confirmed' ? (
           <View style={styles.confirmedContainer}>
-            <Text style={styles.confirmedText}>✓ You're going!</Text>
+            <Text style={styles.confirmedText}>✓ You&apos;re going!</Text>
             <TouchableOpacity style={styles.cancelButton}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
@@ -473,7 +473,7 @@ const EventDetailsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
   },
   scrollView: {
     flex: 1,
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
     width: scaleWidth(40),
     height: scaleWidth(40),
     borderRadius: scaleWidth(20),
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: theme.colors.overlay.lighter,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
     width: scaleWidth(40),
     height: scaleWidth(40),
     borderRadius: scaleWidth(20),
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: theme.colors.overlay.lighter,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -530,12 +530,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: scaleFont(24),
     fontWeight: '700',
-    color: '#111827',
+    color: theme.colors.gray['900'],
     marginBottom: scaleHeight(8),
   },
   statusBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.gray['100'],
     paddingHorizontal: scaleWidth(12),
     paddingVertical: scaleHeight(6),
     borderRadius: scaleWidth(12),
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
   hostCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.gray['50'],
     padding: scaleWidth(12),
     borderRadius: scaleWidth(12),
     marginBottom: scaleHeight(20),
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
     marginRight: scaleWidth(12),
   },
   hostInitial: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: scaleFont(20),
     fontWeight: '600',
   },
@@ -572,7 +572,7 @@ const styles = StyleSheet.create({
   hostName: {
     fontSize: scaleFont(16),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   hostStats: {
     flexDirection: 'row',
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
   },
   hostStat: {
     fontSize: scaleFont(12),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   detailsGrid: {
     flexDirection: 'row',
@@ -591,26 +591,26 @@ const styles = StyleSheet.create({
   },
   detailItem: {
     width: (scaleWidth(335) - scaleWidth(15)) / 2,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.gray['50'],
     padding: scaleWidth(12),
     borderRadius: scaleWidth(12),
     alignItems: 'center',
   },
   detailLabel: {
     fontSize: scaleFont(11),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginTop: scaleHeight(4),
   },
   detailValue: {
     fontSize: scaleFont(14),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
     marginTop: scaleHeight(2),
   },
   locationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: theme.colors.ui.bluePale,
     padding: scaleWidth(16),
     borderRadius: scaleWidth(12),
     marginBottom: scaleHeight(20),
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
     width: scaleWidth(40),
     height: scaleWidth(40),
     borderRadius: scaleWidth(20),
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: scaleWidth(12),
@@ -630,11 +630,11 @@ const styles = StyleSheet.create({
   restaurantName: {
     fontSize: scaleFont(15),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   address: {
     fontSize: scaleFont(13),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginTop: scaleHeight(2),
   },
   section: {
@@ -643,12 +643,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: scaleFont(18),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
     marginBottom: scaleHeight(12),
   },
   description: {
     fontSize: scaleFont(14),
-    color: '#4B5563',
+    color: theme.colors.gray['600'],
     lineHeight: scaleFont(22),
   },
   detailsList: {
@@ -659,16 +659,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: scaleHeight(8),
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: theme.colors.gray['100'],
   },
   detailRowLabel: {
     fontSize: scaleFont(14),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   detailRowValue: {
     fontSize: scaleFont(14),
     fontWeight: '500',
-    color: '#111827',
+    color: theme.colors.gray['900'],
     flex: 1,
     textAlign: 'right',
     marginLeft: scaleWidth(20),
@@ -678,7 +678,7 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: scaleFont(13),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginBottom: scaleHeight(8),
   },
   tagsList: {
@@ -687,24 +687,24 @@ const styles = StyleSheet.create({
     gap: scaleWidth(8),
   },
   tag: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.gray['100'],
     paddingHorizontal: scaleWidth(12),
     paddingVertical: scaleHeight(6),
     borderRadius: scaleWidth(16),
   },
   tagText: {
     fontSize: scaleFont(12),
-    color: '#4B5563',
+    color: theme.colors.gray['600'],
   },
   hashTag: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: theme.colors.ui.bluePale,
     paddingHorizontal: scaleWidth(12),
     paddingVertical: scaleHeight(6),
     borderRadius: scaleWidth(16),
   },
   hashTagText: {
     fontSize: scaleFont(12),
-    color: '#3B82F6',
+    color: theme.colors.ui.blueLight,
   },
   attendeesList: {
     flexDirection: 'row',
@@ -718,7 +718,7 @@ const styles = StyleSheet.create({
     height: scaleWidth(40),
     borderRadius: scaleWidth(20),
     borderWidth: 2,
-    borderColor: 'white',
+    borderColor: theme.colors.white,
   },
   attendeeImage: {
     width: '100%',
@@ -729,30 +729,30 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: scaleWidth(20),
-    backgroundColor: '#E5E7EB',
+    backgroundColor: theme.colors.gray['200'],
     justifyContent: 'center',
     alignItems: 'center',
   },
   attendeeInitial: {
     fontSize: scaleFont(16),
     fontWeight: '600',
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   emptySpots: {
     width: scaleWidth(40),
     height: scaleWidth(40),
     borderRadius: scaleWidth(20),
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.gray['100'],
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: scaleWidth(8),
     borderWidth: 2,
-    borderColor: 'white',
+    borderColor: theme.colors.white,
     borderStyle: 'dashed',
   },
   emptySpotsText: {
     fontSize: scaleFont(12),
-    color: '#9CA3AF',
+    color: theme.colors.gray['400'],
   },
   bottomBar: {
     position: 'absolute',
@@ -761,13 +761,13 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     paddingHorizontal: scaleWidth(20),
     paddingVertical: scaleHeight(16),
     paddingBottom: scaleHeight(30),
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    shadowColor: '#000',
+    borderTopColor: theme.colors.border,
+    shadowColor: theme.colors.black['1'],
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -778,12 +778,12 @@ const styles = StyleSheet.create({
   },
   priceLabel: {
     fontSize: scaleFont(11),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   priceValue: {
     fontSize: scaleFont(20),
     fontWeight: '700',
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   bookButton: {
     flex: 1,
@@ -794,31 +794,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   bookButtonText: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: scaleFont(16),
     fontWeight: '600',
   },
   waitlistButton: {
     flex: 1,
-    backgroundColor: '#6B7280',
+    backgroundColor: theme.colors.gray['500'],
     paddingVertical: scaleHeight(14),
     borderRadius: scaleWidth(12),
     alignItems: 'center',
   },
   waitlistButtonText: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: scaleFont(16),
     fontWeight: '600',
   },
   manageButton: {
     flex: 1,
-    backgroundColor: '#3B82F6',
+    backgroundColor: theme.colors.ui.blueLight,
     paddingVertical: scaleHeight(14),
     borderRadius: scaleWidth(12),
     alignItems: 'center',
   },
   manageButtonText: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: scaleFont(16),
     fontWeight: '600',
   },
@@ -831,7 +831,7 @@ const styles = StyleSheet.create({
   confirmedText: {
     fontSize: scaleFont(16),
     fontWeight: '600',
-    color: '#10B981',
+    color: theme.colors.success['500'],
   },
   cancelButton: {
     paddingHorizontal: scaleWidth(16),
@@ -839,14 +839,14 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     fontSize: scaleFont(14),
-    color: '#DC2626',
+    color: theme.colors.error['600'],
     fontWeight: '600',
   },
   messageButton: {
     width: scaleWidth(48),
     height: scaleWidth(48),
     borderRadius: scaleWidth(24),
-    backgroundColor: '#FEF2F2',
+    backgroundColor: theme.colors.error['50'],
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: scaleWidth(12),

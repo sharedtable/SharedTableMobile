@@ -31,7 +31,7 @@ import { usePaymentStore } from '@/store/paymentStore';
 import { CheckoutModal } from '@/components/payment/CheckoutModal';
 
 // Images
-// @ts-ignore - Image asset
+// @ts-expect-error - Image asset
 import backgroundImage from '@/assets/images/backgrounds/background.jpg';
 
 interface TimeSlot {
@@ -225,12 +225,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
       const date = new Date(isoString);
       if (isNaN(date.getTime())) {
         console.error('Invalid datetime string:', isoString);
-        return { date: 'Invalid date', time: 'Invalid time', dayOfWeek: '' };
+        return { date: 'Invalid date', time: 'Invalid time', dayOfWeek: '', fullMonthDate: 'Invalid date' };
       }
       
       const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const fullMonthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
       const dateStr = `${monthNames[date.getMonth()]} ${date.getDate()}`;
+      const fullMonthDate = `${fullMonthNames[date.getMonth()]} ${date.getDate()}`;
       
       const hours = date.getHours();
       const minutes = date.getMinutes();
@@ -244,10 +246,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
       const displayMinute = minutes.toString().padStart(2, '0');
       const timeStr = `${displayHour}:${displayMinute} ${period}`;
       
-      return { date: dateStr, time: timeStr, dayOfWeek };
+      return { date: dateStr, time: timeStr, dayOfWeek, fullMonthDate };
     } catch (error) {
       console.error('Error formatting datetime:', error);
-      return { date: 'Invalid date', time: 'Invalid time', dayOfWeek: '' };
+      return { date: 'Invalid date', time: 'Invalid time', dayOfWeek: '', fullMonthDate: 'Invalid date' };
     }
   }, []);
 
@@ -358,10 +360,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
       });
 
       if (response.success) {
-        const { dayOfWeek, date, time } = formatDateTime(dinner.datetime);
+        const { dayOfWeek, fullMonthDate, time } = formatDateTime(dinner.datetime);
+        
         Alert.alert(
-          'Success! 🎉',
-          `You're confirmed for ${dayOfWeek}, ${date} at ${time}.\n\nA $30 hold has been placed on your card and will be released after you attend.`
+          'Table reserved! See you soon',
+          `🍽️ ${dayOfWeek}, ${fullMonthDate}\n🕐 ${time}\n\nYour ideal restaurant and dining partner will be revealed 24 hours in advance.`
         );
         
         // Refresh payment methods if a new card was saved
@@ -741,7 +744,7 @@ const styles = StyleSheet.create({
     paddingVertical: scaleHeight(4),
   },
   headerLinkText: {
-    color: '#666666',
+    color: theme.colors.gray['500'],
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(13),
     fontWeight: '400',
@@ -752,7 +755,7 @@ const styles = StyleSheet.create({
   },
   tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: theme.colors.gray['100'],
     borderRadius: scaleWidth(25),
     padding: scaleWidth(4),
     justifyContent: 'center',
@@ -768,14 +771,14 @@ const styles = StyleSheet.create({
   activeTab: {
     backgroundColor: theme.colors.white,
     borderRadius: scaleWidth(22),
-    shadowColor: '#000',
+    shadowColor: theme.colors.black['1'],
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 3,
   },
   tabText: {
-    color: '#999999',
+    color: theme.colors.gray['400'],
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(15),
     fontWeight: '500',
@@ -787,7 +790,7 @@ const styles = StyleSheet.create({
   tabDivider: {
     width: 1,
     height: scaleHeight(20),
-    backgroundColor: '#E0E0E0',
+    backgroundColor: theme.colors.gray['200'],
     marginHorizontal: scaleWidth(4),
   },
   sectionTitle: {
@@ -809,7 +812,7 @@ const styles = StyleSheet.create({
     minHeight: scaleHeight(140),
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: theme.colors.black['1'],
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 4,
@@ -824,7 +827,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleWidth(28),
     paddingVertical: scaleHeight(15),
     width: '90%',
-    shadowColor: '#000',
+    shadowColor: theme.colors.black['1'],
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
@@ -894,7 +897,7 @@ const styles = StyleSheet.create({
     marginBottom: scaleHeight(8),
     paddingHorizontal: scaleWidth(28),
     paddingVertical: scaleHeight(15),
-    shadowColor: '#000',
+    shadowColor: theme.colors.black['1'],
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
@@ -923,7 +926,7 @@ const styles = StyleSheet.create({
     marginTop: Platform.OS === 'ios' ? scaleHeight(48) : scaleHeight(24), // Respect status bar height
   },
   heroSubtitle: {
-    color: '#666666',
+    color: theme.colors.gray['500'],
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(13),
     textAlign: 'center',
@@ -960,7 +963,7 @@ const styles = StyleSheet.create({
     marginBottom: scaleHeight(16),
   },
   locationText: {
-    color: '#999999',
+    color: theme.colors.gray['400'],
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(12),
     letterSpacing: 0.3,
@@ -1019,14 +1022,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#000',
+    shadowColor: theme.colors.black['1'],
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 4,
     elevation: 2,
   },
   timeSlotCardSelected: {
-    backgroundColor: '#FFF5F5',
+    backgroundColor: theme.colors.primary['50'],
     borderColor: theme.colors.primary.main,
     borderWidth: 2.5,
   },
@@ -1061,7 +1064,7 @@ const styles = StyleSheet.create({
     height: scaleWidth(22),
     borderRadius: scaleWidth(11),
     borderWidth: 2,
-    borderColor: '#CCCCCC',
+    borderColor: theme.colors.gray['300'],
     backgroundColor: theme.colors.white,
   },
   selectionCircleSelected: {

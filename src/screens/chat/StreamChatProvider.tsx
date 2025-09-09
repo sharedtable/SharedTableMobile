@@ -9,7 +9,7 @@ import {
   MessageList,
   MessageInput,
 } from 'stream-chat-expo';
-import { StreamChat } from 'stream-chat';
+import { StreamChat, Channel as StreamChannel } from 'stream-chat';
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { api } from '@/services/api';
 import { logger } from '@/utils/logger';
@@ -143,7 +143,7 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 };
 
 export const BasicChannelListScreen: React.FC = () => {
-  const [channel, setChannel] = useState<any>(null);
+  const [channel, setChannel] = useState<StreamChannel | null>(null);
   if (channel) {
     return (
       <Channel channel={channel}>

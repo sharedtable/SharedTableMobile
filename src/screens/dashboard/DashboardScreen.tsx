@@ -88,9 +88,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               tier={stats?.currentTier || 1}
               level={currentTier?.name || 'Newcomer'}
               dinnersAttended={stats?.dinnersAttended || 0}
-              percentComplete={stats?.pointsToNextTier && nextTier 
-                ? Math.round(((stats.totalPoints - currentTier!.pointsRequired) / 
-                  (nextTier.pointsRequired - currentTier!.pointsRequired)) * 100)
+              percentComplete={stats?.pointsToNextTier && nextTier && currentTier
+                ? Math.round(((stats.totalPoints - currentTier.pointsRequired) / 
+                  (nextTier.pointsRequired - currentTier.pointsRequired)) * 100)
                 : 100
               }
             />
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   container: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor: theme.colors.background.paper,
     flex: 1,
   },
   loadingContainer: {
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     backgroundColor: theme.colors.white,
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: theme.colors.ui.lightGray,
     borderBottomWidth: 1,
   },
   tabScrollContent: {

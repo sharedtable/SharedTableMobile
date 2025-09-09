@@ -21,13 +21,17 @@ const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 
 // Wrapper to handle navigation between screens
 const createScreenWrapper = (
-  ScreenComponent: any,
+  ScreenComponent: React.ComponentType<{
+    onNavigate: (screen: string) => void;
+    currentStep?: number;
+    totalSteps?: number;
+  }>,
   nextScreen?: string,
   currentStep?: number,
   totalSteps: number = 3  // Only 3 mandatory steps
 ) => {
   const ScreenWrapper = () => {
-    const navigation = useNavigation<any>();
+    const navigation = useNavigation();
 
     const handleNavigate = (screen: string, _data?: unknown) => {
       if (__DEV__) {
@@ -36,10 +40,10 @@ const createScreenWrapper = (
 
       switch (screen) {
         case 'onboarding-birthday':
-          navigation.navigate('OnboardingBirthday');
+          (navigation as any).navigate('OnboardingBirthday');
           break;
         case 'onboarding-gender':
-          navigation.navigate('OnboardingGender');
+          (navigation as any).navigate('OnboardingGender');
           break;
         case 'back':
           if (navigation.canGoBack()) {
@@ -53,7 +57,7 @@ const createScreenWrapper = (
           // After mandatory completion, go to main (where optional prompt will show)
           navigation.reset({
             index: 0,
-            routes: [{ name: 'Main' }],
+            routes: [{ name: 'Main' as never }],
           });
           break;
         default:

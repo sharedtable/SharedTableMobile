@@ -70,7 +70,7 @@ const EnhancedCreatePostScreen: React.FC = () => {
   const [postType, setPostType] = useState<PostType>('text');
   const [content, setContent] = useState('');
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
-  const [location, setLocation] = useState<any>(null);
+  const [location, setLocation] = useState<{ latitude: number; longitude: number; name?: string } | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [posting, setPosting] = useState(false);
   const [_showLocationPicker, _setShowLocationPicker] = useState(false);
@@ -119,7 +119,7 @@ const EnhancedCreatePostScreen: React.FC = () => {
   const _contentScale = useSharedValue(1);
 
   const POST_TYPES = [
-    { id: 'text', label: 'Post', icon: 'create-outline', color: '#007AFF' },
+    { id: 'text', label: 'Post', icon: 'create-outline', color: theme.colors.ios.blue },
     { id: 'image', label: 'Photo', icon: 'camera-outline', color: '#FF9500' },
     { id: 'recipe', label: 'Recipe', icon: 'restaurant-outline', color: '#FF2D55' },
     { id: 'event', label: 'Event', icon: 'calendar-outline', color: '#5856D6' },
@@ -164,8 +164,8 @@ const EnhancedCreatePostScreen: React.FC = () => {
     if (address[0]) {
       setLocation({
         name: address[0].name || address[0].city || 'Current Location',
-        address: `${address[0].street}, ${address[0].city}`,
-        coords: currentLocation.coords,
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
       });
     }
   }, []);
@@ -249,11 +249,11 @@ const EnhancedCreatePostScreen: React.FC = () => {
           <Ionicons
             name={type.icon as any}
             size={24}
-            color={postType === type.id ? type.color : '#6B7280'}
+            color={postType === type.id ? type.color : theme.colors.gray['500']}
           />
           <Text style={[
             styles.typeLabel,
-            { color: postType === type.id ? type.color : '#6B7280' }
+            { color: postType === type.id ? type.color : theme.colors.gray['500'] }
           ]}>
             {type.label}
           </Text>
@@ -751,7 +751,7 @@ const EnhancedCreatePostScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
   },
   header: {
     flexDirection: 'row',
@@ -760,16 +760,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleWidth(20),
     paddingVertical: scaleHeight(16),
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.colors.border,
   },
   cancelText: {
     fontSize: scaleFont(16),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   headerTitle: {
     fontSize: scaleFont(18),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   postText: {
     fontSize: scaleFont(16),
@@ -782,7 +782,7 @@ const styles = StyleSheet.create({
   typeSelector: {
     maxHeight: scaleHeight(80),
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.colors.border,
   },
   typeSelectorContent: {
     paddingHorizontal: scaleWidth(16),
@@ -799,7 +799,7 @@ const styles = StyleSheet.create({
     minWidth: scaleWidth(80),
   },
   typeButtonActive: {
-    backgroundColor: 'rgba(0, 122, 255, 0.05)',
+    backgroundColor: theme.colors.overlay.blue5,
   },
   typeLabel: {
     fontSize: scaleFont(12),
@@ -812,19 +812,19 @@ const styles = StyleSheet.create({
   },
   contentInput: {
     fontSize: scaleFont(16),
-    color: '#111827',
+    color: theme.colors.gray['900'],
     lineHeight: scaleFont(22),
     minHeight: scaleHeight(120),
     textAlignVertical: 'top',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.border,
     borderRadius: scaleWidth(8),
     paddingHorizontal: scaleWidth(12),
     paddingVertical: scaleHeight(12),
     fontSize: scaleFont(14),
-    color: '#111827',
+    color: theme.colors.gray['900'],
     marginBottom: scaleHeight(12),
   },
   halfInput: {
@@ -854,7 +854,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: scaleFont(16),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
     marginTop: scaleHeight(16),
     marginBottom: scaleHeight(8),
   },
@@ -866,7 +866,7 @@ const styles = StyleSheet.create({
   listInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.border,
     borderRadius: scaleWidth(8),
     paddingHorizontal: scaleWidth(12),
     paddingVertical: scaleHeight(8),
@@ -876,7 +876,7 @@ const styles = StyleSheet.create({
   stepNumber: {
     fontSize: scaleFont(14),
     fontWeight: '600',
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginRight: scaleWidth(8),
     minWidth: scaleWidth(20),
   },
@@ -884,7 +884,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleWidth(12),
     paddingVertical: scaleHeight(4),
     borderRadius: scaleWidth(16),
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.gray['100'],
     marginRight: scaleWidth(8),
   },
   difficultyButtonActive: {
@@ -892,7 +892,7 @@ const styles = StyleSheet.create({
   },
   difficultyText: {
     fontSize: scaleFont(14),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   difficultyTextActive: {
     color: theme.colors.primary.main,
@@ -902,7 +902,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.border,
     borderRadius: scaleWidth(8),
     paddingHorizontal: scaleWidth(12),
     paddingVertical: scaleHeight(12),
@@ -911,7 +911,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: scaleFont(14),
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   pollOption: {
     flexDirection: 'row',
@@ -921,7 +921,7 @@ const styles = StyleSheet.create({
   pollInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.border,
     borderRadius: scaleWidth(8),
     paddingHorizontal: scaleWidth(12),
     paddingVertical: scaleHeight(12),
@@ -946,14 +946,14 @@ const styles = StyleSheet.create({
   },
   durationLabel: {
     fontSize: scaleFont(14),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginRight: scaleWidth(12),
   },
   durationButton: {
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(8),
     borderRadius: scaleWidth(16),
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.gray['100'],
     marginRight: scaleWidth(8),
   },
   durationButtonActive: {
@@ -961,7 +961,7 @@ const styles = StyleSheet.create({
   },
   durationText: {
     fontSize: scaleFont(14),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   durationTextActive: {
     color: theme.colors.primary.main,
@@ -974,7 +974,7 @@ const styles = StyleSheet.create({
   },
   ratingLabel: {
     fontSize: scaleFont(14),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginRight: scaleWidth(12),
   },
   stars: {
@@ -985,7 +985,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleWidth(12),
     paddingVertical: scaleHeight(6),
     borderRadius: scaleWidth(8),
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.gray['100'],
     marginRight: scaleWidth(8),
   },
   priceButtonActive: {
@@ -993,7 +993,7 @@ const styles = StyleSheet.create({
   },
   priceText: {
     fontSize: scaleFont(14),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     fontWeight: '600',
   },
   priceTextActive: {
@@ -1017,14 +1017,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -8,
     right: -8,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: theme.colors.overlay.mediumDark,
     borderRadius: scaleWidth(10),
   },
   addImageButton: {
     width: scaleWidth(80),
     height: scaleWidth(80),
     borderWidth: 2,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.border,
     borderStyle: 'dashed',
     borderRadius: scaleWidth(8),
     justifyContent: 'center',
@@ -1033,7 +1033,7 @@ const styles = StyleSheet.create({
   locationTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.gray['100'],
     paddingHorizontal: scaleWidth(12),
     paddingVertical: scaleHeight(8),
     borderRadius: scaleWidth(16),
@@ -1042,7 +1042,7 @@ const styles = StyleSheet.create({
   },
   locationText: {
     fontSize: scaleFont(13),
-    color: '#374151',
+    color: theme.colors.gray['700'],
     flex: 1,
   },
   tags: {
@@ -1054,7 +1054,7 @@ const styles = StyleSheet.create({
   tag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F0F0F0',
+    backgroundColor: theme.colors.ui.lighterGray,
     paddingHorizontal: scaleWidth(12),
     paddingVertical: scaleHeight(6),
     borderRadius: scaleWidth(16),
@@ -1067,7 +1067,7 @@ const styles = StyleSheet.create({
   toolbar: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: theme.colors.border,
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(12),
     gap: scaleWidth(16),

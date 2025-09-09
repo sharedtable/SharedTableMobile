@@ -54,11 +54,11 @@ export const PaymentMethodCard = memo<PaymentMethodCardProps>(({
   const getBrandColor = () => {
     switch (brand.toLowerCase()) {
       case 'visa':
-        return '#1A1F71';
+        return theme.colors.paymentBrands.visa;
       case 'mastercard':
-        return '#EB001B';
+        return theme.colors.paymentBrands.mastercard;
       case 'amex':
-        return '#006FCF';
+        return theme.colors.paymentBrands.amex;
       default:
         return theme.colors.text.secondary;
     }
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     marginVertical: scaleHeight(8),
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: theme.colors.black['1'],
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,

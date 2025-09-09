@@ -11,14 +11,14 @@ import { OnboardingError, OnboardingErrorType, OnboardingErrorHandler } from './
 import type { OnboardingStep } from './validation';
 
 interface CachedData {
-  data: any;
+  data: unknown;
   timestamp: number;
   step: OnboardingStep | string;
 }
 
 interface QueuedRequest {
   step: OnboardingStep | string;
-  data: any;
+  data: unknown;
   timestamp: number;
   attempts: number;
 }
@@ -157,7 +157,7 @@ export class OnboardingApiService {
       try {
         await OnboardingAPI.saveStep({
           step: request.step as any,
-          data: request.data,
+          data: request.data as any,
         });
       } catch (_error) {
         request.attempts++;
@@ -264,12 +264,13 @@ export class OnboardingApiService {
   /**
    * Check if error is network-related
    */
-  private isNetworkError(error: any): boolean {
+  private isNetworkError(error: unknown): boolean {
+    const err = error as { message?: string; code?: string };
     return (
-      error.message?.includes('Network') ||
-      error.message?.includes('fetch') ||
-      error.code === 'NETWORK_ERROR' ||
-      error.code === 'ECONNREFUSED'
+      err.message?.includes('Network') ||
+      err.message?.includes('fetch') ||
+      err.code === 'NETWORK_ERROR' ||
+      err.code === 'ECONNREFUSED'
     );
   }
 

@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   },
   actionIconContainer: {
     alignItems: 'center',
-    backgroundColor: '#FFF3E0',
+    backgroundColor: theme.colors.ui.orangeLight,
     borderRadius: scaleWidth(20),
     height: scaleWidth(40),
     justifyContent: 'center',
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
   },
   actionsList: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(16),
     borderWidth: 1,
     marginHorizontal: scaleWidth(16),
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
   },
   avatar: {
     alignItems: 'center',
-    backgroundColor: '#B2EDE8',
+    backgroundColor: theme.colors.ui.teal,
     borderRadius: scaleWidth(50),
     height: scaleWidth(100),
     justifyContent: 'center',
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   container: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor: theme.colors.background.paper,
     flex: 1,
   },
   disabledField: {
@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
   },
   fieldsList: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(16),
     borderWidth: 1,
     marginHorizontal: scaleWidth(16),
@@ -550,8 +550,8 @@ const styles = StyleSheet.create({
     width: '85%',
   },
   modalInput: {
-    backgroundColor: '#F8F9FA',
-    borderColor: '#E5E5E5',
+    backgroundColor: theme.colors.ui.offWhite,
+    borderColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(12),
     borderWidth: 1,
     fontFamily: theme.typography.fontFamily.body,
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: theme.colors.overlay.medium,
     flex: 1,
     justifyContent: 'center',
   },
@@ -578,7 +578,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   pressedField: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: theme.colors.ui.lightestGray,
   },
   profileHeader: {
     alignItems: 'center',
@@ -612,7 +612,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   separator: {
-    backgroundColor: '#F0F0F0',
+    backgroundColor: theme.colors.ui.lighterGray,
     height: 1,
     marginLeft: scaleWidth(20),
   },

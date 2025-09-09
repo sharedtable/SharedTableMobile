@@ -177,7 +177,7 @@ const PostCard = memo<PostCardProps>(({ activity, onLike, onComment }) => {
               <Ionicons
                 name={isLiked ? 'heart' : 'heart-outline'}
                 size={26}
-                color={isLiked ? '#FF3B30' : '#262626'}
+                color={isLiked ? '#FF3B30' : '#666666'}
               />
             </Animated.View>
           </TouchableOpacity>

@@ -16,7 +16,7 @@ const analytics = createClient({
 
 interface OnboardingEvent {
   event: string;
-  properties: Record<string, any>;
+  properties: Record<string, string | number | boolean | null>;
   timestamp: string;
 }
 

@@ -139,14 +139,12 @@ export const useUserPreferences = (): UserPreferencesData => {
 
         if (preferences) {
           // Update existing preferences
-          // Using type assertion due to Supabase type limitations
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { error } = await (supabase as any)
+          const { error } = await supabase
             .from('user_preferences')
             .update({
               ...updateData,
               updated_at: new Date().toISOString(),
-            })
+            } as unknown as never)
             .eq('user_id', dbUserId);
 
           if (error) {
@@ -157,10 +155,10 @@ export const useUserPreferences = (): UserPreferencesData => {
           // Create new preferences record
           // Using type assertion due to Supabase type limitations
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { error } = await (supabase as any).from('user_preferences').insert([{
+          const { error } = await supabase.from('user_preferences').insert([{
             user_id: dbUserId,
             ...updateData,
-          }]);
+          }] as any);
 
           if (error) {
             console.error('Error creating database preferences:', error);

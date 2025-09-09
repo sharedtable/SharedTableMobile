@@ -4,7 +4,8 @@ import { notificationService } from '@/services/notificationService';
 import { useNotificationStore } from '@/store/notificationStore';
 import { NotificationData, NotificationType, NotificationPriority, NotificationChannel } from '@/types/notification.types';
 import { InAppNotification } from '@/components/notifications/InAppNotification';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { RootStackParamList } from '@/navigation/RootNavigator';
 
 interface NotificationContextType {
   expoPushToken: string | null;
@@ -20,7 +21,7 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [notification, setNotification] = useState<Notifications.Notification | null>(null);
   const [inAppNotification, setInAppNotification] = useState<NotificationData | null>(null);
@@ -30,6 +31,33 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     scheduleDinnerReminder: scheduleReminder,
     cancelDinnerReminder: cancelReminder,
   } = useNotificationStore();
+
+  const showInAppNotification = useCallback((notification: NotificationData) => {
+    setInAppNotification(notification);
+  }, []);
+
+  const handleNotificationResponse = useCallback((response: Notifications.NotificationResponse) => {
+    const data = response.notification.request.content.data;
+    const notificationType = data?.type as NotificationType;
+
+    // Navigate based on notification type
+    switch (notificationType) {
+      case NotificationType.DINNER_REMINDER:
+      case NotificationType.DINNER_STATUS_CHANGE:
+        // Navigate to event details
+        break;
+      case NotificationType.CHAT_MESSAGE:
+        // Navigate to chat
+        break;
+      case NotificationType.FEED_COMMENT:
+      case NotificationType.FEED_REACTION:
+        // Navigate to feed post
+        break;
+      default:
+        // Navigate to notifications list
+        break;
+    }
+  }, []);
 
   useEffect(() => {
     // Initialize notification system
@@ -66,17 +94,13 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       notificationListener.remove();
       responseListener.remove();
     };
-  }, []);
+  }, [handleNotificationResponse, initialize, showInAppNotification]);
 
   const registerForPushNotifications = useCallback(async () => {
     const token = await notificationService.registerForPushNotifications();
     if (token) {
       setExpoPushToken(token);
     }
-  }, []);
-
-  const showInAppNotification = useCallback((notification: NotificationData) => {
-    setInAppNotification(notification);
   }, []);
 
   const dismissInAppNotification = useCallback(() => {
@@ -94,43 +118,6 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const cancelDinnerReminder = useCallback(async (eventId: string) => {
     await cancelReminder(eventId);
   }, [cancelReminder]);
-
-  const handleNotificationResponse = (response: Notifications.NotificationResponse) => {
-    const data = response.notification.request.content.data;
-    const notificationType = data?.type as NotificationType;
-
-    // Navigate based on notification type
-    switch (notificationType) {
-      case NotificationType.DINNER_REMINDER:
-      case NotificationType.DINNER_CONFIRMATION:
-      case NotificationType.DINNER_CANCELLATION:
-      case NotificationType.DINNER_STATUS_CHANGE:
-        if (data?.eventId) {
-          navigation.navigate('EventDetails', { eventId: data.eventId });
-        }
-        break;
-      case NotificationType.CHAT_MESSAGE:
-      case NotificationType.CHAT_MENTION:
-        if (data?.eventId) {
-          navigation.navigate('EventChat', { eventId: data.eventId });
-        }
-        break;
-      case NotificationType.FEED_POST:
-      case NotificationType.FEED_MENTION:
-      case NotificationType.FEED_REACTION:
-      case NotificationType.FEED_COMMENT:
-        navigation.navigate('Feed');
-        break;
-      case NotificationType.BOOKING_REQUEST:
-      case NotificationType.BOOKING_APPROVED:
-      case NotificationType.BOOKING_REJECTED:
-        navigation.navigate('Bookings');
-        break;
-      default:
-        navigation.navigate('Notifications');
-        break;
-    }
-  };
 
   const handleInAppNotificationPress = () => {
     if (inAppNotification) {
@@ -152,22 +139,25 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         case NotificationType.CHAT_MESSAGE:
         case NotificationType.CHAT_MENTION:
           if (data?.eventId) {
-            navigation.navigate('EventChat', { eventId: data.eventId });
+            // EventChat screen not in RootStackParamList yet
+            navigation.navigate('EventDetails', { eventId: data.eventId });
           }
           break;
         case NotificationType.FEED_POST:
         case NotificationType.FEED_MENTION:
         case NotificationType.FEED_REACTION:
         case NotificationType.FEED_COMMENT:
-          navigation.navigate('Feed');
+          // Feed is nested in Main, navigate to Main
+          navigation.navigate('Main');
           break;
         case NotificationType.BOOKING_REQUEST:
         case NotificationType.BOOKING_APPROVED:
         case NotificationType.BOOKING_REJECTED:
-          navigation.navigate('Bookings');
+          // Bookings screen not in RootStackParamList yet
+          navigation.navigate('Main');
           break;
         default:
-          navigation.navigate('Notifications');
+          navigation.navigate('NotificationsList');
           break;
       }
     }

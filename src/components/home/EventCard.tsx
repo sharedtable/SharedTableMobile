@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(16),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     marginBottom: scaleHeight(4),
   },
   location: {
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(15),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   spots: {
     color: theme.colors.text.secondary,

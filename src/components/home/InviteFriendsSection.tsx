@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: theme.colors.white,
     fontSize: scaleFont(28),
-    fontWeight: '400' as any,
+    fontWeight: '400',
   },
   container: {
     borderTopColor: Colors.gray200,
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     marginBottom: scaleHeight(16),
   },
   suggestionsContainer: {
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     borderRadius: scaleWidth(16),
     borderWidth: 1,
     borderColor: Colors.gray200,
-    shadowColor: '#000',
+    shadowColor: theme.colors.black['1'],
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
   avatarText: {
     color: theme.colors.primary.main,
     fontSize: scaleFont(14),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   suggestionInfo: {
     flex: 1,
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(15),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     marginBottom: scaleHeight(2),
   },
   suggestionEmail: {

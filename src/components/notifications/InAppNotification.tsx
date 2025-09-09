@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     padding: scaleWidth(16),
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: theme.colors.black['1'],
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     width: scaleWidth(28),
     height: scaleWidth(28),
     borderRadius: scaleWidth(14),
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: theme.colors.overlay.white,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: scaleWidth(10),
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   body: {
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: theme.colors.overlay.whiteLight,
     lineHeight: scaleFont(20),
     marginLeft: scaleWidth(38),
   },

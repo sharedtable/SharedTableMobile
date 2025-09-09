@@ -18,7 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 import { api } from '@/services/api';
-// @ts-ignore
+// @ts-expect-error - lodash types not installed
 import debounce from 'lodash/debounce';
 
 interface User {

@@ -1,3 +1,4 @@
+import { theme } from "@/theme";
 /**
  * Feature Flags System for Internal Testing
  * Allows enabling/disabling features for different environments
@@ -298,7 +299,7 @@ const styles = StyleSheet.create({
     zIndex: 9999,
   },
   debugTitle: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
@@ -310,7 +311,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   flagName: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: 14,
   },
 });
