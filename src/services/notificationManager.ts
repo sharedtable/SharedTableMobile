@@ -10,6 +10,7 @@ import {
   NotificationChannel,
   NotificationPriority,
 } from '@/types/notification.types';
+import { Achievement } from '@/types/gamification';
 
 interface NotificationQueue {
   id: string;
@@ -129,7 +130,7 @@ class NotificationManager {
     }
   }
 
-  private async deliverNotification(notification: NotificationData, options?: any) {
+  private async deliverNotification(notification: NotificationData, options?: { sound?: boolean | string; critical?: boolean; schedule?: Date; groupId?: string }) {
     const content: Notifications.NotificationContentInput = {
       title: notification.title,
       body: notification.body,
@@ -273,8 +274,8 @@ class NotificationManager {
     }
 
     // Show grouped notification if threshold reached
-    const group = this.notificationGroups.get(groupId)!;
-    if (group.count >= 3) {
+    const group = this.notificationGroups.get(groupId);
+    if (group && group.count >= 3) {
       this.showGroupedNotification(group);
     }
   }
@@ -444,7 +445,7 @@ class NotificationManager {
     });
   }
 
-  async sendAchievementUnlocked(achievement: any) {
+  async sendAchievementUnlocked(achievement: Achievement) {
     const notification: NotificationData = {
       id: `achievement-${achievement.id}`,
       type: NotificationType.ACHIEVEMENT_UNLOCKED,
@@ -453,7 +454,7 @@ class NotificationManager {
       title: '🏆 Achievement Unlocked!',
       body: `You've unlocked "${achievement.name}"! ${achievement.description}`,
       data: { achievementId: achievement.id },
-      imageUrl: achievement.imageUrl,
+      imageUrl: (achievement as any).imageUrl,
       userId: '',
       read: false,
       createdAt: new Date(),

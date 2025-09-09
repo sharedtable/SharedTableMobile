@@ -132,7 +132,7 @@ interface EnhancedPostCardProps {
 }
 
 const REACTIONS = [
-  { type: 'like', icon: 'heart' as const, color: '#FF3B30', emoji: '❤️' },
+  { type: 'like', icon: 'heart' as const, color: theme.colors.ios.red, emoji: '❤️' },
   { type: 'love', icon: 'heart-circle' as const, color: '#FF2D55', emoji: '😍' },
   { type: 'fire', icon: 'flame' as const, color: '#FF9500', emoji: '🔥' },
   { type: 'yum', icon: 'happy' as const, color: '#FFCC00', emoji: '😋' },
@@ -520,7 +520,7 @@ const EnhancedPostCard = memo<EnhancedPostCardProps>(({
             <Ionicons
               name={post.user_reaction ? getReactionIcon(post.user_reaction) : 'heart-outline'}
               size={26}
-              color={post.user_reaction ? getReactionColor(post.user_reaction) : '#262626'}
+              color={post.user_reaction ? getReactionColor(post.user_reaction) : theme.colors.ui.darkGray}
             />
           </Animated.View>
         </TouchableOpacity>
@@ -540,7 +540,7 @@ const EnhancedPostCard = memo<EnhancedPostCardProps>(({
         <Ionicons
           name={post.is_saved ? 'bookmark' : 'bookmark-outline'}
           size={24}
-          color={post.is_saved ? '#262626' : '#262626'}
+          color={post.is_saved ? theme.colors.ui.darkGray : theme.colors.ui.darkGray}
         />
       </TouchableOpacity>
     </View>
@@ -647,7 +647,7 @@ const EnhancedPostCard = memo<EnhancedPostCardProps>(({
                   onPress={() => handleReaction(reaction.type)}
                 >
                   <Ionicons
-                    name={reaction.icon as any}
+                    name={reaction.icon as React.ComponentProps<typeof Ionicons>['name']}
                     size={32}
                     color={reaction.color}
                   />

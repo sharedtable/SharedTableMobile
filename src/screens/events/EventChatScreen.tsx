@@ -343,7 +343,7 @@ const EventChatScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.gray['50'],
   },
   header: {
     flexDirection: 'row',
@@ -351,9 +351,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: scaleWidth(20),
     paddingVertical: scaleHeight(16),
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.colors.border,
   },
   headerCenter: {
     alignItems: 'center',
@@ -361,11 +361,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: scaleFont(18),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   headerSubtitle: {
     fontSize: scaleFont(12),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginTop: scaleHeight(2),
   },
   loadingContainer: {
@@ -395,11 +395,11 @@ const styles = StyleSheet.create({
   },
   messageBubble: {
     maxWidth: '75%',
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     borderRadius: scaleWidth(16),
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(10),
-    shadowColor: '#000',
+    shadowColor: theme.colors.black['1'],
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -416,25 +416,25 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: scaleFont(15),
-    color: '#111827',
+    color: theme.colors.gray['900'],
     lineHeight: scaleFont(20),
   },
   ownMessageText: {
-    color: 'white',
+    color: theme.colors.white,
   },
   messageTime: {
     fontSize: scaleFont(11),
-    color: '#9CA3AF',
+    color: theme.colors.gray['400'],
     marginTop: scaleHeight(4),
   },
   ownMessageTime: {
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: theme.colors.overlay.white80,
   },
   replyContainer: {
     flexDirection: 'row',
     marginBottom: scaleHeight(8),
     padding: scaleWidth(8),
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.gray['100'],
     borderRadius: scaleWidth(8),
   },
   replyBar: {
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   },
   replyText: {
     fontSize: scaleFont(12),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginTop: scaleHeight(2),
   },
   systemMessage: {
@@ -459,21 +459,21 @@ const styles = StyleSheet.create({
   },
   systemText: {
     fontSize: scaleFont(12),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     fontStyle: 'italic',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.gray['100'],
     paddingHorizontal: scaleWidth(12),
     paddingVertical: scaleHeight(4),
     borderRadius: scaleWidth(12),
   },
   announcement: {
     flexDirection: 'row',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: theme.colors.ui.yellowLight,
     borderRadius: scaleWidth(12),
     padding: scaleWidth(12),
     marginBottom: scaleHeight(16),
     borderWidth: 1,
-    borderColor: '#FCD34D',
+    borderColor: theme.colors.ui.yellowBorder,
   },
   announcementContent: {
     flex: 1,
@@ -482,26 +482,26 @@ const styles = StyleSheet.create({
   announcementTitle: {
     fontSize: scaleFont(13),
     fontWeight: '600',
-    color: '#92400E',
+    color: theme.colors.ui.yellowDark,
   },
   announcementText: {
     fontSize: scaleFont(14),
-    color: '#78350F',
+    color: theme.colors.ui.yellowDarker,
     marginTop: scaleHeight(4),
   },
   announcementTime: {
     fontSize: scaleFont(11),
-    color: '#92400E',
+    color: theme.colors.ui.yellowDark,
     marginTop: scaleHeight(4),
   },
   replyingToContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(12),
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: theme.colors.border,
   },
   replyingToContent: {
     flex: 1,
@@ -523,29 +523,29 @@ const styles = StyleSheet.create({
   },
   replyingToMessage: {
     fontSize: scaleFont(12),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginTop: scaleHeight(2),
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(12),
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: theme.colors.border,
   },
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: theme.colors.gray['300'],
     borderRadius: scaleWidth(20),
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(10),
     marginRight: scaleWidth(12),
     maxHeight: scaleHeight(100),
     fontSize: scaleFont(15),
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   sendButton: {
     width: scaleWidth(40),
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sendButtonDisabled: {
-    backgroundColor: '#D1D5DB',
+    backgroundColor: theme.colors.gray['300'],
   },
 });
 

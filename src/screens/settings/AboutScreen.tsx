@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   container: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor: theme.colors.background.paper,
     flex: 1,
   },
   copyrightText: {
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
   },
   infoItem: {
     alignItems: 'center',
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: theme.colors.ui.lighterGray,
     borderBottomWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(14),
   },
   pressedItem: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: theme.colors.ui.lightestGray,
   },
   scrollView: {
     flex: 1,
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   },
   sectionContent: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(16),
     borderWidth: 1,
     marginHorizontal: scaleWidth(16),
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   separator: {
-    backgroundColor: '#F0F0F0',
+    backgroundColor: theme.colors.ui.lighterGray,
     height: 1,
     marginLeft: scaleWidth(20),
   },

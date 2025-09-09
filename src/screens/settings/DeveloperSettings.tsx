@@ -277,21 +277,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: theme.colors.gray['200'],
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
+    color: theme.colors.black['1'],
   },
   content: {
     flex: 1,
   },
   section: {
     marginTop: 20,
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderColor: '#e0e0e0',
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#666',
+    color: theme.colors.gray['600'],
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 8,
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: theme.colors.ui.lighterGray,
   },
   flagInfo: {
     flex: 1,
@@ -322,11 +322,11 @@ const styles = StyleSheet.create({
   },
   flagLabel: {
     fontSize: 16,
-    color: '#000',
+    color: theme.colors.black['1'],
   },
   flagKey: {
     fontSize: 12,
-    color: '#999',
+    color: theme.colors.gray['400'],
     marginTop: 2,
   },
   infoContainer: {
@@ -339,11 +339,11 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.gray['600'],
   },
   infoValue: {
     fontSize: 14,
-    color: '#000',
+    color: theme.colors.black['1'],
     fontWeight: '500',
     flex: 1,
     textAlign: 'right',
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     marginVertical: 4,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: theme.colors.ui.lighterGray,
     borderRadius: 8,
     alignItems: 'center',
   },
@@ -362,11 +362,11 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
-    color: '#000',
+    color: theme.colors.black['1'],
     fontWeight: '500',
   },
   destructiveText: {
-    color: '#d32f2f',
+    color: theme.colors.error.main,
   },
   footer: {
     padding: 20,
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: '#999',
+    color: theme.colors.gray['400'],
     marginBottom: 4,
   },
 });

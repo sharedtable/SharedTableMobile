@@ -10,6 +10,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   ChannelList,
 } from 'stream-chat-expo';
+import type { Channel, ChannelMemberResponse } from 'stream-chat';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   FadeInDown,
@@ -28,8 +29,8 @@ import { ChatStackParamList } from './ChatNavigator';
 type NavigationProp = NativeStackNavigationProp<ChatStackParamList>;
 
 interface CustomChannelPreviewProps {
-  channel: any; // Stream Channel type
-  latestMessagePreview?: any; // Stream message preview
+  channel: Channel;
+  latestMessagePreview?: any;
   unread?: number;
 }
 
@@ -53,7 +54,7 @@ const CustomChannelPreview: React.FC<CustomChannelPreviewProps> = (props) => {
       scale.value = withSpring(0.98, {}, () => {
         scale.value = withSpring(1);
       });
-      navigation.navigate('Channel', { channelId: channel.id });
+      navigation.navigate('Channel', { channelId: channel.id! });
     }
   }, [channel, navigation]);
 
@@ -61,14 +62,14 @@ const CustomChannelPreview: React.FC<CustomChannelPreviewProps> = (props) => {
   let channelName = 'Channel';
   
   
-  if (channel?.data?.name) {
+  if ((channel?.data as any)?.name) {
     // Use custom channel name if set
-    channelName = channel.data.name;
+    channelName = (channel.data as any).name;
   } else if (channel?.type === 'messaging') {
     // For direct messages, show the other user's name
     const currentUserId = user?.id ? normalizeStreamUserId(user.id) : '';
     const members = Object.values(channel?.state?.members || {});
-    const otherMembers = members.filter((member: any) => 
+    const otherMembers = members.filter((member: ChannelMemberResponse) => 
       member.user?.id !== currentUserId
     );
     
@@ -87,7 +88,7 @@ const CustomChannelPreview: React.FC<CustomChannelPreviewProps> = (props) => {
       // Group chat - show member names
       const names = otherMembers
         .slice(0, 2)
-        .map((m: any) => m.user?.name || 'User')
+        .map((m: ChannelMemberResponse) => m.user?.name || 'User')
         .filter(name => !name.startsWith('!members-') && !name.includes('did:privy:'))
         .join(', ');
       channelName = otherMembers.length > 2 
@@ -234,8 +235,8 @@ export const ChannelListScreen: React.FC = () => {
     navigation.navigate('NewChat');
   }, [navigation]);
 
-  const handleChannelSelect = useCallback((channel: any) => { // Stream Channel
-    navigation.navigate('Channel', { channelId: channel.id });
+  const handleChannelSelect = useCallback((channel: Channel) => {
+    navigation.navigate('Channel', { channelId: channel.id! });
   }, [navigation]);
 
   const handleFriends = useCallback(() => {
@@ -336,7 +337,7 @@ export const ChannelListScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: theme.colors.gray['50'],
   },
   headerButtons: {
     flexDirection: 'row',
@@ -352,7 +353,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#667EEA',
+    shadowColor: theme.colors.primary.main,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -363,11 +364,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     marginHorizontal: 12,
     marginVertical: 4,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: theme.colors.black['1'],
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
@@ -406,9 +407,9 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#FF3B30',
+    backgroundColor: theme.colors.ios.red,
     borderWidth: 2,
-    borderColor: 'white',
+    borderColor: theme.colors.white,
   },
   avatarText: {
     color: theme.colors.white,
@@ -419,25 +420,25 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontFamily: theme.typography.fontFamily.semibold,
-    color: '#1C1C1E',
+    color: theme.colors.text.primary,
   },
   timeText: {
     fontSize: 13,
-    color: '#8E8E93',
+    color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
   },
   messageText: {
     flex: 1,
     fontSize: 14,
-    color: '#8E8E93',
+    color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
   },
   unreadMessage: {
-    color: '#1C1C1E',
+    color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.medium,
   },
   unreadBadge: {
-    backgroundColor: '#667EEA',
+    backgroundColor: theme.colors.ui.blueIndigo,
     borderRadius: 10,
     paddingHorizontal: 7,
     paddingVertical: 3,
@@ -467,13 +468,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 22,
     fontFamily: theme.typography.fontFamily.semibold,
-    color: '#1C1C1E',
+    color: theme.colors.text.primary,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 15,
     fontFamily: theme.typography.fontFamily.body,
-    color: '#8E8E93',
+    color: theme.colors.text.secondary,
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 22,
@@ -487,7 +488,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   newChatButtonText: {
-    color: 'white',
+    color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.semibold,
     fontSize: 15,
   },

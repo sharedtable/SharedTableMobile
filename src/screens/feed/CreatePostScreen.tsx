@@ -1,3 +1,4 @@
+import { theme } from "@/theme";
 import React, { useState } from 'react';
 import {
   View,
@@ -211,7 +212,7 @@ const CreatePostScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
   },
   header: {
     flexDirection: 'row',
@@ -220,8 +221,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    backgroundColor: 'white',
+    borderBottomColor: theme.colors.gray['200'],
+    backgroundColor: theme.colors.white,
   },
   headerButton: {
     padding: 8,
@@ -229,22 +230,22 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.gray['700'],
   },
   cancelText: {
     fontSize: 16,
-    color: '#007AFF',
+    color: theme.colors.ios.blue,
   },
   postText: {
     fontSize: 16,
-    color: '#007AFF',
+    color: theme.colors.ios.blue,
     fontWeight: '600',
   },
   disabledButton: {
     opacity: 0.5,
   },
   disabledText: {
-    color: '#999',
+    color: theme.colors.gray['400'],
   },
   content: {
     flex: 1,
@@ -252,7 +253,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     fontSize: 16,
-    color: '#333',
+    color: theme.colors.gray['700'],
     minHeight: 120,
     textAlignVertical: 'top',
     marginBottom: 16,
@@ -265,20 +266,20 @@ const styles = StyleSheet.create({
     width: '100%',
     aspectRatio: 1,
     borderRadius: 12,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: theme.colors.ui.lighterGray,
   },
   removeImageButton: {
     position: 'absolute',
     top: 8,
     right: 8,
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
     borderRadius: 14,
   },
   toolbar: {
     flexDirection: 'row',
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: theme.colors.ui.lighterGray,
     marginTop: 16,
   },
   toolbarButton: {
@@ -287,7 +288,7 @@ const styles = StyleSheet.create({
   },
   toolbarText: {
     fontSize: 12,
-    color: '#007AFF',
+    color: theme.colors.ios.blue,
     marginTop: 4,
   },
   charCount: {
@@ -296,7 +297,7 @@ const styles = StyleSheet.create({
   },
   charCountText: {
     fontSize: 12,
-    color: '#999',
+    color: theme.colors.gray['400'],
   },
 });
 

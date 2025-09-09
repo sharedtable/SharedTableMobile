@@ -6,6 +6,7 @@ import {
   NotificationPriority,
   NotificationChannel,
 } from '@/types/notification.types';
+import type { Achievement } from '@/types/gamification';
 
 /**
  * Notification Testing Utilities
@@ -115,8 +116,11 @@ export class NotificationTester {
       id: 'achievement-1',
       name: 'Social Butterfly',
       description: 'Attended 10 dinners this month!',
-      imageUrl: 'https://example.com/badge.png',
-    });
+      icon: '🦋',
+      points: 100,
+      category: 'social',
+      // imageUrl: 'https://example.com/badge.png', // Not part of Achievement interface
+    } as Achievement);
 
     const questNotification: NotificationData = {
       id: 'test-quest-1',
@@ -312,6 +316,6 @@ export class NotificationTester {
 
 // Export for easy access in development
 if (__DEV__) {
-  (global as any).notificationTester = NotificationTester;
+  (global as { notificationTester?: typeof NotificationTester }).notificationTester = NotificationTester;
   console.log('📱 Notification Tester available. Use: notificationTester.testAllNotificationTypes()');
 }

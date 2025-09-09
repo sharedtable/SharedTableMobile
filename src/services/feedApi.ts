@@ -93,9 +93,10 @@ class FeedApi {
       });
       console.log('Timeline response:', response);
       return response.data || [];
-    } catch (error: any) {
+    } catch (error: unknown) {
       // If it's a 404, the endpoint doesn't exist yet
-      if (error?.response?.status === 404) {
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError?.response?.status === 404) {
         console.log('Timeline API endpoint not available yet, returning empty array');
         return [];
       }
@@ -115,8 +116,9 @@ class FeedApi {
   async likePost(postId: string): Promise<void> {
     try {
       await api.request('POST', `/feed/posts/${postId}/like`);
-    } catch (error: any) {
-      if (error?.response?.status === 404) {
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError?.response?.status === 404) {
         console.log('Like API endpoint not available yet');
       } else {
         console.error('Error liking post:', error);
@@ -127,8 +129,9 @@ class FeedApi {
   async unlikePost(postId: string): Promise<void> {
     try {
       await api.request('DELETE', `/feed/posts/${postId}/like`);
-    } catch (error: any) {
-      if (error?.response?.status === 404) {
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError?.response?.status === 404) {
         console.log('Unlike API endpoint not available yet');
       } else {
         console.error('Error unliking post:', error);
@@ -139,8 +142,9 @@ class FeedApi {
   async commentOnPost(activityId: string, text: string): Promise<ApiResponse<Comment>> {
     try {
       return await api.request('POST', `/feed/posts/${activityId}/comment`, { text });
-    } catch (error: any) {
-      if (error?.response?.status === 404) {
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError?.response?.status === 404) {
         console.log('Comment API endpoint not available yet');
         // Return a mock unsuccessful response
         return {
@@ -157,9 +161,10 @@ class FeedApi {
     try {
       const response = await api.request<Comment[]>('GET', `/feed/posts/${postId}/comments`);
       return response.data || [];
-    } catch (error: any) {
+    } catch (error: unknown) {
       // If it's a 404, the endpoint doesn't exist yet
-      if (error?.response?.status === 404) {
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError?.response?.status === 404) {
         console.log('Comments API endpoint not available yet, returning empty array');
         return [];
       }

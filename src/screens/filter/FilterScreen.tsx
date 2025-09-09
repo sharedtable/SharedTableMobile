@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
   },
   applyButtonContainer: {
     backgroundColor: theme.colors.white,
-    borderTopColor: '#E5E5E5',
+    borderTopColor: theme.colors.ui.lightGray,
     borderTopWidth: 1,
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(16),
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   },
   checkbox: {
     alignItems: 'center',
-    borderColor: '#E5E5E5',
+    borderColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(4),
     borderWidth: 2,
     height: scaleWidth(20),
@@ -410,12 +410,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   filterSection: {
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: theme.colors.ui.lightGray,
     borderBottomWidth: 1,
   },
   header: {
     alignItems: 'center',
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: theme.colors.ui.lightGray,
     borderBottomWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   optionItem: {
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: theme.colors.ui.lighterGray,
     borderBottomWidth: 1,
     paddingVertical: scaleHeight(12),
   },
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
     lineHeight: scaleFont(20),
   },
   refineSection: {
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: theme.colors.ui.lightGray,
     borderBottomWidth: 1,
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(20),
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
   },
   tag: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(20),
     borderWidth: 1,
     marginBottom: scaleHeight(8),
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
     paddingVertical: scaleHeight(8),
   },
   tagSelected: {
-    backgroundColor: '#FFE4E4',
+    backgroundColor: theme.colors.ui.redMedium,
     borderColor: theme.colors.primary.main,
   },
   tagText: {
@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleWidth(16),
   },
   textInput: {
-    borderColor: '#E5E5E5',
+    borderColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(12),
     borderWidth: 1,
     color: theme.colors.text.primary,

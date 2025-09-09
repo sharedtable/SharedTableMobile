@@ -327,7 +327,7 @@ export const PrivacySecurityScreen: React.FC<PrivacySecurityScreenProps> = ({ on
           value={setting.enabled && !isDisabled}
           onValueChange={(enabled) => updatePrivacySetting(setting.key, enabled)}
           trackColor={{
-            false: '#E5E5E5',
+            false: theme.colors.ui.lightGray,
             true: theme.colors.primary.main,
           }}
           thumbColor="#FFFFFF"
@@ -402,17 +402,17 @@ export const PrivacySecurityScreen: React.FC<PrivacySecurityScreenProps> = ({ on
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor: theme.colors.background.paper,
     flex: 1,
   },
   dangerIcon: {
-    backgroundColor: '#FFE5E5',
+    backgroundColor: theme.colors.ui.redLight,
   },
   dangerItem: {
     // Special styling for dangerous actions
   },
   dangerText: {
-    color: '#FF4444',
+    color: theme.colors.error.light,
   },
   disabledItem: {
     opacity: 0.5,
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   separator: {
-    backgroundColor: '#F0F0F0',
+    backgroundColor: theme.colors.ui.lighterGray,
     height: 1,
     marginLeft: scaleWidth(20),
   },
@@ -473,18 +473,18 @@ const styles = StyleSheet.create({
     paddingVertical: scaleHeight(16),
   },
   settingsItemPressed: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: theme.colors.ui.lightestGray,
   },
   settingsList: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(16),
     borderWidth: 1,
     marginHorizontal: scaleWidth(16),
     overflow: 'hidden',
   },
   unavailableText: {
-    color: '#FF8800',
+    color: theme.colors.warning.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(12),
     marginTop: scaleHeight(2),

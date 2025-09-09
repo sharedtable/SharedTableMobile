@@ -623,7 +623,7 @@ const styles = StyleSheet.create({
     marginHorizontal: scaleWidth(20),
     marginBottom: scaleHeight(1),
     borderBottomWidth: 1,
-    borderBottomColor: '#E8E8E8',
+    borderBottomColor: theme.colors.ui.paleGray,
   },
   cardContent: {
     flexDirection: 'row',
@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
   },
   detailsText: {
     fontSize: scaleFont(13),
-    color: '#00BCD4',
+    color: theme.colors.ui.cyan,
     fontWeight: '500',
   },
   cancelTextButton: {
@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
     height: scaleWidth(70),
     borderRadius: scaleWidth(35),
     marginBottom: scaleHeight(8),
-    backgroundColor: '#f0f0f0',
+    backgroundColor: theme.colors.ui.lighterGray,
   },
   restaurantList: {
     paddingTop: scaleHeight(12),

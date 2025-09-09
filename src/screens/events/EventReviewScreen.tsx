@@ -161,7 +161,7 @@ const EventReviewScreen: React.FC = () => {
             <Ionicons
               name={star <= rating ? 'star' : 'star-outline'}
               size={28}
-              color={star <= rating ? '#F59E0B' : '#D1D5DB'}
+              color={star <= rating ? '#F59E0B' : theme.colors.gray['300']}
             />
           </TouchableOpacity>
         ))}
@@ -302,7 +302,7 @@ const EventReviewScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
   },
   keyboardView: {
     flex: 1,
@@ -314,12 +314,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleWidth(20),
     paddingVertical: scaleHeight(16),
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.colors.border,
   },
   headerTitle: {
     fontSize: scaleFont(18),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   submitText: {
     fontSize: scaleFont(16),
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.main,
   },
   submitTextDisabled: {
-    color: '#9CA3AF',
+    color: theme.colors.gray['400'],
   },
   scrollView: {
     flex: 1,
@@ -339,33 +339,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: scaleHeight(20),
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.colors.border,
   },
   eventTitle: {
     fontSize: scaleFont(20),
     fontWeight: '700',
-    color: '#111827',
+    color: theme.colors.gray['900'],
     textAlign: 'center',
   },
   hostName: {
     fontSize: scaleFont(14),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginTop: scaleHeight(4),
   },
   section: {
     paddingVertical: scaleHeight(24),
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.colors.border,
   },
   sectionTitle: {
     fontSize: scaleFont(18),
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.gray['900'],
     marginBottom: scaleHeight(4),
   },
   sectionSubtitle: {
     fontSize: scaleFont(14),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginBottom: scaleHeight(16),
   },
   ratingItem: {
@@ -381,10 +381,10 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     fontSize: scaleFont(15),
-    color: '#374151',
+    color: theme.colors.gray['700'],
   },
   required: {
-    color: '#EF4444',
+    color: theme.colors.error['500'],
   },
   starsContainer: {
     flexDirection: 'row',
@@ -402,9 +402,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(8),
     borderRadius: scaleWidth(20),
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.gray['100'],
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.border,
     marginBottom: scaleHeight(8),
   },
   highlightChipSelected: {
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
   },
   highlightText: {
     fontSize: scaleFont(14),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
   },
   highlightTextSelected: {
     color: theme.colors.primary.main,
@@ -421,16 +421,16 @@ const styles = StyleSheet.create({
   },
   textArea: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: theme.colors.gray['300'],
     borderRadius: scaleWidth(12),
     padding: scaleWidth(16),
     fontSize: scaleFont(15),
-    color: '#111827',
+    color: theme.colors.gray['900'],
     minHeight: scaleHeight(120),
   },
   charCount: {
     fontSize: scaleFont(12),
-    color: '#9CA3AF',
+    color: theme.colors.gray['400'],
     marginTop: scaleHeight(8),
     textAlign: 'right',
   },
@@ -445,18 +445,18 @@ const styles = StyleSheet.create({
   privacyTitle: {
     fontSize: scaleFont(16),
     fontWeight: '500',
-    color: '#111827',
+    color: theme.colors.gray['900'],
   },
   privacyDesc: {
     fontSize: scaleFont(14),
-    color: '#6B7280',
+    color: theme.colors.gray['500'],
     marginTop: scaleHeight(2),
   },
   toggle: {
     width: scaleWidth(52),
     height: scaleHeight(28),
     borderRadius: scaleWidth(14),
-    backgroundColor: '#D1D5DB',
+    backgroundColor: theme.colors.gray['300'],
     padding: scaleWidth(2),
   },
   toggleActive: {
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
     width: scaleHeight(24),
     height: scaleHeight(24),
     borderRadius: scaleHeight(12),
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.white,
   },
   toggleThumbActive: {
     transform: [{ translateX: scaleWidth(24) }],

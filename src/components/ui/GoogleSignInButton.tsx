@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: theme.colors.black['1'],
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 2,
@@ -117,8 +117,8 @@ const styles = StyleSheet.create({
     }),
   },
   buttonDark: {
-    backgroundColor: '#4285F4',
-    borderColor: '#4285F4',
+    backgroundColor: theme.colors.primary.main,
+    borderColor: theme.colors.primary.main,
   },
   content: {
     alignItems: 'center',

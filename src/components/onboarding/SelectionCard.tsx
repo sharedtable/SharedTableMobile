@@ -47,8 +47,8 @@ export const SelectionCard: React.FC<SelectionCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(226, 72, 73, 0.1)',
-    borderColor: 'transparent',
+    backgroundColor: theme.colors.overlay.primary10,
+    borderColor: theme.colors.transparent,
     borderRadius: scaleWidth(12),
     borderWidth: 2,
     paddingHorizontal: scaleWidth(20),
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }],
   },
   selectedCard: {
-    backgroundColor: 'rgba(226, 72, 73, 0.3)',
+    backgroundColor: theme.colors.overlay.primary30,
     borderColor: theme.colors.primary.main, // 30% of brand color
   },
   selectedText: {

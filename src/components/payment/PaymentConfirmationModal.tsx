@@ -126,7 +126,7 @@ export const PaymentConfirmationModal: React.FC<PaymentConfirmationModalProps> =
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: theme.colors.overlay.medium,
     justifyContent: 'center',
     alignItems: 'center',
     padding: scaleWidth(20),

@@ -13,6 +13,7 @@ import {
   MessageInput,
   KeyboardCompatibleView,
 } from 'stream-chat-expo';
+import { Channel as StreamChannel } from 'stream-chat';
 import { Ionicons } from '@expo/vector-icons';
 
 import { theme } from '@/theme';
@@ -28,7 +29,7 @@ export const ChannelScreen: React.FC = () => {
   const route = useRoute<RouteProps>();
   const navigation = useNavigation<NavigationProp>();
   const client = useChatClient();
-  const [channel, setChannel] = useState<any>(null);
+  const [channel, setChannel] = useState<StreamChannel | null>(null);
 
   const { channelId } = route.params;
 
@@ -72,7 +73,7 @@ export const ChannelScreen: React.FC = () => {
           } else if (channelInstance.type === 'messaging') {
             // For direct messages, show the other user's name
             const members = Object.values(channelInstance.state.members || {});
-            const otherMembers = members.filter((member: any) => 
+            const otherMembers = members.filter((member) => 
               member.user?.id !== client.userID
             );
             
@@ -84,7 +85,7 @@ export const ChannelScreen: React.FC = () => {
               // Group chat - show member names
               const names = otherMembers
                 .slice(0, 3)
-                .map((m: any) => m.user?.name || 'User')
+                .map((m) => m.user?.name || 'User')
                 .join(', ');
               channelTitle = otherMembers.length > 3 
                 ? `${names} +${otherMembers.length - 3}` 

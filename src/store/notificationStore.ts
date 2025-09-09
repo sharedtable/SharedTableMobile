@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import { notificationService } from '@/services/notificationService';
-import { api } from '@/services/api';
+import { api, type Notification } from '@/services/api';
 import { safeParseDate } from '@/utils/dateHelpers';
 import {
   NotificationData,
@@ -70,13 +70,13 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         const apiNotifications = response.data || [];
         
         // Convert API notifications to our NotificationData format
-        notifications = apiNotifications.map((n: any) => ({
+        notifications = apiNotifications.map((n: Notification) => ({
           id: n.id,
           type: n.type as NotificationType || NotificationType.SYSTEM_UPDATE,
           priority: NotificationPriority.NORMAL,
           channels: [NotificationChannel.PUSH, NotificationChannel.IN_APP],
           title: n.title,
-          body: n.message || n.body,
+          body: n.message || (n as any).body,
           data: n.data,
           userId: n.user_id,
           read: n.read,
@@ -125,13 +125,13 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         const apiNotifications = response.data || [];
         
         // Convert API notifications to our NotificationData format
-        const notifications: NotificationData[] = apiNotifications.map((n: any) => ({
+        const notifications: NotificationData[] = apiNotifications.map((n: Notification) => ({
           id: n.id,
           type: n.type as NotificationType || NotificationType.SYSTEM_UPDATE,
           priority: NotificationPriority.NORMAL,
           channels: [NotificationChannel.PUSH, NotificationChannel.IN_APP],
           title: n.title,
-          body: n.message || n.body,
+          body: n.message || (n as any).body,
           data: n.data,
           userId: n.user_id,
           read: n.read,

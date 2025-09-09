@@ -298,8 +298,8 @@ export class EmbeddingService {
       );
     }
     
-    if (preferences?.social_preferences) {
-      const socialPrefs = preferences.social_preferences;
+    if (profile?.social_preferences) {
+      const socialPrefs = profile.social_preferences;
       features.socialMediaFrequencyNormalized = this.normalizeOrdinal(
         socialPrefs.social_media_frequency || 'weekly',
         SOCIAL_MEDIA_FREQUENCY
@@ -310,8 +310,8 @@ export class EmbeddingService {
     }
     
     // Process geographic data
-    if (preferences?.location_zip_code) {
-      const coords = await this.getCoordinatesFromZip(preferences.location_zip_code);
+    if (profile?.location_zip_code) {
+      const coords = await this.getCoordinatesFromZip(profile.location_zip_code);
       features.latitude = coords.lat;
       features.longitude = coords.lng;
     }

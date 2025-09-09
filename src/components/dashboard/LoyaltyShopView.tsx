@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { Icon } from '@/components/base/Icon';
+import { Icon, type IconName } from '@/components/base/Icon';
 import { Colors } from '@/constants/colors';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
@@ -135,7 +135,7 @@ export const LoyaltyShopView: React.FC = () => {
     );
   }, [stats, redeemItem]);
   
-  const getCategoryIcon = (category: string) => {
+  const getCategoryIcon = (category: string): IconName => {
     switch (category) {
       case 'discount': return 'tag';
       case 'experience': return 'star';
@@ -190,7 +190,7 @@ export const LoyaltyShopView: React.FC = () => {
             onPress={() => setActiveCategory(category.id as ItemCategory)}
           >
             <Icon 
-              name={category.icon as any} 
+              name={category.icon as IconName} 
               size={16} 
               color={activeCategory === category.id ? theme.colors.white : theme.colors.primary.main}
             />
@@ -227,7 +227,7 @@ export const LoyaltyShopView: React.FC = () => {
         
         {!isLoading && filteredItems.length === 0 && (
           <View style={styles.emptyState}>
-            <Icon name={"inbox" as any} size={48} color={theme.colors.text.secondary} />
+            <Icon name="inbox" size={48} color={theme.colors.text.secondary} />
             <Text style={styles.emptyStateTitle}>No items available</Text>
             <Text style={styles.emptyStateText}>
               Check back later for new rewards in this category
@@ -253,7 +253,7 @@ export const LoyaltyShopView: React.FC = () => {
                     { backgroundColor: `${getCategoryColor(item.category)}20` },
                   ]}>
                     <Icon 
-                      name={getCategoryIcon(item.category) as any} 
+                      name={getCategoryIcon(item.category) as IconName} 
                       size={32} 
                       color={getCategoryColor(item.category)}
                     />
@@ -476,14 +476,14 @@ const styles = StyleSheet.create({
     paddingVertical: scaleHeight(24),
   },
   pointsInfo: {
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: theme.colors.overlay.whiteLight,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(12),
     marginTop: scaleHeight(4),
     textAlign: 'center',
   },
   pointsLabel: {
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: theme.colors.overlay.whiteLight,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
   },
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   soldOutBadge: {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: theme.colors.overlay.dark,
     borderRadius: scaleWidth(4),
     paddingHorizontal: scaleWidth(8),
     paddingVertical: scaleHeight(4),

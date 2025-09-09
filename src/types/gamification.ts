@@ -1,3 +1,4 @@
+import { theme } from "@/theme";
 export interface GamificationStats {
   userId: string;
   totalPoints: number;
@@ -129,7 +130,7 @@ export const TIER_CONFIG: TierBenefit[] = [
     name: 'Regular',
     benefits: ['5% point bonus', 'Priority waitlist'],
     pointsRequired: 100,
-    color: '#10B981',
+    color: theme.colors.success['500'],
     icon: 'leaf',
   },
   {

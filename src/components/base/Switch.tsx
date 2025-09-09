@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: theme.colors.black['1'],
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
         shadowRadius: 3,
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: theme.colors.black['1'],
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 2,

@@ -6,7 +6,7 @@ import { scaleHeight, scaleFont } from '@/utils/responsive';
 
 interface OnboardingTitleProps {
   children: React.ReactNode;
-  style?: any;
+  style?: object;
 }
 
 export const OnboardingTitle: React.FC<OnboardingTitleProps> = ({ children, style }) => {
@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(32),
-    fontWeight: '700' as any,
+    fontWeight: '700',
     lineHeight: scaleHeight(40),
     marginBottom: scaleHeight(32),
   },

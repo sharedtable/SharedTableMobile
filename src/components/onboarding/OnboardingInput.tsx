@@ -12,7 +12,7 @@ interface OnboardingInputProps {
   required?: boolean;
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-  autoComplete?: any;
+  autoComplete?: 'off' | 'email' | 'name' | 'password' | 'tel' | 'username' | 'given-name' | 'family-name';
   autoFocus?: boolean;
   error?: string;
 }
@@ -52,7 +52,7 @@ export const OnboardingInput: React.FC<OnboardingInputProps> = ({
 
 const styles = StyleSheet.create({
   errorText: {
-    color: '#e53e3e',
+    color: theme.colors.error.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
     marginTop: scaleHeight(4),
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleWidth(16),
   },
   inputError: {
-    borderColor: '#e53e3e',
+    borderColor: theme.colors.error.main,
     borderWidth: 1.5,
   },
   inputGroup: {
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(15),
-    fontWeight: '600' as any,
+    fontWeight: '600',
     marginBottom: scaleHeight(8),
   },
   required: {

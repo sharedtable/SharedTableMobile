@@ -1,5 +1,6 @@
 # OSX
 .DS_Store
+**/.DS_Store
 
 # Xcode
 build/
@@ -67,6 +68,10 @@ coverage/
 *.log
 tmp/
 temp/
+*.orig
+*.bak
+*.backup
+*~
 
 # Editor directories and files
 .vscode/
@@ -87,4 +92,36 @@ eas-build-*
 .eslintcache
 .prettierignore
 .husky/_
-EOF < /dev/null
+
+# Test files
+*.test.example.*
+*.spec.example.*
+**/test-data/
+**/mock-data/
+
+# Build artifacts
+build/
+dist/
+out/
+.next/
+.nuxt/
+.turbo/
+
+# IDE
+.idea/
+*.sublime-*
+*.code-workspace
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Lock files in subdirectories (keep only root)
+backend/package-lock.json
+backend/yarn.lock
+backend/pnpm-lock.yaml

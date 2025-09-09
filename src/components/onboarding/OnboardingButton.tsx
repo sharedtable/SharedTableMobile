@@ -11,7 +11,7 @@ interface OnboardingButtonProps {
   variant?: 'primary' | 'secondary' | 'outline';
   disabled?: boolean;
   loading?: boolean;
-  style?: any;
+  style?: object;
 }
 
 export const OnboardingButton: React.FC<OnboardingButtonProps> = ({
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(18),
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   disabled: {
     opacity: 0.5,

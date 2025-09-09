@@ -159,7 +159,7 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
 
               {/* Budget Slider */}
               <View style={styles.section}>
-                <Text style={styles.questionText}>What's your budget for a typical social dinner?</Text>
+                <Text style={styles.questionText}>What&apos;s your budget for a typical social dinner?</Text>
                 <View style={styles.sliderWrapper}>
                   <Slider
                     style={styles.slider}
@@ -201,7 +201,7 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
                     <Text style={styles.sliderLabel}>Always</Text>
                   </View>
                 </View>
-                <Text style={styles.helperText}>As long as the food and company are good, I don't mind</Text>
+                <Text style={styles.helperText}>As long as the food and company are good, I don&apos;t mind</Text>
               </View>
 
               {/* Drinking Slider */}
@@ -220,7 +220,7 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
                     thumbTintColor={theme.colors.primary.main}
                   />
                   <View style={styles.sliderLabels}>
-                    <Text style={styles.sliderLabel}>I don't drink</Text>
+                    <Text style={styles.sliderLabel}>I don&apos;t drink</Text>
                     <Text style={styles.sliderValue}>{drinkingLevel}</Text>
                     <Text style={styles.sliderLabel}>Frequently</Text>
                   </View>

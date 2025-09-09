@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     left: scaleWidth(20),
     position: 'absolute',
-    shadowColor: '#000',
+    shadowColor: theme.colors.black['1'],
     shadowOffset: {
       width: 0,
       height: 2,

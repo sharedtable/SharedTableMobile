@@ -200,8 +200,8 @@ export class EventsService {
    */
   static async updateEventCapacity(eventId: string, increment: number): Promise<boolean> {
     try {
-      const { data: event, error: fetchError } = await (supabase
-        .from('events') as any)
+      const { data: event, error: fetchError } = await supabase
+        .from('events')
         .select('current_capacity, max_capacity')
         .eq('id', eventId)
         .single();
@@ -216,12 +216,12 @@ export class EventsService {
         return false;
       }
 
-      const { error: updateError } = await (supabase
-        .from('events') as any)
+      const { error: updateError } = await supabase
+        .from('events')
         .update({
           current_capacity: newCapacity,
           updated_at: new Date().toISOString(),
-        })
+        } as unknown as never)
         .eq('id', eventId);
 
       if (updateError) {

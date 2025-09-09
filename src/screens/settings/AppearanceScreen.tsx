@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   },
   accessibilityList: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(16),
     borderWidth: 1,
     marginHorizontal: scaleWidth(16),
@@ -341,12 +341,12 @@ const styles = StyleSheet.create({
     width: scaleWidth(32),
   },
   container: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor: theme.colors.background.paper,
     flex: 1,
   },
   fontSizeList: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(16),
     borderWidth: 1,
     marginHorizontal: scaleWidth(16),
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   },
   fontSizeOption: {
     alignItems: 'center',
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: theme.colors.ui.lighterGray,
     borderBottomWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
   },
   previewCard: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(16),
     borderWidth: 1,
     padding: scaleWidth(20),
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
   themeOption: {
     alignItems: 'center',
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(16),
     borderWidth: 1,
     flexDirection: 'row',
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
   },
   toggleContainer: {
     alignItems: 'center',
-    backgroundColor: '#E5E5E5',
+    backgroundColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(16),
     height: scaleWidth(32),
     justifyContent: 'center',

@@ -92,6 +92,23 @@ export const colors = {
     default: '#FFFFFF',
     paper: '#F9FAFB',
   },
+  
+  // Overlay Colors
+  overlay: {
+    dark: 'rgba(0, 0, 0, 0.7)',
+    darkest: 'rgba(0, 0, 0, 0.9)',
+    medium: 'rgba(0, 0, 0, 0.5)',
+    mediumDark: 'rgba(0, 0, 0, 0.6)',
+    light: 'rgba(0, 0, 0, 0.4)',
+    lighter: 'rgba(0, 0, 0, 0.3)',
+    white: 'rgba(255, 255, 255, 0.2)',
+    white30: 'rgba(255, 255, 255, 0.3)',
+    white80: 'rgba(255, 255, 255, 0.8)',
+    whiteLight: 'rgba(255, 255, 255, 0.9)',
+    primary10: 'rgba(226, 72, 73, 0.1)',
+    primary30: 'rgba(226, 72, 73, 0.3)',
+    blue5: 'rgba(0, 122, 255, 0.05)',
+  },
 
   // Border color
   border: '#E5E7EB',
@@ -101,11 +118,11 @@ export const colors = {
     white: '#FFFFFF',
     gray: {
       '50': '#F9FAFB',
-      '100': '#F3F4F6',
+      '100': '#F7F7F7',
       '200': '#E5E7EB',
-      '300': '#D1D5DB',
+      '300': '#E5E5E5',
       '400': '#9CA3AF',
-      '500': '#6B7280',
+      '500': '#9CA3AF',
       '600': '#4B5563',
       '700': '#374151',
       '800': '#1F2937',
@@ -121,7 +138,48 @@ export const colors = {
 
   // White & Extra
   white: '#FFFFFF',
+  transparent: 'transparent',
   extra: '#3E192A',
+  
+  // iOS System Colors
+  ios: {
+    blue: '#007AFF',
+    red: '#FF3B30',
+    green: '#4CD964',
+    yellow: '#FFCC00',
+    orange: '#FF9500',
+    purple: '#5856D6',
+    teal: '#5AC8FA',
+    pink: '#FF2D55',
+  },
+  
+  // Additional UI Colors
+  ui: {
+    lightGray: '#E5E5E5',
+    lighterGray: '#F5F5F5',
+    lightestGray: '#F5F5F5',
+    offWhite: '#F8F9FA',
+    paleGray: '#E8E8E8',
+    borderLight: '#E1E1E1',
+    redLight: '#FFE5E5',
+    redLightest: '#FFF9F9',
+    redMedium: '#FFE4E4',
+    greenLight: '#D1FAE5',
+    yellowLight: '#FEF3C7',
+    yellowBorder: '#FCD34D',
+    yellowDark: '#92400E',
+    yellowDarker: '#78350F',
+    yellowOrange: '#F59E0B',
+    bluePale: '#EFF6FF',
+    blueIndigo: '#667EEA',
+    blueLight: '#3B82F6',
+    teal: '#B2EDE8',
+    cyan: '#00BCD4',
+    orangeLight: '#FFF3E0',
+    orangePale: '#FFF3CD',
+    yellowBright: '#FFEAA7',
+    darkGray: '#666666',
+  },
 
   // Gray Colors
   gray: {
@@ -130,16 +188,25 @@ export const colors = {
     '3': '#9A9A9A', // Medium gray
     '4': '#B2B6C6', // Blue-gray
     '50': '#F9FAFB',
-    '100': '#F3F4F6',
+    '100': '#F7F7F7',
     '200': '#E5E7EB',
-    '300': '#D1D5DB',
+    '300': '#E5E5E5',
     '400': '#9CA3AF',
-    '500': '#6B7280',
+    '500': '#9CA3AF',
     '600': '#4B5563',
     '700': '#374151',
     '800': '#1F2937',
     '900': '#111827',
   },
+  
+  // Payment brand colors
+  paymentBrands: {
+    visa: '#1A1F71',
+    mastercard: '#EB001B',
+    amex: '#006FCF',
+  },
+  
+  // Special values (removed duplicate transparent)
 };
 
 export const spacing = {
@@ -245,28 +312,28 @@ export const borderRadius = {
 export const shadows = {
   none: {},
   sm: {
-    shadowColor: '#000',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
   },
   md: {
-    shadowColor: '#000',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
   lg: {
-    shadowColor: '#000',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 5,
   },
   xl: {
-    shadowColor: '#000',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 16,

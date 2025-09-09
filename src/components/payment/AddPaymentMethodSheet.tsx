@@ -151,7 +151,7 @@ export const AddPaymentMethodSheet: React.FC<AddPaymentMethodSheetProps> = ({
         </View>
 
         <Text style={styles.description}>
-          Add a card to place holds for bookings. You'll only be charged if you cancel last minute or don't show up.
+          Add a card to place holds for bookings. You&apos;ll only be charged if you cancel last minute or don&apos;t show up.
         </Text>
 
         <View style={styles.cardFieldContainer}>
@@ -203,12 +203,12 @@ export const AddPaymentMethodSheet: React.FC<AddPaymentMethodSheetProps> = ({
 };
 
 const cardFieldStyles = {
-  backgroundColor: '#FFFFFF',
+  backgroundColor: theme.colors.white,
   textColor: '#000000',
   placeholderColor: '#999999',
   borderRadius: 8,
   borderWidth: 1,
-  borderColor: '#E0E0E0',
+  borderColor: theme.colors.gray['200'],
   fontSize: 16,
 };
 

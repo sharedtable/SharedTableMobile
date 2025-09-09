@@ -57,11 +57,11 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       // Save ALL steps to backend, not just mandatory ones
       try {
         // Prepare data for backend - send all the data for this step
-        const apiData: any = { ...data };
+        const apiData: Record<string, unknown> = { ...data };
         
         // Handle date conversion if needed
-        if (apiData.birthDate?.toISOString) {
-          apiData.birthDate = apiData.birthDate.toISOString();
+        if (apiData.birthDate && typeof apiData.birthDate === 'object' && 'toISOString' in apiData.birthDate) {
+          apiData.birthDate = (apiData.birthDate as Date).toISOString();
         }
         
         console.log(`📤 Saving ${step} to backend:`, apiData);

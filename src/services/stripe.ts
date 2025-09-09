@@ -21,6 +21,14 @@ export interface PaymentMethod {
   };
 }
 
+export interface StripeError {
+  code: string;
+  message: string;
+  localizedMessage?: string;
+  declineCode?: string;
+  type?: string;
+}
+
 export interface PaymentIntentResult {
   success: boolean;
   paymentIntentId?: string;
@@ -241,7 +249,7 @@ export class StripeService {
     clientSecret: string,
     customerId?: string,
     ephemeralKey?: string
-  ): Promise<{ error?: any }> {
+  ): Promise<{ error?: StripeError }> {
     try {
       const { error } = await initPaymentSheet({
         paymentIntentClientSecret: clientSecret,
@@ -266,19 +274,19 @@ export class StripeService {
         logger.error('Failed to initialize payment sheet:', error);
       }
 
-      return { error: error as any };
+      return { error: error as StripeError };
     } catch (error) {
       logger.error('Failed to initialize payment sheet:', error);
       return {
         error: {
           code: PaymentSheetError.Failed,
           message: 'Failed to initialize payment',
-        } as any,
+        } as StripeError,
       };
     }
   }
 
-  static async presentPaymentSheet(): Promise<{ error?: any }> {
+  static async presentPaymentSheet(): Promise<{ error?: StripeError }> {
     try {
       const { error } = await presentPaymentSheet();
       
@@ -286,14 +294,14 @@ export class StripeService {
         logger.error('Payment sheet error:', error);
       }
       
-      return { error: error as any };
+      return { error: error as StripeError };
     } catch (error) {
       logger.error('Failed to present payment sheet:', error);
       return {
         error: {
           code: PaymentSheetError.Failed,
           message: 'Failed to complete payment',
-        } as any,
+        } as StripeError,
       };
     }
   }

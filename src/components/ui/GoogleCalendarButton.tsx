@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: theme.colors.black['1'],
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 2,
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     alignItems: 'center',
-    backgroundColor: 'transparent',
+    backgroundColor: theme.colors.transparent,
     borderRadius: theme.borderRadius.md,
     justifyContent: 'center',
   },

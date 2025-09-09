@@ -38,8 +38,8 @@ export const OptionCard: React.FC<OptionCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     alignItems: 'center',
-    backgroundColor: 'rgba(226, 72, 73, 0.1)', // 10% of brand color
-    borderColor: 'transparent',
+    backgroundColor: theme.colors.overlay.primary10,
+    borderColor: theme.colors.transparent,
     borderRadius: scaleWidth(12),
     borderWidth: 2,
     justifyContent: 'center',
@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     paddingVertical: scaleHeight(16),
   },
   cardSelected: {
-    backgroundColor: 'rgba(226, 72, 73, 0.3)', // 30% of brand color
+    backgroundColor: theme.colors.overlay.primary30,
     borderColor: theme.colors.primary.main,
   },
   iconContainer: {
@@ -58,11 +58,11 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
-    fontWeight: '500' as any,
+    fontWeight: '500',
     textAlign: 'center',
   },
   labelSelected: {
     color: theme.colors.primary.main,
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
 });

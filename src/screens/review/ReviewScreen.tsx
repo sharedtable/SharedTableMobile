@@ -76,7 +76,7 @@ export const ReviewScreen: React.FC<ReviewScreenProps> = ({ onNavigate }) => {
             onPress={() => handleRating(category, star)}
             style={styles.starButton}
           >
-            <Icon name="star" size={28} color={star <= currentRating ? '#FFB800' : '#E5E5E5'} />
+            <Icon name="star" size={28} color={star <= currentRating ? '#FFB800' : theme.colors.ui.lightGray} />
           </Pressable>
         ))}
       </View>
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   container: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor: theme.colors.background.paper,
     flex: 1,
   },
   header: {
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   },
   photoUploadButton: {
     alignItems: 'center',
-    backgroundColor: '#FFF9F9',
+    backgroundColor: theme.colors.ui.redLightest,
     borderColor: theme.colors.primary.main,
     borderRadius: scaleWidth(12),
     borderStyle: 'dashed',
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
   },
   section: {
     backgroundColor: theme.colors.white,
-    borderColor: '#E5E5E5',
+    borderColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(27),
     borderWidth: 1,
     marginBottom: scaleHeight(16),
@@ -359,13 +359,13 @@ const styles = StyleSheet.create({
   },
   submitContainer: {
     backgroundColor: theme.colors.white,
-    borderTopColor: '#E5E5E5',
+    borderTopColor: theme.colors.ui.lightGray,
     borderTopWidth: 1,
     paddingHorizontal: scaleWidth(16),
     paddingVertical: scaleHeight(16),
   },
   textInput: {
-    borderColor: '#E5E5E5',
+    borderColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(12),
     borderWidth: 1,
     color: theme.colors.text.primary,
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
   },
   yesNoButton: {
     alignItems: 'center',
-    borderColor: '#E5E5E5',
+    borderColor: theme.colors.ui.lightGray,
     borderRadius: scaleWidth(20),
     borderWidth: 1,
     flex: 1,

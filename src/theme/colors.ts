@@ -17,13 +17,13 @@ export const colors = {
   gray: {
     50: '#FAFAFA',
     100: '#F5F5F5',
-    200: '#F0F0F0',
+    200: '#F5F5F5',
     300: '#E5E5E5',
     400: '#CCCCCC',
     500: '#999999',
     600: '#666666',
     700: '#4D4D4D',
-    800: '#333333',
+    800: '#374151',
     900: '#1A1A1A',
   },
 
@@ -37,7 +37,7 @@ export const colors = {
   background: {
     primary: '#FFFFFF',
     secondary: '#F9F9F9',
-    tertiary: '#F3F4F6',
+    tertiary: '#F5F5F5',
     overlay: 'rgba(0, 0, 0, 0.5)',
     overlayLight: 'rgba(0, 0, 0, 0.3)',
     brandLight: 'rgba(226, 72, 73, 0.05)',
@@ -61,7 +61,7 @@ export const colors = {
   // Border colors
   border: {
     primary: '#E5E5E5',
-    secondary: '#F0F0F0',
+    secondary: '#F5F5F5',
     tertiary: '#CCCCCC',
   },
 

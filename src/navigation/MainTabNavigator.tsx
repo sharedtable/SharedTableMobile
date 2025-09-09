@@ -5,14 +5,14 @@ import React from 'react';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { HomeScreen } from '@/screens/home/HomeScreen';
 import { ChatScreen } from '@/screens/chat/ChatScreen';
-import { FeedNavigator } from './FeedNavigator';
+// import { FeedNavigator } from './FeedNavigator'; // Hidden for now
 import { ProfileNavigator } from './ProfileNavigator';
 import { theme } from '@/theme';
 import { useNotificationStore } from '@/store/notificationStore';
 
 export type MainTabParamList = {
   Home: undefined;
-  Feed: undefined;
+  // Feed: undefined; // Hidden for now - will be re-enabled when feature is polished
   Dashboard: undefined;
   Profile: undefined;
   Chat: undefined;
@@ -31,8 +31,8 @@ export function MainTabNavigator() {
 
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Feed') {
-            iconName = focused ? 'grid' : 'grid-outline';
+          // } else if (route.name === 'Feed') {
+          //   iconName = focused ? 'grid' : 'grid-outline';
           } else if (route.name === 'Dashboard') {
             iconName = focused ? 'stats-chart' : 'stats-chart-outline';
           } else if (route.name === 'Chat') {
@@ -64,6 +64,7 @@ export function MainTabNavigator() {
           tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
         }}
       />
+      {/* Hidden for now - will be re-enabled when feature is polished
       <Tab.Screen
         name="Feed"
         component={FeedNavigator}
@@ -71,6 +72,7 @@ export function MainTabNavigator() {
           title: 'Feed',
         }}
       />
+      */}
       <Tab.Screen
         name="Dashboard"
         component={DashboardScreen}

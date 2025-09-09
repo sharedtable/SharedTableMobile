@@ -131,13 +131,19 @@ export const TopBar = memo<TopBarProps>(
 
             {/* Center Section */}
             <View style={styles.centerSection}>
-              {title ? (
-                <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
-                  {title}
-                </Text>
-              ) : showLogo && (showBack || showMenu) ? (
-                <Logo size="small" />
-              ) : null}
+              {(() => {
+                if (title) {
+                  return (
+                    <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
+                      {title}
+                    </Text>
+                  );
+                }
+                if (showLogo && (showBack || showMenu)) {
+                  return <Logo size="small" />;
+                }
+                return null;
+              })()}
             </View>
 
             {/* Right Section */}
@@ -252,7 +258,7 @@ const styles = StyleSheet.create({
   shadow: {
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: theme.colors.black['1'],
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 4,
@@ -266,7 +272,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(24),
-    fontWeight: '700' as any,
+    fontWeight: '700',
   },
   transparent: {
     left: 0,
