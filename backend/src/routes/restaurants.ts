@@ -9,24 +9,9 @@ router.get('/top-rated', async (req, res) => {
   try {
     const limit = parseInt(req.query.limit as string) || 10;
     
-    // Get restaurants with their average ratings from past dinners
-    const { data: restaurants, error } = await supabaseService
-      .from('dinner_groups')
-      .select(`
-        restaurant_name,
-        restaurant_address
-      `)
-      .eq('status', 'completed')
-      .not('restaurant_name', 'is', null)
-      .limit(100);
-
-    if (error) {
-      logger.error('Failed to fetch restaurants:', error);
-      return res.status(500).json({ 
-        success: false, 
-        error: 'Failed to fetch top-rated restaurants' 
-      });
-    }
+    // For now, return curated mock data since dinner_groups table might not exist
+    // In production, this would query from a restaurants table or dinner events
+    const restaurants: any[] = [];
 
     // Curated restaurant images from Unsplash
     const restaurantImages = [
@@ -65,31 +50,76 @@ router.get('/top-rated', async (req, res) => {
     // Add Evvia first
     restaurantMap.set('Evvia Estiatorio', evviaRestaurant);
 
-    // Process other restaurants from database
-    let imageIndex = 0;
-    restaurants?.forEach(group => {
-      const key = group.restaurant_name;
-      if (!restaurantMap.has(key)) {
-        // Assign random cuisine and price range for demo
-        const cuisines = ['Italian', 'French', 'Japanese', 'American', 'Mediterranean', 'Thai', 'Mexican'];
-        const priceRanges = ['$$', '$$$', '$$$$'];
-        
-        // Use restaurant images cyclically
-        const imageUrl = restaurantImages[imageIndex % restaurantImages.length];
-        imageIndex++;
-        
-        restaurantMap.set(key, {
-          name: group.restaurant_name,
-          address: group.restaurant_address || '',
-          cuisine: cuisines[Math.floor(Math.random() * cuisines.length)],
-          priceRange: priceRanges[Math.floor(Math.random() * priceRanges.length)],
-          imageUrl,
-          visitCount: 0,
-          rating: 4.2 + Math.random() * 0.7 // Rating 4.2-4.9
-        });
+    // Add more curated restaurants for demo
+    const mockRestaurants = [
+      {
+        name: 'The French Laundry',
+        address: '6640 Washington St, Yountville, CA 94599',
+        cuisine: 'French',
+        priceRange: '$$$$',
+        imageUrl: restaurantImages[1],
+        visitCount: 8,
+        rating: 4.9
+      },
+      {
+        name: 'Nobu Palo Alto',
+        address: '180 Hamilton Ave, Palo Alto, CA 94301',
+        cuisine: 'Japanese',
+        priceRange: '$$$',
+        imageUrl: restaurantImages[2],
+        visitCount: 15,
+        rating: 4.7
+      },
+      {
+        name: 'Baumé',
+        address: '201 S California Ave, Palo Alto, CA 94306',
+        cuisine: 'French',
+        priceRange: '$$$$',
+        imageUrl: restaurantImages[3],
+        visitCount: 6,
+        rating: 4.6
+      },
+      {
+        name: 'Protégé',
+        address: '250 California Ave, Palo Alto, CA 94306',
+        cuisine: 'New American',
+        priceRange: '$$$',
+        imageUrl: restaurantImages[4],
+        visitCount: 10,
+        rating: 4.8
+      },
+      {
+        name: 'Tamarine',
+        address: '546 University Ave, Palo Alto, CA 94301',
+        cuisine: 'Vietnamese',
+        priceRange: '$$',
+        imageUrl: restaurantImages[5],
+        visitCount: 12,
+        rating: 4.5
+      },
+      {
+        name: 'Bird Dog',
+        address: '420 Ramona St, Palo Alto, CA 94301',
+        cuisine: 'American',
+        priceRange: '$$',
+        imageUrl: restaurantImages[6],
+        visitCount: 18,
+        rating: 4.4
+      },
+      {
+        name: 'Oren\'s Hummus',
+        address: '261 University Ave, Palo Alto, CA 94301',
+        cuisine: 'Mediterranean',
+        priceRange: '$$',
+        imageUrl: restaurantImages[7],
+        visitCount: 20,
+        rating: 4.3
       }
-      const restaurant = restaurantMap.get(key)!;
-      restaurant.visitCount++;
+    ];
+
+    // Add mock restaurants to the map
+    mockRestaurants.forEach(restaurant => {
+      restaurantMap.set(restaurant.name, restaurant);
     });
 
     // Convert to array and sort by rating

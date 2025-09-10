@@ -8,6 +8,7 @@ import * as SecureStore from 'expo-secure-store';
 
 import { logError } from '@/utils/env';
 import { retryWithBackoff, withTimeout } from '@/utils/retry';
+import { tokenProvider } from '@/services/tokenProvider';
 
 // API configuration
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -25,9 +26,16 @@ const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   async (config) => {
     try {
-      const token = await SecureStore.getItemAsync('privy_auth_token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      // Try to get fresh token from TokenProvider first
+      const freshToken = await tokenProvider.getAccessToken();
+      if (freshToken) {
+        config.headers.Authorization = `Bearer ${freshToken}`;
+      } else {
+        // Fallback to stored token if TokenProvider is not initialized
+        const token = await SecureStore.getItemAsync('privy_auth_token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
       }
     } catch (error) {
       logError('Failed to get auth token', error);

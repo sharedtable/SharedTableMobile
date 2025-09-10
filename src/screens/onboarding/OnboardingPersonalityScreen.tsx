@@ -5,7 +5,6 @@ import {
   Text, 
   StyleSheet, 
   Alert, 
-  ScrollView, 
   TouchableOpacity,
   Platform
 } from 'react-native';
@@ -28,12 +27,81 @@ interface PersonalityTraits {
   seekExperiences: number;
 }
 
-const mbtiTypes = [
-  'INTJ', 'INTP', 'ENTJ', 'ENTP',
-  'INFJ', 'INFP', 'ENFJ', 'ENFP',
-  'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ',
-  'ISTP', 'ISFP', 'ESTP', 'ESFP',
+// Organized in a 4x4 grid for easy selection
+const mbtiGrid = [
+  ['INTJ', 'INTP', 'ENTJ', 'ENTP'],
+  ['INFJ', 'INFP', 'ENFJ', 'ENFP'],
+  ['ISTJ', 'ISFJ', 'ESTJ', 'ESFJ'],
+  ['ISTP', 'ISFP', 'ESTP', 'ESFP'],
 ];
+
+// MBTI type descriptions
+const mbtiDescriptions: Record<string, { title: string; traits: string[] }> = {
+  'INTJ': {
+    title: 'The Architect',
+    traits: ['Strategic thinker', 'Independent', 'Decisive', 'Innovative problem-solver']
+  },
+  'INTP': {
+    title: 'The Thinker',
+    traits: ['Analytical', 'Objective', 'Abstract thinker', 'Reserved but precise']
+  },
+  'ENTJ': {
+    title: 'The Commander',
+    traits: ['Natural leader', 'Bold', 'Strategic', 'Efficient organizer']
+  },
+  'ENTP': {
+    title: 'The Debater',
+    traits: ['Quick thinker', 'Charismatic', 'Energetic', 'Enjoys intellectual challenges']
+  },
+  'INFJ': {
+    title: 'The Advocate',
+    traits: ['Insightful', 'Principled', 'Passionate', 'Altruistic']
+  },
+  'INFP': {
+    title: 'The Mediator',
+    traits: ['Idealistic', 'Empathetic', 'Creative', 'Open-minded']
+  },
+  'ENFJ': {
+    title: 'The Protagonist',
+    traits: ['Charismatic leader', 'Inspiring', 'Confident', 'Altruistic']
+  },
+  'ENFP': {
+    title: 'The Campaigner',
+    traits: ['Enthusiastic', 'Creative', 'Sociable', 'Free spirit']
+  },
+  'ISTJ': {
+    title: 'The Inspector',
+    traits: ['Practical', 'Fact-oriented', 'Reliable', 'Duty-focused']
+  },
+  'ISFJ': {
+    title: 'The Protector',
+    traits: ['Supportive', 'Reliable', 'Patient', 'Observant']
+  },
+  'ESTJ': {
+    title: 'The Executive',
+    traits: ['Organized', 'Practical', 'Strong-willed', 'Direct']
+  },
+  'ESFJ': {
+    title: 'The Consul',
+    traits: ['Caring', 'Social', 'Supportive', 'Practical helper']
+  },
+  'ISTP': {
+    title: 'The Virtuoso',
+    traits: ['Practical', 'Observant', 'Hands-on problem solver', 'Flexible']
+  },
+  'ISFP': {
+    title: 'The Adventurer',
+    traits: ['Artistic', 'Curious', 'Flexible', 'Charming']
+  },
+  'ESTP': {
+    title: 'The Entrepreneur',
+    traits: ['Energetic', 'Perceptive', 'Direct', 'Action-oriented']
+  },
+  'ESFP': {
+    title: 'The Entertainer',
+    traits: ['Spontaneous', 'Energetic', 'Enthusiastic', 'Fun-loving']
+  },
+};
 
 const roleOptions = [
   'Connector',
@@ -78,7 +146,6 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
   const [selectedRoles, setSelectedRoles] = useState<string[]>(
     currentStepData.roles || []
   );
-  const [showMbtiDropdown, setShowMbtiDropdown] = useState(false);
   const [traits, setTraits] = useState<PersonalityTraits>(() => {
     // Check if personalityTraits is an array (from database) and convert back to object
     if (Array.isArray(currentStepData.personalityTraits)) {
@@ -90,17 +157,17 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
         }
       });
       return {
-        leadConversations: 5,
-        willingCompromise: 5,
-        seekExperiences: 5,
+        leadConversations: 3,
+        willingCompromise: 3,
+        seekExperiences: 3,
         ...traitsFromArray,
       };
     }
 
     return {
-      leadConversations: currentStepData.leadConversations || 5,
-      willingCompromise: currentStepData.willingCompromise || 5,
-      seekExperiences: currentStepData.seekExperiences || 5,
+      leadConversations: currentStepData.leadConversations || 3,
+      willingCompromise: currentStepData.willingCompromise || 3,
+      seekExperiences: currentStepData.seekExperiences || 3,
     };
   });
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
@@ -193,7 +260,7 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
       scrollable
     >
       <View style={styles.container}>
-        <OnboardingTitle>Your Personality & Passions</OnboardingTitle>
+        <OnboardingTitle>Your Personality</OnboardingTitle>
         
         <Text style={styles.subtitle}>
           Tell us how you connect with others, what drives you, and how you spend your time.
@@ -264,54 +331,45 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
         {/* MBTI Selection */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>What is your MBTI personality type?</Text>
-          <Text style={styles.sectionSubtitle}>Leave empty if unsure</Text>
+          <Text style={styles.sectionSubtitle}>Tap to select/unselect. Leave empty if unsure</Text>
           
-          <TouchableOpacity
-            style={styles.selectButton}
-            onPress={() => setShowMbtiDropdown(!showMbtiDropdown)}
-            activeOpacity={0.7}
-          >
-            <Text style={[
-              styles.selectButtonText,
-              !selectedMbti && styles.placeholderText
-            ]}>
-              {selectedMbti || 'Select MBTI type (optional)'}
-            </Text>
-            <Text style={styles.selectButtonArrow}>
-              {showMbtiDropdown ? '▲' : '▼'}
-            </Text>
-          </TouchableOpacity>
-          
-          {showMbtiDropdown && (
-            <View style={styles.dropdown}>
-              <ScrollView 
-                showsVerticalScrollIndicator={true}
-                nestedScrollEnabled
-                bounces={false}
-              >
-                {mbtiTypes.map((type, index) => (
+          <View style={styles.mbtiGrid}>
+            {mbtiGrid.map((row, rowIndex) => (
+              <View key={rowIndex} style={styles.mbtiRow}>
+                {row.map((type) => (
                   <TouchableOpacity
                     key={type}
                     style={[
-                      styles.dropdownItem,
-                      selectedMbti === type && styles.dropdownItemSelected,
-                      index === mbtiTypes.length - 1 && styles.dropdownItemLast
+                      styles.mbtiButton,
+                      selectedMbti === type && styles.mbtiButtonSelected
                     ]}
-                    onPress={() => {
-                      setSelectedMbti(type);
-                      setShowMbtiDropdown(false);
-                    }}
-                    activeOpacity={0.6}
+                    onPress={() => setSelectedMbti(selectedMbti === type ? '' : type)}
+                    activeOpacity={0.7}
                   >
                     <Text style={[
-                      styles.dropdownItemText,
-                      selectedMbti === type && styles.dropdownItemTextSelected
+                      styles.mbtiButtonText,
+                      selectedMbti === type && styles.mbtiButtonTextSelected
                     ]}>
                       {type}
                     </Text>
                   </TouchableOpacity>
                 ))}
-              </ScrollView>
+              </View>
+            ))}
+          </View>
+          
+          {selectedMbti && mbtiDescriptions[selectedMbti] && (
+            <View style={styles.mbtiExplanation}>
+              <Text style={styles.mbtiExplanationTitle}>
+                {selectedMbti} - {mbtiDescriptions[selectedMbti].title}
+              </Text>
+              <View style={styles.mbtiTraits}>
+                {mbtiDescriptions[selectedMbti].traits.map((trait, index) => (
+                  <Text key={index} style={styles.mbtiTrait}>
+                    • {trait}
+                  </Text>
+                ))}
+              </View>
             </View>
           )}
         </View>
@@ -432,71 +490,71 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontWeight: '500',
   },
-  selectButton: {
-    backgroundColor: Colors.backgroundGrayLight,
-    borderColor: Colors.borderLight,
-    borderRadius: scaleWidth(8),
-    borderWidth: 1,
+  mbtiGrid: {
+    backgroundColor: Colors.backgroundGrayLighter,
+    borderRadius: scaleWidth(12),
+    padding: scaleWidth(12),
+    gap: scaleHeight(8),
+  },
+  mbtiRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: scaleWidth(14),
-    paddingVertical: scaleHeight(12),
+    gap: scaleWidth(8),
   },
-  selectButtonText: {
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(15),
+  mbtiButton: {
     flex: 1,
-  },
-  placeholderText: {
-    color: theme.colors.text.secondary,
-  },
-  selectButtonArrow: {
-    color: theme.colors.text.secondary,
-    fontSize: scaleFont(14),
-    marginLeft: scaleWidth(8),
-  },
-  dropdown: {
-    marginTop: scaleHeight(8),
     backgroundColor: Colors.white,
     borderRadius: scaleWidth(8),
+    paddingVertical: scaleHeight(12),
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: Colors.borderLight,
-    maxHeight: scaleHeight(200),
-    overflow: 'hidden',
     ...Platform.select({
       ios: {
         shadowColor: Colors.shadowColor,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
       },
       android: {
-        elevation: 4,
+        elevation: 1,
       },
     }),
   },
-  dropdownItem: {
-    paddingHorizontal: scaleWidth(14),
-    paddingVertical: scaleHeight(10),
-    borderBottomWidth: 0.5,
-    borderBottomColor: Colors.backgroundGrayLighter,
+  mbtiButtonSelected: {
+    backgroundColor: theme.colors.primary.main,
+    borderColor: theme.colors.primary.main,
   },
-  dropdownItemSelected: {
-    backgroundColor: Colors.primaryLight,
-  },
-  dropdownItemLast: {
-    borderBottomWidth: 0,
-  },
-  dropdownItemText: {
+  mbtiButtonText: {
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
+    fontSize: scaleFont(13),
+    fontWeight: '500',
   },
-  dropdownItemTextSelected: {
-    color: theme.colors.primary.main,
+  mbtiButtonTextSelected: {
+    color: Colors.white,
     fontWeight: '600',
+  },
+  mbtiExplanation: {
+    marginTop: scaleHeight(12),
+    backgroundColor: Colors.primaryLight,
+    borderRadius: scaleWidth(8),
+    padding: scaleWidth(12),
+  },
+  mbtiExplanationTitle: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '600',
+    marginBottom: scaleHeight(8),
+  },
+  mbtiTraits: {
+    gap: scaleHeight(4),
+  },
+  mbtiTrait: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
+    lineHeight: scaleFont(18),
   },
   spacer: {
     flex: 1,

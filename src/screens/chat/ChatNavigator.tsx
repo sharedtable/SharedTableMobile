@@ -8,7 +8,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { theme } from '@/theme';
 
-import { ChannelListScreen } from './ChannelListScreen';
+import { OptimizedChannelListScreen } from './OptimizedChannelListScreen';
 import { ChannelScreen } from './ChannelScreen';
 import { ThreadScreen } from './ThreadScreen';
 import { ChannelMembersScreen } from './ChannelMembersScreen';
@@ -46,7 +46,7 @@ export const ChatNavigator: React.FC = () => {
     >
       <Stack.Screen
         name="ChannelList"
-        component={ChannelListScreen}
+        component={OptimizedChannelListScreen}
         options={{
           title: 'Messages',
           headerLargeTitle: true,

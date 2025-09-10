@@ -409,29 +409,29 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
       {/* Optional Onboarding Prompt */}
       <OptionalOnboardingPrompt />
 
-      <KeyboardAvoidingView
-        style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={0}
-      >
-        <ScrollView
-          ref={scrollViewRef}
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refreshEvents} />}
-        >
-          {/* Hero Section with Background */}
-          <View style={styles.heroSection}>
-            <Image
-              source={backgroundImage}
-              style={styles.heroImage as ImageStyle}
-            />
-          </View>
+      {/* Fixed Hero Section with Background */}
+      <View style={styles.heroSection}>
+        <Image
+          source={backgroundImage}
+          style={styles.heroImage as ImageStyle}
+        />
+      </View>
 
-          {/* Content Card */}
-          <View style={styles.contentCard}>
+      {/* Fixed Content Card Container with scrollable content inside */}
+      <View style={styles.contentCardContainer}>
+        <KeyboardAvoidingView
+          style={styles.keyboardView}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={0}
+        >
+          <ScrollView
+            ref={scrollViewRef}
+            style={styles.scrollView}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refreshEvents} />}
+          >
             {/* Header Section with Links and Location */}
             <View style={styles.headerSection}>
               <View style={styles.locationContainer}>
@@ -707,9 +707,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
 
             {/* Bottom Padding */}
             <View style={{ height: scaleHeight(100) }} />
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </View>
 
       {/* Bottom Tab Bar removed - using React Navigation's tab bar */}
       
@@ -734,7 +734,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: scaleWidth(24),
     marginBottom: scaleHeight(20),
-    marginTop: scaleHeight(8),
+    marginTop: scaleHeight(30),
   },
   headerLinks: {
     flexDirection: 'row',
@@ -856,13 +856,16 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background?.paper || '#F9F9F9',
     flex: 1,
   },
-  contentCard: {
+  contentCardContainer: {
+    position: 'absolute',
+    top: scaleHeight(210), // Position below the hero image
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: theme.colors.white,
     borderTopLeftRadius: scaleWidth(24),
     borderTopRightRadius: scaleWidth(24),
-    marginTop: -scaleHeight(30),
-    minHeight: scaleHeight(600),
-    paddingTop: scaleHeight(24),
+    overflow: 'hidden', // Ensure content doesn't overflow rounded corners
   },
   errorContainer: {
     alignItems: 'center',
@@ -922,8 +925,11 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     height: scaleHeight(240),
-    position: 'relative',
-    marginTop: Platform.OS === 'ios' ? scaleHeight(48) : scaleHeight(24), // Respect status bar height
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? scaleHeight(48) : scaleHeight(24), // Respect status bar height
+    left: 0,
+    right: 0,
+    zIndex: 0,
   },
   heroSubtitle: {
     color: theme.colors.gray['500'],

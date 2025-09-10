@@ -64,8 +64,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryLight,
   },
   specialContainer: {
-    backgroundColor: Colors.pinkBackground,
-    borderColor: Colors.pinkBorder,
+    backgroundColor: Colors.white,  // Same as regular options
+    borderColor: Colors.borderLight,  // Same as regular options
+    borderStyle: 'dashed' as const,  // Make it subtly different with dashed border
   },
   specialSelected: {
     backgroundColor: Colors.primaryLighter,

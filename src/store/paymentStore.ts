@@ -29,6 +29,7 @@ export interface PaymentActions {
   removePaymentMethod: (paymentMethodId: string) => Promise<boolean>;
   setDefaultPaymentMethod: (paymentMethodId: string) => Promise<void>;
   createSetupIntent: () => Promise<boolean>;
+  clearSetupIntent: () => void;
   createBookingHold: (dinnerId: string, amount: number) => Promise<boolean>;
   captureBookingHold: (bookingId: string, amount?: number, reason?: string) => Promise<boolean>;
   releaseBookingHold: (bookingId: string) => Promise<boolean>;
@@ -191,6 +192,13 @@ export const usePaymentStore = create<PaymentStore>()(
     },
 
     createSetupIntent: async () => {
+      // If we already have a setup intent, don't create a new one
+      const existingIntent = get().currentSetupIntent;
+      if (existingIntent?.clientSecret) {
+        logger.info('Using existing setup intent');
+        return true;
+      }
+
       set((state) => {
         state.isLoading = true;
         state.error = null;
@@ -221,6 +229,12 @@ export const usePaymentStore = create<PaymentStore>()(
         });
         return false;
       }
+    },
+
+    clearSetupIntent: () => {
+      set((state) => {
+        state.currentSetupIntent = null;
+      });
     },
 
     createBookingHold: async (dinnerId: string, amount: number) => {

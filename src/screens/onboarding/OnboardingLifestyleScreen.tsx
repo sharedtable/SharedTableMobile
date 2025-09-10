@@ -76,10 +76,10 @@ export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps>
   const [traits, setTraits] = useState<LifestyleTraits>(() => {
     // Check if lifestyle traits were saved as an object or need to be initialized
     return {
-      earlyBirdNightOwl: currentStepData.earlyBirdNightOwl || 5,
-      activePerson: currentStepData.activePerson || 5,
-      punctuality: currentStepData.punctuality || 5,
-      workLifeBalance: currentStepData.workLifeBalance || 5,
+      earlyBirdNightOwl: currentStepData.earlyBirdNightOwl || 3,
+      activePerson: currentStepData.activePerson || 3,
+      punctuality: currentStepData.punctuality || 3,
+      workLifeBalance: currentStepData.workLifeBalance || 3,
     };
   });
   
@@ -322,14 +322,13 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(12),
-    flex: 1,
   },
   sliderValue: {
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
     fontWeight: '600',
-    paddingHorizontal: scaleWidth(10),
+    marginHorizontal: scaleWidth(10),
   },
   substancesGrid: {
     flexDirection: 'row',
@@ -342,10 +341,10 @@ const styles = StyleSheet.create({
     borderRadius: scaleWidth(20),
     borderWidth: 1,
     borderColor: Colors.borderLight,
-    backgroundColor: Colors.backgroundGrayLight,
+    backgroundColor: Colors.white,
   },
   substanceButtonSelected: {
-    backgroundColor: theme.colors.primary.light,
+    backgroundColor: theme.colors.primary.main,
     borderColor: theme.colors.primary.main,
   },
   substanceButtonText: {
@@ -354,7 +353,7 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(14),
   },
   substanceButtonTextSelected: {
-    color: theme.colors.primary.main,
+    color: Colors.white,
     fontWeight: '500',
   },
   spacer: {

@@ -10,6 +10,7 @@ import * as SecureStore from 'expo-secure-store';
 import AuthAPI from './api/authApi';
 import { NotificationData, NotificationPreferences } from '@/types/notification.types';
 import { Booking } from '@/types';
+import { tokenProvider } from '@/services/tokenProvider';
 
 // Restaurant types
 interface RestaurantItem {
@@ -283,12 +284,22 @@ class ApiService {
 
   async getAuthToken(): Promise<string | null> {
     try {
-      // Try Privy token first (current auth system)
+      // Try to get fresh token from Privy first
+      const freshToken = await tokenProvider.getAccessToken();
+      if (freshToken) {
+        if (__DEV__) {
+          console.log('📱 [API] Using fresh Privy token (length:', freshToken.length, ')');
+        }
+        // Store it for offline use
+        await SecureStore.setItemAsync('privy_auth_token', freshToken);
+        return freshToken;
+      }
+
+      // Fallback to stored token if fresh token not available (offline mode)
       const privyToken = await SecureStore.getItemAsync('privy_auth_token');
       if (privyToken) {
-        // Log token presence for debugging
         if (__DEV__) {
-          console.log('📱 [API] Using Privy token (length:', privyToken.length, ')');
+          console.log('📱 [API] Using stored Privy token (may be expired)');
         }
         return privyToken;
       }

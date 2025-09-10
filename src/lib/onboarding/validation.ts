@@ -186,18 +186,12 @@ export const foodPreferencesSchema = z.object({
 export const finalTouchSchema = z.object({
   hopingToMeet: z
     .string()
-    .min(10, 'Please provide more detail (at least 10 characters)')
-    .max(300, 'Please keep it under 300 characters')
     .optional(),
   hobbies: z
     .string()
-    .min(10, 'Please provide more detail (at least 10 characters)')
-    .max(300, 'Please keep it under 300 characters')
     .optional(),
   interestingFact: z
     .string()
-    .min(10, 'Please provide more detail (at least 10 characters)')
-    .max(300, 'Please keep it under 300 characters')
     .optional(),
 });
 

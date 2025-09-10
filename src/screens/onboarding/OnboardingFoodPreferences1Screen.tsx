@@ -3,13 +3,8 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  Alert, 
-  TextInput,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  Keyboard,
-  TouchableWithoutFeedback
+  Alert,
+  TouchableOpacity
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 
@@ -25,6 +20,18 @@ interface OnboardingFoodPreferences1ScreenProps {
   totalSteps?: number;
 }
 
+const dietaryRestrictionsOptions = [
+  'Vegetarian',
+  'Vegan',
+  'Gluten-free',
+  'Dairy-free',
+  'Kosher',
+  'Halal',
+  'Nut allergy',
+  'Shellfish allergy',
+  'No restrictions',
+];
+
 const diningAtmosphereOptions = [
   'Casual & relaxed',
   'Lively & Trendy',
@@ -38,10 +45,12 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
 }) => {
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
 
-  const [dietaryRestrictions, setDietaryRestrictions] = useState<string>(
+  const [selectedDietaryRestrictions, setSelectedDietaryRestrictions] = useState<string[]>(
     Array.isArray(currentStepData.dietaryRestrictions)
-      ? currentStepData.dietaryRestrictions.join(', ')
-      : currentStepData.dietaryRestrictions || ''
+      ? currentStepData.dietaryRestrictions
+      : currentStepData.dietaryRestrictions 
+        ? currentStepData.dietaryRestrictions.split(', ').filter(Boolean)
+        : ['No restrictions'] // Default to "No restrictions"
   );
   const [budget, setBudget] = useState<number>(currentStepData.budget || 50);
   const [spicyLevel, setSpicyLevel] = useState<number>(currentStepData.spicyLevel || 3);
@@ -55,6 +64,24 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
   useEffect(() => {
     clearErrors();
   }, [clearErrors]);
+
+  const toggleDietaryRestriction = (restriction: string) => {
+    setSelectedDietaryRestrictions(prev => {
+      // If "No restrictions" is selected, clear all other selections
+      if (restriction === 'No restrictions') {
+        return ['No restrictions'];
+      }
+      
+      // If selecting something else, remove "No restrictions" if it was selected
+      const filtered = prev.filter(r => r !== 'No restrictions');
+      
+      if (prev.includes(restriction)) {
+        return filtered.filter(r => r !== restriction);
+      }
+      
+      return [...filtered, restriction];
+    });
+  };
 
   const toggleAtmosphere = (atmosphere: string) => {
     setSelectedAtmospheres(prev => 
@@ -78,7 +105,7 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
       clearErrors();
 
       const foodData = {
-        dietaryRestrictions: dietaryRestrictions.trim(),
+        dietaryRestrictions: selectedDietaryRestrictions.join(', '),
         budget,
         spicyLevel,
         drinkingLevel,
@@ -119,22 +146,15 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
   const errorMessage = Object.values(localErrors)[0] || Object.values(stepErrors)[0];
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.flexOne}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <OnboardingLayout
+      onBack={handleBack}
+      currentStep={currentStep}
+      totalSteps={totalSteps}
+      scrollable
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.flexOne}>
-          <OnboardingLayout
-            onBack={handleBack}
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-            scrollable
-          >
-            <View style={styles.container}>
+      <View style={styles.container}>
               <View style={styles.headerSection}>
-                <Text style={styles.title}>Your Taste in Food (1/2)</Text>
-                <Text style={styles.subtitle}>Your preferences, cravings, and food comfort zones.</Text>
+                <Text style={styles.title}>Your Taste in Food (1/4)</Text>
               </View>
 
               {hasError && errorMessage && (
@@ -146,15 +166,27 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
               {/* Dietary Restrictions */}
               <View style={styles.section}>
                 <Text style={styles.questionText}>Dietary Restrictions</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Leave blank if none."
-                  placeholderTextColor={theme.colors.text.secondary}
-                  value={dietaryRestrictions}
-                  onChangeText={setDietaryRestrictions}
-                  multiline
-                  numberOfLines={3}
-                />
+                <Text style={styles.helperText}>(Multi-select allowed)</Text>
+                <View style={styles.optionsContainer}>
+                  {dietaryRestrictionsOptions.map((restriction) => (
+                    <TouchableOpacity
+                      key={restriction}
+                      style={[
+                        styles.optionButton,
+                        selectedDietaryRestrictions.includes(restriction) && styles.optionButtonSelected
+                      ]}
+                      onPress={() => toggleDietaryRestriction(restriction)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[
+                        styles.optionButtonText,
+                        selectedDietaryRestrictions.includes(restriction) && styles.optionButtonTextSelected
+                      ]}>
+                        {restriction}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
 
               {/* Budget Slider */}
@@ -278,26 +310,20 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
 
               <View style={styles.spacer} />
 
-              <View style={styles.bottomContainer}>
-                <OnboardingButton
-                  onPress={handleNext}
-                  label={saving ? 'Saving...' : 'Save and continue'}
-                  disabled={saving}
-                  loading={saving}
-                />
-              </View>
-            </View>
-          </OnboardingLayout>
+        <View style={styles.bottomContainer}>
+          <OnboardingButton
+            onPress={handleNext}
+            label={saving ? 'Saving...' : 'Save and continue'}
+            disabled={saving}
+            loading={saving}
+          />
         </View>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+      </View>
+    </OnboardingLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  flexOne: {
-    flex: 1,
-  },
   container: {
     flex: 1,
   },
@@ -310,12 +336,6 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(24),
     fontWeight: '700',
     marginBottom: scaleHeight(8),
-  },
-  subtitle: {
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
-    lineHeight: scaleFont(20),
   },
   errorContainer: {
     backgroundColor: Colors.errorLighter,
@@ -346,18 +366,6 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(13),
     marginTop: scaleHeight(4),
   },
-  textInput: {
-    backgroundColor: Colors.white,
-    borderColor: Colors.borderLight,
-    borderRadius: scaleWidth(12),
-    borderWidth: 1,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(15),
-    minHeight: scaleHeight(80),
-    padding: scaleWidth(12),
-    textAlignVertical: 'top',
-  },
   sliderWrapper: {
     paddingHorizontal: scaleWidth(8),
   },
@@ -375,14 +383,13 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(12),
-    flex: 1,
   },
   sliderValue: {
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
     fontWeight: '600',
-    paddingHorizontal: scaleWidth(10),
+    marginHorizontal: scaleWidth(10),
   },
   optionsContainer: {
     flexDirection: 'row',
@@ -399,7 +406,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   optionButtonSelected: {
-    backgroundColor: theme.colors.primary.light,
+    backgroundColor: theme.colors.primary.main,
     borderColor: theme.colors.primary.main,
   },
   optionButtonText: {
@@ -408,7 +415,7 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(14),
   },
   optionButtonTextSelected: {
-    color: theme.colors.primary.main,
+    color: Colors.white,
     fontWeight: '500',
   },
   spacer: {

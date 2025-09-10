@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Alert, View, Text, StyleSheet, Pressable, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Modal, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,7 +14,7 @@ import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 type NavigationType = NativeStackNavigationProp<RootStackParamList>;
 
 const PROMPT_DISMISS_KEY = 'optional_onboarding_prompt_dismissed';
-const PROMPT_DISMISS_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+const PROMPT_DISMISS_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 interface ResumeInfo {
   success: boolean;
@@ -70,10 +70,9 @@ export const OptionalOnboardingPrompt: React.FC = () => {
         const parsed = JSON.parse(dismissedData);
         const timeSinceDismiss = Date.now() - parsed.timestamp;
         console.log('🔍 [OptionalOnboardingPrompt] Time since dismiss:', timeSinceDismiss);
-        console.log('🔍 [OptionalOnboardingPrompt] Is permanent dismiss?', parsed.permanent);
         
-        if (parsed.permanent || timeSinceDismiss < PROMPT_DISMISS_DURATION) {
-          console.log('❌ [OptionalOnboardingPrompt] Not showing - recently dismissed or permanent');
+        if (timeSinceDismiss < PROMPT_DISMISS_DURATION) {
+          console.log('❌ [OptionalOnboardingPrompt] Not showing - recently dismissed');
           setShowPrompt(false);
           return;
         }
@@ -172,34 +171,6 @@ export const OptionalOnboardingPrompt: React.FC = () => {
     }
   };
 
-  const handleNeverAsk = () => {
-    Alert.alert(
-      'Skip Profile Questions?',
-      'You can always complete your profile later from Settings. This helps us match you with better dining experiences.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Skip',
-          style: 'destructive',
-          onPress: async () => {
-            setIsModalVisible(false);
-            // Store permanent dismissal
-            try {
-              await SecureStore.setItemAsync(
-                PROMPT_DISMISS_KEY,
-                JSON.stringify({ timestamp: Date.now(), permanent: true })
-              );
-            } catch (error) {
-              console.error('Error saving dismissal:', error);
-            }
-          },
-        },
-      ]
-    );
-  };
 
   console.log('🎭 [OptionalOnboardingPrompt] Render check - showPrompt:', showPrompt, 'isModalVisible:', isModalVisible);
   
@@ -234,7 +205,7 @@ export const OptionalOnboardingPrompt: React.FC = () => {
             {(() => {
               if (resumeInfo?.canResume) return resumeInfo.message;
               if (onboardingStatus === OnboardingStatus.MANDATORY_COMPLETE) {
-                return 'Answer a few optional questions to help us find your perfect dining matches! It only takes 2 minutes.';
+                return 'Answer a few optional questions to help us find your perfect dining matches! It only takes 3-5 minutes.';
               }
               return 'Tell us about your dining preferences to get personalized restaurant recommendations and better matches.';
             })()}
@@ -281,13 +252,6 @@ export const OptionalOnboardingPrompt: React.FC = () => {
             onPress={handleRemindLater}
           >
             <Text style={styles.secondaryButtonText}>Remind Me Later</Text>
-          </Pressable>
-
-          <Pressable 
-            style={styles.textButton}
-            onPress={handleNeverAsk}
-          >
-            <Text style={styles.textButtonText}>Don&apos;t Ask Again</Text>
           </Pressable>
         </View>
       </View>
@@ -376,14 +340,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontSize: scaleFont(16),
     fontWeight: '500',
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  textButton: {
-    paddingVertical: scaleHeight(8),
-  },
-  textButtonText: {
-    color: theme.colors.text.tertiary,
-    fontSize: scaleFont(14),
     fontFamily: theme.typography.fontFamily.body,
   },
   progressContainer: {

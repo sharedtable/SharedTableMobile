@@ -249,22 +249,42 @@ export const popularSchools = [
   'Manhattan School of Music',
   'New England Conservatory',
   
-  // International Universities (Common for US Students)
+  // Canadian Universities
+  'Carleton University',
+  'Concordia University',
+  'Dalhousie University',
+  'McGill University',
+  'McMaster University',
+  'Queen\'s University',
+  'Ryerson University',
+  'Simon Fraser University',
+  'University of Alberta',
+  'University of British Columbia',
+  'University of Calgary',
+  'University of Guelph',
+  'University of Manitoba',
+  'University of Montreal',
+  'University of Ottawa',
+  'University of Toronto',
+  'University of Victoria',
+  'University of Waterloo',
+  'University of Western Ontario',
+  'University of Windsor',
+  'York University',
+  
+  // Other International Universities
   'Cambridge University',
   'ETH Zurich',
   'Imperial College London',
   'London School of Economics',
-  'McGill University',
   'National University of Singapore',
   'Oxford University',
   'Sorbonne University',
   'Trinity College Dublin',
   'University College London',
-  'University of British Columbia',
   'University of Edinburgh',
   'University of Melbourne',
   'University of Sydney',
-  'University of Toronto',
   
   // Historically Black Colleges and Universities
   'Clark Atlanta University',
@@ -296,7 +316,8 @@ export const popularSchools = [
 ];
 
 // Mapping of common abbreviations/nicknames to official names
-const schoolAbbreviations: Record<string, string> = {
+// Some abbreviations map to multiple schools (e.g., "uw" -> both Washington and Waterloo)
+const schoolAbbreviations: Record<string, string | string[]> = {
   // UC System
   'ucb': 'University of California, Berkeley',
   'uc berkeley': 'University of California, Berkeley',
@@ -392,7 +413,7 @@ const schoolAbbreviations: Record<string, string> = {
   'georgia': 'University of Georgia',
   'uiuc': 'University of Illinois at Urbana-Champaign',
   'illinois': 'University of Illinois at Urbana-Champaign',
-  'uw': 'University of Washington',
+  'uw': ['University of Washington', 'University of Waterloo'], // Both Washington and Waterloo
   'udub': 'University of Washington',
   'washington': 'University of Washington',
   'wisconsin': 'University of Wisconsin-Madison',
@@ -414,7 +435,7 @@ const schoolAbbreviations: Record<string, string> = {
   'cu boulder': 'University of Colorado Boulder',
   'colorado': 'University of Colorado Boulder',
   'arizona': 'University of Arizona',
-  'u of a': 'University of Arizona',
+  'u of a': ['University of Arizona', 'University of Alberta'], // Both Arizona and Alberta
   'asu': 'Arizona State University',
   'arizona state': 'Arizona State University',
   'oregon': 'University of Oregon',
@@ -476,6 +497,51 @@ const schoolAbbreviations: Record<string, string> = {
   'sva': 'School of Visual Arts',
   'mica': 'Maryland Institute College of Art',
   
+  // Canadian Universities
+  'uoft': 'University of Toronto',
+  'u of t': 'University of Toronto',
+  'toronto': 'University of Toronto',
+  'waterloo': 'University of Waterloo',
+  // 'uw' is already mapped to both Washington and Waterloo above
+  'uwaterloo': 'University of Waterloo',
+  'ubc': 'University of British Columbia',
+  'mcgill': 'McGill University',
+  'queens': 'Queen\'s University',
+  'queen\'s': 'Queen\'s University',
+  'western': 'University of Western Ontario',
+  'uwo': 'University of Western Ontario',
+  'mcmaster': 'McMaster University',
+  'mac': 'McMaster University',
+  'york': 'York University',
+  'yorku': 'York University',
+  'ryerson': 'Ryerson University',
+  'tmu': 'Ryerson University', // Toronto Metropolitan University (new name)
+  'ottawa': 'University of Ottawa',
+  'uottawa': 'University of Ottawa',
+  'u of o': 'University of Ottawa',
+  'calgary': 'University of Calgary',
+  'u of c calgary': 'University of Calgary',
+  'alberta': 'University of Alberta',
+  // 'u of a' is already mapped to both Arizona and Alberta above
+  'ualberta': 'University of Alberta',
+  'sfu': 'Simon Fraser University',
+  'simon fraser': 'Simon Fraser University',
+  'uvic': 'University of Victoria',
+  'victoria': 'University of Victoria',
+  'concordia': 'Concordia University',
+  'carleton u': 'Carleton University',
+  'guelph': 'University of Guelph',
+  'u of g': 'University of Guelph',
+  'manitoba': 'University of Manitoba',
+  'u of manitoba': 'University of Manitoba',
+  'dalhousie': 'Dalhousie University',
+  'dal': 'Dalhousie University',
+  'windsor': 'University of Windsor',
+  'uwindsor': 'University of Windsor',
+  'montreal': 'University of Montreal',
+  'udem': 'University of Montreal',
+  'u de m': 'University of Montreal',
+  
   // Other Common Abbreviations
   'gwu': 'George Washington University',
   'gw': 'George Washington University',
@@ -497,36 +563,59 @@ export const searchSchools = (query: string, limit = 10): string[] => {
   
   // Check if the query matches an abbreviation
   const fullNameFromAbbr = schoolAbbreviations[lowerQuery];
+  let abbreviationExactMatches: string[] = [];
+  
   if (fullNameFromAbbr) {
-    return [fullNameFromAbbr];
+    // Handle both single string and array of strings
+    if (Array.isArray(fullNameFromAbbr)) {
+      abbreviationExactMatches = fullNameFromAbbr;
+    } else {
+      abbreviationExactMatches = [fullNameFromAbbr];
+    }
   }
   
   // Check for partial abbreviation matches
-  const abbreviationMatches = Object.entries(schoolAbbreviations)
-    .filter(([abbr, _]) => abbr.startsWith(lowerQuery))
-    .map(([_, fullName]) => fullName);
+  const abbreviationPartialMatches: string[] = [];
+  Object.entries(schoolAbbreviations).forEach(([abbr, schools]) => {
+    if (abbr.startsWith(lowerQuery) && abbr !== lowerQuery) {
+      if (Array.isArray(schools)) {
+        abbreviationPartialMatches.push(...schools);
+      } else {
+        abbreviationPartialMatches.push(schools);
+      }
+    }
+  });
   
   // Remove duplicates from abbreviation matches
-  const uniqueAbbreviationMatches = [...new Set(abbreviationMatches)];
+  const uniqueAbbreviationMatches = [...new Set([...abbreviationExactMatches, ...abbreviationPartialMatches])];
   
   // Search in the main schools list
   const exactMatches = popularSchools.filter(school =>
     school.toLowerCase().startsWith(lowerQuery)
   );
   
-  const partialMatches = popularSchools.filter(school =>
-    !school.toLowerCase().startsWith(lowerQuery) &&
-    school.toLowerCase().includes(lowerQuery)
-  );
+  // For partial matches, only match at word boundaries (start of words)
+  const partialMatches = popularSchools.filter(school => {
+    const schoolLower = school.toLowerCase();
+    // Skip if it's already an exact match
+    if (schoolLower.startsWith(lowerQuery)) return false;
+    
+    // Check if query matches the start of any word in the school name
+    const words = schoolLower.split(/[\s,-]+/); // Split on spaces, commas, and hyphens
+    return words.some(word => word.startsWith(lowerQuery));
+  });
   
-  // Combine results, prioritizing abbreviation matches, then exact matches, then partial
+  // Combine results, prioritizing exact abbreviation matches, then partial abbreviation matches, then exact matches, then partial
   const allMatches = [
-    ...uniqueAbbreviationMatches,
+    ...abbreviationExactMatches,
+    ...abbreviationPartialMatches.filter(s => !abbreviationExactMatches.includes(s)),
     ...exactMatches.filter(s => !uniqueAbbreviationMatches.includes(s)),
     ...partialMatches.filter(s => !uniqueAbbreviationMatches.includes(s) && !exactMatches.includes(s))
   ];
   
-  return allMatches.slice(0, limit);
+  // Remove duplicates and limit results
+  const uniqueMatches = [...new Set(allMatches)];
+  return uniqueMatches.slice(0, limit);
 };
 
 // Get popular schools by region (for potential future use)

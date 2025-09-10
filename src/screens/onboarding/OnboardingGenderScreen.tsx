@@ -63,7 +63,7 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
               lastName: currentStepData.lastName || '',
               nickname: currentStepData.nickname || '',
               birthDate: currentStepData.birthDate || new Date().toISOString(),
-              gender: selectedGender || 'prefer_not_to_say',
+              gender: selectedGender, // Don't default to 'prefer_not_to_say'
             };
             
             console.log('📍 [OnboardingGenderScreen] Completing mandatory onboarding');
@@ -114,7 +114,7 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
     { id: 'female', label: 'Female' },
     { id: 'male', label: 'Male' },
     { id: 'non_binary', label: 'Non-binary' },
-    { id: 'prefer_not_to_say', label: 'Prefer not to say', special: true },
+    { id: 'prefer_not_to_say', label: 'Prefer not to say' },
   ];
 
   const hasError = Object.keys(localErrors).length > 0 || Object.keys(stepErrors).length > 0;
@@ -141,7 +141,6 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
               key={option.id}
               label={option.label}
               selected={selectedGender === option.id}
-              special={option.special}
               onPress={() => {
                 setSelectedGender(option.id as any);
                 if (localErrors.gender || stepErrors.gender) {

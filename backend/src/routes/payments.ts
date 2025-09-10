@@ -277,9 +277,30 @@ router.post('/create-booking', verifyPrivyToken, async (req: AuthRequest, res: R
     // Save payment method if requested
     if (savePaymentMethod) {
       try {
-        await StripeService.attachPaymentMethod(paymentMethodId, stripeCustomerId);
+        // Check if payment method is already attached to prevent duplicates
+        const existingMethods = await StripeService.listPaymentMethods(stripeCustomerId);
+        const isAlreadyAttached = existingMethods.some(method => method.id === paymentMethodId);
+        
+        if (!isAlreadyAttached) {
+          // Also check if there's a card with the same fingerprint (same actual card)
+          const paymentMethod = await StripeService.getPaymentMethod(paymentMethodId);
+          const hasSameCard = paymentMethod.card?.fingerprint && 
+            existingMethods.some(method => 
+              method.card && 
+              (method.card as any).fingerprint === paymentMethod.card?.fingerprint
+            );
+          
+          if (!hasSameCard) {
+            await StripeService.attachPaymentMethod(paymentMethodId, stripeCustomerId);
+            logger.info('Payment method attached successfully:', paymentMethodId);
+          } else {
+            logger.info('Card already exists with same fingerprint, skipping attachment');
+          }
+        } else {
+          logger.info('Payment method already attached, skipping');
+        }
       } catch (err) {
-        logger.warn('Payment method may already be attached:', err);
+        logger.warn('Error handling payment method attachment:', err);
       }
     }
 

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   Switch,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import {
   CardField,
@@ -37,13 +38,11 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
   loading = false,
 }) => {
   const stripe = useStripe();
-  const { createSetupIntent, currentSetupIntent } = usePaymentStore();
+  const { createSetupIntent, clearSetupIntent, currentSetupIntent, paymentMethods, defaultPaymentMethodId, initializePayments } = usePaymentStore();
   
   // State management
-  const [_selectedPaymentMethod, _setSelectedPaymentMethod] = useState<string | null>(null);
-  const [_useNewCard, _setUseNewCard] = useState(true);
-  const useNewCard = _useNewCard; // Always use new card for now
-  const selectedPaymentMethod = _selectedPaymentMethod;
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(defaultPaymentMethodId);
+  const [useNewCard, setUseNewCard] = useState(!paymentMethods.length);
   const [cardDetails, setCardDetails] = useState<CardFieldInput.Details | null>(null);
   const [saveCard, setSaveCard] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -51,6 +50,29 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
 
   const isLoading = loading || processing;
 
+  // Load payment methods on mount
+  useEffect(() => {
+    if (paymentMethods.length === 0) {
+      initializePayments();
+    }
+  }, []);
+
+  // Set default payment method when it changes
+  useEffect(() => {
+    if (defaultPaymentMethodId && paymentMethods.length > 0) {
+      setSelectedPaymentMethod(defaultPaymentMethodId);
+      setUseNewCard(false);
+    } else if (paymentMethods.length === 0) {
+      setUseNewCard(true);
+    }
+  }, [defaultPaymentMethodId, paymentMethods]);
+  
+  // Clean up SetupIntent when component unmounts or modal closes
+  useEffect(() => {
+    return () => {
+      clearSetupIntent();
+    };
+  }, [clearSetupIntent]);
 
   const handleCardChange = useCallback((details: CardFieldInput.Details) => {
     setCardDetails(details);
@@ -139,6 +161,9 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
         paymentMethodId = selectedPaymentMethod;
       }
 
+      // Clear setup intent before success callback
+      clearSetupIntent();
+      
       // Haptic feedback for success
       if (Platform.OS === 'ios') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -148,6 +173,10 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
       onSuccess(paymentMethodId, useNewCard && saveCard);
     } catch (err) {
       logger.error('Payment processing error:', err);
+      
+      // Clear setup intent on error to ensure fresh start next time
+      clearSetupIntent();
+      
       setError(err instanceof Error ? err.message : 'Payment processing failed');
       
       if (Platform.OS === 'ios') {
@@ -164,11 +193,16 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
     selectedPaymentMethod,
     currentSetupIntent,
     createSetupIntent,
+    clearSetupIntent,
     onSuccess,
   ]);
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={0}
+    >
       <Pressable style={styles.closeButton} onPress={onCancel}>
         <Ionicons name="close" size={24} color={theme.colors.text.primary} />
       </Pressable>
@@ -183,12 +217,98 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
 
       <ScrollView 
         style={styles.content}
+        contentContainerStyle={styles.scrollContentContainer}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        bounces={false}
       >
-        <View style={styles.section}>
-              {/* Card Input with Camera Button */}
-              <View style={styles.cardFieldWrapper}>
+        {/* Saved Payment Methods */}
+        {paymentMethods.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Payment Method</Text>
+            
+            {/* Saved Cards */}
+            {paymentMethods.map((method) => (
+              <Pressable
+                key={method.id}
+                style={[
+                  styles.paymentMethodCard,
+                  selectedPaymentMethod === method.id && !useNewCard && styles.paymentMethodCardSelected,
+                ]}
+                onPress={() => {
+                  setSelectedPaymentMethod(method.id);
+                  setUseNewCard(false);
+                  setError(null);
+                }}
+              >
+                <View style={styles.paymentMethodInfo}>
+                  <Ionicons 
+                    name="card" 
+                    size={20} 
+                    color={selectedPaymentMethod === method.id && !useNewCard ? theme.colors.primary.main : theme.colors.text.secondary} 
+                  />
+                  <Text style={[
+                    styles.paymentMethodText,
+                    selectedPaymentMethod === method.id && !useNewCard && styles.paymentMethodTextSelected
+                  ]}>
+                    •••• {method.card?.last4 || '****'}
+                  </Text>
+                  <Text style={[
+                    styles.paymentMethodBrand,
+                    selectedPaymentMethod === method.id && !useNewCard && styles.paymentMethodTextSelected
+                  ]}>
+                    {method.card?.brand || 'Card'}
+                  </Text>
+                </View>
+                <View style={[
+                  styles.radioButton,
+                  selectedPaymentMethod === method.id && !useNewCard && styles.radioButtonSelected,
+                ]} />
+              </Pressable>
+            ))}
+            
+            {/* Add New Card Option */}
+            <Pressable
+              style={[
+                styles.paymentMethodCard,
+                useNewCard && styles.paymentMethodCardSelected,
+              ]}
+              onPress={() => {
+                setUseNewCard(true);
+                setSelectedPaymentMethod(null);
+                setError(null);
+              }}
+            >
+              <View style={styles.paymentMethodInfo}>
+                <Ionicons 
+                  name="add-circle-outline" 
+                  size={20} 
+                  color={useNewCard ? theme.colors.primary.main : theme.colors.text.secondary} 
+                />
+                <Text style={[
+                  styles.paymentMethodText,
+                  useNewCard && styles.paymentMethodTextSelected
+                ]}>
+                  Add new card
+                </Text>
+              </View>
+              <View style={[
+                styles.radioButton,
+                useNewCard && styles.radioButtonSelected,
+              ]} />
+            </Pressable>
+          </View>
+        )}
+
+        {/* New Card Input */}
+        {(useNewCard || paymentMethods.length === 0) && (
+          <View style={styles.section}>
+            {paymentMethods.length === 0 && (
+              <Text style={styles.sectionTitle}>Card Details</Text>
+            )}
+            {/* Card Input with Camera Button */}
+            <View style={styles.cardFieldWrapper}>
                 <CardField
                   postalCodeEnabled={false}
                   placeholders={{
@@ -222,7 +342,8 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
                 />
                 <Text style={styles.saveText}>Save card for future bookings</Text>
               </View>
-            </View>
+          </View>
+        )}
 
           {error && (
             <View style={styles.errorContainer}>
@@ -267,7 +388,7 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
             )}
           </Pressable>
         </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -287,8 +408,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
   },
   closeButton: {
     position: 'absolute',
@@ -323,6 +442,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scrollContentContainer: {
+    paddingBottom: scaleHeight(10),
   },
   section: {
     backgroundColor: theme.colors.white,
@@ -400,7 +522,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: scaleWidth(20),
-    paddingBottom: scaleHeight(30),
+    paddingBottom: scaleHeight(20),
     backgroundColor: theme.colors.white,
     borderTopWidth: 1,
     borderTopColor: theme.colors.gray[100],
@@ -425,6 +547,59 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(17),
     fontWeight: '600',
     color: theme.colors.white,
+  },
+  sectionTitle: {
+    fontSize: scaleFont(14),
+    fontWeight: '600',
+    color: theme.colors.text.secondary,
+    marginBottom: scaleHeight(12),
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  paymentMethodCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.gray[50],
+    borderRadius: 12,
+    padding: scaleWidth(16),
+    marginBottom: scaleHeight(12),
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  paymentMethodCardSelected: {
+    borderColor: theme.colors.primary.main,
+    backgroundColor: theme.colors.primary['50'],
+  },
+  paymentMethodInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scaleWidth(12),
+  },
+  paymentMethodText: {
+    fontSize: scaleFont(16),
+    color: theme.colors.text.primary,
+    fontWeight: '500',
+  },
+  paymentMethodTextSelected: {
+    color: theme.colors.primary.main,
+  },
+  paymentMethodBrand: {
+    fontSize: scaleFont(14),
+    color: theme.colors.text.secondary,
+    textTransform: 'capitalize',
+  },
+  radioButton: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: theme.colors.gray[300],
+    backgroundColor: theme.colors.white,
+  },
+  radioButtonSelected: {
+    borderColor: theme.colors.primary.main,
+    backgroundColor: theme.colors.primary.main,
   },
 });
 

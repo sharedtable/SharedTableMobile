@@ -200,21 +200,59 @@ router.post('/sync', async (req: Request, res: Response, next: NextFunction) => 
         const { error: createError } = await supabaseService.from('users').insert(userData);
 
         if (createError) {
-          // Check if it's a duplicate key error
-          if (createError.code === '23505' && createError.message.includes('external_auth_id')) {
-            logger.warn('User with this Privy ID already exists, fetching existing user');
-            // User already exists with this external_auth_id, fetch them instead
-            const { data: existingUser } = await supabaseService
-              .from('users')
-              .select('id')
-              .eq('external_auth_id', validatedData.privyUserId)
-              .single();
+          // Check if it's a duplicate key error (either email or external_auth_id)
+          if (createError.code === '23505') {
+            if (createError.message.includes('external_auth_id')) {
+              logger.warn('User with this Privy ID already exists, fetching existing user');
+              // User already exists with this external_auth_id, fetch them instead
+              const { data: existingUser } = await supabaseService
+                .from('users')
+                .select('id')
+                .eq('external_auth_id', validatedData.privyUserId)
+                .single();
 
-            if (existingUser) {
-              userId = existingUser.id;
-              isNewUser = false;
+              if (existingUser) {
+                userId = existingUser.id;
+                isNewUser = false;
+              } else {
+                throw new AppError('Failed to create or find user', 500);
+              }
+            } else if (createError.message.includes('users_email_key')) {
+              logger.warn('User with this email already exists, fetching and updating');
+              // User already exists with this email, fetch and update them
+              const { data: existingUser } = await supabaseService
+                .from('users')
+                .select('id')
+                .eq('email', validatedData.email!.toLowerCase())
+                .single();
+
+              if (existingUser) {
+                userId = existingUser.id;
+                isNewUser = false;
+                
+                // Update the external_auth_id and wallet if needed
+                const updateData: Record<string, string> = {
+                  external_auth_id: validatedData.privyUserId,
+                  last_active_at: new Date().toISOString(),
+                };
+                
+                if (validatedData.walletAddress) {
+                  updateData.wallet_address = validatedData.walletAddress.toLowerCase();
+                }
+                
+                await supabaseService
+                  .from('users')
+                  .update(updateData)
+                  .eq('id', userId);
+                
+                logger.info(`Updated existing user ${userId} with Privy ID and wallet`);
+              } else {
+                throw new AppError('Failed to create or find user', 500);
+              }
             } else {
-              throw new AppError('Failed to create or find user', 500);
+              // Other duplicate key error
+              logger.error('Duplicate key error:', createError);
+              throw new AppError('User already exists', 409);
             }
           } else {
             logger.error('Failed to create user:', {

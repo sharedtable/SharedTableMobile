@@ -136,7 +136,7 @@ export const OnboardingEducationScreen: React.FC<OnboardingEducationScreenProps>
       keyboardAvoiding
     >
       <View style={styles.container}>
-        <OnboardingTitle>What is your highest level of education? *</OnboardingTitle>
+        <OnboardingTitle>Your Education</OnboardingTitle>
 
         {hasError && errorMessage && (
           <View style={styles.errorContainer}>
@@ -179,6 +179,9 @@ export const OnboardingEducationScreen: React.FC<OnboardingEducationScreenProps>
                 }
               }}
               autoCapitalize="words"
+              autoCorrect={false}  // Disable auto-correction
+              autoComplete="off"   // Disable auto-complete
+              spellCheck={false}   // Disable spell check
               returnKeyType="done"
               onSubmitEditing={() => {
                 setShowSuggestions(false);
