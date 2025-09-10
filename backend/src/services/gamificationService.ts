@@ -359,6 +359,18 @@ export class GamificationService {
    */
   static async initializeUserStats(userId: string) {
     try {
+      // First verify the user exists
+      const { data: user, error: userError } = await supabaseService
+        .from('users')
+        .select('id')
+        .eq('id', userId)
+        .single();
+
+      if (userError || !user) {
+        logger.warn(`User ${userId} not found, skipping stats initialization`);
+        return;
+      }
+
       const { error } = await supabaseService
         .from('user_stats')
         .insert({
@@ -375,8 +387,16 @@ export class GamificationService {
           points_this_week: 0
         });
 
-      if (error && error.code !== '23505') { // Ignore unique violation
-        throw error;
+      if (error) {
+        if (error.code === '23505') {
+          // Unique violation - stats already exist
+          logger.info(`User stats already exist for user ${userId}`);
+        } else if (error.code === '23503') {
+          // Foreign key violation - user doesn't exist
+          logger.error(`User ${userId} doesn't exist in users table, cannot create stats`);
+        } else {
+          throw error;
+        }
       }
 
       logger.info(`Initialized gamification stats for user ${userId}`);

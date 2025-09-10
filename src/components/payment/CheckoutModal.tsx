@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import CheckoutPaymentForm from './CheckoutPaymentForm';
 import { theme } from '@/theme';
+import { scaleHeight, scaleWidth } from '@/utils/responsive';
 
 interface CheckoutModalProps {
   visible: boolean;
@@ -49,6 +50,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
 const { height: screenHeight } = Dimensions.get('window');
 
+// Calculate the height to match the white card area from HomeScreen
+const CARD_TOP_POSITION = scaleHeight(210); // Same as contentCardContainer top position
+const MODAL_HEIGHT = screenHeight - CARD_TOP_POSITION;
+
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
@@ -56,13 +61,13 @@ const styles = StyleSheet.create({
   },
   invisibleArea: {
     flex: 1,
-    // No background color - completely transparent
+    // No background - completely transparent
   },
   modalContent: {
     backgroundColor: theme.colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    height: screenHeight * 0.67, // Takes up 2/3 of screen height
+    borderTopLeftRadius: scaleWidth(24), // Match HomeScreen's contentCardContainer
+    borderTopRightRadius: scaleWidth(24), // Match HomeScreen's contentCardContainer
+    height: MODAL_HEIGHT, // Fixed height to match white card area
     shadowColor: theme.colors.black['1'],
     shadowOffset: {
       width: 0,

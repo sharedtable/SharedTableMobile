@@ -22,6 +22,7 @@ import { AuthSyncProvider } from '@/components/AuthSyncProvider';
 import { PrivyProvider } from '@/lib/privy/PrivyProvider';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { NotificationWrapper } from '@/contexts/NotificationWrapper';
+import { GlobalStreamChatProvider } from '@/providers/GlobalStreamChatProvider';
 import { useAuthStore } from '@/store/authStore';
 import { setLogLevel } from '@/utils/logger';
 import { deepLinkingConfig } from '@/config/deepLinking';
@@ -90,11 +91,13 @@ export default function App() {
           >
             <PrivyProvider>
               <AuthSyncProvider>
-                <NavigationContainer linking={deepLinkingConfig}>
-                  <NotificationWrapper>
-                    <RootNavigator />
-                  </NotificationWrapper>
-                </NavigationContainer>
+                <GlobalStreamChatProvider>
+                  <NavigationContainer linking={deepLinkingConfig}>
+                    <NotificationWrapper>
+                      <RootNavigator />
+                    </NotificationWrapper>
+                  </NavigationContainer>
+                </GlobalStreamChatProvider>
               </AuthSyncProvider>
             </PrivyProvider>
           </StripeProvider>

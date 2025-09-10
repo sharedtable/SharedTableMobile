@@ -4,7 +4,7 @@ import React from 'react';
 
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { HomeScreen } from '@/screens/home/HomeScreen';
-import { ChatScreen } from '@/screens/chat/ChatScreen';
+import { OptimizedChatScreen } from '@/screens/chat/OptimizedChatScreen';
 // import { FeedNavigator } from './FeedNavigator'; // Hidden for now
 import { ProfileNavigator } from './ProfileNavigator';
 import { theme } from '@/theme';
@@ -82,7 +82,7 @@ export function MainTabNavigator() {
       />
       <Tab.Screen
         name="Chat"
-        component={ChatScreen}
+        component={OptimizedChatScreen}
         options={{
           title: 'Chat',
         }}

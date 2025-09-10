@@ -66,12 +66,14 @@ router.post('/save', verifyPrivyToken, async (req: AuthRequest, res: Response, n
           supabaseService.from('users').update({ display_name: value }).eq('id', user.id);
           break;
           
-        // Basic info
+        // Basic info - save to users table
         case 'birthDate':
-          userInfoData.birth_date = value;
+          // Save birth_date to users table, not onboarding_profiles
+          supabaseService.from('users').update({ date_of_birth: value }).eq('id', user.id);
           break;
         case 'gender':
-          userInfoData.gender = value;
+          // Save gender to users table, not onboarding_profiles
+          supabaseService.from('users').update({ gender: value }).eq('id', user.id);
           break;
           
         // Education fields

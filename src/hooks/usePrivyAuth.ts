@@ -13,6 +13,7 @@ import { UserSyncService } from '@/services/userSyncService';
 import { useAuthStore, OnboardingStatus } from '@/store/authStore';
 import { __DEV__, devLog, logError } from '@/utils/env';
 import { logger } from '@/utils/logger';
+import { tokenProvider } from '@/services/tokenProvider';
 
 interface PrivyUser {
   id: string;
@@ -177,6 +178,14 @@ export const usePrivyAuth = (): UsePrivyAuthReturn => {
   const syncInProgressRef = useRef(false);
   const lastSyncedUserId = useRef<string | null>(null);
   const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Register the token getter with the provider immediately (not in useEffect)
+  // This ensures it's available as soon as the hook is called
+  if (authenticated && getAccessToken) {
+    tokenProvider.setTokenGetter(getAccessToken);
+  } else if (!authenticated) {
+    tokenProvider.clear();
+  }
 
   // Store user session securely and sync with backend
   useEffect(() => {

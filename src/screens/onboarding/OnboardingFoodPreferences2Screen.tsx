@@ -1,17 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
-  Alert, 
-  TextInput,
+  Alert,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  Keyboard,
-  TouchableWithoutFeedback
+  Animated
 } from 'react-native';
-import Slider from '@react-native-community/slider';
 
 import { OnboardingLayout, OnboardingButton } from '@/components/onboarding';
 import { useOnboarding, validateOnboardingStep } from '@/lib/onboarding';
@@ -28,7 +23,31 @@ interface OnboardingFoodPreferences2ScreenProps {
 const dinnerDurationOptions = [
   '< 30 min',
   '30-45 min',
-  '> 45 m',
+  '> 45 min',
+  'It depends',
+];
+
+const foodCravingOptions = [
+  'Pizza',
+  'Burgers',
+  'Sushi',
+  'Ramen',
+  'Tacos',
+  'Pasta',
+  'Steak',
+  'Salad',
+  'Sandwich',
+  'Fried Chicken',
+  'Seafood',
+  'BBQ Ribs',
+  'Pho',
+  'Dim Sum',
+  'Curry',
+  'Burritos',
+  'Wings',
+  'Poke Bowl',
+  'Hot Pot',
+  'Dumplings',
 ];
 
 export const OnboardingFoodPreferences2Screen: React.FC<OnboardingFoodPreferences2ScreenProps> = ({
@@ -41,25 +60,77 @@ export const OnboardingFoodPreferences2Screen: React.FC<OnboardingFoodPreference
   const [dinnerDuration, setDinnerDuration] = useState<string>(
     currentStepData.dinnerDuration || ''
   );
-  const [zipCode, setZipCode] = useState<string>(
-    currentStepData.zipCode || ''
-  );
-  const [travelDistance, setTravelDistance] = useState<number>(
-    currentStepData.travelDistance || 5
-  );
-  const [foodCraving, setFoodCraving] = useState<string>(
-    currentStepData.foodCraving || ''
+  const [selectedCravings, setSelectedCravings] = useState<string[]>(
+    Array.isArray(currentStepData.foodCraving)
+      ? currentStepData.foodCraving
+      : currentStepData.foodCraving
+        ? currentStepData.foodCraving.split(', ').filter(Boolean)
+        : []
   );
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+  const [isRolling, setIsRolling] = useState(false);
+  const animatedValues = useRef(
+    foodCravingOptions.map(() => new Animated.Value(1))
+  ).current;
 
   useEffect(() => {
     clearErrors();
   }, [clearErrors]);
 
-  const getDistanceLabel = (value: number): string => {
-    if (value <= 1) return 'Under 1 mile';
-    if (value <= 10) return `${Math.round(value)} miles`;
-    return '10+ miles';
+  const toggleCraving = (craving: string) => {
+    setSelectedCravings(prev =>
+      prev.includes(craving)
+        ? prev.filter(c => c !== craving)
+        : [...prev, craving]
+    );
+  };
+
+  const randomizeCravings = () => {
+    if (isRolling) return;
+    
+    setIsRolling(true);
+    setSelectedCravings([]); // Clear current selections
+    
+    // Create staggered animations for each button
+    const animations = animatedValues.map((anim, index) => {
+      return Animated.sequence([
+        Animated.timing(anim, {
+          toValue: 0.3,
+          duration: 100,
+          delay: index * 30, // Stagger the start
+          useNativeDriver: true,
+        }),
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(anim, {
+              toValue: 1.2,
+              duration: 150,
+              useNativeDriver: true,
+            }),
+            Animated.timing(anim, {
+              toValue: 0.8,
+              duration: 150,
+              useNativeDriver: true,
+            }),
+          ]),
+          { iterations: 3 }
+        ),
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]);
+    });
+    
+    // Run all animations in parallel
+    Animated.parallel(animations).start(() => {
+      // After animation, select random items
+      const shuffled = [...foodCravingOptions].sort(() => 0.5 - Math.random());
+      const numToSelect = Math.floor(Math.random() * 3) + 3; // Random between 3-5
+      setSelectedCravings(shuffled.slice(0, numToSelect));
+      setIsRolling(false);
+    });
   };
 
   const handleNext = async () => {
@@ -74,9 +145,7 @@ export const OnboardingFoodPreferences2Screen: React.FC<OnboardingFoodPreference
 
       const foodData = {
         dinnerDuration,
-        zipCode: zipCode.trim(),
-        travelDistance,
-        foodCraving: foodCraving.trim(),
+        foodCraving: selectedCravings.join(', '),
       };
 
       const validation = validateOnboardingStep('foodPreferences', foodData);
@@ -112,22 +181,15 @@ export const OnboardingFoodPreferences2Screen: React.FC<OnboardingFoodPreference
   const errorMessage = Object.values(localErrors)[0] || Object.values(stepErrors)[0];
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.flexOne}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <OnboardingLayout
+      onBack={handleBack}
+      currentStep={currentStep}
+      totalSteps={totalSteps}
+      scrollable
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.flexOne}>
-          <OnboardingLayout
-            onBack={handleBack}
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-            scrollable
-          >
-            <View style={styles.container}>
+      <View style={styles.container}>
               <View style={styles.headerSection}>
-                <Text style={styles.title}>Your Taste in Food (2/2)</Text>
-                <Text style={styles.subtitle}>Your preferences, cravings, and food comfort zones.</Text>
+                <Text style={styles.title}>Your Taste in Food (2/4)</Text>
               </View>
 
               {hasError && errorMessage && (
@@ -158,87 +220,81 @@ export const OnboardingFoodPreferences2Screen: React.FC<OnboardingFoodPreference
                 </View>
               </View>
 
-              {/* Zip Code */}
-              <View style={styles.section}>
-                <Text style={styles.questionText}>Zip/ Postal code</Text>
-                <View style={styles.zipCodeContainer}>
-                  <TextInput
-                    style={styles.zipCodeInput}
-                    placeholder="00000"
-                    placeholderTextColor={theme.colors.text.secondary}
-                    value={zipCode}
-                    onChangeText={setZipCode}
-                    keyboardType="number-pad"
-                    maxLength={5}
-                  />
-                  <View style={styles.emojiContainer}>
-                    <Text style={styles.emoji}>😋</Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Travel Distance */}
-              <View style={styles.section}>
-                <Text style={styles.questionText}>Ideal distance willing to travel for dinners</Text>
-                <View style={styles.sliderWrapper}>
-                  <Slider
-                    style={styles.slider}
-                    value={travelDistance}
-                    onValueChange={setTravelDistance}
-                    minimumValue={0.5}
-                    maximumValue={15}
-                    step={0.5}
-                    minimumTrackTintColor={theme.colors.primary.main}
-                    maximumTrackTintColor={Colors.borderLight}
-                    thumbTintColor={theme.colors.primary.main}
-                  />
-                  <View style={styles.sliderLabels}>
-                    <Text style={styles.sliderLabel}>Under 1 mile</Text>
-                    <Text style={styles.sliderValue}>{getDistanceLabel(travelDistance)}</Text>
-                    <Text style={styles.sliderLabel}>10+ miles</Text>
-                  </View>
-                </View>
-                <View style={styles.emojiContainer2}>
-                  <Text style={styles.emoji}>🚗</Text>
-                </View>
-              </View>
 
               {/* Food Craving */}
               <View style={styles.section}>
                 <Text style={styles.questionText}>What kind of food are you craving right now?</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Type here..."
-                  placeholderTextColor={theme.colors.text.secondary}
-                  value={foodCraving}
-                  onChangeText={setFoodCraving}
-                  multiline
-                  numberOfLines={3}
-                />
+                <View style={styles.helperRow}>
+                  <Text style={styles.helperText}>(Multi-select allowed)</Text>
+                  <TouchableOpacity
+                    style={[styles.rouletteButton, isRolling && styles.rouletteButtonActive]}
+                    onPress={randomizeCravings}
+                    activeOpacity={0.7}
+                    disabled={isRolling}
+                  >
+                    <Animated.Text style={[
+                      styles.rouletteIcon,
+                      isRolling && {
+                        transform: [{
+                          rotate: animatedValues[0].interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0deg', '360deg']
+                          })
+                        }]
+                      }
+                    ]}>🎰</Animated.Text>
+                    <Text style={[styles.rouletteText, isRolling && styles.rouletteTextActive]}>
+                      {isRolling ? 'Rolling...' : 'Surprise me!'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.optionsContainer}>
+                  {foodCravingOptions.map((craving, index) => (
+                    <Animated.View
+                      key={craving}
+                      style={{
+                        transform: [{ scale: animatedValues[index] }],
+                        opacity: isRolling ? animatedValues[index] : 1,
+                      }}
+                    >
+                      <TouchableOpacity
+                        style={[
+                          styles.optionButton,
+                          selectedCravings.includes(craving) && styles.optionButtonSelected,
+                          isRolling && styles.optionButtonRolling
+                        ]}
+                        onPress={() => !isRolling && toggleCraving(craving)}
+                        activeOpacity={0.7}
+                        disabled={isRolling}
+                      >
+                        <Text style={[
+                          styles.optionButtonText,
+                          selectedCravings.includes(craving) && styles.optionButtonTextSelected
+                        ]}>
+                          {craving}
+                        </Text>
+                      </TouchableOpacity>
+                    </Animated.View>
+                  ))}
+                </View>
               </View>
 
               <View style={styles.spacer} />
 
-              <View style={styles.bottomContainer}>
-                <OnboardingButton
-                  onPress={handleNext}
-                  label={saving ? 'Saving...' : 'Save and continue'}
-                  disabled={!dinnerDuration || saving}
-                  loading={saving}
-                />
-              </View>
-            </View>
-          </OnboardingLayout>
+        <View style={styles.bottomContainer}>
+          <OnboardingButton
+            onPress={handleNext}
+            label={saving ? 'Saving...' : 'Save and continue'}
+            disabled={!dinnerDuration || saving}
+            loading={saving}
+          />
         </View>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+      </View>
+    </OnboardingLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  flexOne: {
-    flex: 1,
-  },
   container: {
     flex: 1,
   },
@@ -251,12 +307,6 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(24),
     fontWeight: '700',
     marginBottom: scaleHeight(8),
-  },
-  subtitle: {
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
-    lineHeight: scaleFont(20),
   },
   errorContainer: {
     backgroundColor: Colors.errorLighter,
@@ -284,7 +334,9 @@ const styles = StyleSheet.create({
   },
   radioContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: scaleWidth(16),
+    rowGap: scaleHeight(12),
   },
   radioOption: {
     flexDirection: 'row',
@@ -311,82 +363,78 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
   },
-  zipCodeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  zipCodeInput: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    borderColor: Colors.borderLight,
-    borderRadius: scaleWidth(12),
-    borderWidth: 1,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(15),
-    height: scaleHeight(50),
-    paddingHorizontal: scaleWidth(12),
-  },
-  emojiContainer: {
-    position: 'absolute',
-    right: scaleWidth(12),
-    top: '50%',
-    transform: [{ translateY: -scaleHeight(15) }],
-  },
-  emojiContainer2: {
-    position: 'absolute',
-    right: scaleWidth(12),
-    top: scaleHeight(40),
-  },
-  emoji: {
-    fontSize: scaleFont(30),
-  },
-  sliderWrapper: {
-    paddingHorizontal: scaleWidth(8),
-  },
-  slider: {
-    width: '100%',
-    height: scaleHeight(40),
-  },
-  sliderLabels: {
+  helperRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: scaleHeight(-8),
+    marginBottom: scaleHeight(12),
   },
-  sliderLabel: {
+  helperText: {
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(12),
-    flex: 1,
+    fontSize: scaleFont(13),
   },
-  sliderValue: {
+  rouletteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primaryLight,
+    paddingHorizontal: scaleWidth(12),
+    paddingVertical: scaleHeight(6),
+    borderRadius: scaleWidth(16),
+    gap: scaleWidth(4),
+  },
+  rouletteButtonActive: {
+    backgroundColor: theme.colors.primary.main,
+  },
+  rouletteIcon: {
+    fontSize: scaleFont(16),
+  },
+  rouletteText: {
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
+    fontSize: scaleFont(13),
     fontWeight: '600',
-    paddingHorizontal: scaleWidth(10),
   },
-  textInput: {
-    backgroundColor: Colors.white,
-    borderColor: Colors.borderLight,
-    borderRadius: scaleWidth(12),
+  rouletteTextActive: {
+    color: Colors.white,
+  },
+  optionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: scaleWidth(10),
+  },
+  optionButton: {
+    paddingHorizontal: scaleWidth(16),
+    paddingVertical: scaleHeight(8),
+    borderRadius: scaleWidth(20),
     borderWidth: 1,
+    borderColor: Colors.borderLight,
+    backgroundColor: Colors.white,
+  },
+  optionButtonSelected: {
+    backgroundColor: theme.colors.primary.main,
+    borderColor: theme.colors.primary.main,
+  },
+  optionButtonRolling: {
+    borderColor: theme.colors.primary.light,
+    backgroundColor: Colors.backgroundGrayLighter,
+  },
+  optionButtonText: {
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(15),
-    minHeight: scaleHeight(80),
-    padding: scaleWidth(12),
-    textAlignVertical: 'top',
+    fontSize: scaleFont(14),
+  },
+  optionButtonTextSelected: {
+    color: Colors.white,
+    fontWeight: '500',
   },
   spacer: {
     flex: 1,
-    minHeight: scaleHeight(20),
+    minHeight: scaleHeight(10),
   },
   bottomContainer: {
-    paddingBottom: scaleHeight(20),
-    paddingTop: scaleHeight(16),
-    gap: scaleHeight(12),
+    paddingBottom: scaleHeight(10),
+    paddingTop: scaleHeight(4),
+    gap: scaleHeight(4),
   },
 });

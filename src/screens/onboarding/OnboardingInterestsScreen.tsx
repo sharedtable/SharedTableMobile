@@ -64,16 +64,25 @@ export const OnboardingInterestsScreen: React.FC<OnboardingInterestsScreenProps>
   };
 
   const addInterest = (interest: string) => {
-    if (!selectedInterests.includes(interest)) {
+    const trimmedInterest = interest.trim();
+    if (!trimmedInterest) return;
+    
+    if (!selectedInterests.includes(trimmedInterest)) {
       if (selectedInterests.length >= 10) {
         Alert.alert('Maximum Reached', 'You can select up to 10 interests');
         return;
       }
-      setSelectedInterests([...selectedInterests, interest]);
+      setSelectedInterests([...selectedInterests, trimmedInterest]);
     }
     setSearchQuery('');
     setSearchResults([]);
     Keyboard.dismiss();
+  };
+
+  const handleAddCustomInterest = () => {
+    if (searchQuery.trim() && !searchResults.includes(searchQuery.trim())) {
+      addInterest(searchQuery.trim());
+    }
   };
 
   const removeInterest = (interest: string) => {
@@ -151,46 +160,63 @@ export const OnboardingInterestsScreen: React.FC<OnboardingInterestsScreenProps>
           <TextInput
             ref={searchInputRef}
             style={styles.searchInput}
-            placeholder="Type to search interests..."
+            placeholder="Type to search or add custom interests..."
             placeholderTextColor={theme.colors.text.secondary}
             value={searchQuery}
             onChangeText={handleSearch}
-            returnKeyType="search"
+            onSubmitEditing={handleAddCustomInterest}
+            returnKeyType="done"
             autoCapitalize="words"
             autoCorrect={false}
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity 
-              style={styles.clearButton}
-              onPress={() => {
-                setSearchQuery('');
-                setSearchResults([]);
-              }}
-            >
-              <Text style={styles.clearButtonText}>×</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity 
+                style={styles.addCustomButton}
+                onPress={handleAddCustomInterest}
+              >
+                <Text style={styles.addCustomButtonText}>Add</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.clearButton}
+                onPress={() => {
+                  setSearchQuery('');
+                  setSearchResults([]);
+                }}
+              >
+                <Text style={styles.clearButtonText}>×</Text>
+              </TouchableOpacity>
+            </>
           )}
         </View>
 
-        {/* Search Results */}
-        {searchResults.length > 0 && (
+        {/* Search Results or Custom Add */}
+        {searchQuery.length > 0 && (
           <View style={styles.searchResultsContainer}>
-            <ScrollView 
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyboardShouldPersistTaps="always"
-            >
-              {searchResults.map((result) => (
-                <TouchableOpacity
-                  key={result}
-                  style={styles.searchResultItem}
-                  onPress={() => addInterest(result)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.searchResultText}>+ {result}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+            {searchResults.length > 0 ? (
+              <ScrollView 
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyboardShouldPersistTaps="always"
+              >
+                {searchResults.map((result) => (
+                  <TouchableOpacity
+                    key={result}
+                    style={styles.searchResultItem}
+                    onPress={() => addInterest(result)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.searchResultText}>+ {result}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            ) : (
+              <View style={styles.customInterestHint}>
+                <Text style={styles.customInterestHintText}>
+                  Press "Add" or Enter to add "{searchQuery}" as a custom interest
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -286,7 +312,23 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(16),
     paddingHorizontal: scaleWidth(20),
     paddingVertical: scaleHeight(12),
-    paddingRight: scaleWidth(40),
+    paddingRight: scaleWidth(90), // More space for both buttons
+  },
+  addCustomButton: {
+    position: 'absolute',
+    right: scaleWidth(45),
+    top: '50%',
+    transform: [{ translateY: -scaleHeight(14) }],
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(14),
+    paddingHorizontal: scaleWidth(12),
+    paddingVertical: scaleHeight(4),
+  },
+  addCustomButtonText: {
+    color: Colors.white,
+    fontSize: scaleFont(13),
+    fontWeight: '600',
+    fontFamily: theme.typography.fontFamily.body,
   },
   clearButton: {
     position: 'absolute',
@@ -316,6 +358,17 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
     fontWeight: '500',
+  },
+  customInterestHint: {
+    backgroundColor: Colors.primaryLight,
+    borderRadius: scaleWidth(8),
+    padding: scaleWidth(12),
+  },
+  customInterestHintText: {
+    color: theme.colors.primary.main,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
+    fontStyle: 'italic',
   },
   selectedSection: {
     marginBottom: scaleHeight(20),

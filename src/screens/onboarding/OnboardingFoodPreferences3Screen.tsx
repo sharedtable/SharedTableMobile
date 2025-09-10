@@ -22,18 +22,26 @@ interface OnboardingFoodPreferences3ScreenProps {
 }
 
 const cuisineOptions = [
-  'Korean',
-  'Japanese',
-  'Mexican',
-  'Indian',
-  'Thai',
   'Italian',
-  'Peruvian',
+  'Chinese', 
+  'Japanese',
+  'Korean',
+  'Thai',
+  'Vietnamese',
+  'Indian',
+  'Mexican',
+  'American',
+  'French',
+  'Mediterranean',
   'Middle Eastern',
   'Ethiopian',
-  'Vietnamese',
-  'Chinese',
-  'Nordic/ Scandinavian',
+  'Spanish',
+  'Greek',
+  'Turkish',
+  'Peruvian',
+  'Brazilian',
+  'German',
+  'British',
 ];
 
 export const OnboardingFoodPreferences3Screen: React.FC<OnboardingFoodPreferences3ScreenProps> = ({
@@ -70,10 +78,7 @@ export const OnboardingFoodPreferences3Screen: React.FC<OnboardingFoodPreference
       if (prev.includes(cuisine)) {
         return prev.filter(c => c !== cuisine);
       }
-      if (prev.length >= 3) {
-        Alert.alert('Maximum Reached', 'You can select up to 3 cuisines');
-        return prev;
-      }
+      // No limit on selections
       return [...prev, cuisine];
     });
   };
@@ -127,9 +132,9 @@ export const OnboardingFoodPreferences3Screen: React.FC<OnboardingFoodPreference
     >
       <View style={styles.container}>
         <View style={styles.headerSection}>
-          <Text style={styles.title}>Your Taste in Food (2/2)</Text>
-          <Text style={styles.subtitle}>Which cuisines are you excited to try?</Text>
-          <Text style={styles.helperText}>pick up to 3</Text>
+          <Text style={styles.title}>Your Taste in Food (3/4)</Text>
+          <Text style={styles.subtitle}>Which cuisines do you enjoy?</Text>
+          <Text style={styles.helperText}>(Multi-select allowed)</Text>
         </View>
 
         {hasError && errorMessage && (
@@ -291,7 +296,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   cuisineButtonSelected: {
-    backgroundColor: theme.colors.primary.light,
+    backgroundColor: theme.colors.primary.main,
     borderColor: theme.colors.primary.main,
   },
   cuisineButtonText: {
@@ -300,7 +305,7 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(14),
   },
   cuisineButtonTextSelected: {
-    color: theme.colors.primary.main,
+    color: Colors.white,
     fontWeight: '500',
   },
   bottomContainer: {
