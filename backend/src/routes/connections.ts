@@ -48,7 +48,7 @@ router.get('/', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
       data: connections || []
     });
   } catch (error) {
-    logger.error('Error in /connections/list:', error);
+    logger.error('Error in /connections:', error);
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -91,7 +91,7 @@ router.get('/pending', verifyPrivyToken, async (req: AuthRequest, res: Response)
       data: requests || []
     });
   } catch (error) {
-    logger.error('Error in /connections/requests:', error);
+    logger.error('Error in /connections/pending:', error);
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -128,12 +128,11 @@ router.post('/', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ success: false, error: 'Cannot connect with yourself' });
     }
 
-    // Check if connection already exists
+    // Check if connection already exists (in either direction)
     const { data: existingConnection } = await supabaseService
       .from('connections')
       .select('id, status')
-      .or(`user_id.eq.${userId},connected_user_id.eq.${userId}`)
-      .or(`user_id.eq.${targetUserId},connected_user_id.eq.${targetUserId}`)
+      .or(`and(user_id.eq.${userId},connected_user_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},connected_user_id.eq.${userId})`)
       .single();
 
     if (existingConnection) {
@@ -143,25 +142,31 @@ router.post('/', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Send connection request using the database function
-    const { data, error } = await supabaseService
-      .rpc('send_connection_request', {
-        p_user_id: userId,
-        p_connected_user_id: targetUserId,
-        p_message: message || null
-      });
+    // Create new connection request
+    const { data: newConnection, error: createError } = await supabaseService
+      .from('connections')
+      .insert({
+        user_id: userId,
+        connected_user_id: targetUserId,
+        status: 'pending',
+        message: message || null,
+        requested_at: new Date().toISOString()
+      })
+      .select()
+      .single();
 
-    if (error) {
-      logger.error('Failed to send connection request:', error);
-      return res.status(500).json({ success: false, error: error.message });
+    if (createError) {
+      logger.error('Failed to create connection request:', createError);
+      return res.status(500).json({ success: false, error: 'Failed to send connection request' });
     }
 
     res.json({ 
       success: true, 
-      data: { connectionId: data }
+      message: 'Connection request sent',
+      data: newConnection
     });
   } catch (error) {
-    logger.error('Error in /connections/request:', error);
+    logger.error('Error in /connections/send:', error);
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -174,6 +179,9 @@ router.put('/:connectionId/accept', verifyPrivyToken, async (req: AuthRequest, r
   try {
     const privyUserId = req.userId;
     const { connectionId } = req.params;
+    
+    // Extract the actual connection ID (remove the suffix if present)
+    const actualConnectionId = connectionId.replace(/_requester$|_recipient$/, '');
 
     // Get internal user ID
     const { data: userData, error: userError } = await supabaseService
@@ -192,7 +200,7 @@ router.put('/:connectionId/accept', verifyPrivyToken, async (req: AuthRequest, r
     const { data: connection, error: connError } = await supabaseService
       .from('connections')
       .select('*')
-      .eq('id', connectionId)
+      .eq('id', actualConnectionId || connectionId)
       .eq('connected_user_id', userId)
       .eq('status', 'pending')
       .single();
@@ -202,10 +210,16 @@ router.put('/:connectionId/accept', verifyPrivyToken, async (req: AuthRequest, r
     }
 
     // Accept the connection request
-    const { data: _data, error } = await supabaseService
-      .rpc('accept_connection_request', {
-        p_connection_id: connectionId
-      });
+    const { data: updatedConnection, error } = await supabaseService
+      .from('connections')
+      .update({ 
+        status: 'accepted', 
+        connected_at: new Date().toISOString(),
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', actualConnectionId || connectionId)
+      .select()
+      .single();
 
     if (error) {
       logger.error('Failed to accept connection:', error);
@@ -214,7 +228,8 @@ router.put('/:connectionId/accept', verifyPrivyToken, async (req: AuthRequest, r
 
     res.json({ 
       success: true, 
-      message: 'Connection accepted successfully'
+      message: 'Connection accepted',
+      data: updatedConnection
     });
   } catch (error) {
     logger.error('Error in /connections/accept:', error);
@@ -223,13 +238,16 @@ router.put('/:connectionId/accept', verifyPrivyToken, async (req: AuthRequest, r
 });
 
 /**
- * PUT /api/connections/:connectionId/reject
- * Reject a pending connection request
+ * PUT /api/connections/:connectionId/decline
+ * Decline a pending connection request
  */
-router.put('/:connectionId/reject', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
+router.put('/:connectionId/decline', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
   try {
     const privyUserId = req.userId;
     const { connectionId } = req.params;
+    
+    // Extract the actual connection ID (remove the suffix if present)
+    const actualConnectionId = connectionId.replace(/_requester$|_recipient$/, '');
 
     // Get internal user ID
     const { data: userData, error: userError } = await supabaseService
@@ -248,7 +266,7 @@ router.put('/:connectionId/reject', verifyPrivyToken, async (req: AuthRequest, r
     const { data: connection, error: connError } = await supabaseService
       .from('connections')
       .select('*')
-      .eq('id', connectionId)
+      .eq('id', actualConnectionId || connectionId)
       .eq('connected_user_id', userId)
       .eq('status', 'pending')
       .single();
@@ -257,23 +275,26 @@ router.put('/:connectionId/reject', verifyPrivyToken, async (req: AuthRequest, r
       return res.status(404).json({ success: false, error: 'Connection request not found' });
     }
 
-    // Reject the connection request
+    // Decline the connection request
     const { error } = await supabaseService
       .from('connections')
-      .update({ status: 'declined', updated_at: new Date().toISOString() })
-      .eq('id', connectionId);
+      .update({ 
+        status: 'declined', 
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', actualConnectionId || connectionId);
 
     if (error) {
-      logger.error('Failed to reject connection:', error);
-      return res.status(500).json({ success: false, error: 'Failed to reject connection' });
+      logger.error('Failed to decline connection:', error);
+      return res.status(500).json({ success: false, error: 'Failed to decline connection' });
     }
 
     res.json({ 
       success: true, 
-      message: 'Connection request rejected'
+      message: 'Connection declined'
     });
   } catch (error) {
-    logger.error('Error in /connections/:id/reject:', error);
+    logger.error('Error in /connections/decline:', error);
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -300,23 +321,26 @@ router.delete('/:connectionId', verifyPrivyToken, async (req: AuthRequest, res: 
 
     const userId = userData.id;
 
+    // Extract the actual connection ID (remove the suffix if present)
+    const actualConnectionId = connectionId.replace(/_requester$|_recipient$/, '');
+    
     // Verify this user is part of the connection
     const { data: connection, error: connError } = await supabaseService
       .from('connections')
       .select('*')
-      .eq('id', connectionId)
+      .eq('id', actualConnectionId)
       .or(`user_id.eq.${userId},connected_user_id.eq.${userId}`)
       .single();
 
     if (connError || !connection) {
       return res.status(404).json({ success: false, error: 'Connection not found' });
     }
-
-    // Decline/remove the connection
-    const { data: _data2, error } = await supabaseService
-      .rpc('decline_connection', {
-        p_connection_id: connectionId
-      });
+    
+    // Delete the connection
+    const { error } = await supabaseService
+      .from('connections')
+      .delete()
+      .eq('id', actualConnectionId);
 
     if (error) {
       logger.error('Failed to remove connection:', error);
@@ -325,75 +349,25 @@ router.delete('/:connectionId', verifyPrivyToken, async (req: AuthRequest, res: 
 
     res.json({ 
       success: true, 
-      message: 'Connection removed successfully'
+      message: 'Connection removed'
     });
   } catch (error) {
-    logger.error('Error in /connections/delete:', error);
+    logger.error('Error in /connections/remove:', error);
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
 /**
- * POST /api/connections/users/:userId/block
- * Block a specific user
- */
-router.post('/users/:userId/block', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
-  try {
-    const privyUserId = req.userId;
-    const blockedUserId = req.params.userId;
-
-    if (!blockedUserId) {
-      return res.status(400).json({ success: false, error: 'User ID is required' });
-    }
-
-    // Get internal user ID
-    const { data: userData, error: userError } = await supabaseService
-      .from('users')
-      .select('id')
-      .eq('external_auth_id', privyUserId)
-      .single();
-
-    if (userError || !userData) {
-      return res.status(404).json({ success: false, error: 'User not found' });
-    }
-
-    const userId = userData.id;
-
-    // Block the user
-    const { data: _data3, error } = await supabaseService
-      .rpc('block_user', {
-        p_user_id: userId,
-        p_blocked_user_id: blockedUserId
-      });
-
-    if (error) {
-      logger.error('Failed to block user:', error);
-      return res.status(500).json({ success: false, error: 'Failed to block user' });
-    }
-
-    res.json({ 
-      success: true, 
-      message: 'User blocked successfully'
-    });
-  } catch (error) {
-    logger.error('Error in /connections/block:', error);
-    res.status(500).json({ success: false, error: 'Internal server error' });
-  }
-});
-
-/**
- * GET /api/connections/users/search
+ * GET /api/connections/search
  * Search for users to connect with
- * Query params: ?q=searchTerm
+ * Query: { q?: string, limit?: number, offset?: number }
  */
-router.get('/users/search', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
+router.get('/search', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
   try {
     const privyUserId = req.userId;
-    const searchQuery = req.query.q;
-
-    if (!searchQuery || typeof searchQuery !== 'string') {
-      return res.status(400).json({ success: false, error: 'Search query parameter "q" is required' });
-    }
+    const { q: searchQuery } = req.query;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const offset = parseInt(req.query.offset as string) || 0;
 
     // Get internal user ID
     const { data: userData, error: userError } = await supabaseService
@@ -408,44 +382,40 @@ router.get('/users/search', verifyPrivyToken, async (req: AuthRequest, res: Resp
 
     const userId = userData.id;
 
-    // Search for users (excluding self and already connected users)
-    const { data: users, error } = await supabaseService
+    // Build query
+    let query = supabaseService
       .from('users')
-      .select('id, first_name, last_name, display_name, email')
-      .or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,display_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`)
-      .neq('id', userId)
-      .limit(20);
+      .select('id, email, first_name, last_name, nickname')
+      .neq('id', userId) // Exclude self
+      .range(offset, offset + limit - 1);
+
+    // Add search filter if provided
+    if (searchQuery && typeof searchQuery === 'string') {
+      query = query.or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,nickname.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
+    }
+
+    // Execute query
+    const { data: users, error } = await query;
 
     if (error) {
       logger.error('Failed to search users:', error);
       return res.status(500).json({ success: false, error: 'Failed to search users' });
     }
 
-    // Check connection status for each user and format name
+    // Get connection status for each user
     const usersWithStatus = await Promise.all(
       (users || []).map(async (user) => {
+        // Get connection status
         const { data: connection } = await supabaseService
           .from('connections')
           .select('status')
           .or(`and(user_id.eq.${userId},connected_user_id.eq.${user.id}),and(user_id.eq.${user.id},connected_user_id.eq.${userId})`)
           .single();
 
-        // Format name from available fields
-        const name = user.display_name || 
-                     (user.first_name && user.last_name ? `${user.first_name} ${user.last_name}` : null) ||
-                     user.first_name || 
-                     user.email;
-
         return {
-          id: user.id,
-          email: user.email,
-          first_name: user.first_name,
-          last_name: user.last_name,
-          display_name: user.display_name,
-          name, // Add formatted name field
-          avatar_url: null,  // Avatar not implemented yet
-          bio: null,  // Bio not implemented yet
-          connectionStatus: connection?.status || 'none'
+          ...user,
+          profile_photo_url: null, // No photo support yet
+          connectionStatus: connection?.status || null
         };
       })
     );
@@ -456,50 +426,6 @@ router.get('/users/search', verifyPrivyToken, async (req: AuthRequest, res: Resp
     });
   } catch (error) {
     logger.error('Error in /connections/search:', error);
-    res.status(500).json({ success: false, error: 'Internal server error' });
-  }
-});
-
-/**
- * GET /api/connections/users/:userId/mutual
- * Get mutual connections count with another user
- */
-router.get('/users/:userId/mutual', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
-  try {
-    const privyUserId = req.userId;
-    const otherUserId = req.params.userId;
-
-    // Get internal user ID
-    const { data: userData, error: userError } = await supabaseService
-      .from('users')
-      .select('id')
-      .eq('external_auth_id', privyUserId)
-      .single();
-
-    if (userError || !userData) {
-      return res.status(404).json({ success: false, error: 'User not found' });
-    }
-
-    const userId = userData.id;
-
-    // Get mutual connections count
-    const { data, error } = await supabaseService
-      .rpc('get_mutual_connections_count', {
-        p_user_id: userId,
-        p_other_user_id: otherUserId
-      });
-
-    if (error) {
-      logger.error('Failed to get mutual connections:', error);
-      return res.status(500).json({ success: false, error: 'Failed to get mutual connections' });
-    }
-
-    res.json({ 
-      success: true, 
-      data: { count: data || 0 }
-    });
-  } catch (error) {
-    logger.error('Error in /connections/mutual:', error);
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });

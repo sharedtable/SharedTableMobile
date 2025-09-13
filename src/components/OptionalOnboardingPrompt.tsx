@@ -57,7 +57,7 @@ export const OptionalOnboardingPrompt: React.FC = () => {
     console.log('🔍 [OptionalOnboardingPrompt] Should show prompt:', shouldShow);
     
     if (!shouldShow) {
-      console.log('❌ [OptionalOnboardingPrompt] Not showing - status not eligible');
+      console.log('ℹ️ [OptionalOnboardingPrompt] Not showing - status not eligible');
       setShowPrompt(false);
       return;
     }
@@ -73,7 +73,7 @@ export const OptionalOnboardingPrompt: React.FC = () => {
         console.log('🔍 [OptionalOnboardingPrompt] Time since dismiss:', timeSinceDismiss);
         
         if (timeSinceDismiss < PROMPT_DISMISS_DURATION) {
-          console.log('❌ [OptionalOnboardingPrompt] Not showing - recently dismissed');
+          console.log('ℹ️ [OptionalOnboardingPrompt] Not showing - recently dismissed');
           setShowPrompt(false);
           return;
         }
@@ -86,7 +86,7 @@ export const OptionalOnboardingPrompt: React.FC = () => {
         console.log('🔍 [OptionalOnboardingPrompt] Resume info:', info);
         setResumeInfo(info);
       } catch (error) {
-        console.error('❌ [OptionalOnboardingPrompt] Error fetching resume info:', error);
+        console.error('[OptionalOnboardingPrompt] Error fetching resume info:', error);
       } finally {
         setIsCheckingResume(false);
       }
@@ -104,7 +104,7 @@ export const OptionalOnboardingPrompt: React.FC = () => {
       // Cleanup timeout on unmount
       return () => clearTimeout(timeoutId);
     } catch (error) {
-      console.error('❌ [OptionalOnboardingPrompt] Error checking prompt status:', error);
+      console.error('[OptionalOnboardingPrompt] Error checking prompt status:', error);
     }
   }, [onboardingStatus]);
 

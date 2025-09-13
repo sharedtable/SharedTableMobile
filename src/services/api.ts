@@ -81,6 +81,16 @@ export interface DiningEvent {
   updated_at: string;
 }
 
+export interface Dinner {
+  id: string;
+  datetime: string;
+  restaurant_id?: string;
+  restaurant_name?: string;
+  status?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface EventBooking {
   id: string;
   event_id: string;
@@ -88,9 +98,16 @@ export interface EventBooking {
   guest_count: number;
   dietary_notes?: string;
   special_requests?: string;
-  status: string;
+  status: 'pending' | 'confirmed' | 'assigned' | 'waitlisted' | 'declined' | 'cancelled' | 'attended' | 'completed';
   created_at: string;
   updated_at: string;
+  cancelled_at?: string;
+  attended_at?: string;
+  completed_at?: string;
+  event?: Event;
+  dinner_id?: string;
+  dinner?: Dinner;
+  survey_submitted?: boolean;
 }
 
 export interface EventAttendee {
@@ -98,7 +115,7 @@ export interface EventAttendee {
   event_id: string;
   user_id: string;
   user: User;
-  status: 'pending' | 'confirmed' | 'waitlisted' | 'declined' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'assigned' | 'waitlisted' | 'declined' | 'cancelled' | 'attended' | 'completed';
   guests_count: number;
   dietary_notes?: string;
   special_requests?: string;
@@ -707,6 +724,16 @@ class ApiService {
     return response.data;
   }
 
+  async getUpcomingBookings(): Promise<ApiResponse<EventBooking[]>> {
+    const response = await this.client.get('/bookings/upcoming');
+    return response.data;
+  }
+
+  async getPastBookings(): Promise<ApiResponse<EventBooking[]>> {
+    const response = await this.client.get('/bookings/past');
+    return response.data;
+  }
+
   async getBookingDetails(bookingId: string): Promise<ApiResponse<EventBooking>> {
     const response = await this.client.get(`/bookings/${bookingId}`);
     return response.data;
@@ -714,6 +741,55 @@ class ApiService {
 
   async cancelBooking(bookingId: string): Promise<ApiResponse<void>> {
     const response = await this.client.delete(`/bookings/${bookingId}`);
+    return response.data;
+  }
+
+  async markBookingAsAttended(bookingId: string): Promise<ApiResponse<EventBooking>> {
+    const response = await this.client.patch(`/bookings/${bookingId}/attend`);
+    return response.data;
+  }
+
+  async markBookingAsCompleted(bookingId: string): Promise<ApiResponse<EventBooking>> {
+    const response = await this.client.patch(`/bookings/${bookingId}/complete`);
+    return response.data;
+  }
+
+  async getBookingStats(): Promise<ApiResponse<{
+    confirmed: number;
+    attended: number;
+    completed: number;
+    cancelled: number;
+    total: number;
+  }>> {
+    const response = await this.client.get('/bookings/stats/by-status');
+    return response.data;
+  }
+
+  async markBookingsAsAssigned(dinnerId: string, userIds: string[]): Promise<ApiResponse<{
+    message: string;
+    data: EventBooking[];
+    count: number;
+  }>> {
+    const response = await this.client.post('/bookings/admin/mark-assigned', {
+      dinnerId,
+      userIds
+    });
+    return response.data;
+  }
+
+  async bulkCompleteBookings(dinnerId: string, attendedUserIds: string[]): Promise<ApiResponse<{
+    message: string;
+    stats: {
+      total: number;
+      attended: number;
+      noShow: number;
+      completed: number;
+    };
+  }>> {
+    const response = await this.client.post('/bookings/admin/bulk-complete', {
+      dinnerId,
+      attendedUserIds
+    });
     return response.data;
   }
 
@@ -1239,6 +1315,36 @@ class ApiService {
         success: true,
         data: preferences,
       };
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  // Post-Dinner Survey
+  async submitPostDinnerSurvey(data: {
+    bookingId: string;
+    dinnerId: string;
+    ratings: {
+      restaurant: number;
+      conversation: number;
+      chemistry: number;
+      overall: number;
+    };
+    feedback?: string;
+    matches?: string[];
+  }): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.client.post('/bookings/survey', data);
+      return response.data;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  async getPendingSurveys(): Promise<ApiResponse<EventBooking[]>> {
+    try {
+      const response = await this.client.get('/bookings/pending-surveys');
+      return response.data;
     } catch (error) {
       return this.handleError(error);
     }

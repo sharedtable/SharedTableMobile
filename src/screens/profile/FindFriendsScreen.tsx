@@ -18,12 +18,15 @@ import { useNavigation } from '@react-navigation/native';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 import { api } from '@/services/api';
+import { getUserDisplayName } from '@/utils/getUserDisplayName';
 // @ts-expect-error - lodash types not installed
 import debounce from 'lodash/debounce';
 
 interface User {
   id: string;
-  name: string;
+  first_name?: string;
+  last_name?: string;
+  nickname?: string;
   email: string;
   avatar_url?: string;
   connectionStatus: 'none' | 'pending' | 'accepted' | 'blocked';
@@ -64,7 +67,13 @@ export const FindFriendsScreen: React.FC = () => {
     searchUsers(searchQuery);
   }, [searchQuery, searchUsers]);
 
-  const handleSendRequest = async (userId: string, userName: string) => {
+  const handleSendRequest = async (user: User) => {
+    const userName = getUserDisplayName({
+      nickname: user.nickname,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      email: user.email,
+    });
     Alert.alert(
       'Send Friend Request',
       `Send a friend request to ${userName}?`,
@@ -73,17 +82,17 @@ export const FindFriendsScreen: React.FC = () => {
         {
           text: 'Send',
           onPress: async () => {
-            setSendingRequest(userId);
+            setSendingRequest(user.id);
             try {
-              const response = await api.sendConnectionRequest(userId);
+              const response = await api.sendConnectionRequest(user.id);
               if (response.success) {
                 Alert.alert('Success', 'Friend request sent!');
                 // Update the user's status in the list
                 setUsers(prevUsers =>
-                  prevUsers.map(user =>
-                    user.id === userId
-                      ? { ...user, connectionStatus: 'pending' }
-                      : user
+                  prevUsers.map(u =>
+                    u.id === user.id
+                      ? { ...u, connectionStatus: 'pending' }
+                      : u
                   )
                 );
               }
@@ -98,7 +107,13 @@ export const FindFriendsScreen: React.FC = () => {
     );
   };
 
-  const handleCancelRequest = async (userId: string, userName: string) => {
+  const handleCancelRequest = async (user: User) => {
+    const userName = getUserDisplayName({
+      nickname: user.nickname,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      email: user.email,
+    });
     Alert.alert(
       'Cancel Request',
       `Cancel friend request to ${userName}?`,
@@ -108,7 +123,7 @@ export const FindFriendsScreen: React.FC = () => {
           text: 'Yes',
           style: 'destructive',
           onPress: async () => {
-            setSendingRequest(userId);
+            setSendingRequest(user.id);
             try {
               // Note: You'll need to get the connection ID first
               // For now, we'll need to enhance the API to support this
@@ -143,7 +158,14 @@ export const FindFriendsScreen: React.FC = () => {
             </View>
           )}
           <View style={styles.userDetails}>
-            <Text style={styles.userName}>{item.name}</Text>
+            <Text style={styles.userName}>
+              {getUserDisplayName({
+                nickname: item.nickname,
+                firstName: item.first_name,
+                lastName: item.last_name,
+                email: item.email,
+              })}
+            </Text>
             <Text style={styles.userEmail}>{item.email}</Text>
           </View>
         </Pressable>
@@ -156,7 +178,7 @@ export const FindFriendsScreen: React.FC = () => {
               {item.connectionStatus === 'none' && (
                 <Pressable
                   style={styles.addButton}
-                  onPress={() => handleSendRequest(item.id, item.name)}
+                  onPress={() => handleSendRequest(item)}
                 >
                   <Ionicons name="person-add" size={18} color={theme.colors.white} />
                   <Text style={styles.addButtonText}>Add</Text>
@@ -166,7 +188,7 @@ export const FindFriendsScreen: React.FC = () => {
               {item.connectionStatus === 'pending' && (
                 <Pressable
                   style={styles.pendingButton}
-                  onPress={() => handleCancelRequest(item.id, item.name)}
+                  onPress={() => handleCancelRequest(item)}
                 >
                   <Ionicons name="time-outline" size={18} color={theme.colors.text.secondary} />
                   <Text style={styles.pendingButtonText}>Pending</Text>

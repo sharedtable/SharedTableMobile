@@ -53,6 +53,9 @@ router.post('/save', verifyPrivyToken, async (req: AuthRequest, res: Response, n
       userInfoData.height = (feet * 12) + inches;
     }
 
+    // Collect updates for users table
+    const userTableUpdates: Record<string, any> = {};
+
     // Direct field mapping to actual database columns
     Object.keys(data).forEach(key => {
       const value = data[key];
@@ -64,23 +67,21 @@ router.post('/save', verifyPrivyToken, async (req: AuthRequest, res: Response, n
       switch(key) {
         // Name fields (also update users table)
         case 'firstName':
-          supabaseService.from('users').update({ first_name: value }).eq('id', user.id);
+          userTableUpdates.first_name = value;
           break;
         case 'lastName':
-          supabaseService.from('users').update({ last_name: value }).eq('id', user.id);
+          userTableUpdates.last_name = value;
           break;
         case 'nickname':
-          supabaseService.from('users').update({ display_name: value }).eq('id', user.id);
+          userTableUpdates.display_name = value;
           break;
           
         // Basic info - save to users table
         case 'birthDate':
-          // Save birth_date to users table, not onboarding_profiles
-          supabaseService.from('users').update({ date_of_birth: value }).eq('id', user.id);
+          userTableUpdates.birthday = value;
           break;
         case 'gender':
-          // Save gender to users table, not onboarding_profiles
-          supabaseService.from('users').update({ gender: value }).eq('id', user.id);
+          userTableUpdates.gender = value;
           break;
           
         // Education fields
@@ -247,6 +248,28 @@ router.post('/save', verifyPrivyToken, async (req: AuthRequest, res: Response, n
       }
     });
     // user_info table has all fields as proper columns, no JSON conversion needed
+
+    // Update users table if there are any updates
+    if (Object.keys(userTableUpdates).length > 0) {
+      userTableUpdates.updated_at = new Date().toISOString();
+      
+      logger.info(`[SIMPLE ONBOARDING] Updating users table:`, {
+        userId: user.id,
+        updates: userTableUpdates
+      });
+      
+      const { error: userUpdateError } = await supabaseService
+        .from('users')
+        .update(userTableUpdates)
+        .eq('id', user.id);
+        
+      if (userUpdateError) {
+        logger.error('Failed to update users table:', userUpdateError);
+        throw new AppError('Failed to update user profile', 500);
+      }
+      
+      logger.info(`✅ [SIMPLE ONBOARDING] Successfully updated users table for user ${user.id}`);
+    }
 
     logger.info(`[SIMPLE ONBOARDING] Saving to user_info:`, {
       userId: user.id,
