@@ -150,8 +150,11 @@ router.post('/step', verifyPrivyToken, async (req: AuthRequest, res: Response, n
         if (validatedData.nationality) profileUpdates.nationality = validatedData.nationality;
         if (validatedData.religion) profileUpdates.religion = validatedData.religion;
         if (validatedData.relationshipStatus) profileUpdates.relationship_status = validatedData.relationshipStatus;
-        if (validatedData.heightFeet !== undefined) profileUpdates.height_feet = validatedData.heightFeet;
-        if (validatedData.heightInches !== undefined) profileUpdates.height_inches = validatedData.heightInches;
+        if (validatedData.heightFeet !== undefined || validatedData.heightInches !== undefined) {
+          const feet = parseInt(validatedData.heightFeet, 10) || 0;
+          const inches = parseInt(validatedData.heightInches, 10) || 0;
+          profileUpdates.height = (feet * 12) + inches;
+        }
         break;
         
       case 'personality':
@@ -189,7 +192,7 @@ router.post('/step', verifyPrivyToken, async (req: AuthRequest, res: Response, n
         if (validatedData.adventurousLevel !== undefined) profileUpdates.adventurous_level = validatedData.adventurousLevel;
         if (validatedData.diningAtmospheres) profileUpdates.dining_atmospheres = Array.isArray(validatedData.diningAtmospheres) ? validatedData.diningAtmospheres : [validatedData.diningAtmospheres];
         if (validatedData.dinnerDuration) profileUpdates.dinner_duration = validatedData.dinnerDuration;
-        if (validatedData.zipCode) profileUpdates.zip_code = validatedData.zipCode;
+        if (validatedData.zipCode) profileUpdates.zipcode = validatedData.zipCode;
         if (validatedData.travelDistance !== undefined) profileUpdates.travel_distance = validatedData.travelDistance;
         if (validatedData.foodCraving) profileUpdates.food_craving = validatedData.foodCraving;
         if (validatedData.cuisinesToTry) profileUpdates.cuisines_to_try = Array.isArray(validatedData.cuisinesToTry) ? validatedData.cuisinesToTry : [validatedData.cuisinesToTry];
@@ -396,6 +399,11 @@ router.get('/profile', verifyPrivyToken, async (req: AuthRequest, res: Response,
       .select('*')
       .eq('user_id', user.id)
       .single();
+
+    if (profile && typeof profile.height === 'number' && profile.height > 0) {
+      profile.height_feet = Math.floor(profile.height / 12);
+      profile.height_inches = profile.height % 12;
+    }
 
     res.json({
       success: true,

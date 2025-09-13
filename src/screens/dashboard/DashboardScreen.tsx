@@ -17,6 +17,8 @@ import { useGamificationStats, useStreak, useGamificationSync } from '@/hooks/us
 import { TIER_CONFIG } from '@/types/gamification';
 import { useAuthStore } from '@/store/authStore';
 import { useNotificationStore } from '@/store/notificationStore';
+import { useUserData } from '@/hooks/useUserData';
+import { getUserDisplayName } from '@/utils/getUserDisplayName';
 
 interface DashboardScreenProps {
   navigation?: NavigationProp<any>;
@@ -36,6 +38,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const navigation = useNavigation<any>();
   
   const profile = useAuthStore((state) => state.privyUser);
+  const { userData } = useUserData();
   const { unreadCount, loadNotifications } = useNotificationStore();
   const { stats, isLoading: statsLoading } = useGamificationStats();
   const { streakInfo } = useStreak();
@@ -79,7 +82,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <>
             {/* Welcome Section */}
             <View style={styles.welcomeSection}>
-              <Text style={styles.welcomeTitle}>Welcome back, {profile?.name?.split(' ')[0] || 'Foodie'}!</Text>
+              <Text style={styles.welcomeTitle}>
+                Welcome back, {getUserDisplayName({
+                  ...userData,
+                  nickname: userData?.displayName,
+                  name: userData?.name || profile?.name
+                }, 'Foodie')}!
+              </Text>
               <Text style={styles.welcomeSubtitle}>Track your food journey, unlock rewards.</Text>
             </View>
 

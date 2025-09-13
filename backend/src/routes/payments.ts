@@ -1,6 +1,6 @@
 import express, { Response } from 'express';
 import { verifyPrivyToken, AuthRequest } from '../middleware/auth';
-import { supabaseService } from '../config/supabase';
+import { supabaseService, supabaseWithUser } from '../config/supabase';
 import StripeService from '../services/stripe';
 import { logger } from '../utils/logger';
 
@@ -352,8 +352,8 @@ router.post('/create-booking', verifyPrivyToken, async (req: AuthRequest, res: R
 
     // Payment intent is auto-confirmed when payment_method is provided
 
-    // Create booking
-    const { data: booking, error: bookingError } = await supabaseService
+    // Create booking with user context for audit logging
+    const { data: booking, error: bookingError } = await supabaseWithUser(userData.id)
       .from('dinner_bookings')
       .insert({
         user_id: userData.id,
@@ -495,7 +495,7 @@ router.post('/booking-hold', verifyPrivyToken, async (req: AuthRequest, res: Res
       paymentMethodId
     );
 
-    const { data: booking, error: bookingError } = await supabaseService
+    const { data: booking, error: bookingError } = await supabaseWithUser(userData.id)
       .from('dinner_bookings')
       .insert({
         user_id: userData.id,

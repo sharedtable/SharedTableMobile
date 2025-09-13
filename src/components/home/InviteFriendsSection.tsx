@@ -29,6 +29,7 @@ interface InviteFriendsSectionProps {
 }
 
 export const InviteFriendsSection: React.FC<InviteFriendsSectionProps> = ({ onInvite, scrollViewRef }) => {
+  const styles = getStyles();
   const [email, setEmail] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [connections, setConnections] = useState<UserConnection[]>([]);
@@ -287,7 +288,8 @@ export const InviteFriendsSection: React.FC<InviteFriendsSectionProps> = ({ onIn
   );
 };
 
-const styles = StyleSheet.create({
+/* eslint-disable react-native/no-unused-styles */
+const getStyles = () => StyleSheet.create({
   addButton: {
     alignItems: 'center',
     backgroundColor: theme.colors.primary.main,

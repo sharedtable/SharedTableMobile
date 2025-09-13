@@ -3,14 +3,14 @@ import React from 'react';
 
 // Import auth screens
 import { WelcomeScreen } from '@/screens/auth/WelcomeScreen';
+import { SignInScreen } from '@/screens/auth/SignInScreen';
 
 // These screens are not implemented yet
 // import { ForgotPasswordScreen } from '@/screens/auth/ForgotPasswordScreen';
-// import { LoginScreen } from '@/screens/auth/LoginScreen';
-// import { SignUpScreen } from '@/screens/auth/SignUpScreen';
 
 export type AuthStackParamList = {
   Welcome: undefined;
+  SignIn: { hasInvitation?: boolean };
   Login: undefined;
   SignUp: undefined;
   ForgotPassword: undefined;
@@ -28,8 +28,7 @@ export function AuthNavigator() {
       }}
     >
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
-      {/* <Stack.Screen name="Login" component={LoginScreen} /> */}
-      {/* <Stack.Screen name="SignUp" component={SignUpScreen} /> */}
+      <Stack.Screen name="SignIn" component={SignInScreen} />
       {/* <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} /> */}
     </Stack.Navigator>
   );

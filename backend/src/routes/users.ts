@@ -13,6 +13,8 @@ const updateProfileSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   displayName: z.string().optional(),
+  gender: z.enum(['Male', 'Female', 'Other', 'Prefer not to say']).optional(),
+  birthday: z.string().optional(), // Date string in ISO format
   bio: z.string().optional(),
   avatarUrl: z.string().url().optional(),
   preferences: z.record(z.any()).optional(),
@@ -28,12 +30,7 @@ router.get('/:userId', verifyPrivyToken, async (req: AuthRequest, res: Response,
 
     const { data: user, error } = await supabaseService
       .from('users')
-      .select(
-        `
-        *,
-        user_profiles (*)
-      `
-      )
+      .select('*')
       .eq('id', userId)
       .single();
 
@@ -84,13 +81,15 @@ router.put('/profile', verifyPrivyToken, async (req: AuthRequest, res: Response,
     }
 
     // Update user table fields
-    const userUpdates: Record<string, string> = {
+    const userUpdates: Record<string, any> = {
       updated_at: new Date().toISOString(),
     };
 
     if (validatedData.firstName) userUpdates.first_name = validatedData.firstName;
     if (validatedData.lastName) userUpdates.last_name = validatedData.lastName;
     if (validatedData.displayName) userUpdates.display_name = validatedData.displayName;
+    if (validatedData.gender) userUpdates.gender = validatedData.gender;
+    if (validatedData.birthday) userUpdates.birthday = validatedData.birthday;
 
     const { error: updateUserError } = await supabaseService
       .from('users')
@@ -102,35 +101,10 @@ router.put('/profile', verifyPrivyToken, async (req: AuthRequest, res: Response,
       throw new AppError('Failed to update user profile', 500);
     }
 
-    // Update user_profiles table
-    const profileUpdates: Record<string, string | Record<string, unknown>> = {
-      updated_at: new Date().toISOString(),
-    };
-
-    if (validatedData.bio) profileUpdates.bio = validatedData.bio;
-    if (validatedData.avatarUrl) profileUpdates.avatar_url = validatedData.avatarUrl;
-    if (validatedData.preferences) profileUpdates.preferences = validatedData.preferences;
-
-    // Upsert profile (create if doesn't exist)
-    const { error: updateProfileError } = await supabaseService.from('onboarding_profiles').upsert({
-      user_id: user.id,
-      ...profileUpdates,
-    });
-
-    if (updateProfileError) {
-      logger.error('Failed to update user profile:', updateProfileError);
-      throw new AppError('Failed to update user profile', 500);
-    }
-
     // Fetch updated user data
     const { data: updatedUser, error: fetchError } = await supabaseService
       .from('users')
-      .select(
-        `
-        *,
-        user_profiles (*)
-      `
-      )
+      .select('*')
       .eq('id', user.id)
       .single();
 

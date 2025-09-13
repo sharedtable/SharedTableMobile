@@ -10,6 +10,7 @@ interface LoadingScreenProps {
 }
 
 export const LoadingScreen = memo<LoadingScreenProps>(({ onLoadingComplete, duration = 2000 }) => {
+  const styles = getStyles();
   const _insets = useSafeAreaInsets();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
@@ -69,7 +70,7 @@ export const LoadingScreen = memo<LoadingScreenProps>(({ onLoadingComplete, dura
 
 LoadingScreen.displayName = 'LoadingScreen';
 
-const styles = StyleSheet.create({
+const getStyles = () => StyleSheet.create({
   container: {
     alignItems: 'center',
     backgroundColor: theme.colors.brand.primary,

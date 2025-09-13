@@ -26,6 +26,7 @@ interface ResumeInfo {
 }
 
 export const OptionalOnboardingPrompt: React.FC = () => {
+  const styles = getStyles();
   const navigation = useNavigation<NavigationType>();
   const { onboardingStatus } = useAuthStore();
   const [showPrompt, setShowPrompt] = useState(false);
@@ -259,7 +260,8 @@ export const OptionalOnboardingPrompt: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+/* eslint-disable react-native/no-unused-styles */
+const getStyles = () => StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: theme.colors.overlay.medium,

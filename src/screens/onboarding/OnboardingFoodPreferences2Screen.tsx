@@ -63,9 +63,7 @@ export const OnboardingFoodPreferences2Screen: React.FC<OnboardingFoodPreference
   const [selectedCravings, setSelectedCravings] = useState<string[]>(
     Array.isArray(currentStepData.foodCraving)
       ? currentStepData.foodCraving
-      : currentStepData.foodCraving
-        ? currentStepData.foodCraving.split(', ').filter(Boolean)
-        : []
+      : []
   );
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
   const [isRolling, setIsRolling] = useState(false);
@@ -145,7 +143,7 @@ export const OnboardingFoodPreferences2Screen: React.FC<OnboardingFoodPreference
 
       const foodData = {
         dinnerDuration,
-        foodCraving: selectedCravings.join(', '),
+        foodCraving: selectedCravings,
       };
 
       const validation = validateOnboardingStep('foodPreferences', foodData);

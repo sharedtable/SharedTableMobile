@@ -19,6 +19,7 @@ import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 
 export const NotificationsListScreen: React.FC = () => {
+  const styles = getStyles();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
@@ -209,7 +210,8 @@ export const NotificationsListScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+/* eslint-disable react-native/no-unused-styles */
+const getStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background.paper,

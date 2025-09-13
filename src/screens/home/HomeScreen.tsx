@@ -29,6 +29,7 @@ import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 import { useNotificationStore } from '@/store/notificationStore';
 import { usePaymentStore } from '@/store/paymentStore';
 import { CheckoutModal } from '@/components/payment/CheckoutModal';
+import { ReservationConfirmModal } from '@/components/reservation/ReservationConfirmModal';
 
 // Images
 // @ts-expect-error - Image asset
@@ -65,6 +66,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
   route: _route,
   onNavigate: _onNavigate,
 }) => {
+  const styles = getStyles();
   const { user } = usePrivyAuth();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { loadNotifications } = useNotificationStore();
@@ -75,6 +77,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
   const [selectedDinner, setSelectedDinner] = useState<string | null>(null);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [showReservationConfirm, setShowReservationConfirm] = useState(false);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [mySignups, setMySignups] = useState<Signup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -334,8 +337,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
       return;
     }
 
-    // Open checkout modal for payment and booking
-    setShowCheckoutModal(true);
+    // Show reservation confirmation modal first
+    setShowReservationConfirm(true);
   };
 
   const handleCheckoutSuccess = useCallback(async (paymentMethodId: string, shouldSave: boolean) => {
@@ -391,6 +394,28 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
 
   const handleCheckoutCancel = useCallback(() => {
     setShowCheckoutModal(false);
+  }, []);
+
+  const handleReservationConfirm = useCallback(() => {
+    // The reservation was successfully completed
+    // Close the modal and reset state
+    setShowReservationConfirm(false);
+    setSelectedDinner(null);
+    // Refresh data to show updated signups
+    setTimeout(() => {
+      fetchData();
+    }, 500);
+  }, [fetchData]);
+
+  const handleReservationCancel = useCallback(() => {
+    setShowReservationConfirm(false);
+  }, []);
+
+  const handleChangeTime = useCallback(() => {
+    setShowReservationConfirm(false);
+    setSelectedDinner(null);
+    // Scroll to time selection area
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
   }, []);
 
   const handleInviteFriend = useCallback((email: string) => {
@@ -713,6 +738,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
 
       {/* Bottom Tab Bar removed - using React Navigation's tab bar */}
       
+      {/* Reservation Confirmation Modal */}
+      <ReservationConfirmModal
+        visible={showReservationConfirm}
+        dinnerData={selectedDinner ? timeSlots.find(slot => slot.id === selectedDinner) || null : null}
+        onConfirm={handleReservationConfirm}
+        onChangeTime={handleChangeTime}
+        onInviteFriends={() => handleInviteFriend('')}
+        onCancel={handleReservationCancel}
+      />
+
       {/* Checkout Modal */}
       <CheckoutModal
         visible={showCheckoutModal}
@@ -727,7 +762,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
 
 HomeScreen.displayName = 'HomeScreen';
 
-const styles = StyleSheet.create({
+const getStyles = () => StyleSheet.create({
   headerSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',

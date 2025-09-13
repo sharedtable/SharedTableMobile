@@ -25,6 +25,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   onCancel,
   loading,
 }) => {
+  const styles = getStyles();
   return (
     <Modal
       visible={visible}
@@ -54,7 +55,8 @@ const { height: screenHeight } = Dimensions.get('window');
 const CARD_TOP_POSITION = scaleHeight(210); // Same as contentCardContainer top position
 const MODAL_HEIGHT = screenHeight - CARD_TOP_POSITION;
 
-const styles = StyleSheet.create({
+/* eslint-disable react-native/no-unused-styles */
+const getStyles = () => StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',

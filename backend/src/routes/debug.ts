@@ -41,11 +41,11 @@ router.get('/user-info', verifyPrivyToken, async (req: AuthRequest, res: Respons
     if (userInfo) {
       const fieldsToCheck = [
         'education_level', 'school', 'occupation', 'industry', 'job_title', 'company',
-        'ethnicity', 'nationality', 'religion', 'relationship_status', 'height_feet', 'height_inches',
+        'ethnicity', 'nationality', 'religion', 'relationship_status', 'height',
         'personality_traits', 'mbti_type', 'lead_conversations', 'willing_compromise', 'seek_experiences', 'roles',
         'early_bird_night_owl', 'active_person', 'punctuality', 'work_life_balance', 'substances',
         'dietary_restrictions', 'food_budget', 'spicy_level', 'drinking_level', 'adventurous_level',
-        'dining_atmospheres', 'dinner_duration', 'zip_code', 'travel_distance', 'food_craving',
+        'dining_atmospheres', 'dinner_duration', 'zipcode', 'travel_distance', 'food_craving',
         'cuisines_to_try', 'cuisines_to_avoid', 'interests', 'hobbies', 'hoping_to_meet', 'interesting_fact'
       ];
       

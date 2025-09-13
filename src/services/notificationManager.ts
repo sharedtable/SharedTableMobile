@@ -171,7 +171,10 @@ class NotificationManager {
       content.sound = 'default';
     }
 
-    await Notifications.presentNotificationAsync(content);
+    await Notifications.scheduleNotificationAsync({
+      content,
+      trigger: null,
+    });
   }
 
   private async scheduleNotification(notification: NotificationData, scheduledFor: Date) {

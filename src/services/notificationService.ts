@@ -363,15 +363,18 @@ class NotificationService {
   // Send local notification immediately
   async sendLocalNotification(payload: NotificationPayload) {
     try {
-      await Notifications.presentNotificationAsync({
-        title: payload.title,
-        body: payload.body,
-        data: payload.data,
-        sound: payload.sound,
-        priority: payload.priority === 'high' 
-          ? Notifications.AndroidNotificationPriority.HIGH
-          : Notifications.AndroidNotificationPriority.DEFAULT,
-        categoryIdentifier: payload.categoryId,
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: payload.title,
+          body: payload.body,
+          data: payload.data,
+          sound: payload.sound,
+          priority: payload.priority === 'high' 
+            ? Notifications.AndroidNotificationPriority.HIGH
+            : Notifications.AndroidNotificationPriority.DEFAULT,
+          categoryIdentifier: payload.categoryId,
+        },
+        trigger: null,
       });
     } catch (error) {
       console.error('Failed to send local notification:', error);
