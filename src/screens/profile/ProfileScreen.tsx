@@ -84,6 +84,7 @@ export function ProfileScreen() {
   const [connections] = useState(0);
   const [topRestaurants, setTopRestaurants] = useState<RestaurantItem[]>([]);
   const [restaurantsLoading, setRestaurantsLoading] = useState(true);
+  const [reservationFilter, setReservationFilter] = useState<'upcoming' | 'past'>('upcoming');
   const { unreadCount, loadNotifications } = useNotificationStore();
   const { stats, isLoading: statsLoading, refetch: refetchStats } = useGamificationStats();
 
@@ -182,9 +183,8 @@ export function ProfileScreen() {
     navigation.navigate('NotificationsList' as any);
   };
 
-  const handleGrabSpot = () => {
-    // Navigate to Home screen (main tab)
-    navigation.navigate('Main' as any, { screen: 'Home' });
+  const handleRefineExperience = () => {
+    navigation.navigate('RefineExperience' as any);
   };
 
 
@@ -357,15 +357,74 @@ export function ProfileScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
-          {/* Dinner Reservations */}
+          {/* Up Next Section */}
+          {reservations.length > 0 && reservations[0].status !== 'cancelled' && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Up Next</Text>
+              <View style={styles.upNextCard}>
+                <Pressable 
+                  style={styles.upNextCardContent}
+                  onPress={() => reservations[0].dinner_group && navigation.navigate('DinnerDetails', { reservation: reservations[0] })}
+                >
+                  <View style={styles.upNextLeft}>
+                    <View style={styles.upNextIconContainer}>
+                      <View style={styles.upNextIconBg}>
+                        <Ionicons name="restaurant" size={24} color={theme.colors.white} />
+                      </View>
+                    </View>
+                  </View>
+                  <View style={styles.upNextCenter}>
+                    <Text style={styles.upNextTitle}>
+                      {reservations[0].dinner_group?.restaurant_name || 'Sotto Mare'}
+                    </Text>
+                    <View style={styles.upNextDateRow}>
+                      <Ionicons name="calendar-outline" size={12} color={theme.colors.white} style={{ opacity: 0.8 }} />
+                      <Text style={styles.upNextDateText}>
+                        {reservations[0].dinner?.datetime ? 
+                          `${new Date(reservations[0].dinner.datetime).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                          })} at ${new Date(reservations[0].dinner.datetime).toLocaleTimeString('en-US', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                          })}`
+                          : '2024-02-15 at 7:00 PM'
+                        }
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.upNextRight}>
+                    <Pressable 
+                      style={styles.upNextDetailsButton}
+                      onPress={() => navigation.navigate('DinnerDetails', { reservation: reservations[0] })}
+                    >
+                      <Text style={styles.upNextDetailsText}>See details</Text>
+                    </Pressable>
+                    <Pressable 
+                      style={styles.upNextCancelButton}
+                      onPress={() => handleCancelReservation(reservations[0].id)}
+                    >
+                      <Text style={styles.upNextCancelText}>Cancel</Text>
+                    </Pressable>
+                  </View>
+                </Pressable>
+              </View>
+            </View>
+          )}
+
+          {/* My Reservation Section */}
           <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>My Dinner Reservations</Text>
-            {reservations.length > 0 && (
-              <View style={styles.sectionBadge}>
-                <Text style={styles.sectionCount}>{reservations.length}</Text>
-              </View>
-            )}
+            <Text style={styles.sectionTitle}>My Reservation</Text>
+            <Pressable 
+              style={styles.filterDropdown}
+              onPress={() => setReservationFilter(reservationFilter === 'upcoming' ? 'past' : 'upcoming')}
+            >
+              <Text style={styles.filterText}>{reservationFilter === 'upcoming' ? 'Upcoming' : 'Past'}</Text>
+              <Ionicons name="chevron-down" size={16} color={theme.colors.text.secondary} />
+            </Pressable>
           </View>
           
           {loading ? (
@@ -373,7 +432,14 @@ export function ProfileScreen() {
               <ActivityIndicator size="small" color={theme.colors.primary.main} />
             </View>
           ) : reservations.length > 0 ? (
-            reservations.map((reservation) => {
+            reservations
+              .filter((reservation) => {
+                if (!reservation.dinner?.datetime) return false;
+                const dinnerDate = new Date(reservation.dinner.datetime);
+                const now = new Date();
+                return reservationFilter === 'upcoming' ? dinnerDate >= now : dinnerDate < now;
+              })
+              .map((reservation) => {
               const formatReservationDate = () => {
                 if (!reservation.dinner?.datetime) return '';
                 const dateTime = new Date(reservation.dinner.datetime);
@@ -467,10 +533,11 @@ export function ProfileScreen() {
           )}
         </View>
 
-        {/* Quick Action Button */}
-        <View style={styles.actionButtons}>
-          <Pressable style={[styles.actionButton, styles.grabButton, styles.grabButtonFull]} onPress={handleGrabSpot}>
-            <Text style={styles.grabButtonText}>Grab a Spot</Text>
+        {/* Quick Action Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Quick Action</Text>
+          <Pressable style={styles.quickActionButton} onPress={handleRefineExperience}>
+            <Text style={styles.quickActionText}>Refine your experience</Text>
           </Pressable>
         </View>
 
@@ -531,16 +598,108 @@ export function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  actionButton: {
-    borderRadius: scaleWidth(25),
-    flex: 1,
-    paddingVertical: scaleHeight(12),
+  upNextCard: {
+    backgroundColor: theme.colors.primary.main,
+    marginHorizontal: scaleWidth(16),
+    borderRadius: scaleWidth(16),
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: theme.colors.primary.dark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
   },
-  actionButtons: {
+  upNextCardContent: {
     flexDirection: 'row',
-    gap: scaleWidth(12),
-    marginBottom: scaleHeight(24),
-    paddingHorizontal: scaleWidth(24),
+    alignItems: 'center',
+    padding: scaleWidth(16),
+  },
+  upNextLeft: {
+    marginRight: scaleWidth(12),
+  },
+  upNextIconContainer: {
+    width: scaleWidth(56),
+    height: scaleWidth(56),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  upNextIconBg: {
+    width: scaleWidth(56),
+    height: scaleWidth(56),
+    borderRadius: scaleWidth(12),
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  upNextCenter: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  upNextTitle: {
+    fontSize: scaleFont(16),
+    fontWeight: '600',
+    color: theme.colors.white,
+    marginBottom: scaleHeight(4),
+  },
+  upNextDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scaleWidth(4),
+  },
+  upNextDateText: {
+    fontSize: scaleFont(12),
+    color: theme.colors.white,
+    opacity: 0.9,
+  },
+  upNextRight: {
+    alignItems: 'flex-end',
+    gap: scaleHeight(8),
+  },
+  upNextDetailsButton: {
+    paddingHorizontal: scaleWidth(12),
+    paddingVertical: scaleHeight(6),
+  },
+  upNextDetailsText: {
+    fontSize: scaleFont(13),
+    color: theme.colors.white,
+    fontWeight: '500',
+    textDecorationLine: 'underline',
+  },
+  upNextCancelButton: {
+    paddingHorizontal: scaleWidth(12),
+    paddingVertical: scaleHeight(4),
+  },
+  upNextCancelText: {
+    fontSize: scaleFont(12),
+    color: theme.colors.white,
+    opacity: 0.8,
+  },
+  filterDropdown: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.gray[100],
+    paddingHorizontal: scaleWidth(12),
+    paddingVertical: scaleHeight(6),
+    borderRadius: scaleWidth(16),
+    gap: scaleWidth(4),
+  },
+  filterText: {
+    fontSize: scaleFont(12),
+    color: theme.colors.text.secondary,
+  },
+  quickActionButton: {
+    backgroundColor: theme.colors.white,
+    borderColor: theme.colors.primary.main,
+    borderWidth: 1,
+    borderRadius: scaleWidth(25),
+    paddingVertical: scaleHeight(14),
+    marginHorizontal: scaleWidth(16),
+    alignItems: 'center',
+  },
+  quickActionText: {
+    color: theme.colors.primary.main,
+    fontSize: scaleFont(14),
+    fontWeight: '600',
   },
   activeTab: {
     borderBottomColor: theme.colors.primary.main,
@@ -573,18 +732,6 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.colors.white,
     flex: 1,
-  },
-  grabButton: {
-    backgroundColor: theme.colors.primary.main,
-  },
-  grabButtonFull: {
-    flex: 1,
-  },
-  grabButtonText: {
-    color: theme.colors.white,
-    fontSize: scaleFont(14),
-    fontWeight: '600',
-    textAlign: 'center',
   },
   header: {
     alignItems: 'center',
@@ -823,16 +970,5 @@ const styles = StyleSheet.create({
   userStats: {
     alignItems: 'center',
     flexDirection: 'row',
-  },
-  sectionBadge: {
-    backgroundColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(12),
-    paddingHorizontal: scaleWidth(10),
-    paddingVertical: scaleHeight(4),
-  },
-  sectionCount: {
-    color: theme.colors.white,
-    fontSize: scaleFont(12),
-    fontWeight: '700',
   },
 });
