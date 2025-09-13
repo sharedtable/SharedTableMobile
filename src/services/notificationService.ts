@@ -285,19 +285,25 @@ class NotificationService {
     // Don't schedule if in the past
     if (reminderTime < new Date()) return;
 
-    const notificationId = await Notifications.scheduleNotificationAsync({
-      content: {
-        title: '🍽️ Dinner Reminder',
-        body: `Your dinner "${eventTitle}" starts in ${this.preferences.reminderTimeBeforeEvent || 60} minutes!`,
-        data: {
-          type: NotificationType.DINNER_REMINDER,
-          eventId,
-          eventTitle,
-        },
-        categoryIdentifier: 'dinner_reminder',
-        sound: true,
-        priority: Notifications.AndroidNotificationPriority.HIGH,
+    // Build notification content dynamically
+    const notificationContent: any = {
+      title: '🍽️ Dinner Reminder',
+      body: `Your dinner "${eventTitle}" starts in ${this.preferences.reminderTimeBeforeEvent || 60} minutes!`,
+      data: {
+        type: NotificationType.DINNER_REMINDER,
+        eventId,
+        eventTitle,
       },
+      sound: true,
+    };
+
+    // Only set Android-specific priority on Android
+    if (Platform.OS === 'android') {
+      notificationContent.priority = Notifications.AndroidNotificationPriority.HIGH;
+    }
+
+    const notificationId = await Notifications.scheduleNotificationAsync({
+      content: notificationContent as Notifications.NotificationContentInput,
       trigger: reminderTime as any,
     });
 
@@ -312,17 +318,24 @@ class NotificationService {
 
     const secondReminderTime = this.preferences.secondReminderTime || 15;
     
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: '🍽️ Final Reminder',
-        body: `Your dinner starts in ${secondReminderTime} minutes! Time to head out!`,
-        data: {
-          ...data,
-          isSecondReminder: true,
-        },
-        sound: true,
-        priority: Notifications.AndroidNotificationPriority.MAX,
+    // Build notification content dynamically
+    const notificationContent: any = {
+      title: '🍽️ Final Reminder',
+      body: `Your dinner starts in ${secondReminderTime} minutes! Time to head out!`,
+      data: {
+        ...data,
+        isSecondReminder: true,
       },
+      sound: true,
+    };
+
+    // Only set Android-specific priority on Android
+    if (Platform.OS === 'android') {
+      notificationContent.priority = Notifications.AndroidNotificationPriority.MAX;
+    }
+
+    await Notifications.scheduleNotificationAsync({
+      content: notificationContent as Notifications.NotificationContentInput,
       trigger: {
         seconds: (secondReminderTime - (this.preferences.reminderTimeBeforeEvent || 60)) * 60,
       } as any,
@@ -363,19 +376,53 @@ class NotificationService {
   // Send local notification immediately
   async sendLocalNotification(payload: NotificationPayload) {
     try {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: payload.title,
-          body: payload.body,
-          data: payload.data,
-          sound: payload.sound,
-          priority: payload.priority === 'high' 
-            ? Notifications.AndroidNotificationPriority.HIGH
-            : Notifications.AndroidNotificationPriority.DEFAULT,
-          categoryIdentifier: payload.categoryId,
-        },
-        trigger: null,
+      // Debug logging
+      console.log('[NotificationService] Payload received:', {
+        hasCategory: !!payload.categoryId,
+        categoryValue: payload.categoryId,
+        platform: Platform.OS
       });
+
+      // Build notification content object without any nil values
+      const notificationContent: Record<string, any> = {};
+      
+      // Required fields
+      notificationContent.title = payload.title;
+      notificationContent.body = payload.body;
+      notificationContent.sound = payload.sound !== false;
+      
+      // Optional fields - only add if they have values
+      if (payload.data && Object.keys(payload.data).length > 0) {
+        notificationContent.data = payload.data;
+      }
+      
+      // Platform-specific fields
+      if (Platform.OS === 'android') {
+        notificationContent.priority = payload.priority === 'high' 
+          ? Notifications.AndroidNotificationPriority.HIGH
+          : Notifications.AndroidNotificationPriority.DEFAULT;
+          
+        // Only add categoryIdentifier on Android if it exists
+        if (payload.categoryId && payload.categoryId.trim() !== '') {
+          notificationContent.categoryIdentifier = payload.categoryId;
+        }
+      }
+      
+      // IMPORTANT: Do not add categoryIdentifier on iOS at all
+      // iOS requires pre-registered categories and will error with nil values
+
+      console.log('[NotificationService] Final content:', notificationContent);
+
+      // Create a clean notification request
+      // Use JSON parse/stringify to ensure no undefined values
+      const cleanContent = JSON.parse(JSON.stringify(notificationContent));
+      
+      const notificationRequest = {
+        content: cleanContent,
+        trigger: null,
+      };
+
+      await Notifications.scheduleNotificationAsync(notificationRequest);
     } catch (error) {
       console.error('Failed to send local notification:', error);
     }

@@ -21,7 +21,7 @@ export type MainTabParamList = {
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export function MainTabNavigator() {
-  const unreadCount = useNotificationStore((state) => state.unreadCount);
+  const _unreadCount = useNotificationStore((state) => state.unreadCount);
 
   return (
     <Tab.Navigator
@@ -61,7 +61,6 @@ export function MainTabNavigator() {
         component={HomeScreen}
         options={{
           title: 'Home',
-          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
         }}
       />
       {/* Hidden for now - will be re-enabled when feature is polished

@@ -4,6 +4,7 @@
  */
 
 import * as Notifications from 'expo-notifications';
+import { AppState, AppStateStatus } from 'react-native';
 import { StreamChat, Event, Channel } from 'stream-chat';
 import { notificationService } from './notificationService';
 import { notificationManager } from './notificationManager';
@@ -69,15 +70,23 @@ class NotificationIntegrationService {
         // Check if app is in foreground
         const appState = await this.getAppState();
         
-        // Determine if we should show the notification
+        // Always show notifications when app is in background or inactive
+        // For foreground, only show important notifications
         const shouldShow = appState !== 'active' || this.isImportantNotification(notification);
+        
+        console.log('[NotificationIntegration] Handling notification:', {
+          appState,
+          shouldShow,
+          type: notification.request?.content?.data?.type,
+        });
         
         return {
           shouldShowAlert: shouldShow,
           shouldPlaySound: shouldShow,
           shouldSetBadge: true,
-          shouldShowBanner: true,
-          shouldShowList: true,
+          shouldShowBanner: shouldShow,
+          shouldShowList: shouldShow,
+          priority: Notifications.AndroidNotificationPriority.HIGH,
         };
       },
     });
@@ -423,9 +432,8 @@ class NotificationIntegrationService {
   /**
    * Get current app state
    */
-  private async getAppState(): Promise<string> {
-    // This would be implemented with AppState from React Native
-    return 'active'; // placeholder
+  private async getAppState(): Promise<AppStateStatus> {
+    return AppState.currentState;
   }
   
   /**

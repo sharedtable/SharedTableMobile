@@ -619,6 +619,42 @@ class ApiService {
   }
 
   // ============================================================================
+  // Booking Endpoints
+  // ============================================================================
+
+  async createBooking(
+    dinnerId: string,
+    preferences?: string,
+    plusOne?: boolean
+  ): Promise<ApiResponse<any>> {
+    const response = await this.client.post('/bookings/create', {
+      dinnerId,
+      preferences,
+      plusOne,
+    });
+    return response.data;
+  }
+
+  async updateBookingStatus(
+    bookingId: string,
+    status: string
+  ): Promise<ApiResponse<any>> {
+    const response = await this.client.patch(`/bookings/${bookingId}/status`, {
+      status,
+    });
+    return response.data;
+  }
+
+  async updateBooking(
+    bookingId: string,
+    data: { status?: string; preferences?: string }
+  ): Promise<ApiResponse<any>> {
+    const response = await this.client.patch(`/bookings/${bookingId}`, data);
+    return response.data;
+  }
+
+
+  // ============================================================================
   // Event Messages Endpoints
   // ============================================================================
 
@@ -866,13 +902,33 @@ class ApiService {
     }
   }
 
+  private unreadChatCountCache: { count: number; timestamp: number } | null = null;
+  private readonly UNREAD_CACHE_TTL = 5000; // 5 seconds cache
+
   async getUnreadChatCount(): Promise<number> {
+    // Check cache first
+    if (this.unreadChatCountCache) {
+      const now = Date.now();
+      if (now - this.unreadChatCountCache.timestamp < this.UNREAD_CACHE_TTL) {
+        return this.unreadChatCountCache.count;
+      }
+    }
+
     try {
       const response = await this.client.get('/chat/unread-count');
-      return response.data.data?.count || 0;
+      const count = response.data.unreadCount || response.data.data?.count || 0;
+      
+      // Cache the result
+      this.unreadChatCountCache = {
+        count,
+        timestamp: Date.now()
+      };
+      
+      return count;
     } catch (error) {
       console.error('Failed to get unread chat count:', error);
-      return 0;
+      // Return cached value if available, otherwise 0
+      return this.unreadChatCountCache?.count || 0;
     }
   }
 

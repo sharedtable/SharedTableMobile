@@ -1,9 +1,8 @@
 import { LinkingOptions } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import { NotificationType } from '@/types/notification.types';
-import { RootStackParamList } from '@/navigation/RootNavigator';
 
-export const deepLinkingConfig: LinkingOptions<RootStackParamList> = {
+export const deepLinkingConfig: LinkingOptions<any> = {
   prefixes: [
     Linking.createURL('/'),
     'sharedtable://',
@@ -29,6 +28,14 @@ export const deepLinkingConfig: LinkingOptions<RootStackParamList> = {
               Achievements: 'dashboard/achievements',
               Leaderboard: 'dashboard/leaderboard',
               Quests: 'dashboard/quests',
+            },
+          },
+          Chat: {
+            screens: {
+              ChannelList: 'chat',
+              Channel: 'chat/channel/:channelId',
+              Thread: 'chat/thread/:channelId/:messageId',
+              NewChat: 'chat/new',
             },
           },
           Profile: {

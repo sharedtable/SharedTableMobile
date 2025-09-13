@@ -30,9 +30,14 @@ export type ChatStackParamList = {
 
 const Stack = createNativeStackNavigator<ChatStackParamList>();
 
+
 export const ChatNavigator: React.FC = () => {
+  
+  console.log('[ChatNavigator] Loaded');
+
   return (
     <Stack.Navigator
+      initialRouteName="ChannelList"
       screenOptions={{
         headerStyle: {
           backgroundColor: theme.colors.white,

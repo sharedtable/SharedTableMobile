@@ -1,13 +1,7 @@
 // Import polyfills first - MUST be before any other imports
 import './global';
 
-import {
-  useFonts as useInterFonts,
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-} from '@expo-google-fonts/inter';
+import { useFonts } from 'expo-font';
 import { useFonts as useKeaniaFonts, KeaniaOne_400Regular } from '@expo-google-fonts/keania-one';
 import { NavigationContainer } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
@@ -23,6 +17,7 @@ import { PrivyProvider } from '@/lib/privy/PrivyProvider';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { NotificationWrapper } from '@/contexts/NotificationWrapper';
 import { GlobalStreamChatProvider } from '@/providers/GlobalStreamChatProvider';
+import { navigationRef } from '@/services/navigationService';
 import { useAuthStore } from '@/store/authStore';
 import { setLogLevel } from '@/utils/logger';
 import { deepLinkingConfig } from '@/config/deepLinking';
@@ -52,19 +47,19 @@ const queryClient = new QueryClient({
 export default function App() {
   const { initializeAuth } = useAuthStore();
 
-  // Load Keania One and Inter fonts
-  const [interLoaded] = useInterFonts({
-    'Inter-Regular': Inter_400Regular,
-    'Inter-Medium': Inter_500Medium,
-    'Inter-SemiBold': Inter_600SemiBold,
-    'Inter-Bold': Inter_700Bold,
+  // Load Fraunces and Keania One fonts
+  const [frauncesLoaded] = useFonts({
+    'Fraunces-Regular': require('./assets/fonts/Fraunces_400Regular.ttf'),
+    'Fraunces-Medium': require('./assets/fonts/Fraunces_500Medium.ttf'),
+    'Fraunces-SemiBold': require('./assets/fonts/Fraunces_600SemiBold.ttf'),
+    'Fraunces-Bold': require('./assets/fonts/Fraunces_700Bold.ttf'),
   });
 
   const [keaniaLoaded] = useKeaniaFonts({
     'KeaniaOne-Regular': KeaniaOne_400Regular,
   });
 
-  const fontsLoaded = interLoaded && keaniaLoaded;
+  const fontsLoaded = frauncesLoaded && keaniaLoaded;
 
   // Initialize auth on app start
   useEffect(() => {
@@ -92,7 +87,7 @@ export default function App() {
             <PrivyProvider>
               <AuthSyncProvider>
                 <GlobalStreamChatProvider>
-                  <NavigationContainer linking={deepLinkingConfig}>
+                  <NavigationContainer ref={navigationRef} linking={deepLinkingConfig}>
                     <NotificationWrapper>
                       <RootNavigator />
                     </NotificationWrapper>

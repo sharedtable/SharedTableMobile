@@ -1,16 +1,30 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Chat, OverlayProvider } from 'stream-chat-expo';
 import { ChatNavigator } from './ChatNavigator';
 import { useStreamChat } from '@/providers/GlobalStreamChatProvider';
 import { theme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { useRoute, RouteProp } from '@react-navigation/native';
 
 /**
  * Optimized Chat Screen with robust error handling and retry capability
  */
+type OptimizedChatScreenParams = {
+  screen?: 'Channel';
+  params?: {
+    channelId?: string;
+  };
+};
+
 export const OptimizedChatScreen: React.FC = () => {
   const { client, isReady, connectionError, reconnect, isConnecting } = useStreamChat();
+  const route = useRoute<RouteProp<{ Chat: OptimizedChatScreenParams }, 'Chat'>>();
+  
+  // Debug logging to see what params we receive
+  useEffect(() => {
+    console.log('[OptimizedChatScreen] Route params:', JSON.stringify(route.params, null, 2));
+  }, [route.params]);
 
   // Show loading state while connecting
   if (!isReady || isConnecting) {

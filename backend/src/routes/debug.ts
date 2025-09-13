@@ -9,7 +9,7 @@ const router = Router();
  * GET /api/debug/user-info
  * Get current user's onboarding_profiles record for debugging
  */
-router.get('/user-info', verifyPrivyToken, async (req: AuthRequest, res: Response, next: NextFunction) => {
+router.get('/user-info', verifyPrivyToken, async (req: AuthRequest, res: Response, _next: NextFunction) => {
   try {
     if (!req.userId) {
       return res.json({ error: 'Not authenticated' });
@@ -35,8 +35,8 @@ router.get('/user-info', verifyPrivyToken, async (req: AuthRequest, res: Respons
 
     // Count filled fields
     let filledFields = 0;
-    let emptyFields = [];
-    let filledData = {};
+    const emptyFields = [];
+    const filledData = {};
     
     if (userInfo) {
       const fieldsToCheck = [
@@ -85,7 +85,7 @@ router.get('/user-info', verifyPrivyToken, async (req: AuthRequest, res: Respons
  * POST /api/debug/create-profile
  * Force create an onboarding_profiles record
  */
-router.post('/create-profile', verifyPrivyToken, async (req: AuthRequest, res: Response, next: NextFunction) => {
+router.post('/create-profile', verifyPrivyToken, async (req: AuthRequest, res: Response, _next: NextFunction) => {
   try {
     if (!req.userId) {
       return res.json({ error: 'Not authenticated' });

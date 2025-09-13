@@ -8,6 +8,49 @@ import { supabaseService } from '../config/supabase';
 
 const router = Router();
 
+// GET /api/chat/unread-count (protected)
+router.get('/unread-count', verifyPrivyToken, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const privyUserId = req.userId;
+    if (!privyUserId) {
+      throw new AppError('User not authenticated', 401);
+    }
+
+    const streamUserId = normalizeStreamUserId(privyUserId);
+    logger.info(`[Chat] Getting unread count for streamUserId: ${streamUserId}`);
+
+    try {
+      // Get user's channel memberships with unread counts
+      const response = await streamClient.queryChannels(
+        { members: { $in: [streamUserId] } },
+        { last_message_at: -1 },
+        { state: true, watch: false }
+      );
+
+      // Calculate total unread count
+      let totalUnread = 0;
+      for (const channel of response) {
+        const unreadCount = channel.state.read?.[streamUserId]?.unread_messages || 0;
+        totalUnread += unreadCount;
+      }
+
+      logger.info(`[Chat] Total unread count for ${streamUserId}: ${totalUnread}`);
+      res.json({ success: true, unreadCount: totalUnread });
+    } catch (streamError: any) {
+      // If user doesn't exist in Stream yet, return 0 unread
+      if (streamError.message?.includes('user') || streamError.code === 4) {
+        logger.info(`[Chat] User ${streamUserId} not found in Stream, returning 0 unread`);
+        res.json({ success: true, unreadCount: 0 });
+      } else {
+        throw streamError;
+      }
+    }
+  } catch (error) {
+    logger.error('[Chat] Failed to get unread count:', error);
+    next(error);
+  }
+});
+
 // POST /api/chat/token (protected)
 router.post('/token', verifyPrivyToken, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {

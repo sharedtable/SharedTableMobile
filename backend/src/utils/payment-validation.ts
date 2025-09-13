@@ -9,10 +9,10 @@ import { logger } from './logger';
 const stripePaymentMethodIdSchema = z.string().regex(/^pm_[a-zA-Z0-9]{24,}$/);
 
 // Stripe customer ID format
-const stripeCustomerIdSchema = z.string().regex(/^cus_[a-zA-Z0-9]{14,}$/);
+const _stripeCustomerIdSchema = z.string().regex(/^cus_[a-zA-Z0-9]{14,}$/);
 
-// Stripe payment intent ID format
-const stripePaymentIntentIdSchema = z.string().regex(/^pi_[a-zA-Z0-9]{24,}$/);
+// Stripe payment intent ID format  
+const _stripePaymentIntentIdSchema = z.string().regex(/^pi_[a-zA-Z0-9]{24,}$/);
 
 // Amount validation (in cents)
 const amountSchema = z.number()
@@ -233,7 +233,7 @@ export function validateIdempotencyKey(key: string): boolean {
  */
 export async function canUserMakeBooking(
   userId: string,
-  maxActiveBookings = 5
+  _maxActiveBookings = 5
 ): Promise<{ allowed: boolean; reason?: string }> {
   // This would normally check the database for:
   // 1. User's current active bookings count

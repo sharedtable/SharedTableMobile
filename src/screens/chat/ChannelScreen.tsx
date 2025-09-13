@@ -103,12 +103,6 @@ export const ChannelScreen: React.FC = () => {
             headerRight: () => (
               <View style={styles.headerRight}>
                 <Pressable 
-                  onPress={() => handleVideoCall()}
-                  style={styles.headerButton}
-                >
-                  <Ionicons name="videocam-outline" size={24} color={theme.colors.primary.main} />
-                </Pressable>
-                <Pressable 
                   onPress={() => handleChannelInfo()}
                   style={styles.headerButton}
                 >
@@ -130,14 +124,6 @@ export const ChannelScreen: React.FC = () => {
     const timer = setTimeout(fetchChannel, 500);
     return () => clearTimeout(timer);
   }, [client, channelId, navigation]);
-
-  const handleVideoCall = useCallback(() => {
-    Alert.alert(
-      'Video Call',
-      'Video calling feature coming soon!',
-      [{ text: 'OK' }]
-    );
-  }, []);
 
   const handleChannelInfo = useCallback(() => {
     navigation.navigate('ChannelMembers', { channelId });

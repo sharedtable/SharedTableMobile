@@ -3,6 +3,7 @@ import { supabaseService, supabaseWithUser } from '../config/supabase';
 import { verifyPrivyToken, AuthRequest } from '../middleware/auth';
 import { logger } from '../utils/logger';
 import { BookingCompletionScheduler } from '../services/bookingCompletionJob';
+import { notificationService, NotificationType } from '../services/notificationService';
 
 const router = express.Router();
 
@@ -795,6 +796,381 @@ router.get('/stats/by-status', verifyPrivyToken, async (req: AuthRequest, res: R
     });
   } catch (error) {
     logger.error('Error in booking stats endpoint:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    });
+  }
+});
+
+// Create a new booking
+router.post('/create', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const privyUserId = req.userId;
+    const { dinnerId, preferences, plusOne } = req.body;
+
+    if (!privyUserId) {
+      return res.status(401).json({
+        success: false,
+        error: 'User not authenticated',
+      });
+    }
+
+    if (!dinnerId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Dinner ID is required',
+      });
+    }
+
+    // Get the internal user ID
+    const { data: userData, error: userError } = await supabaseService
+      .from('users')
+      .select('id, first_name, last_name')
+      .eq('external_auth_id', privyUserId)
+      .single();
+
+    if (userError || !userData) {
+      logger.error('User not found:', { userError, privyUserId });
+      return res.status(404).json({
+        success: false,
+        error: 'User not found',
+      });
+    }
+
+    const userId = userData.id;
+    const _userName = `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || 'User';
+
+    // Check if dinner exists and get its details
+    const { data: dinnerData, error: dinnerError } = await supabaseService
+      .from('dinners')
+      .select('*, restaurants(*)')
+      .eq('id', dinnerId)
+      .single();
+
+    if (dinnerError || !dinnerData) {
+      logger.error('Dinner not found:', { dinnerError, dinnerId });
+      return res.status(404).json({
+        success: false,
+        error: 'Dinner not found',
+      });
+    }
+
+    // Check if user already has a booking for this dinner
+    const { data: existingBooking } = await supabaseService
+      .from('dinner_bookings')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('dinner_id', dinnerId)
+      .single();
+
+    if (existingBooking) {
+      return res.status(400).json({
+        success: false,
+        error: 'You already have a booking for this dinner',
+      });
+    }
+
+    // Create the booking
+    const bookingData = {
+      user_id: userId,
+      dinner_id: dinnerId,
+      status: 'pending', // Will be updated based on availability
+      preferences: preferences || null,
+      plus_one: plusOne || false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data: newBooking, error: bookingError } = await supabaseService
+      .from('dinner_bookings')
+      .insert(bookingData)
+      .select('*, dinners(*, restaurants(*))')
+      .single();
+
+    if (bookingError) {
+      logger.error('Error creating booking:', bookingError);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to create booking',
+      });
+    }
+
+    // Send notification based on booking status
+    const dinnerName = dinnerData.restaurants?.name || 'the dinner';
+    const dinnerDate = dinnerData.datetime ? new Date(dinnerData.datetime) : undefined;
+    
+    try {
+      await notificationService.sendBookingNotification(
+        userId,
+        newBooking.status as 'confirmed' | 'waitlisted' | 'cancelled' | 'assigned',
+        dinnerName,
+        newBooking.id,
+        dinnerDate
+      );
+
+      // Schedule dinner reminder if confirmed
+      if (newBooking.status === 'confirmed' && dinnerDate) {
+        const twoHoursBefore = new Date(dinnerDate.getTime() - 2 * 60 * 60 * 1000);
+        const oneHourBefore = new Date(dinnerDate.getTime() - 60 * 60 * 1000);
+        
+        if (twoHoursBefore > new Date()) {
+          await notificationService.scheduleNotification(
+            {
+              userId,
+              type: NotificationType.DINNER_REMINDER,
+              title: '🍽️ Dinner Reminder',
+              body: `Your dinner at ${dinnerName} is in 2 hours!`,
+              data: { dinnerId, bookingId: newBooking.id },
+              priority: 'high',
+            },
+            twoHoursBefore
+          );
+        }
+
+        if (oneHourBefore > new Date()) {
+          await notificationService.scheduleNotification(
+            {
+              userId,
+              type: NotificationType.DINNER_REMINDER,
+              title: '🍽️ Dinner Starting Soon',
+              body: `Your dinner at ${dinnerName} is in 1 hour!`,
+              data: { dinnerId, bookingId: newBooking.id },
+              priority: 'high',
+            },
+            oneHourBefore
+          );
+        }
+      }
+    } catch (notifError) {
+      logger.error('Failed to send booking notification:', notifError);
+      // Don't fail the booking creation if notification fails
+    }
+
+    logger.info(`Booking created successfully for user ${userId} at dinner ${dinnerId}`);
+
+    return res.json({
+      success: true,
+      data: newBooking,
+      message: `Booking ${newBooking.status === 'confirmed' ? 'confirmed' : newBooking.status === 'waitlisted' ? 'waitlisted' : 'created'} successfully`,
+    });
+  } catch (error) {
+    logger.error('Error in create booking endpoint:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    });
+  }
+});
+
+// Cancel a booking
+router.post('/:bookingId/cancel', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const privyUserId = req.userId;
+    const { bookingId } = req.params;
+
+    if (!privyUserId) {
+      return res.status(401).json({
+        success: false,
+        error: 'User not authenticated',
+      });
+    }
+
+    // Get the internal user ID
+    const { data: userData, error: userError } = await supabaseService
+      .from('users')
+      .select('id')
+      .eq('external_auth_id', privyUserId)
+      .single();
+
+    if (userError || !userData) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found',
+      });
+    }
+
+    const userId = userData.id;
+
+    // Get the booking with dinner details
+    const { data: booking, error: bookingError } = await supabaseService
+      .from('dinner_bookings')
+      .select('*, dinners(*, restaurants(*))')
+      .eq('id', bookingId)
+      .eq('user_id', userId)
+      .single();
+
+    if (bookingError || !booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found',
+      });
+    }
+
+    // Update booking status to cancelled
+    const { data: updatedBooking, error: updateError } = await supabaseService
+      .from('dinner_bookings')
+      .update({
+        status: 'cancelled',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', bookingId)
+      .select('*, dinners(*, restaurants(*))')
+      .single();
+
+    if (updateError) {
+      logger.error('Error cancelling booking:', updateError);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to cancel booking',
+      });
+    }
+
+    // Send cancellation notification
+    const dinnerName = booking.dinners?.restaurants?.name || 'the dinner';
+    
+    try {
+      await notificationService.sendBookingNotification(
+        userId,
+        'cancelled',
+        dinnerName,
+        bookingId
+      );
+    } catch (notifError) {
+      logger.error('Failed to send cancellation notification:', notifError);
+    }
+
+    logger.info(`Booking ${bookingId} cancelled successfully for user ${userId}`);
+
+    return res.json({
+      success: true,
+      data: updatedBooking,
+      message: 'Booking cancelled successfully',
+    });
+  } catch (error) {
+    logger.error('Error in cancel booking endpoint:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    });
+  }
+});
+
+// Update booking status
+router.patch('/:bookingId/status', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const privyUserId = req.userId;
+    const { bookingId } = req.params;
+    const { status } = req.body;
+
+    if (!privyUserId) {
+      return res.status(401).json({
+        success: false,
+        error: 'User not authenticated',
+      });
+    }
+
+    if (!status || !['confirmed', 'waitlisted', 'cancelled', 'assigned', 'attended'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid status',
+      });
+    }
+
+    // Get the internal user ID
+    const { data: userData, error: userError } = await supabaseService
+      .from('users')
+      .select('id')
+      .eq('external_auth_id', privyUserId)
+      .single();
+
+    if (userError || !userData) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found',
+      });
+    }
+
+    const userId = userData.id;
+
+    // Get the booking with dinner details
+    const { data: booking, error: bookingError } = await supabaseService
+      .from('dinner_bookings')
+      .select('*, dinners(*, restaurants(*))')
+      .eq('id', bookingId)
+      .eq('user_id', userId)
+      .single();
+
+    if (bookingError || !booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found',
+      });
+    }
+
+    // Update booking status
+    const { data: updatedBooking, error: updateError } = await supabaseService
+      .from('dinner_bookings')
+      .update({
+        status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', bookingId)
+      .select('*, dinners(*, restaurants(*))')
+      .single();
+
+    if (updateError) {
+      logger.error('Error updating booking status:', updateError);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to update booking status',
+      });
+    }
+
+    // Send status update notification
+    const dinnerName = booking.dinners?.restaurants?.name || 'the dinner';
+    const dinnerDate = booking.dinners?.datetime ? new Date(booking.dinners.datetime) : undefined;
+    
+    try {
+      await notificationService.sendBookingNotification(
+        userId,
+        status as 'confirmed' | 'waitlisted' | 'cancelled' | 'assigned',
+        dinnerName,
+        bookingId,
+        dinnerDate
+      );
+
+      // Schedule reminder if status changed to confirmed
+      if (status === 'confirmed' && dinnerDate && dinnerDate > new Date()) {
+        const twoHoursBefore = new Date(dinnerDate.getTime() - 2 * 60 * 60 * 1000);
+        
+        if (twoHoursBefore > new Date()) {
+          await notificationService.scheduleNotification(
+            {
+              userId,
+              type: NotificationType.DINNER_REMINDER,
+              title: '🍽️ Dinner Reminder',
+              body: `Your dinner at ${dinnerName} is in 2 hours!`,
+              data: { dinnerId: booking.dinner_id, bookingId },
+              priority: 'high',
+            },
+            twoHoursBefore
+          );
+        }
+      }
+    } catch (notifError) {
+      logger.error('Failed to send status update notification:', notifError);
+    }
+
+    logger.info(`Booking ${bookingId} status updated to ${status} for user ${userId}`);
+
+    return res.json({
+      success: true,
+      data: updatedBooking,
+      message: `Booking status updated to ${status}`,
+    });
+  } catch (error) {
+    logger.error('Error in update booking status endpoint:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error',

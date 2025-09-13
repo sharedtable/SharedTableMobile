@@ -224,36 +224,37 @@ export const typography = {
     heading: Platform.select({
       ios: 'KeaniaOne-Regular',
       android: 'KeaniaOne-Regular',
-      default: 'System',
+      default: 'KeaniaOne-Regular',
     }),
-    // Inter for body text
+    // Fraunces for body text
     body: Platform.select({
-      ios: 'Inter-Regular',
-      android: 'Inter-Regular',
-      default: 'System',
+      ios: 'Fraunces-Regular',
+      android: 'Fraunces-Regular',
+      default: 'Fraunces-Regular',
     }),
     // Specific font families
     keania: 'KeaniaOne-Regular',
-    // Inter font weights
+    fraunces: 'Fraunces-Regular',
+    // Fraunces font weights
     regular: Platform.select({
-      ios: 'Inter-Regular',
-      android: 'Inter-Regular',
-      default: 'System',
+      ios: 'Fraunces-Regular',
+      android: 'Fraunces-Regular',
+      default: 'Fraunces-Regular',
     }),
     medium: Platform.select({
-      ios: 'Inter-Medium',
-      android: 'Inter-Medium',
-      default: 'System',
+      ios: 'Fraunces-Medium',
+      android: 'Fraunces-Medium',
+      default: 'Fraunces-Medium',
     }),
     semibold: Platform.select({
-      ios: 'Inter-SemiBold',
-      android: 'Inter-SemiBold',
-      default: 'System',
+      ios: 'Fraunces-SemiBold',
+      android: 'Fraunces-SemiBold',
+      default: 'Fraunces-SemiBold',
     }),
     bold: Platform.select({
-      ios: 'Inter-Bold',
-      android: 'Inter-Bold',
-      default: 'System',
+      ios: 'Fraunces-Bold',
+      android: 'Fraunces-Bold',
+      default: 'Fraunces-Bold',
     }),
   },
 

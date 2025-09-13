@@ -136,7 +136,7 @@ export class BookingCompletionScheduler {
    * Clean up all scheduled jobs
    */
   static stop(): void {
-    for (const [bookingId, timeoutId] of this.scheduledJobs) {
+    for (const [_bookingId, timeoutId] of this.scheduledJobs) {
       clearTimeout(timeoutId);
     }
     this.scheduledJobs.clear();
