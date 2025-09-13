@@ -16,7 +16,9 @@ import { ReferAFriendScreen } from '@/screens/referral/ReferAFriendScreen';
 export type ProfileStackParamList = {
   ProfileMain: undefined;
   DinnerDetails: {
-    reservation: any; // You can type this more specifically based on your data structure
+    reservation?: any; // Legacy parameter for backward compatibility
+    bookingId?: string;
+    dinnerId?: string;
   };
   FindFriends: undefined;
   EditProfile: undefined;

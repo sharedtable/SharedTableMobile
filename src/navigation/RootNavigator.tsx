@@ -10,6 +10,7 @@ import { HowItWorksScreen } from '@/screens/info/HowItWorksScreen';
 import { FAQsScreen } from '@/screens/info/FAQsScreen';
 import { WaitlistScreen } from '@/screens/waitlist/WaitlistScreen';
 import RefineExperienceScreen from '@/screens/booking/RefineExperienceScreen';
+import PostDinnerSurveyScreen from '@/screens/post-dinner/PostDinnerSurveyScreen';
 
 // Navigators
 import { AuthNavigator } from './AuthNavigator';
@@ -35,6 +36,10 @@ export type RootStackParamList = {
   RefineExperience: {
     bookingId?: string;
     dinnerData?: any;
+  };
+  PostDinnerSurvey: {
+    bookingId: string;
+    dinnerId: string;
   };
 };
 
@@ -123,6 +128,15 @@ export function RootNavigator() {
           <Stack.Screen 
             name="RefineExperience" 
             component={RefineExperienceScreen}
+            options={{
+              presentation: 'modal',
+              animation: 'slide_from_bottom',
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen 
+            name="PostDinnerSurvey" 
+            component={PostDinnerSurveyScreen}
             options={{
               presentation: 'modal',
               animation: 'slide_from_bottom',

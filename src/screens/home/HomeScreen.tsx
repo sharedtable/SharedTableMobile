@@ -30,6 +30,7 @@ import { useNotificationStore } from '@/store/notificationStore';
 import { usePaymentStore } from '@/store/paymentStore';
 import { CheckoutModal } from '@/components/payment/CheckoutModal';
 import { ReservationConfirmModal } from '@/components/reservation/ReservationConfirmModal';
+import { usePostDinnerSurvey } from '@/hooks/usePostDinnerSurvey';
 
 // Images
 // @ts-expect-error - Image asset
@@ -73,6 +74,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
   const { 
     initializePayments
   } = usePaymentStore();
+  
+  // Check for pending post-dinner surveys
+  usePostDinnerSurvey();
   const [activeTab, setActiveTab] = useState<'dinners' | 'events'>('dinners');
   const [selectedDinner, setSelectedDinner] = useState<string | null>(null);
   const [bookingLoading, setBookingLoading] = useState(false);

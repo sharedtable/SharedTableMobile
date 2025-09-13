@@ -18,6 +18,7 @@ import { ProfileStackParamList } from '@/navigation/ProfileNavigator';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 import { api } from '@/services/api';
+import { ActivityIndicator } from 'react-native';
 
 type DinnerDetailsNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'DinnerDetails'>;
 type DinnerDetailsRouteProp = RouteProp<ProfileStackParamList, 'DinnerDetails'>;
@@ -38,13 +39,16 @@ interface GroupMember {
 export function DinnerDetailsScreen() {
   const navigation = useNavigation<DinnerDetailsNavigationProp>();
   const route = useRoute<DinnerDetailsRouteProp>();
-  const { reservation } = route.params;
+  const { reservation: initialReservation, bookingId, dinnerId: _dinnerId } = route.params;
   
+  const [reservation, setReservation] = useState<any>(initialReservation || null);
   const [activeTab, setActiveTab] = useState<'restaurant' | 'group'>('restaurant');
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
   const [_loading, setLoading] = useState(false);
   const [expandedMemberId, setExpandedMemberId] = useState<string | null>(null);
   const [isCountdownCollapsed, setIsCountdownCollapsed] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isLoadingBooking, setIsLoadingBooking] = useState(false);
 
   // Countdown state
   const [countdownTime, setCountdownTime] = useState({ 
@@ -55,18 +59,80 @@ export function DinnerDetailsScreen() {
     progress: 0 
   });
 
+  // Fetch booking details if bookingId is provided and status is assigned
+  useEffect(() => {
+    const fetchBookingDetails = async () => {
+      // If we have initial reservation data, check if it's assigned
+      if (initialReservation) {
+        const status = initialReservation.status;
+        console.log('Reservation status:', status);
+        
+        // Only fetch details if status is assigned, attended, or completed
+        if (!['assigned', 'attended', 'completed'].includes(status)) {
+          console.log('Booking not yet assigned, skipping details fetch');
+          setReservation(initialReservation);
+          setIsLoadingBooking(false);
+          return;
+        }
+      }
+      
+      if (!bookingId) return;
+      
+      setIsLoadingBooking(true);
+      try {
+        console.log('Fetching booking details for ID:', bookingId);
+        const response = await api.getBookingDetails(bookingId);
+        console.log('Booking details response:', response);
+        
+        if (response.success && response.data) {
+          // Transform the booking data to match the expected reservation format
+          const booking = response.data;
+          const transformedReservation = {
+            id: booking.id,
+            dinner_id: booking.dinner_id,
+            user_id: booking.user_id,
+            status: booking.status,
+            dietary_restrictions: (booking as any).dietary_restrictions,
+            preferences: (booking as any).preferences,
+            plus_one: (booking as any).plus_one,
+            dinner: booking.dinner,
+            // For backward compatibility with existing code
+            dinner_group: booking.status === 'assigned' ? {
+              id: booking.dinner_id,
+              restaurant_name: booking.dinner?.restaurant_name,
+              restaurant_address: (booking.dinner as any)?.restaurant_address,
+            } : null
+          };
+          setReservation(transformedReservation);
+        }
+      } catch (error) {
+        console.error('Failed to fetch booking details:', error);
+        // Fall back to initial reservation if fetch fails
+        if (initialReservation) {
+          setReservation(initialReservation);
+        }
+      } finally {
+        setIsLoadingBooking(false);
+      }
+    };
+
+    fetchBookingDetails();
+  }, [bookingId, initialReservation]);
+
   // Calculate countdown timer
   useEffect(() => {
     const calculateCountdown = () => {
-      if (!reservation.dinner?.datetime) {
+      if (!reservation?.dinner?.datetime && !reservation?.dinners?.datetime) {
         return;
       }
+      
+      const dinnerDateTime = reservation?.dinner?.datetime || reservation?.dinners?.datetime;
 
       // Create date object for dinner time from ISO string
-      const dinnerDate = new Date(reservation.dinner.datetime);
+      const dinnerDate = new Date(dinnerDateTime);
       
       if (isNaN(dinnerDate.getTime())) {
-        console.error('Invalid datetime:', reservation.dinner.datetime);
+        console.error('Invalid datetime:', dinnerDateTime);
         return;
       }
 
@@ -112,7 +178,7 @@ export function DinnerDetailsScreen() {
 
   // Fetch group members
   const fetchGroupMembers = useCallback(async () => {
-    if (!reservation.dinner_group?.id) return;
+    if (!reservation?.dinner_group?.id) return;
 
     setLoading(true);
     try {
@@ -130,7 +196,7 @@ export function DinnerDetailsScreen() {
     } finally {
       setLoading(false);
     }
-  }, [reservation.dinner_group?.id]);
+  }, [reservation?.dinner_group?.id]);
 
   useEffect(() => {
     if (activeTab === 'group') {
@@ -139,7 +205,7 @@ export function DinnerDetailsScreen() {
   }, [activeTab, fetchGroupMembers]);
 
   const _handleOpenMaps = () => {
-    if (!reservation.dinner_group?.restaurant_address) return;
+    if (!reservation?.dinner_group?.restaurant_address) return;
     
     const address = encodeURIComponent(reservation.dinner_group.restaurant_address);
     const url = Platform.select({
@@ -158,9 +224,10 @@ export function DinnerDetailsScreen() {
   };
 
   const _formatDate = () => {
-    if (!reservation.dinner?.datetime) return '';
+    if (!reservation?.dinner?.datetime && !reservation?.dinners?.datetime) return '';
     
-    const date = new Date(reservation.dinner.datetime);
+    const dinnerDateTime = reservation?.dinner?.datetime || reservation?.dinners?.datetime;
+    const date = new Date(dinnerDateTime);
     if (isNaN(date.getTime())) return '';
     
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -168,9 +235,10 @@ export function DinnerDetailsScreen() {
   };
 
   const _formatTime = () => {
-    if (!reservation.dinner?.datetime) return '';
+    if (!reservation?.dinner?.datetime && !reservation?.dinners?.datetime) return '';
     
-    const date = new Date(reservation.dinner.datetime);
+    const dinnerDateTime = reservation?.dinner?.datetime || reservation?.dinners?.datetime;
+    const date = new Date(dinnerDateTime);
     if (isNaN(date.getTime())) return '';
     
     const hours = date.getHours();
@@ -189,13 +257,191 @@ export function DinnerDetailsScreen() {
   };
 
   const _formatDayOfWeek = () => {
-    if (!reservation.dinner?.datetime) return '';
+    if (!reservation?.dinner?.datetime && !reservation?.dinners?.datetime) return '';
     
-    const date = new Date(reservation.dinner.datetime);
+    const dinnerDateTime = reservation?.dinner?.datetime || reservation?.dinners?.datetime;
+    const date = new Date(dinnerDateTime);
     if (isNaN(date.getTime())) return '';
     
     return date.toLocaleDateString('en-US', { weekday: 'long' });
   };
+
+  const handleCheckIn = async () => {
+    if (!reservation?.id || isUpdatingStatus) return;
+    
+    setIsUpdatingStatus(true);
+    try {
+      const response = await api.markBookingAsAttended(reservation.id);
+      if (response.success && response.data) {
+        setReservation({ ...reservation, status: 'attended' });
+        Alert.alert(
+          'Checked In!',
+          'You\'ve been marked as attending. Enjoy your dinner!',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      console.error('Error checking in:', error);
+      Alert.alert(
+        'Check-in Failed',
+        'Unable to check in at this time. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  // Auto-completion happens after 1.5 hours from dinner start
+  // No manual completion needed
+
+  // Check if we should show status buttons
+  const shouldShowStatusButtons = () => {
+    if (!reservation?.dinner?.datetime && !reservation?.dinners?.datetime) return false;
+    
+    const dinnerDateTime = reservation?.dinner?.datetime || reservation?.dinners?.datetime;
+    const dinnerDate = new Date(dinnerDateTime);
+    const now = new Date();
+    const hoursUntilDinner = (dinnerDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    // Show buttons if dinner is within 2 hours or has passed
+    return hoursUntilDinner <= 2;
+  };
+
+  const getButtonState = () => {
+    const currentStatus = reservation?.status || 'pending';
+    const dinnerDateTime = reservation?.dinner?.datetime || reservation?.dinners?.datetime || '';
+    const dinnerDate = new Date(dinnerDateTime);
+    const now = new Date();
+    const hoursAfterDinner = (now.getTime() - dinnerDate.getTime()) / (1000 * 60 * 60);
+    
+    return {
+      isAssigned: currentStatus === 'assigned',
+      canCheckIn: currentStatus === 'assigned' && hoursAfterDinner < 1.5,
+      isAttended: currentStatus === 'attended',
+      isCompleted: currentStatus === 'completed',
+      autoCompletionPending: currentStatus === 'attended' && hoursAfterDinner < 1.5,
+      hoursUntilAutoComplete: Math.max(0, 1.5 - hoursAfterDinner)
+    };
+  };
+
+  // Show loading state while fetching booking details
+  if (isLoadingBooking) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary.main} />
+          <Text style={styles.loadingText}>Loading dinner details...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show empty state if no reservation data
+  if (!reservation) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No dinner details available</Text>
+          <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Text style={styles.backButtonText}>Go Back</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show "Details coming soon" for unassigned bookings
+  if (reservation && !['assigned', 'attended', 'completed'].includes(reservation.status)) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Your Dinner Reservation</Text>
+          <Pressable style={styles.closeButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="close" size={24} color={theme.colors.text.secondary} />
+          </Pressable>
+        </View>
+        
+        <ScrollView contentContainerStyle={styles.comingSoonContainer}>
+          {/* Countdown Timer Card */}
+          <View style={styles.countdownCard}>
+            <View style={styles.countdownHeader}>
+              <Ionicons name="time-outline" size={32} color={theme.colors.primary.main} />
+              <Text style={styles.countdownTitle}>Matching in Progress</Text>
+            </View>
+            
+            <Text style={styles.countdownSubtitle}>
+              We're finding the perfect dinner group for you!
+            </Text>
+            
+            {/* Countdown Display */}
+            <View style={styles.countdownDisplay}>
+              <View style={styles.countdownBox}>
+                <Text style={styles.countdownNumber}>{countdownTime.hours.toString().padStart(2, '0')}</Text>
+                <Text style={styles.countdownLabel}>Hours</Text>
+              </View>
+              <Text style={styles.countdownSeparator}>:</Text>
+              <View style={styles.countdownBox}>
+                <Text style={styles.countdownNumber}>{countdownTime.minutes.toString().padStart(2, '0')}</Text>
+                <Text style={styles.countdownLabel}>Minutes</Text>
+              </View>
+              <Text style={styles.countdownSeparator}>:</Text>
+              <View style={styles.countdownBox}>
+                <Text style={styles.countdownNumber}>{countdownTime.seconds.toString().padStart(2, '0')}</Text>
+                <Text style={styles.countdownLabel}>Seconds</Text>
+              </View>
+            </View>
+            
+            <Text style={styles.countdownInfo}>
+              Until dinner on {_formatDate()} at {_formatTime()}
+            </Text>
+          </View>
+          
+          {/* Status Card */}
+          <View style={styles.statusCard}>
+            <View style={styles.statusHeader}>
+              <Ionicons name="checkmark-circle" size={24} color={theme.colors.success.main} />
+              <Text style={styles.statusTitle}>Reservation Confirmed</Text>
+            </View>
+            <Text style={styles.statusDescription}>
+              Your spot is secured! Restaurant and group details will be revealed soon.
+            </Text>
+          </View>
+          
+          {/* What to Expect Card */}
+          <View style={styles.expectCard}>
+            <Text style={styles.expectTitle}>What Happens Next?</Text>
+            <View style={styles.expectItem}>
+              <Ionicons name="people" size={20} color={theme.colors.primary.main} />
+              <Text style={styles.expectText}>
+                We'll match you with 3-5 other diners who share similar interests
+              </Text>
+            </View>
+            <View style={styles.expectItem}>
+              <Ionicons name="restaurant" size={20} color={theme.colors.primary.main} />
+              <Text style={styles.expectText}>
+                You'll receive the restaurant details 24 hours before dinner
+              </Text>
+            </View>
+            <View style={styles.expectItem}>
+              <Ionicons name="chatbubbles" size={20} color={theme.colors.primary.main} />
+              <Text style={styles.expectText}>
+                Get access to your group chat to connect before meeting
+              </Text>
+            </View>
+          </View>
+          
+          {/* Fun Fact */}
+          <View style={styles.funFactCard}>
+            <Ionicons name="bulb-outline" size={24} color={theme.colors.warning.main} />
+            <Text style={styles.funFactText}>
+              Did you know? Our matching algorithm considers over 20 factors to create the perfect dinner group!
+            </Text>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -609,6 +855,77 @@ export function DinnerDetailsScreen() {
         )}
       </ScrollView>
 
+      {/* Status Action Buttons */}
+      {shouldShowStatusButtons() && (
+        <View style={styles.statusButtonsContainer}>
+          {(() => {
+            const buttonState = getButtonState();
+            
+            if (buttonState.isCompleted) {
+              return (
+                <View style={styles.statusCompletedContainer}>
+                  <Ionicons name="checkmark-circle" size={24} color={theme.colors.success.main} />
+                  <Text style={styles.statusCompletedText}>Dinner Completed</Text>
+                </View>
+              );
+            }
+            
+            if (buttonState.isAssigned && !buttonState.canCheckIn) {
+              return (
+                <View style={styles.statusAssignedContainer}>
+                  <Ionicons name="people-circle" size={24} color={theme.colors.primary.main} />
+                  <Text style={styles.statusAssignedText}>You've been assigned to a group! Check in when you arrive</Text>
+                </View>
+              );
+            }
+            
+            if (buttonState.isAttended) {
+              const hoursRemaining = buttonState.hoursUntilAutoComplete;
+              const minutesRemaining = Math.floor(hoursRemaining * 60);
+              return (
+                <View style={styles.statusAttendedContainer}>
+                  <Ionicons name="checkmark-circle" size={24} color={theme.colors.success.main} />
+                  <Text style={styles.statusAttendedText}>Checked In</Text>
+                  {buttonState.autoCompletionPending && (
+                    <Text style={styles.autoCompleteText}>
+                      Auto-completes in {minutesRemaining > 60 ? `${Math.floor(minutesRemaining/60)}h ${minutesRemaining%60}m` : `${minutesRemaining}m`}
+                    </Text>
+                  )}
+                </View>
+              );
+            }
+            
+            return (
+              <View style={styles.statusButtonsRow}>
+                {buttonState.canCheckIn && (
+                  <Pressable 
+                    style={[styles.statusButton, styles.checkInButton]}
+                    onPress={handleCheckIn}
+                    disabled={isUpdatingStatus}
+                  >
+                    {isUpdatingStatus ? (
+                      <ActivityIndicator size="small" color={theme.colors.white} />
+                    ) : (
+                      <>
+                        <Ionicons name="location" size={20} color={theme.colors.white} />
+                        <Text style={styles.statusButtonText}>Check In at Restaurant</Text>
+                      </>
+                    )}
+                  </Pressable>
+                )}
+                
+                {buttonState.isAssigned && (
+                  <View style={styles.assignedBadge}>
+                    <Ionicons name="people" size={20} color={theme.colors.primary.main} />
+                    <Text style={styles.assignedText}>Assigned - Ready to check in</Text>
+                  </View>
+                )}
+              </View>
+            );
+          })()}
+        </View>
+      )}
+
       {/* Countdown Timer - Fixed at Bottom for Both Tabs */}
       <Pressable 
         style={[
@@ -713,6 +1030,38 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.gray[100],
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: scaleHeight(12),
+    fontSize: scaleFont(16),
+    color: theme.colors.text.secondary,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: scaleWidth(20),
+  },
+  emptyText: {
+    fontSize: scaleFont(16),
+    color: theme.colors.text.secondary,
+    marginBottom: scaleHeight(20),
+  },
+  backButton: {
+    paddingHorizontal: scaleWidth(24),
+    paddingVertical: scaleHeight(12),
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(8),
+  },
+  backButtonText: {
+    fontSize: scaleFont(14),
+    color: theme.colors.white,
+    fontWeight: '600',
   },
   header: {
     flexDirection: 'row',
@@ -987,7 +1336,7 @@ const styles = StyleSheet.create({
   },
   countdownTimeContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: theme.colors.gray[50],
     borderRadius: scaleWidth(12),
     paddingHorizontal: scaleWidth(16),
@@ -1229,12 +1578,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: theme.colors.primary.main,
   },
-  emptyText: {
-    fontSize: scaleFont(14),
-    color: theme.colors.text.tertiary,
-    textAlign: 'center',
-    marginTop: scaleHeight(20),
-  },
   chatButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1273,5 +1616,217 @@ const styles = StyleSheet.create({
   tipTextBold: {
     fontWeight: '600',
     color: theme.colors.text.primary,
+  },
+  statusButtonsContainer: {
+    position: 'absolute',
+    bottom: scaleHeight(140), // Above countdown timer
+    left: 0,
+    right: 0,
+    backgroundColor: theme.colors.white,
+    padding: scaleWidth(16),
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.gray[200],
+    shadowColor: theme.colors.black[1],
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  statusButtonsRow: {
+    flexDirection: 'row',
+    gap: scaleWidth(12),
+    justifyContent: 'center',
+  },
+  statusButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: scaleHeight(14),
+    borderRadius: scaleWidth(12),
+    gap: scaleWidth(8),
+    minHeight: scaleHeight(48),
+  },
+  checkInButton: {
+    backgroundColor: theme.colors.primary.main,
+  },
+  statusButtonText: {
+    fontSize: scaleFont(15),
+    fontWeight: '600',
+    color: theme.colors.white,
+  },
+  statusCompletedContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: scaleWidth(12),
+    paddingVertical: scaleHeight(12),
+  },
+  statusCompletedText: {
+    fontSize: scaleFont(16),
+    fontWeight: '600',
+    color: theme.colors.success.main,
+  },
+  statusAttendedContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: scaleWidth(8),
+    paddingVertical: scaleHeight(12),
+  },
+  statusAttendedText: {
+    fontSize: scaleFont(14),
+    fontWeight: '500',
+    color: theme.colors.success.main,
+  },
+  statusAssignedContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: scaleWidth(8),
+    paddingVertical: scaleHeight(12),
+  },
+  statusAssignedText: {
+    fontSize: scaleFont(14),
+    fontWeight: '500',
+    color: theme.colors.primary.main,
+  },
+  assignedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scaleWidth(8),
+    paddingVertical: scaleHeight(12),
+    paddingHorizontal: scaleWidth(20),
+    backgroundColor: theme.colors.primary[50],
+    borderRadius: scaleWidth(12),
+    borderWidth: 1,
+    borderColor: theme.colors.primary[200],
+  },
+  assignedText: {
+    fontSize: scaleFont(14),
+    fontWeight: '600',
+    color: theme.colors.primary.main,
+  },
+  autoCompleteText: {
+    fontSize: scaleFont(12),
+    color: theme.colors.text.secondary,
+    marginTop: scaleHeight(4),
+  },
+  // Details coming soon styles
+  comingSoonContainer: {
+    padding: scaleWidth(20),
+  },
+  countdownCard: {
+    backgroundColor: theme.colors.white,
+    borderRadius: scaleWidth(16),
+    padding: scaleWidth(20),
+    marginBottom: scaleHeight(16),
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  countdownHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scaleWidth(12),
+    marginBottom: scaleHeight(8),
+  },
+  countdownTitle: {
+    fontSize: scaleFont(20),
+    fontWeight: '600',
+    color: theme.colors.text.primary,
+  },
+  countdownSubtitle: {
+    fontSize: scaleFont(14),
+    color: theme.colors.text.secondary,
+    textAlign: 'center',
+    marginBottom: scaleHeight(24),
+  },
+  countdownDisplay: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    marginBottom: scaleHeight(16),
+  },
+  countdownBox: {
+    alignItems: 'center',
+  },
+  countdownNumber: {
+    fontSize: scaleFont(36),
+    fontWeight: '700',
+    color: theme.colors.primary.main,
+  },
+  countdownLabel: {
+    fontSize: scaleFont(12),
+    color: theme.colors.text.secondary,
+    marginTop: scaleHeight(4),
+  },
+  countdownInfo: {
+    fontSize: scaleFont(14),
+    color: theme.colors.text.secondary,
+    textAlign: 'center',
+  },
+  statusCard: {
+    backgroundColor: '#E8F5E9',
+    borderRadius: scaleWidth(12),
+    padding: scaleWidth(16),
+    marginBottom: scaleHeight(16),
+  },
+  statusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scaleWidth(8),
+    marginBottom: scaleHeight(8),
+  },
+  statusTitle: {
+    fontSize: scaleFont(16),
+    fontWeight: '600',
+    color: '#2E7D32',
+  },
+  statusDescription: {
+    fontSize: scaleFont(14),
+    color: '#2E7D32',
+    opacity: 0.8,
+  },
+  expectCard: {
+    backgroundColor: theme.colors.white,
+    borderRadius: scaleWidth(12),
+    padding: scaleWidth(16),
+    marginBottom: scaleHeight(16),
+  },
+  expectTitle: {
+    fontSize: scaleFont(18),
+    fontWeight: '600',
+    color: theme.colors.text.primary,
+    marginBottom: scaleHeight(16),
+  },
+  expectItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: scaleWidth(12),
+    marginBottom: scaleHeight(12),
+  },
+  expectText: {
+    flex: 1,
+    fontSize: scaleFont(14),
+    color: theme.colors.text.secondary,
+    lineHeight: scaleFont(20),
+  },
+  funFactCard: {
+    backgroundColor: '#FFF3E0',
+    borderRadius: scaleWidth(12),
+    padding: scaleWidth(16),
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scaleWidth(12),
   },
 });

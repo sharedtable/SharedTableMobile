@@ -23,7 +23,7 @@ export interface BookingResponse {
 export interface UserBooking {
   id: string;
   event: Event;
-  status: 'confirmed' | 'waitlisted' | 'cancelled';
+  status: 'confirmed' | 'grouped' | 'waitlisted' | 'cancelled' | 'attended' | 'completed';
   createdAt: string;
   specialRequests?: string;
 }

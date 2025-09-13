@@ -8,8 +8,7 @@ import 'express-async-errors';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
 import { logger } from './utils/logger';
-import { SharedTableMatchingService as MatchingJobService } from './services/sharedTableMatchingService';
-import { featureProcessingWorker } from './services/featureProcessingWorker';
+import { BookingCompletionJob } from './services/bookingCompletionJob';
 
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
@@ -22,11 +21,8 @@ import dinnersRoutes from './routes/dinners';
 import groupingRoutes from './routes/admin/grouping';
 import gamificationRoutes from './routes/gamification';
 import notificationRoutes from './routes/notifications';
-import restaurantsRoutes from './routes/restaurants';
 import connectionsRoutes from './routes/connections';
 import analyticsRoutes from './routes/analytics';
-import matchingRoutes from './routes/matching';
-import featuresRoutes from './routes/features';
 import paymentsRoutes from './routes/payments';
 import webhooksRoutes from './routes/webhooks';
 
@@ -107,11 +103,8 @@ if (process.env.NODE_ENV !== 'production') {
   const debugRoutes = require('./routes/debug').default;
   app.use('/api/debug', debugRoutes);
 }
-app.use('/api/restaurants', restaurantsRoutes);
 app.use('/api/connections', connectionsRoutes);
 app.use('/api/analytics', analyticsRoutes);
-app.use('/api/matching', matchingRoutes);
-app.use('/api/features', featuresRoutes);
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/webhooks', webhooksRoutes);
 app.use('/api/waitlist', require('./routes/waitlist').default);
@@ -128,28 +121,21 @@ app.listen(PORT, () => {
   logger.info(`💬 Stream API Secret: ${process.env.STREAM_API_SECRET ? '[set]' : '[missing]'}`);
   logger.info(`📲 Mobile access: http://192.168.1.5:${PORT}`);
   
-  // Initialize matching job service
-  MatchingJobService.initialize();
-  logger.info(`🤝 Matching job service initialized`);
+  // Initialize the booking completion scheduler
+  BookingCompletionJob.initialize();
+  logger.info('🕐 Booking auto-completion scheduler initialized');
   
-  // Start feature processing worker in production
-  if (process.env.NODE_ENV === 'production') {
-    featureProcessingWorker.start();
-    logger.info(`⚙️ Feature processing worker started`);
-  }
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
   logger.info('SIGTERM signal received: closing server');
-  MatchingJobService.shutdown();
-  featureProcessingWorker.stop();
+  BookingCompletionJob.stop();
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
   logger.info('SIGINT signal received: closing server');
-  MatchingJobService.shutdown();
-  featureProcessingWorker.stop();
+  BookingCompletionJob.stop();
   process.exit(0);
 });

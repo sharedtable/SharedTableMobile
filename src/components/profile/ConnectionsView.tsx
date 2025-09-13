@@ -11,18 +11,24 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 import { api } from '@/services/api';
+import { getUserDisplayName } from '@/utils/getUserDisplayName';
+import { useStreamChat } from '@/providers/GlobalStreamChatProvider';
+import { usePrivyAuth } from '@/hooks/usePrivyAuth';
+import { normalizeStreamUserId } from '../../../shared/streamUserId';
 
 interface Connection {
-  id: string;
+  view_id: string;  // Unique identifier for the view row
+  connection_id: string;  // The actual connection ID
   connected_user_id: string;
-  connected_user_name: string;
+  connected_user_first_name?: string;
+  connected_user_last_name?: string;
+  connected_user_nickname?: string;
   connected_user_email: string;
-  connected_user_avatar?: string;
-  connected_user_bio?: string;
-  connected_user_dinners_attended?: number;
+  connected_user_photo?: string;
   status: 'accepted' | 'pending' | 'blocked';
   requested_at?: string;
   connected_at?: string;
@@ -33,12 +39,16 @@ interface Connection {
 
 interface PendingRequest {
   id: string;
-  user_id: string;
-  requester_name: string;
+  requester_id: string;
+  connected_user_id: string;
+  requester_first_name?: string;
+  requester_last_name?: string;
+  requester_nickname?: string;
   requester_email: string;
-  requester_avatar?: string;
+  requester_photo?: string;
   message?: string;
   requested_at: string;
+  status: string;
 }
 
 interface ConnectionsViewProps {
@@ -52,6 +62,9 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ onAddFriend })
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'connections' | 'requests'>('connections');
+  const navigation = useNavigation<any>();
+  const { client } = useStreamChat();
+  const { user: currentUser } = usePrivyAuth();
 
   useEffect(() => {
     fetchConnections();
@@ -83,15 +96,48 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ onAddFriend })
     }
   };
 
-  const handleMessage = (connection: Connection) => {
-    // Navigate to chat/message screen
-    console.log('Message:', connection.connected_user_name);
+  const handleMessage = async (connection: Connection) => {
+    if (!client || !currentUser?.id) {
+      Alert.alert('Error', 'Chat service is not available');
+      return;
+    }
+
+    try {
+      // Create a deterministic channel ID for direct messaging
+      const currentUserId = normalizeStreamUserId(currentUser.id);
+      const friendUserId = normalizeStreamUserId(connection.connected_user_id);
+      const sortedIds = [currentUserId, friendUserId].sort();
+      const channelId = sortedIds.join('_');
+
+      // Get or create the channel
+      const channel = client.channel('messaging', channelId, {
+        members: [currentUserId, friendUserId],
+      });
+
+      // Watch the channel to ensure it exists
+      await channel.watch();
+
+      // Navigate to the Chat tab and then to the specific channel
+      navigation.navigate('Chat', {
+        screen: 'Channel',
+        params: { channelId: channel.id },
+      });
+    } catch (error) {
+      console.error('Failed to open chat:', error);
+      Alert.alert('Error', 'Failed to open chat. Please try again.');
+    }
   };
 
   const handleUnfriend = async (connection: Connection) => {
+    const userName = getUserDisplayName({
+      nickname: connection.connected_user_nickname,
+      firstName: connection.connected_user_first_name,
+      lastName: connection.connected_user_last_name,
+      email: connection.connected_user_email,
+    });
     Alert.alert(
       'Remove Friend',
-      `Remove ${connection.connected_user_name} from your friends?`,
+      `Remove ${userName} from your friends?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -99,7 +145,7 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ onAddFriend })
           style: 'destructive',
           onPress: async () => {
             try {
-              const response = await api.removeConnection(connection.id);
+              const response = await api.removeConnection(connection.connection_id);
               if (response.success) {
                 // Refresh connections list
                 fetchConnections();
@@ -167,29 +213,42 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ onAddFriend })
     }
   };
 
-  const filteredConnections = connections.filter(connection =>
-    connection.connected_user_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    connection.connected_user_email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredConnections = connections.filter(connection => {
+    const displayName = getUserDisplayName({
+      nickname: connection.connected_user_nickname,
+      firstName: connection.connected_user_first_name,
+      lastName: connection.connected_user_last_name,
+      email: connection.connected_user_email,
+    });
+    return displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      connection.connected_user_email?.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   const renderConnection = ({ item }: { item: Connection }) => (
     <View style={styles.connectionCard}>
       <View style={styles.connectionLeft}>
-        {item.connected_user_avatar ? (
-          <Image source={{ uri: item.connected_user_avatar }} style={styles.avatar} />
+        {item.connected_user_photo ? (
+          <Image source={{ uri: item.connected_user_photo }} style={styles.avatar} />
         ) : (
           <View style={styles.avatarPlaceholder}>
             <Ionicons name="person" size={24} color={theme.colors.white} />
           </View>
         )}
         <View style={styles.connectionInfo}>
-          <Text style={styles.connectionName}>{item.connected_user_name}</Text>
-          <Text style={styles.connectionEmail}>{item.connected_user_email}</Text>
-          {item.dinners_together && item.dinners_together > 0 && (
+          <Text style={styles.connectionName}>
+            {getUserDisplayName({
+              nickname: item.connected_user_nickname,
+              firstName: item.connected_user_first_name,
+              lastName: item.connected_user_last_name,
+              email: item.connected_user_email,
+            })}
+          </Text>
+          <Text style={styles.connectionEmail}>{item.connected_user_email || ''}</Text>
+          {item.dinners_together && item.dinners_together > 0 ? (
             <Text style={styles.dinnersText}>
-              🍽️ {item.dinners_together} dinners together
+              {`🍽️ ${item.dinners_together} dinners together`}
             </Text>
-          )}
+          ) : null}
         </View>
       </View>
       
@@ -204,9 +263,15 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ onAddFriend })
         <Pressable 
           style={styles.actionButton}
           onPress={() => {
+            const userName = getUserDisplayName({
+              nickname: item.connected_user_nickname,
+              firstName: item.connected_user_first_name,
+              lastName: item.connected_user_last_name,
+              email: item.connected_user_email,
+            });
             Alert.alert(
               'Friend Options',
-              `Manage ${item.connected_user_name}`,
+              `Manage ${userName}`,
               [
                 { text: 'Cancel', style: 'cancel' },
                 {
@@ -217,7 +282,15 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ onAddFriend })
                 {
                   text: 'Block User',
                   style: 'destructive',
-                  onPress: () => handleBlock(item.connected_user_id, item.connected_user_name),
+                  onPress: () => {
+                    const userName = getUserDisplayName({
+                      nickname: item.connected_user_nickname,
+                      firstName: item.connected_user_first_name,
+                      lastName: item.connected_user_last_name,
+                      email: item.connected_user_email,
+                    });
+                    handleBlock(item.connected_user_id, userName);
+                  },
                 },
               ]
             );
@@ -232,19 +305,26 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ onAddFriend })
   const renderPendingRequest = ({ item }: { item: PendingRequest }) => (
     <View style={styles.connectionCard}>
       <View style={styles.connectionLeft}>
-        {item.requester_avatar ? (
-          <Image source={{ uri: item.requester_avatar }} style={styles.avatar} />
+        {item.requester_photo ? (
+          <Image source={{ uri: item.requester_photo }} style={styles.avatar} />
         ) : (
           <View style={styles.avatarPlaceholder}>
             <Ionicons name="person" size={24} color={theme.colors.white} />
           </View>
         )}
         <View style={styles.connectionInfo}>
-          <Text style={styles.connectionName}>{item.requester_name}</Text>
-          <Text style={styles.connectionEmail}>{item.requester_email}</Text>
-          {item.message && (
+          <Text style={styles.connectionName}>
+            {getUserDisplayName({
+              nickname: item.requester_nickname,
+              firstName: item.requester_first_name,
+              lastName: item.requester_last_name,
+              email: item.requester_email,
+            })}
+          </Text>
+          <Text style={styles.connectionEmail}>{item.requester_email || ''}</Text>
+          {item.message ? (
             <Text style={styles.connectionMessage}>{item.message}</Text>
-          )}
+          ) : null}
         </View>
       </View>
       
@@ -293,11 +373,11 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ onAddFriend })
             <Text style={[styles.tabText, activeTab === 'requests' && styles.activeTabText]}>
               Requests
             </Text>
-            {pendingRequests.length > 0 && (
+            {pendingRequests.length > 0 ? (
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>{pendingRequests.length}</Text>
+                <Text style={styles.badgeText}>{String(pendingRequests.length)}</Text>
               </View>
-            )}
+            ) : null}
           </View>
         </Pressable>
       </View>
@@ -305,7 +385,7 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ onAddFriend })
       {/* Search Bar and Actions */}
       <View style={styles.searchContainer}>
         {activeTab === 'connections' ? (
-          <>
+          <React.Fragment>
             <View style={styles.searchBar}>
               <Ionicons name="search" size={20} color={theme.colors.text.secondary} />
               <TextInput
@@ -322,10 +402,10 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ onAddFriend })
             >
               <Ionicons name="person-add" size={20} color={theme.colors.primary.main} />
             </Pressable>
-          </>
+          </React.Fragment>
         ) : (
           <Text style={styles.requestsHeader}>
-            You have {pendingRequests.length} pending connection request{pendingRequests.length !== 1 ? 's' : ''}
+            {`You have ${pendingRequests.length} pending connection request${pendingRequests.length !== 1 ? 's' : ''}`}
           </Text>
         )}
       </View>
@@ -335,7 +415,7 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ onAddFriend })
         <FlatList
           data={filteredConnections}
           renderItem={renderConnection}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.view_id || item.connection_id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={

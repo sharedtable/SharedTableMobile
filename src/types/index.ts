@@ -122,7 +122,7 @@ export interface Event {
 }
 
 // Booking Types
-export type BookingStatus = 'confirmed' | 'pending' | 'cancelled' | 'completed';
+export type BookingStatus = 'pending' | 'confirmed' | 'assigned' | 'waitlisted' | 'declined' | 'cancelled' | 'attended' | 'completed';
 
 export interface Booking {
   id: string;

@@ -12,12 +12,70 @@ const router = Router();
 const updateProfileSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
+  nickname: z.string().optional(),
   displayName: z.string().optional(),
   gender: z.enum(['Male', 'Female', 'Other', 'Prefer not to say']).optional(),
   birthday: z.string().optional(), // Date string in ISO format
   bio: z.string().optional(),
   avatarUrl: z.string().url().optional(),
+  jobTitle: z.string().optional(),
+  company: z.string().optional(),
+  foodPreferences: z.array(z.string()).optional(),
+  dietaryRestrictions: z.array(z.string()).optional(),
+  lifestyleChoices: z.array(z.string()).optional(),
+  interests: z.array(z.string()).optional(),
   preferences: z.record(z.any()).optional(),
+});
+
+/**
+ * GET /api/users/me
+ * Get current user's complete profile
+ */
+router.get('/me', verifyPrivyToken, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    if (!req.userId) {
+      throw new AppError('User not authenticated', 401);
+    }
+
+    // First try to find by external_auth_id
+    let { data: user, error } = await supabaseService
+      .from('users')
+      .select('*')
+      .eq('external_auth_id', req.userId)
+      .single();
+
+    // If not found and we have email, try by email
+    if ((error || !user) && req.user?.email) {
+      const emailResult = await supabaseService
+        .from('users')
+        .select('*')
+        .eq('email', req.user.email)
+        .single();
+        
+      user = emailResult.data;
+      error = emailResult.error;
+      
+      // Update external_auth_id if we found the user by email
+      if (user && !user.external_auth_id) {
+        await supabaseService
+          .from('users')
+          .update({ external_auth_id: req.userId })
+          .eq('id', user.id);
+      }
+    }
+
+    if (error || !user) {
+      logger.error('User not found:', { userId: req.userId, email: req.user?.email, error });
+      throw new AppError('User not found', 404);
+    }
+
+    res.json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 /**
@@ -69,14 +127,35 @@ router.put('/profile', verifyPrivyToken, async (req: AuthRequest, res: Response,
 
     const validatedData = updateProfileSchema.parse(req.body);
 
-    // Get user from database
-    const { data: user, error: userError } = await supabaseService
+    // Get user from database - try external_auth_id first, then email
+    let { data: user, error: userError } = await supabaseService
       .from('users')
       .select('id')
       .eq('external_auth_id', req.userId)
       .single();
 
+    // If not found and we have email, try by email
+    if ((userError || !user) && req.user?.email) {
+      const emailResult = await supabaseService
+        .from('users')
+        .select('id')
+        .eq('email', req.user.email)
+        .single();
+        
+      user = emailResult.data;
+      userError = emailResult.error;
+      
+      // Update external_auth_id if we found the user by email
+      if (user) {
+        await supabaseService
+          .from('users')
+          .update({ external_auth_id: req.userId })
+          .eq('id', user.id);
+      }
+    }
+
     if (userError || !user) {
+      logger.error('User not found for profile update:', { userId: req.userId, email: req.user?.email, error: userError });
       throw new AppError('User not found', 404);
     }
 
@@ -85,11 +164,22 @@ router.put('/profile', verifyPrivyToken, async (req: AuthRequest, res: Response,
       updated_at: new Date().toISOString(),
     };
 
-    if (validatedData.firstName) userUpdates.first_name = validatedData.firstName;
-    if (validatedData.lastName) userUpdates.last_name = validatedData.lastName;
-    if (validatedData.displayName) userUpdates.display_name = validatedData.displayName;
-    if (validatedData.gender) userUpdates.gender = validatedData.gender;
-    if (validatedData.birthday) userUpdates.birthday = validatedData.birthday;
+    if (validatedData.firstName !== undefined) userUpdates.first_name = validatedData.firstName;
+    if (validatedData.lastName !== undefined) userUpdates.last_name = validatedData.lastName;
+    // Use display_name for nickname until we add the column
+    if (validatedData.nickname !== undefined) userUpdates.display_name = validatedData.nickname;
+    if (validatedData.displayName !== undefined) userUpdates.display_name = validatedData.displayName;
+    if (validatedData.gender !== undefined) userUpdates.gender = validatedData.gender;
+    if (validatedData.birthday !== undefined) userUpdates.birthday = validatedData.birthday;
+    // These fields will be added via migration
+    // For now, comment them out to avoid errors
+    // if (validatedData.bio !== undefined) userUpdates.bio = validatedData.bio;
+    // if (validatedData.jobTitle !== undefined) userUpdates.job_title = validatedData.jobTitle;
+    // if (validatedData.company !== undefined) userUpdates.company = validatedData.company;
+    // if (validatedData.foodPreferences !== undefined) userUpdates.food_preferences = JSON.stringify(validatedData.foodPreferences);
+    // if (validatedData.dietaryRestrictions !== undefined) userUpdates.dietary_restrictions = JSON.stringify(validatedData.dietaryRestrictions);
+    // if (validatedData.lifestyleChoices !== undefined) userUpdates.lifestyle_choices = JSON.stringify(validatedData.lifestyleChoices);
+    // if (validatedData.interests !== undefined) userUpdates.interests = JSON.stringify(validatedData.interests);
 
     const { error: updateUserError } = await supabaseService
       .from('users')
