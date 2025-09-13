@@ -48,6 +48,7 @@ interface DinnerBooking {
   dietary_restrictions?: string;
   preferences?: string;
   plus_one?: boolean;
+  has_reviewed?: boolean;
   created_at?: string;
   updated_at?: string;
   dinners?: {
@@ -83,6 +84,7 @@ export function ProfileScreen() {
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [loadingPreferences, setLoadingPreferences] = useState(false);
 
   // Helper function to get consistent restaurant images
   const getRestaurantImage = (restaurantName: string): string => {
@@ -167,8 +169,28 @@ export function ProfileScreen() {
     navigation.navigate('NotificationsList' as any);
   };
 
-  const handleRefineExperience = () => {
-    navigation.navigate('RefineExperience' as any);
+  const handleRefineExperience = async () => {
+    // Fetch user's existing preferences
+    setLoadingPreferences(true);
+    try {
+      const response = await api.getUserPreferences();
+      if (response.success && response.data) {
+        console.log('User preferences fetched:', response.data);
+        // Navigate to optional onboarding with prefilled data
+        navigation.navigate('OptionalOnboarding' as any, {
+          prefilledData: response.data
+        });
+      } else {
+        // Navigate without prefilled data if fetch fails
+        navigation.navigate('OptionalOnboarding' as any);
+      }
+    } catch (error) {
+      console.error('Failed to fetch user preferences:', error);
+      // Navigate without prefilled data on error
+      navigation.navigate('OptionalOnboarding' as any);
+    } finally {
+      setLoadingPreferences(false);
+    }
   };
 
 
@@ -445,6 +467,10 @@ export function ProfileScreen() {
                                      reservation.dinner?.restaurant_name || 
                                      'Restaurant TBD';
 
+              // Check if this is a past reservation
+              const dinnerDate = reservation.dinners?.datetime || reservation.dinner?.datetime;
+              const isPastReservation = dinnerDate ? new Date(dinnerDate) < new Date() : false;
+
               return (
                 <Pressable 
                   key={reservation.id} 
@@ -485,17 +511,25 @@ export function ProfileScreen() {
                     {/* Right: Actions */}
                     <View style={styles.cardActions}>
                       {/* Show appropriate buttons based on status */}
-                      {reservation.status === 'completed' ? (
-                        // Completed: Show Review button
-                        <Pressable 
-                          style={styles.reviewButton}
-                          onPress={() => navigation.navigate('PostDinnerSurvey' as any, {
-                            bookingId: reservation.id,
-                            dinnerId: reservation.dinner_id || reservation.dinners?.id
-                          })}
-                        >
-                          <Text style={styles.reviewText}>Review</Text>
-                        </Pressable>
+                      {(reservation.status === 'completed' || (isPastReservation && reservation.status === 'assigned')) ? (
+                        // Completed or past assigned reservations: Show Review button
+                        <View style={styles.reviewContainer}>
+                          <Pressable 
+                            style={styles.reviewButton}
+                            onPress={() => navigation.navigate('PostDinnerSurvey' as any, {
+                              bookingId: reservation.id,
+                              dinnerId: reservation.dinner_id || reservation.dinner?.id
+                            })}
+                          >
+                            <Ionicons name="star-outline" size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
+                            <Text style={styles.reviewText}>Review</Text>
+                          </Pressable>
+                          {!reservation.has_reviewed && (
+                            <View style={styles.reviewBadge}>
+                              <Text style={styles.reviewBadgeText}>!</Text>
+                            </View>
+                          )}
+                        </View>
                       ) : (
                         <View style={styles.actionButtonsColumn}>
                           {/* Show See details for all non-completed bookings */}
@@ -536,8 +570,16 @@ export function ProfileScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Quick Action</Text>
           </View>
-          <Pressable style={styles.quickActionButton} onPress={handleRefineExperience}>
-            <Text style={styles.quickActionText}>Refine your experience</Text>
+          <Pressable 
+            style={[styles.quickActionButton, loadingPreferences && styles.quickActionButtonDisabled]} 
+            onPress={handleRefineExperience}
+            disabled={loadingPreferences}
+          >
+            {loadingPreferences ? (
+              <ActivityIndicator size="small" color={theme.colors.primary.main} />
+            ) : (
+              <Text style={styles.quickActionText}>Refine your experience</Text>
+            )}
           </Pressable>
         </View>
 
@@ -746,6 +788,9 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(14),
     fontWeight: '600',
   },
+  quickActionButtonDisabled: {
+    opacity: 0.6,
+  },
   activeTab: {
     borderBottomColor: theme.colors.primary.main,
     borderBottomWidth: 2,
@@ -881,15 +926,38 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     opacity: 0.8,
   },
+  reviewContainer: {
+    position: 'relative',
+  },
   reviewButton: {
-    paddingHorizontal: scaleWidth(12),
-    paddingVertical: scaleHeight(6),
+    backgroundColor: theme.colors.primary.main,
+    paddingHorizontal: scaleWidth(16),
+    paddingVertical: scaleHeight(8),
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   reviewText: {
-    fontSize: scaleFont(13),
-    color: theme.colors.primary.main,
+    fontSize: scaleFont(14),
+    color: '#FFFFFF',
     fontWeight: '600',
-    textDecorationLine: 'underline',
+  },
+  reviewBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#FF4444',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reviewBadgeText: {
+    color: '#FFFFFF',
+    fontSize: scaleFont(12),
+    fontWeight: 'bold',
   },
   reservationName: {
     color: theme.colors.text.primary,

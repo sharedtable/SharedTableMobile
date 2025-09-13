@@ -54,11 +54,17 @@ export const OnboardingHopingToMeetScreen: React.FC<OnboardingHopingToMeetScreen
   currentStep = 10,
   totalSteps = 12,
 }) => {
-  const { saveStep, saving, stepErrors, clearErrors } = useOnboarding();
+  const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
 
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [selectedSpecifics, setSelectedSpecifics] = useState<Record<string, string[]>>({});
-  const [additionalNotes, setAdditionalNotes] = useState<string>('');
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(
+    currentStepData.hopingToMeetTypes || []
+  );
+  const [selectedSpecifics, setSelectedSpecifics] = useState<Record<string, string[]>>(
+    currentStepData.hopingToMeetSpecifics || {}
+  );
+  const [additionalNotes, setAdditionalNotes] = useState<string>(
+    currentStepData.hopingToMeet || ''
+  );
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {

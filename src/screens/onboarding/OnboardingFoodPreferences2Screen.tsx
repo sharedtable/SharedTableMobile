@@ -56,6 +56,10 @@ export const OnboardingFoodPreferences2Screen: React.FC<OnboardingFoodPreference
   totalSteps = 13,
 }) => {
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
+  
+  console.log('🍕 OnboardingFoodPreferences2Screen: currentStepData:', currentStepData);
+  console.log('🍕 dinnerDuration:', currentStepData.dinnerDuration);
+  console.log('🍕 foodCraving:', currentStepData.foodCraving);
 
   const [dinnerDuration, setDinnerDuration] = useState<string>(
     currentStepData.dinnerDuration || ''

@@ -168,7 +168,7 @@ export const additionalLifestyleSchema = z.object({
 
 // Food Preferences validation
 export const foodPreferencesSchema = z.object({
-  dietaryRestrictions: z.string().optional(),
+  dietaryRestrictions: z.array(z.string()).optional(),
   budget: z.number().min(10).max(100).optional(),
   spicyLevel: z.number().min(1).max(5).optional(),
   drinkingLevel: z.number().min(1).max(5).optional(),
@@ -177,9 +177,9 @@ export const foodPreferencesSchema = z.object({
   dinnerDuration: z.string().optional(),
   zipCode: z.string().max(10).optional(),
   travelDistance: z.number().min(0.5).max(50).optional(),
-  foodCraving: z.string().max(200).optional(),
-  cuisinesToTry: z.array(z.string()).max(3).optional(),
-  cuisinesToAvoid: z.array(z.string()).max(3).optional(),
+  foodCraving: z.array(z.string()).optional(),
+  cuisinesToTry: z.array(z.string()).optional(),
+  cuisinesToAvoid: z.array(z.string()).optional(),
 });
 
 // Final Touch screens validation
@@ -322,11 +322,15 @@ export type ExtendedOnboardingData = CompleteOnboardingData & {
   dinnerDuration?: string;
   zipCode?: string;
   travelDistance?: number;
-  foodCraving?: string;
+  foodCraving?: string | string[];
   cuisinesToTry?: string[];
   cuisinesToAvoid?: string[];
   // Final Touch
   hopingToMeet?: string;
+  hopingToMeetTypes?: string[];
+  hopingToMeetSpecifics?: Record<string, string[]>;
+  timeActivities?: Array<{ timeCategory: string; activity: string }>;
+  socialFrequency?: string;
   hobbies?: string;
   interestingFact?: string;
 };

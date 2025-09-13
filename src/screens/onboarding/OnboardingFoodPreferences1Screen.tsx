@@ -44,6 +44,8 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
   totalSteps = 13,
 }) => {
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
+  
+  console.log('🍔 OnboardingFoodPreferences1Screen: currentStepData:', currentStepData);
 
   const [selectedDietaryRestrictions, setSelectedDietaryRestrictions] = useState<string[]>(
     Array.isArray(currentStepData.dietaryRestrictions)

@@ -1280,9 +1280,52 @@ class ApiService {
       // The response has a 'profile' field that contains the onboarding profile data
       const profile = (profileResponse as any).profile || {};
       
-      // Extract preferences from the user's onboarding profile
+      // Return ALL onboarding data for prefilling optional onboarding screens
       const preferences = {
+        // Basic info
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        display_name: profile.display_name || profile.nickname,
+        gender: profile.gender,
+        birthday: profile.birthday || profile.date_of_birth,
+        
+        // Education & Work
+        education: profile.education,
+        education_level: profile.education_level,
+        school: profile.school,
+        work: profile.work,
+        profession: profile.profession,
+        job_title: profile.job_title || profile.profession,
+        line_of_work: profile.line_of_work || profile.industry,
+        industry: profile.industry,
+        company: profile.company,
+        
+        // Background
+        nationality: profile.nationality,
+        ethnicity: profile.ethnicity,
+        religion: profile.religion,
+        relationship_status: profile.relationship_status,
+        height_feet: profile.height_feet,
+        height_inches: profile.height_inches,
+        height_cm: profile.height_cm,
+        
+        // Personality
+        personality_type: profile.personality_type,
+        mbti_type: profile.mbti_type || profile.personality_type,
+        roles: profile.roles || [],
+        personality_traits: profile.personality_traits,
+        
+        // Lifestyle
+        lifestyle: profile.lifestyle,
+        substances: profile.substances || [],
+        early_bird_night_owl: profile.early_bird_night_owl,
+        active_person: profile.active_person,
+        punctuality: profile.punctuality,
+        work_life_balance: profile.work_life_balance,
+        
+        // Food preferences
         dietary_restrictions: profile.dietary_restrictions || [],
+        dinner_duration: profile.dinner_duration,
         food_craving: profile.food_craving || [],
         cuisines_to_try: profile.cuisines_to_try || [],
         cuisines_to_avoid: profile.cuisines_to_avoid || [],
@@ -1291,10 +1334,16 @@ class ApiService {
         spicy_level: profile.spicy_level || null,
         drinking_level: profile.drinking_level || null,
         adventurous_level: profile.adventurous_level || null,
-        zipcode: profile.zipcode || null,
-        travel_distance: profile.travel_distance || null,
+        
+        // Interests & Hobbies
+        interests: profile.interests || [],
+        hobbies: profile.hobbies || [],
         hoping_to_meet: profile.hoping_to_meet || '',
         interesting_fact: profile.interesting_fact || '',
+        
+        // Location
+        zipcode: profile.zipcode || null,
+        travel_distance: profile.travel_distance || null,
       };
 
       return {
