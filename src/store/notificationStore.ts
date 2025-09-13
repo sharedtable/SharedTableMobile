@@ -95,7 +95,9 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         unreadCount = notifications.filter(n => !n.read).length;
       } catch (_apiError) {
         console.warn('Notifications API not available, using empty state');
-        // Continue with empty notifications - don't fail initialization
+        // Only show real notifications - no mock data
+        notifications = [];
+        unreadCount = 0;
       }
 
       set({
@@ -156,51 +158,13 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
           isLoading: false,
         });
       } catch (_apiError) {
-        console.warn('Using mock notifications as API is not available');
+        console.warn('Notifications API not available, showing no notifications');
         
-        // Use mock notifications for development
-        const mockNotifications: NotificationData[] = [
-          {
-            id: 'notif-1',
-            type: NotificationType.DINNER_REMINDER,
-            priority: NotificationPriority.HIGH,
-            channels: [NotificationChannel.PUSH, NotificationChannel.IN_APP],
-            title: 'Dinner Reminder',
-            body: 'Your dinner at Chez Panisse starts in 1 hour!',
-            data: { eventId: 'event-1' },
-            userId: 'user-1',
-            read: false,
-            createdAt: new Date(Date.now() - 30 * 60 * 1000), // 30 mins ago
-          },
-          {
-            id: 'notif-2',
-            type: NotificationType.CHAT_MESSAGE,
-            priority: NotificationPriority.NORMAL,
-            channels: [NotificationChannel.PUSH, NotificationChannel.IN_APP],
-            title: 'New Message',
-            body: 'Sarah: "Looking forward to dinner tonight!"',
-            data: { chatId: 'chat-1', senderId: 'user-2' },
-            userId: 'user-1',
-            read: false,
-            createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-          },
-        ];
-
-        // Load saved read states from local storage
-        const savedReadStates = await SecureStore.getItemAsync('notification_read_states');
-        const readStates = savedReadStates ? JSON.parse(savedReadStates) : {};
-        
-        // Apply saved read states to mock notifications
-        const notificationsWithReadState = mockNotifications.map(n => ({
-          ...n,
-          read: readStates[n.id] || false,
-        }));
-
-        const unreadCount = notificationsWithReadState.filter(n => !n.read).length;
-
+        // Only show real notifications from the backend
+        // No mock data
         set({
-          notifications: notificationsWithReadState,
-          unreadCount,
+          notifications: [],
+          unreadCount: 0,
           isLoading: false,
         });
       }

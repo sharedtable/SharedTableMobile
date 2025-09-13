@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   },
   welcomeTitle: {
     color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.bold,
+    fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(24),
     fontWeight: '700',
     marginBottom: scaleHeight(4),

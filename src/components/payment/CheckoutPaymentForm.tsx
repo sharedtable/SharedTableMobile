@@ -401,7 +401,7 @@ const cardFieldStyles = {
   borderRadius: 12,
   fontSize: 16,
   cursorColor: '#000000',
-  fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  fontFamily: 'Fraunces-Regular',
 };
 
 const styles = StyleSheet.create({

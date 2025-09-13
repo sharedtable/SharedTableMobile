@@ -1,6 +1,5 @@
 import { supabaseService } from '../config/supabase';
 import { logger } from '../utils/logger';
-import crypto from 'crypto';
 import { createHash } from 'crypto';
 
 interface ReferralActivity {
@@ -13,7 +12,7 @@ interface ReferralActivity {
   ip_address?: string;
 }
 
-interface ReferralReward {
+interface _ReferralReward {
   user_id: string;
   referral_activity_id: string;
   reward_type: string;

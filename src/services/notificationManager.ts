@@ -153,8 +153,13 @@ class NotificationManager {
       }];
     }
 
-    // Set category for actionable notifications
-    content.categoryIdentifier = this.getCategoryForType(notification.type);
+    // Set category for actionable notifications only if needed
+    const category = this.getCategoryForType(notification.type);
+    // Only set categoryIdentifier if it's not the default category
+    // iOS requires registered categories, so avoid setting unregistered ones
+    if (category !== 'default') {
+      content.categoryIdentifier = category;
+    }
 
     // Platform-specific configurations
     if (Platform.OS === 'android') {

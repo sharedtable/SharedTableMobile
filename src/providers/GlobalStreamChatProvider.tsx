@@ -77,6 +77,7 @@ export const GlobalStreamChatProvider: React.FC<{ children: React.ReactNode }> =
     const chatClient = initializeClient();
     if (chatClient) {
       client = chatClient;
+      console.log('🚀 Stream Chat client created, waiting for user authentication...');
     }
   }, []);
   
@@ -197,9 +198,11 @@ export const GlobalStreamChatProvider: React.FC<{ children: React.ReactNode }> =
       connectionState.retryCount = 0;
       connectionState.lastError = null;
       
-      // Initialize notification integration
+      // Initialize notification integration for real-time chat notifications
       try {
+        console.log('🔔 Initializing notification integration for Stream Chat...');
         await notificationIntegration.initialize(streamUserId, client);
+        console.log('✅ Notification integration initialized - Chat notifications will work in background');
       } catch (error) {
         console.warn('Failed to initialize notifications:', error);
       }
@@ -292,11 +295,18 @@ export const GlobalStreamChatProvider: React.FC<{ children: React.ReactNode }> =
     };
   }, [user?.id, connectToStream]);
   
-  // Main connection effect
+  // Main connection effect - Connect immediately when user is authenticated
   useEffect(() => {
     if (!user?.id) {
       disconnectSafely();
+      connectionAttempted.current = false;
       return;
+    }
+    
+    // Reset connection attempt flag when user changes
+    const currentUserId = normalizeStreamUserId(user.id);
+    if (connectionState.lastConnectedUserId !== currentUserId) {
+      connectionAttempted.current = false;
     }
     
     // Only attempt connection once per user session
@@ -305,6 +315,9 @@ export const GlobalStreamChatProvider: React.FC<{ children: React.ReactNode }> =
     }
     
     connectionAttempted.current = true;
+    
+    // Connect immediately for notifications to work
+    console.log('👤 User authenticated, connecting to Stream Chat for notifications...');
     connectToStream(0);
     
     // Cleanup on unmount (not on user change)

@@ -39,9 +39,10 @@ export const NotificationWrapper: React.FC<NotificationWrapperProps> = ({ childr
         break;
       case NotificationType.CHAT_MESSAGE:
       case NotificationType.CHAT_MENTION:
-        if (data?.eventId) {
-          (navigation.navigate as unknown as (routeName: string, params?: object) => void)('EventChat', { eventId: data.eventId });
-        }
+        // Navigate to specific chat channel using global navigation service
+        import('@/services/navigationService').then(({ navigateToChat }) => {
+          navigateToChat(data?.channelId as string);
+        });
         break;
       case NotificationType.FEED_POST:
       case NotificationType.FEED_MENTION:
@@ -55,7 +56,8 @@ export const NotificationWrapper: React.FC<NotificationWrapperProps> = ({ childr
         (navigation.navigate as unknown as (routeName: string) => void)('Bookings');
         break;
       default:
-        (navigation.navigate as unknown as (routeName: string) => void)('Notifications');
+        // Navigate to main dashboard for unknown notification types
+        (navigation.navigate as unknown as (routeName: string) => void)('Main');
         break;
     }
   }, [navigation]);
@@ -115,9 +117,10 @@ export const NotificationWrapper: React.FC<NotificationWrapperProps> = ({ childr
           break;
         case NotificationType.CHAT_MESSAGE:
         case NotificationType.CHAT_MENTION:
-          if (data?.eventId) {
-            (navigation.navigate as unknown as (routeName: string, params?: object) => void)('EventChat', { eventId: data.eventId });
-          }
+          // Navigate to specific chat channel using global navigation service
+          import('@/services/navigationService').then(({ navigateToChat }) => {
+            navigateToChat(data?.channelId);
+          });
           break;
         case NotificationType.FEED_POST:
         case NotificationType.FEED_MENTION:
@@ -131,7 +134,8 @@ export const NotificationWrapper: React.FC<NotificationWrapperProps> = ({ childr
           (navigation.navigate as unknown as (routeName: string) => void)('Bookings');
           break;
         default:
-          (navigation.navigate as unknown as (routeName: string) => void)('Notifications');
+          // Navigate to main dashboard for unknown notification types
+          (navigation.navigate as unknown as (routeName: string) => void)('Main');
           break;
       }
     }
