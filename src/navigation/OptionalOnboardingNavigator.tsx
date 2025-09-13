@@ -134,9 +134,13 @@ const OnboardingWorkOnlyScreen = (props: any) => {
   return <OnboardingWorkScreen {...props} startSection="work" workOnly={true} />;
 };
 
-export function OptionalOnboardingNavigator() {
+export function OptionalOnboardingNavigator(props: any) {
+  // Extract prefilled data from navigation params if available
+  // React Navigation passes route as a prop to navigator components
+  const prefilledData = props?.route?.params?.prefilledData;
+  
   return (
-    <OnboardingProvider>
+    <OnboardingProvider initialData={prefilledData}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,

@@ -25,7 +25,7 @@ export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
   Onboarding: undefined;
-  OptionalOnboarding: { screen?: keyof OptionalOnboardingStackParamList };
+  OptionalOnboarding: { screen?: keyof OptionalOnboardingStackParamList; prefilledData?: any };
   Waitlist: undefined;
   NotificationsList: undefined;
   EventDetails: {
@@ -87,6 +87,9 @@ export function RootNavigator() {
           <Stack.Screen 
             name="OptionalOnboarding" 
             component={OptionalOnboardingNavigator}
+            options={{
+              headerShown: false,
+            }}
           />
           <Stack.Screen 
             name="NotificationsList" 

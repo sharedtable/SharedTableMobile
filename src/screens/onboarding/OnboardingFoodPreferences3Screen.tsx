@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   View, 
   Text, 
@@ -57,6 +57,12 @@ export const OnboardingFoodPreferences3Screen: React.FC<OnboardingFoodPreference
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filteredCuisines, setFilteredCuisines] = useState<string[]>(cuisineOptions);
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+
+  // Memoize the unselected cuisines to avoid recalculating on every render
+  const unselectedCuisines = useMemo(() => 
+    filteredCuisines.filter(cuisine => !selectedCuisines.includes(cuisine)),
+    [filteredCuisines, selectedCuisines]
+  );
 
   useEffect(() => {
     clearErrors();
@@ -162,29 +168,44 @@ export const OnboardingFoodPreferences3Screen: React.FC<OnboardingFoodPreference
           )}
         </View>
 
+        {/* Selected Cuisines - Show at the top */}
+        {selectedCuisines.length > 0 && (
+          <View style={styles.selectedSection}>
+            <Text style={styles.selectedLabel}>Selected ({selectedCuisines.length}):</Text>
+            <View style={styles.selectedContainer}>
+              {selectedCuisines.map((cuisine) => (
+                <TouchableOpacity
+                  key={`selected-${cuisine}`}
+                  style={[styles.cuisineButton, styles.cuisineButtonSelected]}
+                  onPress={() => toggleCuisine(cuisine)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.cuisineButtonText, styles.cuisineButtonTextSelected]}>
+                    {cuisine} ✓
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
         {/* Suggestions */}
         <Text style={styles.suggestionsLabel}>Suggestions</Text>
 
-        {/* Cuisine Options */}
+        {/* Cuisine Options - Only show unselected */}
         <ScrollView 
           style={styles.cuisineScrollView}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.cuisineGrid}>
-            {filteredCuisines.map((cuisine) => (
+            {unselectedCuisines.map((cuisine) => (
               <TouchableOpacity
                 key={cuisine}
-                style={[
-                  styles.cuisineButton,
-                  selectedCuisines.includes(cuisine) && styles.cuisineButtonSelected
-                ]}
+                style={styles.cuisineButton}
                 onPress={() => toggleCuisine(cuisine)}
                 activeOpacity={0.7}
               >
-                <Text style={[
-                  styles.cuisineButtonText,
-                  selectedCuisines.includes(cuisine) && styles.cuisineButtonTextSelected
-                ]}>
+                <Text style={styles.cuisineButtonText}>
                   {cuisine}
                 </Text>
               </TouchableOpacity>
@@ -270,6 +291,24 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     fontSize: scaleFont(24),
     fontWeight: '300',
+  },
+  selectedSection: {
+    marginBottom: scaleHeight(20),
+    paddingBottom: scaleHeight(16),
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  selectedLabel: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    fontWeight: '600',
+    marginBottom: scaleHeight(12),
+  },
+  selectedContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: scaleWidth(10),
   },
   suggestionsLabel: {
     color: theme.colors.text.secondary,
