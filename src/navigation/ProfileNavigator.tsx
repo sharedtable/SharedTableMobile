@@ -4,9 +4,14 @@ import React from 'react';
 import { ProfileScreen } from '@/screens/profile/ProfileScreen';
 import { DinnerDetailsScreen } from '@/screens/profile/DinnerDetailsScreen';
 import { FindFriendsScreen } from '@/screens/profile/FindFriendsScreen';
+import { EditProfileScreen } from '@/screens/profile/EditProfileScreen';
 import { SettingsScreen } from '@/screens/settings/SettingsScreen';
 import { AboutScreen } from '@/screens/settings/AboutScreen';
 import { PaymentMethodsScreen } from '@/screens/settings/PaymentMethodsScreen';
+import { PrivacyPolicyScreen } from '@/screens/settings/PrivacyPolicyScreen';
+import { PrivacySettingsScreen } from '@/screens/settings/PrivacySettingsScreen';
+import { TermsOfServiceScreen } from '@/screens/settings/TermsOfServiceScreen';
+import { ReferAFriendScreen } from '@/screens/referral/ReferAFriendScreen';
 
 export type ProfileStackParamList = {
   ProfileMain: undefined;
@@ -14,10 +19,15 @@ export type ProfileStackParamList = {
     reservation: any; // You can type this more specifically based on your data structure
   };
   FindFriends: undefined;
+  EditProfile: undefined;
   Settings: undefined;
   About: undefined;
   Help: undefined;
   PaymentMethods: undefined;
+  PrivacyPolicy: undefined;
+  PrivacySettings: undefined;
+  ReferAFriend: undefined;
+  TermsOfService: undefined;
 };
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
@@ -52,6 +62,13 @@ export function ProfileNavigator() {
         }}
       />
       <Stack.Screen 
+        name="EditProfile" 
+        component={EditProfileScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen 
         name="Settings" 
         component={SettingsScreen}
         options={{
@@ -68,6 +85,34 @@ export function ProfileNavigator() {
       <Stack.Screen 
         name="PaymentMethods" 
         component={PaymentMethodsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen 
+        name="PrivacyPolicy" 
+        component={PrivacyPolicyScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen 
+        name="PrivacySettings" 
+        component={PrivacySettingsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen 
+        name="TermsOfService" 
+        component={TermsOfServiceScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen 
+        name="ReferAFriend" 
+        component={ReferAFriendScreen}
         options={{
           headerShown: false,
         }}

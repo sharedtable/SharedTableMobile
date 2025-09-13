@@ -11,6 +11,9 @@ import {
   Linking,
   Alert,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { ProfileStackParamList } from '@/navigation/ProfileNavigator';
 
 import { Icon } from '@/components/base/Icon';
 import { TopBar } from '@/components/navigation/TopBar';
@@ -31,63 +34,28 @@ interface AboutItem {
   type: 'info' | 'link' | 'action';
 }
 
-export const AboutScreen: React.FC<AboutScreenProps> = ({ onNavigate }) => {
+type ProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
+
+export const AboutScreen: React.FC<AboutScreenProps> = ({ onNavigate: _onNavigate }) => {
+  const navigation = useNavigation<ProfileNavigationProp>();
   const appVersion = Application.nativeApplicationVersion || '1.0.0';
-  const buildNumber = Application.nativeBuildVersion || '1';
-  const deviceName = Device.deviceName || 'Unknown Device';
+  const _buildNumber = Application.nativeBuildVersion || '1';
+  const _deviceName = Device.deviceName || 'Unknown Device';
   const osVersion = Device.osVersion || 'Unknown';
 
   const aboutItems: AboutItem[] = [
     {
       id: 'version',
       title: 'Version',
-      value: `${appVersion} (${buildNumber})`,
+      value: `Beta ${appVersion}`,
       type: 'info',
-    },
-    {
-      id: 'device',
-      title: 'Device',
-      value: `${deviceName} (${Device.osName} ${osVersion})`,
-      type: 'info',
-    },
-    {
-      id: 'website',
-      title: 'Website',
-      subtitle: 'Visit our website',
-      icon: 'globe',
-      onPress: () => openWebsite(),
-      type: 'link',
-    },
-    {
-      id: 'support',
-      title: 'Help & Support',
-      subtitle: 'Get help or contact us',
-      icon: 'help-circle',
-      onPress: () => openSupport(),
-      type: 'link',
     },
     {
       id: 'feedback',
       title: 'Send Feedback',
-      subtitle: 'Help us improve SharedTable',
+      subtitle: 'Help us improve Fare',
       icon: 'message-circle',
       onPress: () => sendFeedback(),
-      type: 'action',
-    },
-    {
-      id: 'rate',
-      title: 'Rate App',
-      subtitle: 'Rate us on the App Store',
-      icon: 'star',
-      onPress: () => rateApp(),
-      type: 'action',
-    },
-    {
-      id: 'share',
-      title: 'Share App',
-      subtitle: 'Tell friends about SharedTable',
-      icon: 'share',
-      onPress: () => shareApp(),
       type: 'action',
     },
   ];
@@ -108,82 +76,66 @@ export const AboutScreen: React.FC<AboutScreenProps> = ({ onNavigate }) => {
       type: 'link',
     },
     {
-      id: 'licenses',
-      title: 'Open Source Licenses',
-      subtitle: 'Third-party software licenses',
-      onPress: () => openLicenses(),
+      id: 'delete-account',
+      title: 'Account Deletion',
+      subtitle: 'Request account removal',
+      onPress: () => handleDeleteAccount(),
       type: 'link',
     },
   ];
 
-  const openWebsite = () => {
-    Linking.openURL('https://sharedtable.app');
+  const _openWebsite = () => {
+    Linking.openURL('https://getfare.app');
   };
 
-  const openSupport = () => {
-    Linking.openURL('https://sharedtable.app/support');
+  const _openSupport = () => {
+    Linking.openURL('https://getfare.app/support');
   };
 
   const sendFeedback = () => {
-    const emailSubject = encodeURIComponent('SharedTable App Feedback');
+    const emailSubject = encodeURIComponent('Fare Beta Feedback');
     const emailBody = encodeURIComponent(
-      `Hi SharedTable Team,\n\nI'd like to share some feedback about the app:\n\n` +
-        `App Version: ${appVersion} (${buildNumber})\n` +
-        `Device: ${deviceName} (${Device.osName} ${osVersion})\n\n` +
+      `Hi Fare Team,\n\nI'd like to share some feedback about the beta app:\n\n` +
+        `App Version: Beta ${appVersion}\n` +
+        `Device: ${Device.osName} ${osVersion}\n\n` +
         `My feedback:\n\n`
     );
 
-    Linking.openURL(`mailto:feedback@sharedtable.app?subject=${emailSubject}&body=${emailBody}`);
-  };
-
-  const rateApp = () => {
-    const appStoreUrl = 'https://apps.apple.com/app/sharedtable/id123456789'; // Replace with actual App Store ID
-    const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.sharedtable.app'; // Replace with actual package name
-
-    const url = Device.osName === 'iOS' ? appStoreUrl : playStoreUrl;
-
-    Linking.canOpenURL(url).then((supported) => {
-      if (supported) {
-        Linking.openURL(url);
-      } else {
-        Alert.alert('Error', 'Unable to open app store');
-      }
-    });
-  };
-
-  const shareApp = () => {
-    const shareUrl = 'https://sharedtable.app/download';
-    const shareMessage = `Check out SharedTable - the best app for dining experiences! Download it here: ${shareUrl}`;
-
-    // For now, we'll copy to clipboard and show an alert
-    // In a real app, you'd use a proper share API
-    Alert.alert('Share SharedTable', shareMessage, [
-      {
-        text: 'Copy Link',
-        onPress: () => {
-          // In a real app, you'd copy to clipboard here
-          Alert.alert('Copied!', 'Link copied to clipboard');
-        },
-      },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+    Linking.openURL(`mailto:feedback@getfare.app?subject=${emailSubject}&body=${emailBody}`);
   };
 
   const openPrivacyPolicy = () => {
-    Linking.openURL('https://sharedtable.app/privacy');
+    navigation.navigate('PrivacyPolicy');
   };
 
   const openTermsOfService = () => {
-    Linking.openURL('https://sharedtable.app/terms');
+    navigation.navigate('TermsOfService');
   };
 
-  const openLicenses = () => {
-    // Navigate to licenses screen or open licenses URL
-    onNavigate?.('licenses');
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Contact Support', 
+          onPress: () => {
+            const emailSubject = encodeURIComponent('Account Deletion Request');
+            const emailBody = encodeURIComponent(
+              'I would like to request the deletion of my Fare account.\n\n' +
+              `Email: [Please provide your account email]\n` +
+              `Reason: [Optional]\n`
+            );
+            Linking.openURL(`mailto:support@getfare.app?subject=${emailSubject}&body=${emailBody}`);
+          }
+        }
+      ]
+    );
   };
 
   const handleBack = () => {
-    onNavigate?.('settings');
+    navigation.goBack();
   };
 
   const renderInfoItem = (item: AboutItem) => (
@@ -241,10 +193,11 @@ export const AboutScreen: React.FC<AboutScreenProps> = ({ onNavigate }) => {
           <View style={styles.appIcon}>
             <Icon name="users" size={40} color={theme.colors.primary.main} />
           </View>
-          <Text style={styles.appName}>SharedTable</Text>
+          <Text style={styles.appName}>Fare</Text>
           <Text style={styles.appTagline}>
-            Bringing people together through shared dining experiences
+            Connect over great food
           </Text>
+          <Text style={styles.betaBadge}>BETA</Text>
         </View>
 
         {/* App Information */}
@@ -255,19 +208,21 @@ export const AboutScreen: React.FC<AboutScreenProps> = ({ onNavigate }) => {
         )}
 
         {/* Actions */}
-        {renderSection(
-          'Support & Feedback',
-          aboutItems.filter((item) => item.type === 'link' || item.type === 'action'),
-          renderActionItem
-        )}
+        {aboutItems.filter((item) => item.type === 'action').length > 0 && 
+          renderSection(
+            'Support & Feedback',
+            aboutItems.filter((item) => item.type === 'action'),
+            renderActionItem
+          )
+        }
 
         {/* Legal */}
         {renderSection('Legal', legalItems, renderActionItem)}
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Made with ❤️ by the SharedTable team</Text>
-          <Text style={styles.copyrightText}>© 2024 SharedTable. All rights reserved.</Text>
+          <Text style={styles.footerText}>Made with ❤️ in San Francisco</Text>
+          <Text style={styles.copyrightText}>© 2025 Fare. All rights reserved.</Text>
         </View>
 
         <View style={{ height: scaleHeight(50) }} />
@@ -336,6 +291,18 @@ const styles = StyleSheet.create({
     lineHeight: scaleFont(22),
     marginHorizontal: scaleWidth(32),
     textAlign: 'center',
+  },
+  betaBadge: {
+    backgroundColor: theme.colors.primary.main,
+    borderRadius: scaleWidth(12),
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: scaleFont(12),
+    fontWeight: '700',
+    marginTop: scaleHeight(12),
+    paddingHorizontal: scaleWidth(12),
+    paddingVertical: scaleHeight(4),
+    overflow: 'hidden',
   },
   container: {
     backgroundColor: theme.colors.background.paper,

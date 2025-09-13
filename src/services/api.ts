@@ -409,8 +409,8 @@ class ApiService {
   // User Profile Endpoints
   // ============================================================================
 
-  async getUserProfile(): Promise<ApiResponse<User>> {
-    const response = await this.client.get('/user/profile');
+  async getUserProfile(): Promise<ApiResponse<any>> {
+    const response = await this.client.get('/onboarding/profile');
     return response.data;
   }
 
@@ -1145,6 +1145,27 @@ class ApiService {
     }
   }
 
+  // Generic HTTP methods for custom endpoints
+  async get<T = unknown>(endpoint: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    const response = await this.client.get(endpoint, config);
+    return response.data;
+  }
+
+  async post<T = unknown>(endpoint: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    const response = await this.client.post(endpoint, data, config);
+    return response.data;
+  }
+
+  async put<T = unknown>(endpoint: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    const response = await this.client.put(endpoint, data, config);
+    return response.data;
+  }
+
+  async delete<T = unknown>(endpoint: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    const response = await this.client.delete(endpoint, config);
+    return response.data;
+  }
+
   // Generic request method for any custom endpoints
   async request<T = unknown>(
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
@@ -1159,6 +1180,68 @@ class ApiService {
       ...config,
     });
     return response.data;
+  }
+
+  // Helper method for error handling
+  private handleError(error: any): ApiResponse<any> {
+    console.error('API Error:', error);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'An error occurred',
+    };
+  }
+
+  // User Preferences Methods
+  async getUserPreferences(): Promise<ApiResponse<any>> {
+    try {
+      // Fetch user's profile which includes onboarding data
+      const profileResponse = await this.getUserProfile();
+      
+      if (!profileResponse.success) {
+        return profileResponse;
+      }
+
+      // The response has a 'profile' field that contains the onboarding profile data
+      const profile = (profileResponse as any).profile || {};
+      
+      // Extract preferences from the user's onboarding profile
+      const preferences = {
+        dietary_restrictions: profile.dietary_restrictions || [],
+        food_craving: profile.food_craving || [],
+        cuisines_to_try: profile.cuisines_to_try || [],
+        cuisines_to_avoid: profile.cuisines_to_avoid || [],
+        dining_atmospheres: profile.dining_atmospheres || [],
+        food_budget: profile.food_budget || null,
+        spicy_level: profile.spicy_level || null,
+        drinking_level: profile.drinking_level || null,
+        adventurous_level: profile.adventurous_level || null,
+        zipcode: profile.zipcode || null,
+        travel_distance: profile.travel_distance || null,
+        hoping_to_meet: profile.hoping_to_meet || '',
+        interesting_fact: profile.interesting_fact || '',
+      };
+
+      return {
+        success: true,
+        data: preferences,
+      };
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  async updateBookingPreferences(bookingId: string, preferences: any): Promise<ApiResponse<any>> {
+    try {
+      // For now, just return success
+      // TODO: Implement backend endpoint
+      console.log('updateBookingPreferences called with:', { bookingId, preferences });
+      return {
+        success: true,
+        data: preferences,
+      };
+    } catch (error) {
+      return this.handleError(error);
+    }
   }
 }
 

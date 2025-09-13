@@ -186,7 +186,7 @@ class UserPreferencesAPI {
         dining_occasions: preferences.dining_occasions,
         preferred_price_range: preferences.preferred_price_range,
         group_size_preference: preferences.group_size_preference,
-        location_zip_code: preferences.zip_code,
+        zipcode: preferences.zip_code,
         max_travel_distance: preferences.max_travel_distance,
         updated_at: new Date().toISOString(),
       };
@@ -323,7 +323,7 @@ class UserPreferencesAPI {
         updateData.dining_occasions = preferences.dining_style.dining_occasions;
         updateData.preferred_price_range = preferences.dining_style.preferred_price_range;
         updateData.group_size_preference = preferences.dining_style.group_size_preference;
-        updateData.location_zip_code = preferences.dining_style.zip_code;
+        updateData.zipcode = preferences.dining_style.zip_code;
         updateData.max_travel_distance = preferences.dining_style.max_travel_distance;
       }
 

@@ -38,7 +38,7 @@ export interface ExtendedUserPreferences extends UserPreferencesRow {
   } | null;
   cuisine_love_levels: Record<string, 'like' | 'love'> | null;
   cuisine_avoid: string[] | null;
-  location_zip_code: string | null;
+  zipcode: string | null;
 }
 
 // Extract the base type first
@@ -93,7 +93,7 @@ export interface UserPersonalizationComplete {
   dining_occasions: string[] | null;
   max_travel_distance: number | null;
   group_size_preference: string | null;
-  location_zip_code: string | null;
+  zipcode: string | null;
   social_preferences: any | null;
   foodie_profile: any | null;
   
@@ -141,7 +141,7 @@ export type ExtendedUserPreferencesInsert = {
   dining_occasions?: string[] | null;
   max_travel_distance?: number | null;
   group_size_preference?: string | null;
-  location_zip_code?: string | null;
+  zipcode?: string | null;
   social_preferences?: {
     social_level?: number;
     adventure_level?: number;

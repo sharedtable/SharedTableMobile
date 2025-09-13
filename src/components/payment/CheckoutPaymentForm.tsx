@@ -55,7 +55,7 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
     if (paymentMethods.length === 0) {
       initializePayments();
     }
-  }, []);
+  }, [initializePayments, paymentMethods.length]);
 
   // Set default payment method when it changes
   useEffect(() => {
@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
     padding: scaleWidth(16),
     marginBottom: scaleHeight(12),
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: theme.colors.gray?.['100'] || 'transparent',
   },
   paymentMethodCardSelected: {
     borderColor: theme.colors.primary.main,

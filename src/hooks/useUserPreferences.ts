@@ -154,7 +154,7 @@ export const useUserPreferences = (): UserPreferencesData => {
         } else {
           // Create new preferences record
           // Using type assertion due to Supabase type limitations
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           const { error } = await supabase.from('user_preferences').insert([{
             user_id: dbUserId,
             ...updateData,

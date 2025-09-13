@@ -99,7 +99,7 @@ interface UserData {
     };
     dietary_restrictions?: string[];
     preferred_price_range?: [number, number];
-    location_zip_code?: string;
+    zipcode?: string;
   };
 }
 
@@ -326,7 +326,7 @@ export class SharedTableMatchingService {
       
       const { data: preferences } = await supabase
         .from('onboarding_profiles')
-        .select('dietary_restrictions, preferred_price_range, location_zip_code')
+        .select('dietary_restrictions, preferred_price_range, zipcode')
         .eq('user_id', userId)
         .single();
       
@@ -340,7 +340,7 @@ export class SharedTableMatchingService {
       }
       
       // Get location coordinates
-      const location = await this.getLocationForZip(preferences?.location_zip_code || '94305');
+      const location = await this.getLocationForZip(preferences?.zipcode || '94305');
       
       participants.push({
         user_id: userId,
@@ -438,11 +438,11 @@ export class SharedTableMatchingService {
         group.members.map(async (userId) => {
           const { data: prefs } = await supabase
             .from('onboarding_profiles')
-            .select('location_zip_code')
+            .select('zipcode')
             .eq('user_id', userId)
             .single();
           
-          return this.getLocationForZip(prefs?.location_zip_code || '94305');
+          return this.getLocationForZip(prefs?.zipcode || '94305');
         })
       );
       

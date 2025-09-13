@@ -48,9 +48,7 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
   const [selectedDietaryRestrictions, setSelectedDietaryRestrictions] = useState<string[]>(
     Array.isArray(currentStepData.dietaryRestrictions)
       ? currentStepData.dietaryRestrictions
-      : currentStepData.dietaryRestrictions 
-        ? currentStepData.dietaryRestrictions.split(', ').filter(Boolean)
-        : ['No restrictions'] // Default to "No restrictions"
+      : ['No restrictions'] // Default to "No restrictions"
   );
   const [budget, setBudget] = useState<number>(currentStepData.budget || 50);
   const [spicyLevel, setSpicyLevel] = useState<number>(currentStepData.spicyLevel || 3);
@@ -105,7 +103,7 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
       clearErrors();
 
       const foodData = {
-        dietaryRestrictions: selectedDietaryRestrictions.join(', '),
+        dietaryRestrictions: selectedDietaryRestrictions,
         budget,
         spicyLevel,
         drinkingLevel,

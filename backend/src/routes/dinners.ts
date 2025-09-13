@@ -66,9 +66,11 @@ router.post('/signup', verifyPrivyToken, async (req: AuthRequest, res: Response)
       .single();
 
     if (userError || !userData) {
+      // User needs to be synced first
+      logger.warn(`User not found for signup: ${privyUserId}. User needs to sync first.`);
       return res.status(404).json({
         success: false,
-        error: 'User not found in database',
+        error: 'Please wait for your account to sync. Try again in a moment.',
       });
     }
 
@@ -173,10 +175,11 @@ router.get('/my-signups', verifyPrivyToken, async (req: AuthRequest, res: Respon
       .single();
 
     if (userError || !userData) {
-      logger.error('User not found:', { privyUserId, userError });
-      return res.status(404).json({
-        success: false,
-        error: 'User not found in database',
+      // For new users who haven't been synced yet, return empty array
+      logger.info(`User not found in database yet (likely new user): ${privyUserId}`);
+      return res.json({
+        success: true,
+        data: [],
       });
     }
 
@@ -281,9 +284,11 @@ router.get('/my-group/:dinnerId', verifyPrivyToken, async (req: AuthRequest, res
       .single();
 
     if (userError || !userData) {
+      // For new users, return not found for group assignment
+      logger.info(`User not found for group assignment: ${privyUserId}`);
       return res.status(404).json({
         success: false,
-        error: 'User not found in database',
+        error: 'No group assignment found',
       });
     }
 
@@ -327,9 +332,11 @@ router.delete('/signup/:signupId', verifyPrivyToken, async (req: AuthRequest, re
       .single();
 
     if (userError || !userData) {
+      // For new users, they shouldn't have any signups to cancel
+      logger.info(`User not found for cancel: ${privyUserId}`);
       return res.status(404).json({
         success: false,
-        error: 'User not found in database',
+        error: 'Signup not found',
       });
     }
 

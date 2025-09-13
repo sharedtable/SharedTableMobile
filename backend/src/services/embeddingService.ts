@@ -310,8 +310,8 @@ export class EmbeddingService {
     }
     
     // Process geographic data
-    if (profile?.location_zip_code) {
-      const coords = await this.getCoordinatesFromZip(profile.location_zip_code);
+    if (profile?.zipcode) {
+      const coords = await this.getCoordinatesFromZip(profile.zipcode);
       features.latitude = coords.lat;
       features.longitude = coords.lng;
     }

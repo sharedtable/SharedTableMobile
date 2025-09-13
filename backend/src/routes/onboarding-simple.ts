@@ -46,6 +46,13 @@ router.post('/save', verifyPrivyToken, async (req: AuthRequest, res: Response, n
       updated_at: new Date().toISOString(),
     };
 
+    // Process height separately to handle feet and inches together
+    if (data.heightFeet !== undefined || data.heightInches !== undefined) {
+      const feet = parseInt(data.heightFeet, 10) || 0;
+      const inches = parseInt(data.heightInches, 10) || 0;
+      userInfoData.height = (feet * 12) + inches;
+    }
+
     // Direct field mapping to actual database columns
     Object.keys(data).forEach(key => {
       const value = data[key];
@@ -122,11 +129,8 @@ router.post('/save', verifyPrivyToken, async (req: AuthRequest, res: Response, n
           userInfoData.relationship_status = value;
           break;
         case 'heightFeet':
-          userInfoData.height_feet = parseInt(value);
-          // Skip height_cm calculation - column doesn't exist
-          break;
         case 'heightInches':
-          userInfoData.height_inches = parseInt(value);
+          // Already handled above
           break;
         case 'heightCm':
           // Skip - we don't have height_cm column
@@ -188,7 +192,7 @@ router.post('/save', verifyPrivyToken, async (req: AuthRequest, res: Response, n
           
         // Food preference fields
         case 'dietaryRestrictions':
-          userInfoData.dietary_restrictions = value;
+          userInfoData.dietary_restrictions = Array.isArray(value) ? value : value ? [value] : [];
           break;
         case 'budget':
           userInfoData.food_budget = value;
@@ -209,13 +213,13 @@ router.post('/save', verifyPrivyToken, async (req: AuthRequest, res: Response, n
           userInfoData.dinner_duration = value;
           break;
         case 'zipCode':
-          userInfoData.zip_code = value;
+          userInfoData.zipcode = value;
           break;
         case 'travelDistance':
           userInfoData.travel_distance = value;
           break;
         case 'foodCraving':
-          userInfoData.food_craving = value;
+          userInfoData.food_craving = Array.isArray(value) ? value : [value];
           break;
         case 'cuisinesToTry':
           userInfoData.cuisines_to_try = Array.isArray(value) ? value : [value];
@@ -413,7 +417,7 @@ router.get('/resume-info', verifyPrivyToken, async (req: AuthRequest, res: Respo
       { step: 'personality', fields: ['lead_conversations', 'willing_compromise', 'seek_experiences'] },
       { step: 'lifestyle', fields: ['early_bird_night_owl', 'active_person'] },
       { step: 'foodPreferences1', fields: ['dietary_restrictions', 'food_budget'] },
-      { step: 'foodPreferences2', fields: ['dinner_duration', 'zip_code'] },
+      { step: 'foodPreferences2', fields: ['dinner_duration', 'zipcode'] },
       { step: 'foodPreferences3', fields: ['cuisines_to_try'] },
       { step: 'foodPreferences4', fields: ['cuisines_to_avoid'] },
       { step: 'interests', fields: ['interests'] },

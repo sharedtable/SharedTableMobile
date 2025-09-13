@@ -114,6 +114,7 @@ app.use('/api/matching', matchingRoutes);
 app.use('/api/features', featuresRoutes);
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/webhooks', webhooksRoutes);
+app.use('/api/waitlist', require('./routes/waitlist').default);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

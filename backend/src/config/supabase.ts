@@ -32,3 +32,19 @@ export const supabaseAnon = createClient(supabaseUrl, supabaseAnonKey || supabas
     detectSessionInUrl: false,
   },
 });
+
+// Helper function to create a supabase client with user context for audit logging
+export const supabaseWithUser = (userId: string) => {
+  return createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
+    global: {
+      headers: {
+        'request.user_id': userId,
+      },
+    },
+  });
+};

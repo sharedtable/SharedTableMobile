@@ -91,32 +91,11 @@ const EventChatScreen: React.FC = () => {
   const sendAnnouncement = () => {
     if (!isHost) return;
     
-    Alert.prompt(
+    // TODO: Implement custom prompt dialog
+    // Alert.prompt doesn't exist in React Native
+    Alert.alert(
       'Send Announcement',
-      'This will notify all attendees',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Send',
-          onPress: async (text) => {
-            if (!text?.trim()) return;
-            
-            try {
-              const response = await api.sendEventMessage(eventId, {
-                message: text.trim(),
-                // TODO: Add announcement type
-              });
-              
-              if (response.success) {
-                fetchMessages();
-              }
-            } catch {
-              Alert.alert('Error', 'Failed to send announcement');
-            }
-          },
-        },
-      ],
-      'plain-text'
+      'Feature coming soon - will allow sending announcements to all attendees'
     );
   };
 

@@ -15,6 +15,8 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
+import { useUserData } from '@/hooks/useUserData';
+import { getUserDisplayName } from '@/utils/getUserDisplayName';
 import { theme } from '@/theme';
 import { scaleHeight, scaleFont, scaleWidth } from '@/utils/responsive';
 import { ProfileStackParamList } from '@/navigation/ProfileNavigator';
@@ -74,6 +76,7 @@ interface DinnerSignup {
 export function ProfileScreen() {
   const navigation = useNavigation<ProfileNavigationProp>();
   const { user } = usePrivyAuth();
+  const { userData } = useUserData();
   const [reservations, setReservations] = useState<DinnerSignup[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -288,7 +291,15 @@ export function ProfileScreen() {
           <Ionicons name="person-circle" size={60} color={theme.colors.primary.main} />
         </View>
         <View style={styles.userInfo}>
-          <Text style={styles.userName}>Welcome back, {user?.name || user?.email?.split('@')[0] || 'User'}</Text>
+          <Text style={styles.userName}>
+            Welcome back, {getUserDisplayName({
+              ...userData,
+              nickname: userData?.displayName,
+              name: userData?.name || user?.name,
+              email: userData?.email || user?.email,
+              phoneNumber: user?.phoneNumber
+            }, 'User')}
+          </Text>
           <View style={styles.userStats}>
             {statsLoading ? (
               <ActivityIndicator size="small" color={theme.colors.primary.main} />

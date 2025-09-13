@@ -1,5 +1,5 @@
 import express, { Response } from 'express';
-import { supabaseService } from '../config/supabase';
+import { supabaseService, supabaseWithUser } from '../config/supabase';
 import { verifyPrivyToken, AuthRequest } from '../middleware/auth';
 import { logger } from '../utils/logger';
 
@@ -108,9 +108,11 @@ router.get('/upcoming', verifyPrivyToken, async (req: AuthRequest, res: Response
       .single();
 
     if (userError || !userData) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found in database',
+      // For new users who haven't been synced yet, return empty array
+      logger.info(`User not found in database yet (likely new user): ${privyUserId}`);
+      return res.json({
+        success: true,
+        data: [],
       });
     }
 
@@ -187,9 +189,11 @@ router.get('/:bookingId', verifyPrivyToken, async (req: AuthRequest, res: Respon
       .single();
 
     if (userError || !userData) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found in database',
+      // For new users who haven't been synced yet, return empty array
+      logger.info(`User not found in database yet (likely new user): ${privyUserId}`);
+      return res.json({
+        success: true,
+        data: [],
       });
     }
 
@@ -270,16 +274,18 @@ router.delete('/:bookingId', verifyPrivyToken, async (req: AuthRequest, res: Res
       .single();
 
     if (userError || !userData) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found in database',
+      // For new users who haven't been synced yet, return empty array
+      logger.info(`User not found in database yet (likely new user): ${privyUserId}`);
+      return res.json({
+        success: true,
+        data: [],
       });
     }
 
     const userId = userData.id;
 
-    // Update booking status to cancelled
-    const { data: booking, error } = await supabaseService
+    // Update booking status to cancelled with user context for audit logging
+    const { data: booking, error } = await supabaseWithUser(userId)
       .from('dinner_bookings')
       .update({ 
         status: 'cancelled',

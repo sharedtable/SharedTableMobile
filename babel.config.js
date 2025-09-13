@@ -33,7 +33,7 @@ export default function (api) {
           },
         },
       ],
-      'react-native-reanimated/plugin', // Note: Reanimated plugin must be last
+      'react-native-worklets/plugin', // Note: Worklets plugin must be last (replaces reanimated plugin)
     ],
   };
 }
