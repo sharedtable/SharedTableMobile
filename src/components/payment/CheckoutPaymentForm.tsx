@@ -9,6 +9,7 @@ import {
   Switch,
   Platform,
   KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 import {
   CardField,
@@ -78,6 +79,14 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
     setCardDetails(details);
     if (error && details.complete) {
       setError(null);
+    }
+    
+    // Auto-dismiss keyboard after entering 5 digits in zip code
+    if (details.postalCode && details.postalCode.length === 5) {
+      // Small delay to ensure the last digit is registered
+      setTimeout(() => {
+        Keyboard.dismiss();
+      }, 100);
     }
   }, [error]);
 
@@ -204,7 +213,7 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
       keyboardVerticalOffset={0}
     >
       <Pressable style={styles.closeButton} onPress={onCancel}>
-        <Ionicons name="close" size={24} color={theme.colors.text.primary} />
+        <Ionicons name="close" size={20} color={theme.colors.text.secondary} />
       </Pressable>
       
       <Text style={styles.title}>DEPOSIT PAYMENT</Text>
@@ -307,41 +316,68 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
             {paymentMethods.length === 0 && (
               <Text style={styles.sectionTitle}>Card Details</Text>
             )}
-            {/* Card Input with Camera Button */}
-            <View style={styles.cardFieldWrapper}>
+            {/* Card Input */}
+            <View style={styles.cardInputContainer}>
+              <View style={styles.cardFieldWrapper}>
                 <CardField
-                  postalCodeEnabled={false}
+                  postalCodeEnabled={true}
                   placeholders={{
-                    number: '4242 4242 4242 4242',
+                    number: 'Card number',
+                    postalCode: '12345',
                   }}
                   onCardChange={handleCardChange}
                   cardStyle={cardFieldStyles}
                   style={styles.cardField}
+                  autofocus={useNewCard && paymentMethods.length > 0}
+                  accessible={true}
+                  accessibilityLabel="Card number input"
                 />
-                <Pressable 
-                  style={styles.cameraButton}
-                  onPress={() => {
-                    // TODO: Implement card scanner
-                    console.log('Open card scanner');
-                  }}
-                >
-                  <Ionicons name="camera" size={24} color="#FFFFFF" />
-                </Pressable>
               </View>
+              
+              {/* Validation Indicators */}
+              {cardDetails && !cardDetails.complete && cardDetails.number && (
+                <View style={styles.validationContainer}>
+                  {cardDetails.validNumber === 'Invalid' && (
+                    <Text style={styles.validationText}>Invalid card number</Text>
+                  )}
+                  {cardDetails.validExpiryDate === 'Invalid' && (
+                    <Text style={styles.validationText}>Invalid expiry date</Text>
+                  )}
+                  {cardDetails.validCVC === 'Invalid' && (
+                    <Text style={styles.validationText}>Invalid CVC</Text>
+                  )}
+                </View>
+              )}
+            </View>
 
-              <View style={styles.saveOption}>
-                <Switch
-                  value={saveCard}
-                  onValueChange={setSaveCard}
-                  disabled={isLoading}
-                  trackColor={{ 
-                    false: theme.colors.gray[300], 
-                    true: theme.colors.primary.main 
-                  }}
-                  thumbColor={theme.colors.white}
+              <Pressable 
+                style={styles.saveOption}
+                onPress={() => !isLoading && setSaveCard(!saveCard)}
+                disabled={isLoading}
+              >
+                <View style={styles.saveOptionContent}>
+                  <Switch
+                    value={saveCard}
+                    onValueChange={setSaveCard}
+                    disabled={isLoading}
+                    trackColor={{ 
+                      false: '#D1D5DB', 
+                      true: theme.colors.brand.primary 
+                    }}
+                    thumbColor={theme.colors.white}
+                    ios_backgroundColor="#D1D5DB"
+                  />
+                  <View style={styles.saveTextContainer}>
+                    <Text style={styles.saveText}>Save card for future use</Text>
+                    <Text style={styles.saveSubtext}>Secure and encrypted by Stripe</Text>
+                  </View>
+                </View>
+                <Ionicons 
+                  name="shield-checkmark" 
+                  size={16} 
+                  color={theme.colors.success?.main || '#4CAF50'} 
                 />
-                <Text style={styles.saveText}>Save card for future bookings</Text>
-              </View>
+              </Pressable>
           </View>
         )}
 
@@ -393,34 +429,48 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
 };
 
 const cardFieldStyles = {
-  backgroundColor: '#F8F8F8',
-  textColor: '#000000',
+  backgroundColor: '#FFFFFF',
+  textColor: theme.colors.text.primary,
   placeholderColor: '#999999',
-  borderColor: '#F8F8F8',
+  borderColor: '#E5E7EB',
   borderWidth: 0,
-  borderRadius: 12,
+  borderRadius: 8,
   fontSize: 16,
-  cursorColor: '#000000',
-  fontFamily: 'Fraunces-Regular',
+  cursorColor: theme.colors.brand.primary,
+  textErrorColor: theme.colors.error.main,
+  fontFamily: theme.typography?.fontFamily?.body || 'System',
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.transparent,
+    borderTopLeftRadius: scaleWidth(24),
+    borderTopRightRadius: scaleWidth(24),
+    overflow: 'hidden',
   },
   closeButton: {
     position: 'absolute',
-    top: scaleHeight(20),
-    right: scaleWidth(20),
-    padding: scaleWidth(8),
+    top: scaleHeight(16),
+    right: scaleWidth(16),
+    width: scaleWidth(28),
+    height: scaleWidth(28),
+    borderRadius: scaleWidth(14),
+    backgroundColor: theme.colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: theme.colors.black?.['1'] || '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2,
     zIndex: 10,
   },
   title: {
     fontSize: scaleFont(18),
     fontWeight: '700',
     color: theme.colors.text.primary,
-    marginTop: scaleHeight(50),
+    marginTop: scaleHeight(45),
     marginBottom: scaleHeight(12),
     letterSpacing: 0.5,
     textAlign: 'center',
@@ -447,40 +497,61 @@ const styles = StyleSheet.create({
     paddingBottom: scaleHeight(10),
   },
   section: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.transparent,
     padding: scaleWidth(20),
   },
-  cardFieldWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  cardInputContainer: {
     marginBottom: scaleHeight(20),
-    position: 'relative',
+  },
+  cardFieldWrapper: {
+    backgroundColor: theme.colors.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.gray?.['200'] || '#E5E7EB',
+    paddingHorizontal: scaleWidth(16),
+    overflow: 'hidden',
   },
   cardField: {
-    flex: 1,
+    width: '100%',
     height: scaleHeight(56),
-    marginRight: scaleWidth(48),
   },
-  cameraButton: {
-    backgroundColor: theme.colors.error.main,
-    borderRadius: 20,
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
-    right: scaleWidth(4),
-    top: scaleHeight(8),
+  validationContainer: {
+    marginTop: scaleHeight(8),
+    paddingHorizontal: scaleWidth(4),
+  },
+  validationText: {
+    fontSize: scaleFont(12),
+    color: theme.colors.error.main,
+    marginBottom: scaleHeight(2),
   },
   saveOption: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.background.paper,
+    padding: scaleWidth(12),
+    borderRadius: 8,
+    marginTop: scaleHeight(12),
     marginBottom: scaleHeight(20),
+  },
+  saveOptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  saveTextContainer: {
+    marginLeft: scaleWidth(12),
+    flex: 1,
   },
   saveText: {
     fontSize: scaleFont(14),
+    fontWeight: '500',
+    color: theme.colors.text.primary,
+  },
+  saveSubtext: {
+    fontSize: scaleFont(11),
     color: theme.colors.text.secondary,
-    marginLeft: scaleWidth(12),
+    marginTop: scaleHeight(2),
   },
   errorContainer: {
     flexDirection: 'row',
@@ -549,12 +620,11 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
   },
   sectionTitle: {
-    fontSize: scaleFont(14),
+    fontSize: scaleFont(15),
     fontWeight: '600',
-    color: theme.colors.text.secondary,
-    marginBottom: scaleHeight(12),
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: theme.colors.text.primary,
+    marginBottom: scaleHeight(16),
+    letterSpacing: 0.2,
   },
   paymentMethodCard: {
     flexDirection: 'row',

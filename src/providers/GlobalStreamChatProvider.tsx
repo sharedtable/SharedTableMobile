@@ -150,7 +150,19 @@ export const GlobalStreamChatProvider: React.FC<{ children: React.ReactNode }> =
       try {
         tokenData = await Promise.race([tokenPromise, timeoutPromise]);
       } catch (error: any) {
-        console.error('❌ Failed to fetch Stream Chat token:', error.message);
+        console.error('❌ Failed to fetch Stream Chat token:', error.message || error);
+        
+        // Check if it's a token expiration error
+        if (error.response?.data?.code === 'TOKEN_EXPIRED' || 
+            error.response?.data?.error?.includes('expired') ||
+            error.response?.status === 401) {
+          console.log('🔑 Auth token expired. User needs to re-authenticate.');
+          // Don't show alert here, let the auth system handle it
+          setConnectionError(new Error('Authentication expired. Please log in again.'));
+          setIsReady(true); // Allow app to continue
+          return false;
+        }
+        
         throw new Error('Unable to fetch chat token. Please check your connection.');
       }
       
@@ -216,7 +228,18 @@ export const GlobalStreamChatProvider: React.FC<{ children: React.ReactNode }> =
       console.error(`❌ Stream Chat connection failed (attempt ${retryAttempt + 1}):`, error.message);
       connectionState.lastError = error;
       
-      // Retry logic
+      // Don't retry if it's an authentication issue
+      const isAuthError = error.message?.includes('Authentication expired') || 
+                         error.message?.includes('expired') ||
+                         error.message?.includes('log in again');
+      
+      if (isAuthError) {
+        console.log('🔑 Skipping retry due to authentication issue');
+        setIsReady(true); // Allow app to continue
+        return false;
+      }
+      
+      // Retry logic for non-auth errors
       if (retryAttempt < MAX_RETRY_ATTEMPTS - 1) {
         console.log(`⏳ Retrying in ${RETRY_DELAY_MS / 1000} seconds...`);
         connectionState.retryCount = retryAttempt + 1;
@@ -232,21 +255,27 @@ export const GlobalStreamChatProvider: React.FC<{ children: React.ReactNode }> =
         // Still mark as ready so app can function
         setIsReady(true);
         
-        // Show user-friendly error
-        Alert.alert(
-          'Chat Connection Issue',
-          'Unable to connect to chat. You can still use other features. Please try again later.',
-          [
-            {
-              text: 'Retry',
-              onPress: () => reconnect(),
-            },
-            {
-              text: 'Continue',
-              style: 'cancel',
-            },
-          ]
-        );
+        // Show user-friendly error (but not for auth issues)
+        if (!isAuthError) {
+          Alert.alert(
+            'Chat Connection Issue',
+            'Unable to connect to chat. You can still use other features. Please try again later.',
+            [
+              {
+                text: 'Retry',
+                onPress: () => {
+                  connectionState.retryCount = 0;
+                  connectionAttempted.current = false;
+                  connectToStream(0);
+                },
+              },
+              {
+                text: 'Continue',
+                style: 'cancel',
+              },
+            ]
+          );
+        }
         
         return false;
       }

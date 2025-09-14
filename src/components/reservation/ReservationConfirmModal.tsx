@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -46,6 +46,14 @@ export const ReservationConfirmModal: React.FC<ReservationConfirmModalProps> = (
   const styles = getStyles();
   const [isConfirming, _setIsConfirming] = useState(false);
   const [showDietaryPreferences, setShowDietaryPreferences] = useState(false);
+  const [isReservationConfirmed, setIsReservationConfirmed] = useState(false);
+
+  // Reset confirmed state when modal closes
+  useEffect(() => {
+    if (!visible) {
+      setIsReservationConfirmed(false);
+    }
+  }, [visible]);
 
   if (!dinnerData) return null;
 
@@ -61,8 +69,8 @@ export const ReservationConfirmModal: React.FC<ReservationConfirmModalProps> = (
 
   const handleDietarySuccess = () => {
     setShowDietaryPreferences(false);
-    // Close the reservation modal and trigger success
-    onCancel();
+    // Set reservation as confirmed and keep modal open
+    setIsReservationConfirmed(true);
     // Trigger the success callback if needed
     if (onConfirm) {
       onConfirm();
@@ -174,12 +182,20 @@ export const ReservationConfirmModal: React.FC<ReservationConfirmModalProps> = (
 
             {/* Success Icon and Title */}
             <View style={styles.titleSection}>
-              <View style={styles.successIcon}>
-                <Ionicons name="checkmark" size={24} color={theme.colors.white} />
+              <View style={[styles.successIcon, isReservationConfirmed && styles.confirmedIcon]}>
+                <Ionicons 
+                  name={isReservationConfirmed ? "checkmark-circle" : "checkmark"} 
+                  size={isReservationConfirmed ? 28 : 24} 
+                  color={theme.colors.white} 
+                />
               </View>
-              <Text style={styles.title}>Almost there! Let's lock it in</Text>
+              <Text style={styles.title}>
+                {isReservationConfirmed ? "You're all set!" : "Almost there! Let's lock it in"}
+              </Text>
               <Text style={styles.subtitle}>
-                Your seat will be held for 15 minutes while you confirm.
+                {isReservationConfirmed 
+                  ? "Your reservation has been confirmed. You'll receive details 24 hours before the event."
+                  : "Your seat will be held for 15 minutes while you confirm."}
               </Text>
             </View>
 
@@ -236,26 +252,45 @@ export const ReservationConfirmModal: React.FC<ReservationConfirmModalProps> = (
             </Pressable>
 
             {/* Action Buttons */}
-            <Pressable 
-              style={styles.confirmButton}
-              onPress={handleConfirmReservation}
-              disabled={isConfirming}
-            >
-              <Text style={styles.confirmButtonText}>
-                {isConfirming ? 'Confirming...' : 'Confirm Reservation'}
-              </Text>
-              <Ionicons name="arrow-forward" size={20} color={theme.colors.white} />
-            </Pressable>
+            {isReservationConfirmed ? (
+              <>
+                <Pressable 
+                  style={[styles.confirmButton, styles.doneButton]}
+                  onPress={onCancel}
+                >
+                  <Text style={styles.confirmButtonText}>Done</Text>
+                  <Ionicons name="checkmark" size={20} color={theme.colors.white} />
+                </Pressable>
 
-            <View style={styles.secondaryButtons}>
-              <Pressable style={styles.secondaryButton} onPress={onChangeTime}>
-                <Text style={styles.secondaryButtonText}>Change Time</Text>
-              </Pressable>
+                <Pressable style={[styles.secondaryButton, styles.inviteFriendsButton]} onPress={handleInvitePlus1}>
+                  <Ionicons name="person-add-outline" size={18} color={theme.colors.text.primary} />
+                  <Text style={[styles.secondaryButtonText, styles.inviteFriendsText]}>Invite Friends</Text>
+                </Pressable>
+              </>
+            ) : (
+              <>
+                <Pressable 
+                  style={styles.confirmButton}
+                  onPress={handleConfirmReservation}
+                  disabled={isConfirming}
+                >
+                  <Text style={styles.confirmButtonText}>
+                    {isConfirming ? 'Confirming...' : 'Confirm Reservation'}
+                  </Text>
+                  <Ionicons name="arrow-forward" size={20} color={theme.colors.white} />
+                </Pressable>
 
-              <Pressable style={styles.secondaryButton} onPress={handleInvitePlus1}>
-                <Text style={styles.secondaryButtonText}>Invite Friends</Text>
-              </Pressable>
-            </View>
+                <View style={styles.secondaryButtons}>
+                  <Pressable style={styles.secondaryButton} onPress={onChangeTime}>
+                    <Text style={styles.secondaryButtonText}>Change Time</Text>
+                  </Pressable>
+
+                  <Pressable style={styles.secondaryButton} onPress={handleInvitePlus1}>
+                    <Text style={styles.secondaryButtonText}>Invite Friends</Text>
+                  </Pressable>
+                </View>
+              </>
+            )}
           </ScrollView>
         </View>
       </View>
@@ -312,7 +347,7 @@ const getStyles = () => StyleSheet.create({
     backgroundColor: theme.colors.white,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: theme.colors.black?.['1'] || '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.15,
     shadowRadius: 2,
@@ -421,7 +456,7 @@ const getStyles = () => StyleSheet.create({
     paddingVertical: scaleHeight(13),
     borderRadius: scaleWidth(8),
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: theme.colors.gray?.['300'] || '#E0E0E0',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: theme.colors.white,
@@ -434,7 +469,7 @@ const getStyles = () => StyleSheet.create({
   },
   plusOneBadge: {
     marginLeft: scaleWidth(8),
-    backgroundColor: '#00C896',
+    backgroundColor: theme.colors.success?.main || '#00C896',
     paddingHorizontal: scaleWidth(10),
     paddingVertical: scaleHeight(3),
     borderRadius: scaleWidth(14),
@@ -466,5 +501,18 @@ const getStyles = () => StyleSheet.create({
     fontWeight: '500',
     color: '#4285F4',
     fontFamily: theme.typography.fontFamily.body,
+  },
+  confirmedIcon: {
+    backgroundColor: theme.colors.success?.main || '#4CAF50',
+  },
+  doneButton: {
+    backgroundColor: theme.colors.success?.main || '#4CAF50',
+  },
+  inviteFriendsButton: {
+    marginHorizontal: scaleWidth(20),
+    flexDirection: 'row' as const,
+  },
+  inviteFriendsText: {
+    marginLeft: 8,
   },
 });

@@ -91,34 +91,58 @@ router.post('/signup', verifyPrivyToken, async (req: AuthRequest, res: Response)
       });
     }
 
-    // Check if user already signed up for this slot
-    const { data: existingSignup } = await supabaseService
+    // Check if user already has a booking for this dinner
+    const { data: existingBooking } = await supabaseService
       .from('dinner_bookings')
-      .select('id')
+      .select('id, status')
       .eq('dinner_id', dinnerId)
       .eq('user_id', userId)
       .single();
 
-    if (existingSignup) {
+    // If there's an active booking, reject
+    if (existingBooking && existingBooking.status !== 'cancelled') {
       return res.status(409).json({
         success: false,
         error: 'You have already signed up for this dinner',
       });
     }
 
-    // Create the signup
-    const { data: signup, error: signupError } = await supabaseService
-      .from('dinner_bookings')
-      .insert({
-        dinner_id: dinnerId,
-        user_id: userId,
-        dietary_restrictions: dietaryRestrictions,
-        preferences: preferences,
-        status: 'pending',
-        signed_up_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
+    let signup, signupError;
+
+    if (existingBooking && existingBooking.status === 'cancelled') {
+      // Reactivate the cancelled booking
+      const result = await supabaseService
+        .from('dinner_bookings')
+        .update({
+          dietary_restrictions: dietaryRestrictions,
+          preferences: preferences,
+          status: 'confirmed',
+          signed_up_at: new Date().toISOString(),
+        })
+        .eq('id', existingBooking.id)
+        .select()
+        .single();
+      
+      signup = result.data;
+      signupError = result.error;
+    } else {
+      // Create new booking
+      const result = await supabaseService
+        .from('dinner_bookings')
+        .insert({
+          dinner_id: dinnerId,
+          user_id: userId,
+          dietary_restrictions: dietaryRestrictions,
+          preferences: preferences,
+          status: 'confirmed',
+          signed_up_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+      
+      signup = result.data;
+      signupError = result.error;
+    }
 
     if (signupError) {
       logger.error('Error creating signup:', signupError);

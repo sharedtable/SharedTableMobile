@@ -529,6 +529,7 @@ router.delete('/:bookingId', verifyPrivyToken, async (req: AuthRequest, res: Res
     const userId = userData.id;
 
     // Update booking status to cancelled with user context for audit logging
+    // Try with cancelled_at first, fallback to just status if column doesn't exist
     const { data: booking, error } = await supabaseWithUser(userId)
       .from('dinner_bookings')
       .update({ 
@@ -539,6 +540,36 @@ router.delete('/:bookingId', verifyPrivyToken, async (req: AuthRequest, res: Res
       .eq('user_id', userId)
       .select()
       .single();
+    
+    // If the error is about the cancelled_at column not existing, retry without it
+    if (error && error.code === 'PGRST204') {
+      logger.warn('cancelled_at column not found, updating without it. Please run migration.');
+      const { data: fallbackBooking, error: fallbackError } = await supabaseWithUser(userId)
+        .from('dinner_bookings')
+        .update({ 
+          status: 'cancelled'
+        })
+        .eq('id', bookingId)
+        .eq('user_id', userId)
+        .select()
+        .single();
+      
+      if (fallbackError) {
+        if (fallbackError.code === 'PGRST116') {
+          return res.status(404).json({
+            success: false,
+            error: 'Booking not found',
+          });
+        }
+        throw fallbackError;
+      }
+      
+      return res.json({
+        success: true,
+        data: fallbackBooking,
+        warning: 'Database schema needs update. Please contact support.'
+      });
+    }
 
     if (error) {
       if (error.code === 'PGRST116') {

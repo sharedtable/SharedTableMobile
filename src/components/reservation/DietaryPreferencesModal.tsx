@@ -31,6 +31,12 @@ interface DietaryPreferencesModalProps {
   onSuccess: () => void;
 }
 
+// Define dietary needs outside component to prevent recreation on render
+const DIETARY_NEEDS = [
+  'Vegetarian', 'Vegan', 'Gluten-free', 'Dairy-free', 'Kosher', 'Halal',
+  'Nut allergy', 'Shellfish allergy', 'No restrictions'
+] as const;
+
 export const DietaryPreferencesModal: React.FC<DietaryPreferencesModalProps> = ({
   visible,
   dinnerData,
@@ -45,12 +51,7 @@ export const DietaryPreferencesModal: React.FC<DietaryPreferencesModalProps> = (
   const [isLoading, setIsLoading] = useState(true);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
-
-  // From OnboardingFoodPreferences1Screen
-  const dietaryNeeds = [
-    'Vegetarian', 'Vegan', 'Gluten-free', 'Dairy-free', 'Kosher', 'Halal',
-    'Nut allergy', 'Shellfish allergy', 'No restrictions'
-  ];
+  const [hasLoadedPreferences, setHasLoadedPreferences] = useState(false);
 
   const loadUserPreferences = useCallback(async () => {
     try {
@@ -61,7 +62,7 @@ export const DietaryPreferencesModal: React.FC<DietaryPreferencesModalProps> = (
         // Set dietary restrictions
         if (prefs.dietary_restrictions && prefs.dietary_restrictions.length > 0) {
           const validDietaryNeeds = prefs.dietary_restrictions.filter((d: string) =>
-            dietaryNeeds.includes(d)
+            DIETARY_NEEDS.includes(d as typeof DIETARY_NEEDS[number])
           );
           if (validDietaryNeeds.length > 0) {
             setSelectedDietaryNeeds(validDietaryNeeds);
@@ -71,19 +72,38 @@ export const DietaryPreferencesModal: React.FC<DietaryPreferencesModalProps> = (
         } else {
           setSelectedDietaryNeeds(['No restrictions']);
         }
+      } else {
+        // Default to 'No restrictions' if no preferences found
+        setSelectedDietaryNeeds(['No restrictions']);
       }
+      setHasLoadedPreferences(true);
     } catch (error) {
       console.error('Error loading preferences:', error);
+      // Default to 'No restrictions' on error
+      setSelectedDietaryNeeds(['No restrictions']);
+      setHasLoadedPreferences(true);
     }
-  }, [dietaryNeeds]);
+  }, []);
 
   useEffect(() => {
-    if (visible) {
+    if (visible && !hasLoadedPreferences) {
       loadUserPreferences().finally(() => {
         setIsLoading(false);
       });
+    } else if (visible) {
+      setIsLoading(false);
     }
-  }, [visible, loadUserPreferences]);
+  }, [visible, hasLoadedPreferences, loadUserPreferences]);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!visible) {
+      setHasLoadedPreferences(false);
+      setShowCheckoutModal(false);
+      setBookingLoading(false);
+      setConfirmDietaryRestrictions(false);
+    }
+  }, [visible]);
 
   const handleConfirmAndContinue = () => {
     // Open checkout modal
@@ -110,24 +130,9 @@ export const DietaryPreferencesModal: React.FC<DietaryPreferencesModalProps> = (
         });
 
         if (signupResponse.success) {
-          // Close the modal first
+          // Close modal and trigger success callback
           onClose();
-          
-          // Show success alert after a brief delay
-          setTimeout(() => {
-            Alert.alert(
-              'Success!',
-              'You have successfully signed up for this dinner. You will receive confirmation details 24 hours before the event.',
-              [
-                {
-                  text: 'OK',
-                  onPress: () => {
-                    onSuccess();
-                  }
-                }
-              ]
-            );
-          }, 300);
+          onSuccess();
         } else {
           Alert.alert('Error', signupResponse.error || 'Failed to complete signup. Please try again.');
         }
@@ -144,26 +149,25 @@ export const DietaryPreferencesModal: React.FC<DietaryPreferencesModalProps> = (
     setShowCheckoutModal(false);
   };
 
-  const toggleDietaryNeed = (need: string) => {
+  const toggleDietaryNeed = useCallback((need: string) => {
     setSelectedDietaryNeeds(prev => {
       if (need === 'No restrictions') {
         return ['No restrictions'];
       }
       
+      // Remove 'No restrictions' when selecting other options
       const filtered = prev.filter(r => r !== 'No restrictions');
       
-      if (prev.includes(need)) {
-        return filtered.filter(r => r !== need);
+      if (filtered.includes(need)) {
+        // If removing this item and no other items selected, default to 'No restrictions'
+        const newList = filtered.filter(r => r !== need);
+        return newList.length === 0 ? ['No restrictions'] : newList;
       }
       
       return [...filtered, need];
     });
-  };
+  }, []);
 
-  const clearAll = () => {
-    setSelectedDietaryNeeds(['No restrictions']);
-    setConfirmDietaryRestrictions(false);
-  };
 
   if (!dinnerData) return null;
 
@@ -209,13 +213,10 @@ export const DietaryPreferencesModal: React.FC<DietaryPreferencesModalProps> = (
                 <View style={styles.section}>
                   <View style={styles.sectionHeader}>
                     <Text style={styles.sectionTitle}>Select all that apply</Text>
-                    <Pressable onPress={clearAll} style={styles.clearButton}>
-                      <Text style={styles.clearText}>Clear</Text>
-                    </Pressable>
                   </View>
                   
                   <View style={styles.optionsGrid}>
-                    {dietaryNeeds.map((need) => (
+                    {DIETARY_NEEDS.map((need) => (
                       <Pressable
                         key={need}
                         style={[
@@ -367,23 +368,12 @@ const getStyles = () => StyleSheet.create({
     marginBottom: scaleHeight(24),
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: scaleHeight(16),
   },
   sectionTitle: {
     fontSize: scaleFont(15),
     fontWeight: '600',
     color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  clearButton: {
-    padding: scaleWidth(4),
-  },
-  clearText: {
-    fontSize: scaleFont(14),
-    color: theme.colors.brand.primary,
     fontFamily: theme.typography.fontFamily.body,
   },
   optionsGrid: {

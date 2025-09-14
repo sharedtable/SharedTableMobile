@@ -65,8 +65,19 @@ export const verifyPrivyToken = async (
       };
 
       next();
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Token verification failed:', error);
+      
+      // Check for specific JWT errors
+      if (error.code === 'ERR_JWT_EXPIRED' || error.name === 'JWTExpired') {
+        res.status(401).json({
+          success: false,
+          error: 'Token has expired. Please log in again.',
+          code: 'TOKEN_EXPIRED'
+        });
+        return;
+      }
+      
       res.status(401).json({
         success: false,
         error: 'Invalid or expired token',

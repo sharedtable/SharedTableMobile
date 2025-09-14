@@ -19,7 +19,6 @@ import { RootStackParamList } from '@/navigation/RootNavigator';
 
 import { Ionicons } from '@expo/vector-icons';
 import { Icon } from '@/components/base/Icon';
-import { InviteFriendsSection } from '@/components/home/InviteFriendsSection';
 import { OptionalOnboardingPrompt } from '@/components/OptionalOnboardingPrompt';
 // Removed BottomTabBar - now using React Navigation's tab bar
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
@@ -422,13 +421,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
     scrollViewRef.current?.scrollTo({ y: 0, animated: true });
   }, []);
 
-  const handleInviteFriend = useCallback((email: string) => {
-    // TODO: Implement invite friend functionality
-    if (__DEV__) {
-      console.log('Inviting friend:', email);
-    }
-  }, []);
-
   // Navigation is now handled by React Navigation's tab bar
 
   return (
@@ -726,14 +718,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
               </View>
             )}
 
-            {/* Invite Friends Section - Only show on Dinners tab */}
-            {activeTab === 'dinners' && (
-              <InviteFriendsSection 
-                onInvite={handleInviteFriend} 
-                scrollViewRef={scrollViewRef}
-              />
-            )}
-
             {/* Bottom Padding */}
             <View style={{ height: scaleHeight(100) }} />
           </ScrollView>
@@ -748,7 +732,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = React.memo(({
         dinnerData={selectedDinner ? timeSlots.find(slot => slot.id === selectedDinner) || null : null}
         onConfirm={handleReservationConfirm}
         onChangeTime={handleChangeTime}
-        onInviteFriends={() => handleInviteFriend('')}
+        onInviteFriends={() => {}}
         onCancel={handleReservationCancel}
       />
 
