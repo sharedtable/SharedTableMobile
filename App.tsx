@@ -7,7 +7,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -21,8 +21,14 @@ import { navigationRef } from '@/services/navigationService';
 import { useAuthStore } from '@/store/authStore';
 import { setLogLevel } from '@/utils/logger';
 import { deepLinkingConfig } from '@/config/deepLinking';
-import { StripeProvider } from '@stripe/stripe-react-native';
+
 import Constants from 'expo-constants';
+
+// Only import Stripe on mobile platforms
+let StripeProvider: any = ({ children }: any) => children;
+if (Platform.OS !== 'web') {
+  StripeProvider = require('@stripe/stripe-react-native').StripeProvider;
+}
 
 // Hide the native splash screen immediately
 SplashScreen.hideAsync();
@@ -81,8 +87,8 @@ export default function App() {
         <QueryClientProvider client={queryClient}>
           <StripeProvider
             publishableKey={stripePublishableKey}
-            merchantIdentifier="merchant.com.sharedtable.app"
-            urlScheme="sharedtable"
+            merchantIdentifier="merchant.com.fare.app"
+            urlScheme="fare"
           >
             <PrivyProvider>
               <AuthSyncProvider>

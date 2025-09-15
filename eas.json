@@ -15,7 +15,8 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "http://localhost:3000/api",
         "EXPO_PUBLIC_ENV": "development"
-      }
+      },
+      "channel": "development"
     },
     "internal": {
       "distribution": "internal",
@@ -57,7 +58,8 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://sharedtable.vercel.app/api"
-      }
+      },
+      "channel": "production"
     }
   },
   "submit": {

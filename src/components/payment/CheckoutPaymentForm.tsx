@@ -11,11 +11,47 @@ import {
   KeyboardAvoidingView,
   Keyboard,
 } from 'react-native';
-import {
-  CardField,
-  useStripe,
-  CardFieldInput,
-} from '@stripe/stripe-react-native';
+// Type definitions for Stripe
+interface CardFieldInputDetails {
+  complete: boolean;
+  brand?: string;
+  last4?: string;
+  expiryMonth?: number;
+  expiryYear?: number;
+  postalCode?: string;
+  number?: string;
+  validNumber?: string;
+  validExpiryDate?: string;
+  validCVC?: string;
+}
+
+// Type for Stripe's useStripe hook - using 'any' for web compatibility
+interface StripeHook {
+  confirmPayment: (clientSecret: string, params?: any) => Promise<any>;
+  confirmSetupIntent: (clientSecret: string, params?: any) => Promise<any>;
+  createPaymentMethod: (params?: any) => Promise<any>;
+}
+
+// Only import Stripe on mobile platforms
+// Using 'any' type for CardField as Stripe types are not available in web context
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let CardField: any = () => null;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let useStripe: () => StripeHook | any = () => ({ 
+  confirmPayment: async () => ({ error: { message: 'Stripe not available on web' } }),
+  confirmSetupIntent: async () => ({ error: { message: 'Stripe not available on web' }, setupIntent: null }),
+  createPaymentMethod: async () => ({ error: { message: 'Stripe not available on web' }, paymentMethod: null })
+});
+
+if (Platform.OS !== 'web') {
+  // Dynamic imports don't work well with React Native Metro bundler
+  // Using require with eslint override is the recommended approach
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const stripe = require('@stripe/stripe-react-native');
+  CardField = stripe.CardField;
+  useStripe = stripe.useStripe;
+}
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { theme } from '@/theme';
@@ -44,7 +80,7 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
   // State management
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(defaultPaymentMethodId);
   const [useNewCard, setUseNewCard] = useState(!paymentMethods.length);
-  const [cardDetails, setCardDetails] = useState<CardFieldInput.Details | null>(null);
+  const [cardDetails, setCardDetails] = useState<CardFieldInputDetails | null>(null);
   const [saveCard, setSaveCard] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +111,7 @@ export const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({
     };
   }, [clearSetupIntent]);
 
-  const handleCardChange = useCallback((details: CardFieldInput.Details) => {
+  const handleCardChange = useCallback((details: CardFieldInputDetails) => {
     setCardDetails(details);
     if (error && details.complete) {
       setError(null);

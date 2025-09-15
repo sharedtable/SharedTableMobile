@@ -104,10 +104,13 @@
       "privyAppId": "cmej9f9cp00xbl10b8zwjifec",
       "stripePublishableKey": "pk_test_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
       "eas": {
-        "projectId": "6acfad68-786e-4582-8ad3-b26e3c91f0f9"
+        "projectId": "af034d26-6541-444c-a014-5b2a63330556"
       }
     },
     "runtimeVersion": "1.0.0",
-    "owner": "0xbigotry"
+    "owner": "0xbigotry",
+    "updates": {
+      "url": "https://u.expo.dev/af034d26-6541-444c-a014-5b2a63330556"
+    }
   }
 }

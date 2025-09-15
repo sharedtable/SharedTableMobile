@@ -1,11 +1,22 @@
-import {
-  StripeProvider,
-  useStripe,
-  CardField,
-  initPaymentSheet,
-  presentPaymentSheet,
-  PaymentSheetError,
-} from '@stripe/stripe-react-native';
+import { Platform } from 'react-native';
+
+// Only import Stripe on mobile platforms
+let StripeProvider: any = null;
+let useStripe: any = null;
+let CardField: any = null;
+let initPaymentSheet: any = null;
+let presentPaymentSheet: any = null;
+let PaymentSheetError: any = null;
+
+if (Platform.OS !== 'web') {
+  const stripe = require('@stripe/stripe-react-native');
+  StripeProvider = stripe.StripeProvider;
+  useStripe = stripe.useStripe;
+  CardField = stripe.CardField;
+  initPaymentSheet = stripe.initPaymentSheet;
+  presentPaymentSheet = stripe.presentPaymentSheet;
+  PaymentSheetError = stripe.PaymentSheetError;
+}
 import * as SecureStore from 'expo-secure-store';
 import { api } from '@/services/api';
 import { logger } from '@/utils/logger';
