@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with the SharedTable Mobile repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with the Fare Mobile repository.
 
 ## 🎯 Code Quality Mandate
 

@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "SharedTable",
-    "slug": "sharedtable",
+    "name": "Fare",
+    "slug": "fare",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/icon.png",
     "userInterfaceStyle": "light",
-    "scheme": "sharedtable",
+    "scheme": "fare",
     "splash": {
       "image": "./src/assets/splash.png",
       "resizeMode": "cover",
@@ -17,21 +17,21 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.sharedtable.app",
+      "bundleIdentifier": "com.fare.app",
       "buildNumber": "1",
       "config": {
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
-        "NSCameraUsageDescription": "SharedTable needs access to your camera to take profile photos.",
-        "NSPhotoLibraryUsageDescription": "SharedTable needs access to your photo library to select profile photos.",
-        "NSLocationWhenInUseUsageDescription": "SharedTable uses your location to show nearby dining events.",
+        "NSCameraUsageDescription": "Fare needs access to your camera to take profile photos.",
+        "NSPhotoLibraryUsageDescription": "Fare needs access to your photo library to select profile photos.",
+        "NSLocationWhenInUseUsageDescription": "Fare uses your location to show nearby dining events.",
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [
-              "sharedtable"
+              "fare"
             ],
-            "CFBundleURLName": "com.sharedtable.app"
+            "CFBundleURLName": "com.fare.app"
           }
         ]
       },
@@ -44,7 +44,7 @@
         "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#E24849"
       },
-      "package": "com.sharedtable.app",
+      "package": "com.fare.app",
       "versionCode": 1,
       "permissions": [
         "android.permission.CAMERA",
@@ -61,11 +61,11 @@
           "action": "VIEW",
           "data": [
             {
-              "scheme": "sharedtable",
+              "scheme": "fare",
               "host": "privy-redirect"
             },
             {
-              "scheme": "sharedtable",
+              "scheme": "fare",
               "host": "auth-callback"
             }
           ],

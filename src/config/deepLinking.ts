@@ -5,9 +5,9 @@ import { NotificationType } from '@/types/notification.types';
 export const deepLinkingConfig: LinkingOptions<any> = {
   prefixes: [
     Linking.createURL('/'),
-    'sharedtable://',
-    'https://sharedtable.app',
-    'https://app.sharedtable.com',
+    'fare://',
+    'https://fare.app',
+    'https://app.fare.com',
   ],
   
   config: {
@@ -139,58 +139,58 @@ function getDeepLinkFromNotification(notification: NotificationPayload): string 
     case NotificationType.DINNER_CONFIRMATION:
     case NotificationType.DINNER_CANCELLATION:
     case NotificationType.DINNER_STATUS_CHANGE:
-      return data?.eventId ? `sharedtable://events/${data.eventId}` : 'sharedtable://events';
+      return data?.eventId ? `fare://events/${data.eventId}` : 'fare://events';
       
     case NotificationType.DINNER_GROUP_MATCHED:
-      return data?.groupId ? `sharedtable://profile/dinner/${data.groupId}` : 'sharedtable://profile';
+      return data?.groupId ? `fare://profile/dinner/${data.groupId}` : 'fare://profile';
       
     case NotificationType.CHAT_MESSAGE:
     case NotificationType.CHAT_MENTION:
-      return data?.chatId ? `sharedtable://chats/${data.chatId}` : 'sharedtable://chats';
+      return data?.chatId ? `fare://chats/${data.chatId}` : 'fare://chats';
       
     case NotificationType.FEED_POST:
     case NotificationType.FEED_COMMENT:
     case NotificationType.FEED_REACTION:
     case NotificationType.FEED_MENTION:
       return data?.postId 
-        ? `sharedtable://feed/post/${data?.postId}`
-        : 'sharedtable://feed';
+        ? `fare://feed/post/${data?.postId}`
+        : 'fare://feed';
       
     case NotificationType.BOOKING_REQUEST:
     case NotificationType.BOOKING_APPROVED:
     case NotificationType.BOOKING_REJECTED:
       return data?.bookingId
-        ? `sharedtable://bookings/${data?.bookingId}`
-        : 'sharedtable://bookings';
+        ? `fare://bookings/${data?.bookingId}`
+        : 'fare://bookings';
       
     case NotificationType.ACHIEVEMENT_UNLOCKED:
-      return 'sharedtable://dashboard/achievements';
+      return 'fare://dashboard/achievements';
       
     case NotificationType.QUEST_COMPLETED:
     case NotificationType.QUEST_PROGRESS:
-      return 'sharedtable://dashboard/quests';
+      return 'fare://dashboard/quests';
       
     case NotificationType.LEADERBOARD_UPDATE:
-      return 'sharedtable://dashboard/leaderboard';
+      return 'fare://dashboard/leaderboard';
       
     case NotificationType.DINNER_REVIEW_REQUEST:
-      return data?.eventId ? `sharedtable://review/${data.eventId}` : 'sharedtable://review';
+      return data?.eventId ? `fare://review/${data.eventId}` : 'fare://review';
       
     case NotificationType.SECURITY_ALERT:
     case NotificationType.LOGIN_NEW_DEVICE:
-      return 'sharedtable://security/verify-login';
+      return 'fare://security/verify-login';
       
     case NotificationType.PROFILE_INCOMPLETE:
-      return 'sharedtable://profile/edit';
+      return 'fare://profile/edit';
       
     case NotificationType.EVENT_INVITATION:
-      return data?.eventId ? `sharedtable://events/${data.eventId}` : 'sharedtable://events';
+      return data?.eventId ? `fare://events/${data.eventId}` : 'fare://events';
       
     case NotificationType.MATCH_FOUND:
-      return data?.matchedUserId ? `sharedtable://profile/${data.matchedUserId}` : 'sharedtable://profile';
+      return data?.matchedUserId ? `fare://profile/${data.matchedUserId}` : 'fare://profile';
       
     default:
-      return 'sharedtable://notifications';
+      return 'fare://notifications';
   }
 }
 

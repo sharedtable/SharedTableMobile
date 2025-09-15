@@ -1,10 +1,10 @@
-# SharedTable Mobile App
+# Fare Mobile App
 
-React Native mobile application with dedicated backend API for SharedTable - Stanford's social dining platform.
+React Native mobile application with dedicated backend API for Fare - Stanford's social dining platform.
 
 ## Overview
 
-This repository contains both the mobile frontend (React Native) and dedicated backend API (Express.js) for SharedTable. The app allows Stanford students to:
+This repository contains both the mobile frontend (React Native) and dedicated backend API (Express.js) for Fare. The app allows Stanford students to:
 
 - 📱 Browse and book dinner events
 - 👥 Connect with other students
