@@ -26,6 +26,7 @@ import { useNotificationStore } from '@/store/notificationStore';
 import { useGamificationStats } from '@/hooks/useGamification';
 import { TIER_CONFIG } from '@/types/gamification';
 import { ConnectionsView } from '@/components/profile/ConnectionsView';
+import { ReservationCard } from '@/components/profile/ReservationCard';
 
 type ProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
 
@@ -57,6 +58,11 @@ interface DinnerBooking {
     status: string;
     restaurant_name?: string;
     restaurant_address?: string;
+    group_details?: {
+      table_number?: number;
+      meeting_time?: string;
+      special_instructions?: string;
+    };
   };
   dinner?: {
     id: string;
@@ -64,6 +70,11 @@ interface DinnerBooking {
     status: string;
     restaurant_name?: string;
     restaurant_address?: string;
+    group_details?: {
+      table_number?: number;
+      meeting_time?: string;
+      special_instructions?: string;
+    };
   };
 }
 
@@ -433,129 +444,18 @@ export function ProfileScreen() {
                 return reservationFilter === 'upcoming' ? date >= now : date < now;
               })
               .map((reservation) => {
-              const formatReservationDate = () => {
-                const dinnerDateTime = reservation.dinners?.datetime || reservation.dinner?.datetime;
-                if (!dinnerDateTime) return '';
-                const dateTime = new Date(dinnerDateTime);
-                if (isNaN(dateTime.getTime())) return '';
-                
-                // Extract date parts for display (US format MM/DD/YYYY)
-                const year = dateTime.getFullYear().toString();
-                const month = (dateTime.getMonth() + 1).toString().padStart(2, '0');
-                const day = dateTime.getDate().toString().padStart(2, '0');
-                
-                const hours = dateTime.getHours();
-                const minutes = dateTime.getMinutes();
-                const period = hours >= 12 ? 'PM' : 'AM';
-                const displayHour = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
-                const displayMinute = minutes.toString().padStart(2, '0');
-                const time = `${displayHour}:${displayMinute} ${period}`;
-                
-                return `${month}/${day}/${year} at ${time}`;
-              };
-
-              const handleSeeDetails = () => {
-                // Pass the entire reservation object as fallback
-                navigation.navigate('DinnerDetails', { 
-                  bookingId: reservation.id,
-                  dinnerId: reservation.dinner_id || reservation.dinners?.id,
-                  reservation // Pass as fallback data
-                });
-              };
-
-              const restaurantName = reservation.dinners?.restaurant_name || 
-                                     reservation.dinner?.restaurant_name || 
-                                     'Restaurant TBD';
-
-              // Check if this is a past reservation
-              const dinnerDate = reservation.dinners?.datetime || reservation.dinner?.datetime;
-              const isPastReservation = dinnerDate ? new Date(dinnerDate) < new Date() : false;
-
-              return (
-                <Pressable 
-                  key={reservation.id} 
-                  style={styles.reservationCard}
-                  onPress={reservation.status !== 'cancelled' ? handleSeeDetails : undefined}
-                >
-                  <View style={styles.cardContent}>
-                    {/* Left: Restaurant image or SharedTable logo */}
-                    {restaurantName !== 'Restaurant TBD' ? (
-                      <Image 
-                        source={{ 
-                          uri: getRestaurantImage(restaurantName)
-                        }}
-                        style={styles.imageSquare}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <Image 
-                        source={require('@/assets/icon.png')}
-                        style={styles.imageSquare}
-                        resizeMode="cover"
-                      />
-                    )}
-                    
-                    {/* Center: Restaurant info */}
-                    <View style={styles.restaurantInfo}>
-                      <Text style={styles.restaurantTitle}>
-                        {restaurantName}
-                      </Text>
-                      <View style={styles.dateRow}>
-                        <Ionicons name="calendar-outline" size={12} color={theme.colors.text.secondary} style={{ opacity: 0.8 }} />
-                        <Text style={styles.dateText}>
-                          {formatReservationDate()}
-                        </Text>
-                      </View>
-                    </View>
-                    
-                    {/* Right: Actions */}
-                    <View style={styles.cardActions}>
-                      {/* Show appropriate buttons based on status */}
-                      {(reservation.status === 'completed' || (isPastReservation && reservation.status === 'assigned')) ? (
-                        // Completed or past assigned reservations: Show Review button
-                        <View style={styles.reviewContainer}>
-                          <Pressable 
-                            style={styles.reviewButton}
-                            onPress={() => navigation.navigate('PostDinnerSurvey' as any, {
-                              bookingId: reservation.id,
-                              dinnerId: reservation.dinner_id || reservation.dinner?.id
-                            })}
-                          >
-                            <Ionicons name="star-outline" size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
-                            <Text style={styles.reviewText}>Review</Text>
-                          </Pressable>
-                          {!reservation.has_reviewed && (
-                            <View style={styles.reviewBadge}>
-                              <Text style={styles.reviewBadgeText}>!</Text>
-                            </View>
-                          )}
-                        </View>
-                      ) : (
-                        <View style={styles.actionButtonsColumn}>
-                          {/* Show See details for all non-completed bookings */}
-                          <Pressable 
-                            style={styles.seeDetailsButton}
-                            onPress={handleSeeDetails}
-                          >
-                            <Text style={styles.seeDetailsText}>See details</Text>
-                          </Pressable>
-                          
-                          {/* Show Cancel button for bookings that haven't been attended yet */}
-                          {reservation.status !== 'attended' && reservation.status !== 'cancelled' && (
-                            <Pressable 
-                              style={styles.cancelButton}
-                              onPress={() => handleCancelPress(reservation.id)}
-                            >
-                              <Text style={styles.cancelButtonText}>Cancel</Text>
-                            </Pressable>
-                          )}
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                </Pressable>
-              );
-            })
+                const restaurantName = reservation.dinners?.restaurant_name || 
+                                       reservation.dinner?.restaurant_name || 
+                                       'Restaurant TBD';
+                return (
+                  <ReservationCard
+                    key={reservation.id}
+                    reservation={reservation}
+                    onCancel={handleCancelPress}
+                    restaurantImage={getRestaurantImage(restaurantName)}
+                  />
+                );
+              })
           ) : (
             <View style={styles.container}>
               <Ionicons name="calendar-outline" size={48} color={theme.colors.text.tertiary} />
@@ -862,103 +762,7 @@ const styles = StyleSheet.create({
     paddingVertical: scaleHeight(20),
     textAlign: 'center',
   },
-  reservationCard: {
-    backgroundColor: theme.colors.white,
-    marginHorizontal: scaleWidth(20),
-    marginBottom: scaleHeight(1),
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.ui.paleGray,
-  },
-  cardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: scaleHeight(12),
-  },
-  imageSquare: {
-    width: scaleWidth(48),
-    height: scaleWidth(48),
-    borderRadius: scaleWidth(8),
-    marginRight: scaleWidth(12),
-  },
-  restaurantInfo: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  restaurantTitle: {
-    fontSize: scaleFont(16),
-    fontWeight: '600',
-    color: theme.colors.text.primary,
-    marginBottom: scaleHeight(4),
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: scaleWidth(4),
-  },
-  dateText: {
-    fontSize: scaleFont(12),
-    color: theme.colors.text.secondary,
-    opacity: 0.9,
-  },
-  cardActions: {
-    alignItems: 'flex-end',
-  },
-  actionButtonsColumn: {
-    alignItems: 'flex-end',
-    gap: scaleHeight(8),
-  },
-  seeDetailsButton: {
-    paddingHorizontal: scaleWidth(12),
-    paddingVertical: scaleHeight(6),
-  },
-  seeDetailsText: {
-    fontSize: scaleFont(13),
-    color: theme.colors.text.primary,
-    fontWeight: '500',
-    textDecorationLine: 'underline',
-  },
-  cancelButton: {
-    paddingHorizontal: scaleWidth(12),
-    paddingVertical: scaleHeight(4),
-  },
-  cancelButtonText: {
-    fontSize: scaleFont(12),
-    color: theme.colors.text.secondary,
-    opacity: 0.8,
-  },
-  reviewContainer: {
-    position: 'relative',
-  },
-  reviewButton: {
-    backgroundColor: theme.colors.primary.main,
-    paddingHorizontal: scaleWidth(16),
-    paddingVertical: scaleHeight(8),
-    borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  reviewText: {
-    fontSize: scaleFont(14),
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  reviewBadge: {
-    position: 'absolute',
-    top: -5,
-    right: -5,
-    backgroundColor: '#FF4444',
-    borderRadius: 10,
-    width: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  reviewBadgeText: {
-    color: '#FFFFFF',
-    fontSize: scaleFont(12),
-    fontWeight: 'bold',
-  },
+  // Reservation card styles moved to ReservationCard component
   reservationName: {
     color: theme.colors.text.primary,
     fontSize: scaleFont(16),

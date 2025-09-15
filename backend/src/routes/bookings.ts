@@ -600,6 +600,270 @@ router.delete('/:bookingId', verifyPrivyToken, async (req: AuthRequest, res: Res
   }
 });
 
+// Get dinner group members for review
+router.get('/:bookingId/group-members', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const privyUserId = req.userId;
+    const { bookingId } = req.params;
+
+    // Validate input
+    if (!privyUserId) {
+      logger.warn('Unauthorized attempt to access group members');
+      return res.status(401).json({
+        success: false,
+        error: 'User not authenticated',
+      });
+    }
+
+    if (!bookingId || !bookingId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid booking ID format',
+      });
+    }
+
+    // Get user data
+    const { data: userData, error: userError } = await supabaseService
+      .from('users')
+      .select('id')
+      .eq('external_auth_id', privyUserId)
+      .single();
+
+    if (userError) {
+      logger.error('Error fetching user:', userError);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to fetch user data',
+      });
+    }
+
+    if (!userData) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found',
+      });
+    }
+
+    // Get the booking with dinner details
+    const { data: booking, error: bookingError } = await supabaseService
+      .from('dinner_bookings')
+      .select(`
+        id,
+        user_id,
+        dinner_id,
+        status,
+        dinners!inner(
+          id,
+          datetime,
+          status
+        )
+      `)
+      .eq('id', bookingId)
+      .eq('user_id', userData.id)
+      .single();
+
+    if (bookingError) {
+      logger.error('Error fetching booking:', bookingError);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to fetch booking data',
+      });
+    }
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found',
+      });
+    }
+
+    // Check if booking is in a valid state for review
+    const validStatuses = ['assigned', 'attended', 'completed'];
+    if (!validStatuses.includes(booking.status)) {
+      return res.status(400).json({
+        success: false,
+        error: `Cannot fetch group members for booking with status: ${booking.status}`,
+      });
+    }
+
+    // Define types for better type safety
+    interface TableUserResult {
+      table_id: string;
+      dinner_booking_id?: string;
+      tables: {
+        id: string;
+        reservation_id: string;
+        dinner_id: string;
+        created_at: string;
+        reservations: {
+          id: string;
+          restaurant_id: string;
+          date: string;
+          time: string;
+          restaurants: {
+            id: string;
+            name: string;
+            address: string;
+            cuisine_type: string;
+            price_range: string;
+          };
+        };
+      };
+    }
+
+    interface TableMemberResult {
+      user_id: string;
+      users: {
+        id: string;
+        name: string | null;
+        profile_picture_url: string | null;
+        bio: string | null;
+      };
+    }
+
+    let tableUser: TableUserResult | null = null;
+    
+    // Try with dinner_booking_id first (if column exists)
+    const { data: tableUserWithBookingId, error: error1 } = await supabaseService
+      .from('table_users')
+      .select(`
+        table_id,
+        dinner_booking_id,
+        tables!inner(
+          id,
+          reservation_id,
+          dinner_id,
+          created_at,
+          reservations!inner(
+            id,
+            restaurant_id,
+            date,
+            time,
+            restaurants!inner(
+              id,
+              name,
+              address,
+              cuisine_type,
+              price_range
+            )
+          )
+        )
+      `)
+      .eq('user_id', userData.id)
+      .eq('dinner_booking_id', bookingId)
+      .maybeSingle();
+    
+    if (tableUserWithBookingId) {
+      tableUser = tableUserWithBookingId as unknown as TableUserResult;
+    } else if (!error1 || error1.code === 'PGRST116') {
+      // Column doesn't exist or no match found, try fallback
+      // Fallback: match through dinner_id
+      const { data: tableUserWithDinnerId, error: error2 } = await supabaseService
+        .from('table_users')
+        .select(`
+          table_id,
+          tables!inner(
+            id,
+            reservation_id,
+            dinner_id,
+            created_at,
+            reservations!inner(
+              id,
+              restaurant_id,
+              date,
+              time,
+              restaurants!inner(
+                id,
+                name,
+                address,
+                cuisine_type,
+                price_range
+              )
+            )
+          )
+        `)
+        .eq('user_id', userData.id)
+        .eq('tables.dinner_id', (booking as any).dinners.id)
+        .maybeSingle();
+      
+      if (error2) {
+        logger.error('Error fetching table assignment:', error2);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to fetch table assignment',
+        });
+      }
+      
+      tableUser = tableUserWithDinnerId as unknown as TableUserResult;
+    }
+
+    if (!tableUser) {
+      logger.info(`No table assignment found for booking ${bookingId} user ${userData.id}`);
+      return res.status(404).json({
+        success: false,
+        error: 'No table assignment found for this booking',
+      });
+    }
+
+    // Get all table members (excluding current user)
+    const { data: otherTableUsers, error: tableUsersError } = await supabaseService
+      .from('table_users')
+      .select(`
+        user_id,
+        users!inner(
+          id,
+          name,
+          profile_picture_url,
+          bio
+        )
+      `)
+      .eq('table_id', tableUser.table_id)
+      .neq('user_id', userData.id);
+
+    if (tableUsersError) {
+      logger.error('Error fetching table members:', tableUsersError);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to fetch table members',
+      });
+    }
+
+    // Type-safe response formatting
+    const diners = ((otherTableUsers as unknown as TableMemberResult[]) || []).map((member, index) => ({
+      id: member.users.id,
+      name: member.users.name || 'Fellow Diner',
+      avatar: member.users.profile_picture_url || undefined,
+      dinerId: index + 1,
+      bio: member.users.bio || undefined,
+    }));
+
+    // Get restaurant info from the nested structure
+    const reservation = tableUser.tables.reservations;
+    const restaurant = reservation.restaurants;
+
+    return res.json({
+      success: true,
+      data: {
+        restaurant: {
+          name: restaurant.name,
+          address: restaurant.address,
+          cuisine: restaurant.cuisine_type,
+          reservationDate: reservation.date,
+          reservationTime: reservation.time,
+        },
+        diners,
+        totalGroupSize: diners.length + 1, // +1 for current user
+      },
+    });
+  } catch (error) {
+    logger.error('Error fetching group members:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    });
+  }
+});
+
 // Admin endpoint: Mark bookings as assigned when dinner groups are formed
 router.post('/admin/mark-assigned', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
   try {
@@ -870,7 +1134,6 @@ router.post('/create', verifyPrivyToken, async (req: AuthRequest, res: Response)
     }
 
     const userId = userData.id;
-    const _userName = `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || 'User';
 
     // Check if dinner exists and get its details
     const { data: dinnerData, error: dinnerError } = await supabaseService

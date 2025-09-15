@@ -1426,6 +1426,31 @@ class ApiService {
   }
 
   // Post-Dinner Survey
+  async getBookingGroupMembers(bookingId: string): Promise<ApiResponse<{
+    restaurant: {
+      name: string;
+      address: string;
+      cuisine: string;
+      reservationDate: string;
+      reservationTime: string;
+    };
+    diners: Array<{
+      id: string;
+      name: string;
+      avatar?: string;
+      dinerId: number;
+      bio?: string;
+    }>;
+    totalGroupSize: number;
+  }>> {
+    try {
+      const response = await this.client.get(`/bookings/${bookingId}/group-members`);
+      return response.data;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
   async submitPostDinnerSurvey(data: {
     bookingId: string;
     dinnerId: string;
@@ -1437,6 +1462,7 @@ class ApiService {
     };
     feedback?: string;
     matches?: string[];
+    additionalData?: any;
   }): Promise<ApiResponse<any>> {
     try {
       const response = await this.client.post('/bookings/survey', data);
