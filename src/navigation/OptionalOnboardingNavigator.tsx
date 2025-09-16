@@ -98,7 +98,7 @@ const createScreenWrapper = (
           break;
         case 'complete':
         case 'home':
-        case 'main':
+        case 'main': {
           // Check if user has access or is on waitlist
           const hasAccess = userData?.access_granted === true;
           
@@ -116,6 +116,7 @@ const createScreenWrapper = (
             });
           }
           break;
+        }
         case 'back':
           if (navigation.canGoBack()) {
             navigation.goBack();

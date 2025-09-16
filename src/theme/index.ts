@@ -157,6 +157,9 @@ export const colors = {
   ui: {
     lightGray: '#E5E5E5',
     lighterGray: '#F5F5F5',
+    lightBlue: '#E8F4FF',
+    lightRed: '#FFF5F5',
+    googleBlue: '#4285F4',
     lightestGray: '#F5F5F5',
     offWhite: '#F8F9FA',
     paleGray: '#E8E8E8',

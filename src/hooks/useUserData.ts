@@ -107,7 +107,7 @@ export const useUserData = () => {
           console.log('User not found in database - new user or sync pending');
           const fallbackData: UserData = {
             id: privyUser.id,
-            email: privyUser.email || privyUser.phone || '',
+            email: privyUser.email || '',
             firstName: null,
             lastName: null,
             displayName: null,

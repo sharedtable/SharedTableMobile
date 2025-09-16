@@ -75,7 +75,14 @@ export function ReservationCard({ reservation, onCancel, restaurantImage }: Rese
     const hours = dateTime.getHours();
     const minutes = dateTime.getMinutes();
     const period = hours >= 12 ? 'PM' : 'AM';
-    const displayHour = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+    let displayHour;
+    if (hours > 12) {
+      displayHour = hours - 12;
+    } else if (hours === 0) {
+      displayHour = 12;
+    } else {
+      displayHour = hours;
+    }
     const displayMinute = minutes.toString().padStart(2, '0');
     const time = `${displayHour}:${displayMinute} ${period}`;
     
@@ -150,6 +157,7 @@ export function ReservationCard({ reservation, onCancel, restaurantImage }: Rese
           />
         ) : (
           <Image 
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             source={require('@/assets/icon.png')}
             style={styles.imageSquare}
             resizeMode="cover"

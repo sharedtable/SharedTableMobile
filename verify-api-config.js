@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
+/* eslint-disable no-undef */
 
 const dotenv = require('dotenv');
 const path = require('path');

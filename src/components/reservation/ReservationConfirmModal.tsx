@@ -246,7 +246,7 @@ export const ReservationConfirmModal: React.FC<ReservationConfirmModalProps> = (
               onPress={handleAddToCalendar}
             >
               <View style={styles.calendarIconContainer}>
-                <Ionicons name="calendar" size={18} color="#4285F4" />
+                <Ionicons name="calendar" size={18} color={theme.colors.ui.googleBlue} />
               </View>
               <Text style={styles.calendarButtonText}>Add to Calendar</Text>
             </Pressable>
@@ -394,7 +394,7 @@ const getStyles = () => StyleSheet.create({
     borderRadius: scaleWidth(16),
     padding: scaleWidth(20),
     borderWidth: 2,
-    borderColor: '#E8F4FF',
+    borderColor: theme.colors.ui.lightBlue,
   },
   detailRow: {
     flexDirection: 'row',
@@ -405,7 +405,7 @@ const getStyles = () => StyleSheet.create({
     width: scaleWidth(36),
     height: scaleWidth(36),
     borderRadius: scaleWidth(18),
-    backgroundColor: '#FFF5F5',
+    backgroundColor: theme.colors.ui.lightRed,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: scaleWidth(12),
@@ -489,7 +489,7 @@ const getStyles = () => StyleSheet.create({
     paddingHorizontal: scaleWidth(16),
     borderRadius: scaleWidth(8),
     borderWidth: 1,
-    borderColor: '#4285F4',
+    borderColor: theme.colors.ui.googleBlue,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -499,7 +499,7 @@ const getStyles = () => StyleSheet.create({
   calendarButtonText: {
     fontSize: scaleFont(14),
     fontWeight: '500',
-    color: '#4285F4',
+    color: theme.colors.ui.googleBlue,
     fontFamily: theme.typography.fontFamily.body,
   },
   confirmedIcon: {

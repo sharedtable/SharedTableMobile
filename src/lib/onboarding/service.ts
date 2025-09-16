@@ -358,7 +358,14 @@ export class OnboardingService {
       }
 
       if (stepData.gender) {
-        profileData.gender = stepData.gender;
+        // Map from UI format to database format
+        const genderMap: Record<string, 'male' | 'female' | 'non_binary' | 'prefer_not_to_say'> = {
+          'Male': 'male',
+          'Female': 'female',
+          'Other': 'non_binary',
+          'Prefer not to say': 'prefer_not_to_say'
+        };
+        profileData.gender = genderMap[stepData.gender] || 'prefer_not_to_say';
       }
 
       if (stepData.major) {

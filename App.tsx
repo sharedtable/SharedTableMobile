@@ -27,6 +27,7 @@ import Constants from 'expo-constants';
 // Only import Stripe on mobile platforms
 let StripeProvider: any = ({ children }: any) => children;
 if (Platform.OS !== 'web') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   StripeProvider = require('@stripe/stripe-react-native').StripeProvider;
 }
 
@@ -55,9 +56,13 @@ export default function App() {
 
   // Load Fraunces and Keania One fonts
   const [frauncesLoaded] = useFonts({
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     'Fraunces-Regular': require('./assets/fonts/Fraunces_400Regular.ttf'),
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     'Fraunces-Medium': require('./assets/fonts/Fraunces_500Medium.ttf'),
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     'Fraunces-SemiBold': require('./assets/fonts/Fraunces_600SemiBold.ttf'),
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     'Fraunces-Bold': require('./assets/fonts/Fraunces_700Bold.ttf'),
   });
 

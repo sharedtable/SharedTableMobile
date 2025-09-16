@@ -289,7 +289,7 @@ export function FeatureFlagDebugger() {
 // Styles for debug component
 const styles = StyleSheet.create({
   debugContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    backgroundColor: theme.colors.overlay.darkest,
     padding: 20,
     position: 'absolute',
     top: 100,

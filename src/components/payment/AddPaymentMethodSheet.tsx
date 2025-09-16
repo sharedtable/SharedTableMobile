@@ -12,13 +12,12 @@ import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 // Platform-specific imports for Stripe
 let CardField: any = () => null;
 let useStripe: any = () => ({ createPaymentMethod: async () => ({ error: { message: 'Stripe not available on web' } }) });
-let CardFieldInput: any = {};
 
 if (Platform.OS !== 'web') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const stripe = require('@stripe/stripe-react-native');
   CardField = stripe.CardField;
   useStripe = stripe.useStripe;
-  CardFieldInput = stripe.CardFieldInput;
 }
 
 import * as Haptics from 'expo-haptics';
@@ -44,10 +43,10 @@ export const AddPaymentMethodSheet: React.FC<AddPaymentMethodSheetProps> = ({
   const { createSetupIntent, addPaymentMethod, currentSetupIntent } = usePaymentStore();
   
   const [isLoading, setIsLoading] = useState(false);
-  const [cardDetails, setCardDetails] = useState<CardFieldInput.Details | null>(null);
+  const [cardDetails, setCardDetails] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleCardChange = useCallback((details: CardFieldInput.Details) => {
+  const handleCardChange = useCallback((details: any) => {
     setCardDetails(details);
     if (error) {
       setError(null);

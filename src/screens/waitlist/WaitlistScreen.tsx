@@ -358,11 +358,6 @@ const styles = StyleSheet.create({
     zIndex: 10,
     padding: scaleWidth(8),
   },
-  logoContainer: {
-    alignItems: 'center',
-    marginTop: scaleHeight(10),
-    marginBottom: scaleHeight(15),
-  },
   logo: {
     fontSize: scaleFont(36),
     fontWeight: 'bold',
@@ -371,14 +366,6 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.heading,
     textAlign: 'center',
     marginBottom: scaleHeight(8),
-  },
-  tagline: {
-    fontSize: scaleFont(12),
-    color: theme.colors.text.secondary,
-    marginTop: scaleHeight(8),
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    fontFamily: theme.typography.fontFamily.body,
   },
   mainContent: {
     flex: 1,
