@@ -127,30 +127,44 @@ export const WaitlistScreen: React.FC = () => {
                 // Update the auth store with the correct onboarding status
                 if (updatedUserData) {
                   const status = updatedUserData.onboarding_status;
+                  const hasAccess = updatedUserData.access_granted === true;
                   
-                  // Map database status to OnboardingStatus enum and update auth store
-                  if (status === 'not_started' || !status) {
-                    await setOnboardingStatus(OnboardingStatus.NOT_STARTED);
-                    await setNeedsOnboarding(true);
-                    // Navigate to onboarding
-                    navigation.navigate('Onboarding' as never);
-                  } else if (status === 'mandatory_complete') {
-                    await setOnboardingStatus(OnboardingStatus.MANDATORY_COMPLETE);
-                    await setNeedsOnboarding(false);
-                    // User is still on waitlist - no navigation needed, they'll stay on waitlist
-                  } else if (status === 'optional_complete') {
-                    await setOnboardingStatus(OnboardingStatus.OPTIONAL_COMPLETE);
-                    await setNeedsOnboarding(false);
-                    // User is still on waitlist - no navigation needed, they'll stay on waitlist
-                  } else if (status === 'fully_complete') {
-                    await setOnboardingStatus(OnboardingStatus.FULLY_COMPLETE);
-                    await setNeedsOnboarding(false);
-                    // User is still on waitlist - no navigation needed, they'll stay on waitlist
+                  // Check if user now has access after code validation
+                  if (hasAccess) {
+                    // User has been granted access with the invitation code
+                    if (status === 'not_started' || !status) {
+                      await setOnboardingStatus(OnboardingStatus.NOT_STARTED);
+                      await setNeedsOnboarding(true);
+                      // Navigate to onboarding
+                      navigation.navigate('Onboarding' as never);
+                    } else {
+                      // User has completed some/all onboarding and has access - go to Main
+                      if (status === 'mandatory_complete') {
+                        await setOnboardingStatus(OnboardingStatus.MANDATORY_COMPLETE);
+                      } else if (status === 'optional_complete') {
+                        await setOnboardingStatus(OnboardingStatus.OPTIONAL_COMPLETE);
+                      } else if (status === 'fully_complete') {
+                        await setOnboardingStatus(OnboardingStatus.FULLY_COMPLETE);
+                      }
+                      await setNeedsOnboarding(false);
+                      
+                      // Navigate to Main screen since they have access now
+                      navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'Main' as never }],
+                      });
+                    }
                   } else {
-                    // Default to onboarding if status is unclear
-                    await setOnboardingStatus(OnboardingStatus.NOT_STARTED);
-                    await setNeedsOnboarding(true);
-                    navigation.navigate('Onboarding' as never);
+                    // Still no access (shouldn't happen if code was valid, but handle it)
+                    if (status === 'not_started' || !status) {
+                      await setOnboardingStatus(OnboardingStatus.NOT_STARTED);
+                      await setNeedsOnboarding(true);
+                      navigation.navigate('Onboarding' as never);
+                    } else {
+                      // Completed onboarding but still on waitlist
+                      await setNeedsOnboarding(false);
+                      // Stay on waitlist screen
+                    }
                   }
                 } else {
                   // If no user data, navigate to onboarding by default
