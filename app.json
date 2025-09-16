@@ -99,10 +99,11 @@
       "expo-font"
     ],
     "extra": {
+      "apiUrl": "https://fare-backend-production.up.railway.app/api",
       "supabaseUrl": "https://sxrvesdqhcovajaqnqcw.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN4cnZlc2RxaGNvdmFqYXFucWN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4NzgxNzAsImV4cCI6MjA3MDQ1NDE3MH0.IVjirwF3tEjKJ9j70lLMPobf9Zez914bEFZd2JdAeMY",
       "privyAppId": "cmej9f9cp00xbl10b8zwjifec",
-      "stripePublishableKey": "pk_test_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "stripePublishableKey": "pk_test_51RbygLGUDucRA4CwK6qX0cbghcjUfakoX0z02FiuQLSJ4E5mpzWAyO7KNVpCIC18H67hyIWly6cLn05gy3dfSOrC00d48w6M27",
       "eas": {
         "projectId": "af034d26-6541-444c-a014-5b2a63330556"
       }

@@ -8,11 +8,19 @@ import {
   Platform,
 } from 'react-native';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import {
-  CardField,
-  useStripe,
-  CardFieldInput,
-} from '@stripe/stripe-react-native';
+
+// Platform-specific imports for Stripe
+let CardField: any = () => null;
+let useStripe: any = () => ({ createPaymentMethod: async () => ({ error: { message: 'Stripe not available on web' } }) });
+let CardFieldInput: any = {};
+
+if (Platform.OS !== 'web') {
+  const stripe = require('@stripe/stripe-react-native');
+  CardField = stripe.CardField;
+  useStripe = stripe.useStripe;
+  CardFieldInput = stripe.CardFieldInput;
+}
+
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/theme';

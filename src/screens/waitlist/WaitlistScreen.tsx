@@ -132,20 +132,32 @@ export const WaitlistScreen: React.FC = () => {
                   if (status === 'not_started' || !status) {
                     await setOnboardingStatus(OnboardingStatus.NOT_STARTED);
                     await setNeedsOnboarding(true);
+                    // Navigate to onboarding
+                    navigation.navigate('Onboarding' as never);
                   } else if (status === 'mandatory_complete') {
                     await setOnboardingStatus(OnboardingStatus.MANDATORY_COMPLETE);
                     await setNeedsOnboarding(false);
+                    // User is still on waitlist - no navigation needed, they'll stay on waitlist
                   } else if (status === 'optional_complete') {
                     await setOnboardingStatus(OnboardingStatus.OPTIONAL_COMPLETE);
                     await setNeedsOnboarding(false);
+                    // User is still on waitlist - no navigation needed, they'll stay on waitlist
                   } else if (status === 'fully_complete') {
                     await setOnboardingStatus(OnboardingStatus.FULLY_COMPLETE);
                     await setNeedsOnboarding(false);
+                    // User is still on waitlist - no navigation needed, they'll stay on waitlist
+                  } else {
+                    // Default to onboarding if status is unclear
+                    await setOnboardingStatus(OnboardingStatus.NOT_STARTED);
+                    await setNeedsOnboarding(true);
+                    navigation.navigate('Onboarding' as never);
                   }
+                } else {
+                  // If no user data, navigate to onboarding by default
+                  await setNeedsOnboarding(true);
+                  navigation.navigate('Onboarding' as never);
                 }
                 
-                // The RootNavigator will automatically re-evaluate and navigate
-                // based on the updated access_granted and onboarding status
                 setInviteCode('');
               },
             },
@@ -193,21 +205,15 @@ export const WaitlistScreen: React.FC = () => {
         >
           {/* Logout Button */}
           <Pressable onPress={handleLogout} style={styles.logoutButton}>
-            <Text style={styles.logoutText}>Log Out</Text>
+            <Ionicons name="exit-outline" size={24} color={theme.colors.text.secondary} />
           </Pressable>
-
-          {/* Logo */}
-          <View style={styles.logoContainer}>
-            <Text style={styles.logo}>FARE</Text>
-            <Text style={styles.tagline}>Curated Dining Experiences</Text>
-          </View>
 
           {/* Main Content */}
           <View style={styles.mainContent}>
-            <Text style={styles.title}>Invitation Only</Text>
+            <Text style={styles.logo}>FARE</Text>
+            <Text style={styles.title}>INVITATION REQUIRED</Text>
             <Text style={styles.subtitle}>
-              Fare is currently accepting members by invitation only.
-              Enter your code to begin your culinary journey.
+              Fare is currently invite-only. Please enter{'\n'}your code to continue.
             </Text>
 
             {/* Code Input */}
@@ -317,7 +323,7 @@ export const WaitlistScreen: React.FC = () => {
             <View style={styles.infoSection}>
               <View style={styles.infoItem}>
                 <Ionicons name="shield-checkmark-outline" size={16} color={theme.colors.text.secondary} />
-                <Text style={styles.infoText}>Verified Members Only</Text>
+                <Text style={styles.infoText}>Invited Members Only</Text>
               </View>
               <View style={styles.infoItem}>
                 <Ionicons name="star-outline" size={16} color={theme.colors.text.secondary} />
@@ -350,28 +356,21 @@ const styles = StyleSheet.create({
     top: scaleHeight(20),
     right: scaleWidth(24),
     zIndex: 10,
-    paddingVertical: scaleHeight(6),
-    paddingHorizontal: scaleWidth(14),
-    borderRadius: scaleWidth(8),
-    borderWidth: 1,
-    borderColor: theme.colors.gray['1'],
-  },
-  logoutText: {
-    fontSize: scaleFont(14),
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
+    padding: scaleWidth(8),
   },
   logoContainer: {
     alignItems: 'center',
-    marginTop: scaleHeight(25),
-    marginBottom: scaleHeight(20),
+    marginTop: scaleHeight(10),
+    marginBottom: scaleHeight(15),
   },
   logo: {
     fontSize: scaleFont(36),
-    fontWeight: '700',
+    fontWeight: 'bold',
     color: theme.colors.primary.main,
-    letterSpacing: 4,
+    letterSpacing: 6,
     fontFamily: theme.typography.fontFamily.heading,
+    textAlign: 'center',
+    marginBottom: scaleHeight(8),
   },
   tagline: {
     fontSize: scaleFont(12),
@@ -386,12 +385,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontSize: scaleFont(26),
-    fontWeight: '700',
+    fontSize: scaleFont(20),
+    fontWeight: 'bold',
     color: theme.colors.text.primary,
     textAlign: 'center',
-    marginBottom: scaleHeight(10),
+    marginBottom: scaleHeight(12),
     fontFamily: theme.typography.fontFamily.heading,
+    letterSpacing: 1.5,
   },
   subtitle: {
     fontSize: scaleFont(14),

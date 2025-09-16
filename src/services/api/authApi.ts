@@ -12,9 +12,11 @@ import { logger } from '@/utils/logger';
 
 // API configuration
 // Use your local IP address for development (not localhost)
+import Constants from 'expo-constants';
 
 //'http://192.168.1.5:3001/api'
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'https://fare-backend-production.up.railway.app/api';
+console.log('🔧 AuthAPI initialized with URL:', API_BASE_URL);
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
@@ -145,7 +147,7 @@ export class AuthAPI {
   /**
    * Fetches a Stream Chat user token for the authenticated user
    */
-  static async getChatUserToken(): Promise<{ token: string; displayName?: string }> {
+  static async getChatUserToken(): Promise<{ token: string; displayName?: string; streamUserId?: string }> {
     const token = await this.getAuthToken();
     if (!token) {
       logger.error('getChatUserToken: Not authenticated');
@@ -175,6 +177,7 @@ export class AuthAPI {
     return {
       token: response.data.token,
       displayName: response.data.displayName,
+      streamUserId: response.data.streamUserId,
     };
   }
 

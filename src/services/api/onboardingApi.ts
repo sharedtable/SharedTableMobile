@@ -11,7 +11,10 @@ import { retryWithBackoff, withTimeout } from '@/utils/retry';
 import { tokenProvider } from '@/services/tokenProvider';
 
 // API configuration
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+import Constants from 'expo-constants';
+
+const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'https://fare-backend-production.up.railway.app/api';
+console.log('🔧 OnboardingAPI initialized with URL:', API_BASE_URL);
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({

@@ -220,21 +220,22 @@ export const spacing = {
 
 export const typography = {
   fontFamily: {
-    // Keania One for headings/display text
+    // Fraunces for headings/display text
     heading: Platform.select({
-      ios: 'KeaniaOne-Regular',
-      android: 'KeaniaOne-Regular',
-      default: 'KeaniaOne-Regular',
-    }),
-    // Fraunces for body text
-    body: Platform.select({
       ios: 'Fraunces-Regular',
       android: 'Fraunces-Regular',
       default: 'Fraunces-Regular',
     }),
+    // Inter for body text
+    body: Platform.select({
+      ios: 'Inter',
+      android: 'Inter',
+      default: 'Inter',
+    }),
     // Specific font families
     keania: 'KeaniaOne-Regular',
     fraunces: 'Fraunces-Regular',
+    inter: 'Inter',
     // Fraunces font weights
     regular: Platform.select({
       ios: 'Fraunces-Regular',

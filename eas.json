@@ -29,7 +29,7 @@
         "buildConfiguration": "Release"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://sharedtable-staging.vercel.app/api",
+        "EXPO_PUBLIC_API_URL": "https://fare-backend-production.up.railway.app/api",
         "EXPO_PUBLIC_ENV": "internal",
         "EXPO_PUBLIC_FEATURE_FLAGS": "true"
       },
@@ -44,7 +44,7 @@
         "simulator": false
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://sharedtable-staging.vercel.app/api",
+        "EXPO_PUBLIC_API_URL": "https://fare-backend-production.up.railway.app/api",
         "EXPO_PUBLIC_ENV": "preview"
       },
       "channel": "preview"
@@ -57,7 +57,7 @@
         "simulator": false
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://sharedtable.vercel.app/api"
+        "EXPO_PUBLIC_API_URL": "https://fare-backend-production.up.railway.app/api"
       },
       "channel": "production"
     }

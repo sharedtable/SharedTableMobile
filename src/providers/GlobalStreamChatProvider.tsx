@@ -166,7 +166,11 @@ export const GlobalStreamChatProvider: React.FC<{ children: React.ReactNode }> =
         throw new Error('Unable to fetch chat token. Please check your connection.');
       }
       
+      console.log('📊 Token data received:', tokenData);
       const USER_TOKEN = typeof tokenData === 'string' ? tokenData : tokenData.token;
+      // Use streamUserId from backend if provided
+      const finalStreamUserId = (tokenData as any).streamUserId || streamUserId;
+      console.log('🆔 Stream user IDs - original:', streamUserId, 'from backend:', (tokenData as any).streamUserId, 'final:', finalStreamUserId);
       
       // Generate display name
       let displayName = tokenData.displayName || user.name || '';
@@ -187,7 +191,7 @@ export const GlobalStreamChatProvider: React.FC<{ children: React.ReactNode }> =
       // Connect to Stream Chat with timeout
       const connectPromise = client.connectUser(
         {
-          id: streamUserId,
+          id: finalStreamUserId,
           name: displayName,
           ...({ 
             email: user.email,
@@ -206,14 +210,14 @@ export const GlobalStreamChatProvider: React.FC<{ children: React.ReactNode }> =
       await Promise.race([connectPromise, connectTimeoutPromise]);
       
       connectionState.isConnected = true;
-      connectionState.lastConnectedUserId = streamUserId;
+      connectionState.lastConnectedUserId = finalStreamUserId;
       connectionState.retryCount = 0;
       connectionState.lastError = null;
       
       // Initialize notification integration for real-time chat notifications
       try {
         console.log('🔔 Initializing notification integration for Stream Chat...');
-        await notificationIntegration.initialize(streamUserId, client);
+        await notificationIntegration.initialize(finalStreamUserId, client);
         console.log('✅ Notification integration initialized - Chat notifications will work in background');
       } catch (error) {
         console.warn('Failed to initialize notifications:', error);

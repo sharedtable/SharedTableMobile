@@ -125,10 +125,12 @@ router.post('/step', verifyPrivyToken, async (req: AuthRequest, res: Response, n
         
       case 'birthday':
         // Birth date stays in users table for mandatory fields
+        userUpdates.birthday = validatedData.birthDate;
         break;
         
       case 'gender':
         // Gender stays in users table for mandatory fields
+        userUpdates.gender = validatedData.gender;
         break;
         
       case 'education':
@@ -341,6 +343,8 @@ router.post('/complete', verifyPrivyToken, async (req: AuthRequest, res: Respons
         first_name: validatedData.firstName,
         last_name: validatedData.lastName,
         display_name: validatedData.nickname,
+        birthday: validatedData.birthDate,
+        gender: validatedData.gender,
         onboarding_status: 'mandatory_complete',
         onboarding_completed_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -372,7 +376,7 @@ router.post('/complete', verifyPrivyToken, async (req: AuthRequest, res: Respons
  * GET /api/onboarding/profile
  * Get user's profile data for debugging
  */
-router.get('/profile', verifyPrivyToken, async (req: AuthRequest, res: Response, next: NextFunction) => {
+router.get('/profile', verifyPrivyToken, async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     if (!req.userId) {
       throw new AppError('User not authenticated', 401);
@@ -473,12 +477,12 @@ router.get('/status', verifyPrivyToken, async (req: AuthRequest, res: Response, 
     
     // Check dining preference fields
     const hasDiningPreferences = !!(
-      profile?.cuisine_preferences?.length ||
-      profile?.dining_frequency ||
-      profile?.meal_preferences?.length ||
-      profile?.budget_preference ||
-      profile?.ambiance_preferences?.length ||
-      profile?.dining_goals?.length
+      (profile as any)?.cuisine_preferences?.length ||
+      (profile as any)?.dining_frequency ||
+      (profile as any)?.meal_preferences?.length ||
+      (profile as any)?.budget_preference ||
+      (profile as any)?.ambiance_preferences?.length ||
+      (profile as any)?.dining_goals?.length
     );
 
     // Determine actual status based on completed fields
@@ -642,7 +646,7 @@ router.post('/test-save', verifyPrivyToken, async (req: AuthRequest, res: Respon
       logger.info('TEST SAVE - Update result:', { data, error });
     } else {
       // Insert
-      userInfoData.created_at = new Date().toISOString();
+      (userInfoData as any).created_at = new Date().toISOString();
       const { data, error } = await supabaseService
         .from('onboarding_profiles')
         .insert(userInfoData)

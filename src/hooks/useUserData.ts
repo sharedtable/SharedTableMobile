@@ -61,6 +61,23 @@ export const useUserData = () => {
             .single() as { data: UserRow | null; error: any };
 
           if (emailError) {
+            // User doesn't exist yet - this is expected for new users
+            if (emailError.code === 'PGRST116') {
+              console.log('User not found in database yet - sync may be in progress');
+              // Return minimal user data while waiting for sync
+              const fallbackData: UserData = {
+                id: privyUser.id,
+                email: privyUser.email || '',
+                firstName: null,
+                lastName: null,
+                displayName: null,
+                name: null,
+                access_granted: false,
+                onboarding_status: 'not_started'
+              };
+              setUserData(fallbackData);
+              return fallbackData;
+            }
             throw emailError;
           }
 
@@ -85,6 +102,21 @@ export const useUserData = () => {
             setUserData(userData);
             return userData;
           }
+        } else if (fetchError.code === 'PGRST116') {
+          // User not found at all - return fallback data for new users
+          console.log('User not found in database - new user or sync pending');
+          const fallbackData: UserData = {
+            id: privyUser.id,
+            email: privyUser.email || privyUser.phone || '',
+            firstName: null,
+            lastName: null,
+            displayName: null,
+            name: null,
+            access_granted: false,
+            onboarding_status: 'not_started'
+          };
+          setUserData(fallbackData);
+          return fallbackData;
         } else {
           throw fetchError;
         }
@@ -109,9 +141,12 @@ export const useUserData = () => {
         setUserData(userData);
         return userData;
       }
-    } catch (err) {
-      console.error('Error fetching user data:', err);
-      setError('Failed to load user data');
+    } catch (err: any) {
+      // Don't log expected errors for new users
+      if (err?.code !== 'PGRST116') {
+        console.error('Error fetching user data:', err);
+        setError('Failed to load user data');
+      }
       
       // Fallback to privyUser data if database fetch fails
       if (privyUser) {
@@ -121,7 +156,9 @@ export const useUserData = () => {
           firstName: null,
           lastName: null,
           displayName: privyUser.name || null,
-          name: privyUser.name || null
+          name: privyUser.name || null,
+          access_granted: false,
+          onboarding_status: 'not_started'
         };
         setUserData(fallbackData);
         return fallbackData;

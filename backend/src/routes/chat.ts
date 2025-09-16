@@ -3,7 +3,7 @@ import { logger } from '../utils/logger';
 import { streamClient } from '../config/stream';
 import { verifyPrivyToken, AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
-import { normalizeStreamUserId } from '../../../shared/streamUserId';
+import { normalizeStreamUserId } from '../utils/streamUserId';
 import { supabaseService } from '../config/supabase';
 
 const router = Router();

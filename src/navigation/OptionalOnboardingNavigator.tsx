@@ -17,6 +17,7 @@ import { OnboardingHopingToMeetScreen } from '@/screens/onboarding/OnboardingHop
 import { OnboardingHobbiesScreen } from '@/screens/onboarding/OnboardingHobbiesScreen';
 import { OnboardingInterestingFactScreen } from '@/screens/onboarding/OnboardingInterestingFactScreen';
 import { useAuthStore } from '@/store/authStore';
+import { useUserData } from '@/hooks/useUserData';
 import { __DEV__ } from '@/utils/env';
 
 export type OptionalOnboardingStackParamList = {
@@ -46,6 +47,7 @@ const createScreenWrapper = (
 ) => {
   const ScreenWrapper = () => {
     const navigation = useNavigation<any>();
+    const { userData } = useUserData();
     // const { setOnboardingStatus } = useAuthStore(); // Removed unused
     useAuthStore();
 
@@ -97,12 +99,22 @@ const createScreenWrapper = (
         case 'complete':
         case 'home':
         case 'main':
-          // The last screen (InterestingFact) will set status to FULLY_COMPLETE
-          // Just navigate to main
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'Main' }],
-          });
+          // Check if user has access or is on waitlist
+          const hasAccess = userData?.access_granted === true;
+          
+          if (hasAccess) {
+            // User has access - navigate to Main tabs
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Main' }],
+            });
+          } else {
+            // User is on waitlist - navigate back to Waitlist screen
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Waitlist' }],
+            });
+          }
           break;
         case 'back':
           if (navigation.canGoBack()) {

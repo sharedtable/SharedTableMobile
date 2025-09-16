@@ -31,12 +31,6 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(() => {
         {/* Logo Section */}
         <View style={styles.logoSection}>
           <Text style={styles.logo}>FARE</Text>
-          <Text style={styles.tagline}>Curated Dining Experiences</Text>
-        </View>
-
-        {/* Middle Content */}
-        <View style={styles.middleContent}>
-          <Text style={styles.title}>Welcome to Fare</Text>
           <Text style={styles.subtitle}>
             An exclusive community for{'\n'}exceptional dining experiences
           </Text>
@@ -51,11 +45,14 @@ export const WelcomeScreen = memo<WelcomeScreenProps>(() => {
             ]}
             onPress={handleGetStarted}
           >
-            <Text style={styles.primaryButtonText}>Get Started</Text>
+            <Text style={styles.primaryButtonText}>Get started</Text>
           </Pressable>
 
           <Text style={styles.footerText}>
-            By continuing, you agree to our Terms of Service
+            By continuing, you agree to our{' '}
+            <Text style={styles.footerLink}>Privacy Policy</Text>
+            {' and '}
+            <Text style={styles.footerLink}>Terms of Service</Text>
           </Text>
         </View>
       </View>
@@ -68,78 +65,69 @@ WelcomeScreen.displayName = 'WelcomeScreen';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.primary.main,
   },
   content: {
     flex: 1,
-    paddingHorizontal: scaleWidth(30),
-    justifyContent: 'space-between',
+    paddingHorizontal: scaleWidth(40),
+    paddingBottom: scaleHeight(40),
   },
   logoSection: {
     alignItems: 'center',
-    paddingTop: scaleHeight(100),
+    marginTop: scaleHeight(120),
   },
   logo: {
     fontSize: scaleFont(48),
-    fontWeight: '700',
-    color: theme.colors.primary.main,
-    letterSpacing: 4,
+    fontWeight: '400',
+    color: theme.colors.white,
+    letterSpacing: 8,
     fontFamily: theme.typography.fontFamily.heading,
-  },
-  tagline: {
-    fontSize: scaleFont(14),
-    color: theme.colors.text.secondary,
-    marginTop: scaleHeight(8),
-    letterSpacing: 1,
-    fontFamily: theme.typography.fontFamily.body,
-  },
-  middleContent: {
-    alignItems: 'center',
-    paddingHorizontal: scaleWidth(20),
-  },
-  title: {
-    fontSize: scaleFont(32),
-    fontWeight: '700',
-    color: theme.colors.text.primary,
-    textAlign: 'center',
-    marginBottom: scaleHeight(16),
-    fontFamily: theme.typography.fontFamily.heading,
+    marginBottom: scaleHeight(24),
   },
   subtitle: {
     fontSize: scaleFont(16),
-    color: theme.colors.text.secondary,
+    color: theme.colors.white,
     textAlign: 'center',
     lineHeight: scaleFont(24),
     fontFamily: theme.typography.fontFamily.body,
+    paddingHorizontal: scaleWidth(20),
   },
   buttonSection: {
-    paddingBottom: scaleHeight(60),
+    position: 'absolute',
+    bottom: scaleHeight(80),
+    left: scaleWidth(40),
+    right: scaleWidth(40),
     alignItems: 'center',
   },
   primaryButton: {
-    backgroundColor: theme.colors.primary.main,
-    paddingVertical: scaleHeight(18),
+    backgroundColor: theme.colors.white,
+    paddingVertical: scaleHeight(16),
     paddingHorizontal: scaleWidth(60),
-    borderRadius: scaleWidth(12),
+    borderRadius: scaleWidth(30),
     alignItems: 'center',
-    marginBottom: scaleHeight(20),
+    marginBottom: scaleHeight(16),
     width: '100%',
   },
   primaryButtonText: {
     fontSize: scaleFont(16),
-    fontWeight: '600',
-    color: theme.colors.white,
-    letterSpacing: 0.5,
+    fontWeight: '500',
+    color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
   },
   buttonPressed: {
-    opacity: 0.85,
+    opacity: 0.9,
     transform: [{ scale: 0.98 }],
   },
   footerText: {
-    fontSize: scaleFont(12),
-    color: theme.colors.text.secondary,
+    fontSize: scaleFont(11),
+    color: theme.colors.white,
     textAlign: 'center',
     fontFamily: theme.typography.fontFamily.body,
+    opacity: 0.9,
+    paddingHorizontal: scaleWidth(20),
+  },
+  footerLink: {
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });

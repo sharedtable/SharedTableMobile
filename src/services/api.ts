@@ -31,7 +31,10 @@ interface RestaurantDetails extends RestaurantItem {
 }
 
 // Get API URL from app.json config
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+import Constants from 'expo-constants';
+
+const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'https://fare-backend-production.up.railway.app/api';
+console.log('🔧 API Service initialized with URL:', API_BASE_URL);
 
 // Storage keys
 const AUTH_TOKEN_KEY = 'auth_token';
@@ -1090,7 +1093,7 @@ class ApiService {
   // Stream Chat Token Endpoint
   // ==========================================================================
 
-  getChatUserToken(): Promise<{ token: string; displayName?: string }> {
+  getChatUserToken(): Promise<{ token: string; displayName?: string; streamUserId?: string }> {
     return AuthAPI.getChatUserToken();
   }
 

@@ -45,7 +45,7 @@ export const birthdaySchema = z.object({
 });
 
 export const genderSchema = z.object({
-  gender: z.enum(['male', 'female', 'non_binary', 'prefer_not_to_say'], {
+  gender: z.enum(['Male', 'Female', 'Other', 'Prefer not to say'], {
     errorMap: () => ({ message: 'Please select a gender option' }),
   }),
 });
@@ -369,7 +369,7 @@ export const onboardingOptions = {
   genders: [
     { value: 'male', label: 'Male' },
     { value: 'female', label: 'Female' },
-    { value: 'non_binary', label: 'Non-binary' },
+    { value: 'non_binary', label: 'Other' },
     { value: 'prefer_not_to_say', label: 'Prefer not to say' },
   ] as const,
 

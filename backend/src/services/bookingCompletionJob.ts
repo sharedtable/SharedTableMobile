@@ -103,7 +103,17 @@ export class BookingCompletionScheduler {
             datetime
           )
         `)
-        .eq('status', 'attended');
+        .eq('status', 'attended') as { 
+          data: Array<{
+            id: string;
+            dinner_id: string;
+            dinners: {
+              id: string;
+              datetime: string;
+            };
+          }> | null;
+          error: any;
+        };
       
       if (error) {
         logger.error('Error fetching attended bookings:', error);

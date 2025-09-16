@@ -42,8 +42,8 @@ const NODE_ENV = getEnvVar('NODE_ENV', 'development');
 export const env: Environment = {
   // API Configuration
   API_URL: getEnvVar(
-    'API_URL',
-    __DEV__ ? 'http://localhost:3000/api' : 'https://sharedtable.vercel.app/api'
+    'apiUrl',
+    __DEV__ ? 'https://fare-backend-production.up.railway.app/api' : 'https://fare-backend-production.up.railway.app/api'
   ),
 
   // Third-party Services
@@ -58,7 +58,7 @@ export const env: Environment = {
   ENABLE_DEBUG_MENU: getBooleanEnvVar('ENABLE_DEBUG_MENU', __DEV__),
 
   // App Info
-  APP_NAME: getEnvVar('APP_NAME', 'SharedTable'),
+  APP_NAME: getEnvVar('APP_NAME', 'Fare'),
   APP_VERSION: getEnvVar('APP_VERSION', '1.0.0'),
   MIN_API_VERSION: getEnvVar('MIN_API_VERSION', '1'),
 

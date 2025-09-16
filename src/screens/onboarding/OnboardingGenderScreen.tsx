@@ -8,6 +8,7 @@ import { useAuthStore, OnboardingStatus } from '@/store/authStore';
 import { api } from '@/services/api';
 import { theme } from '@/theme';
 import { scaleHeight, scaleFont, scaleWidth } from '@/utils/responsive';
+import { useUserData } from '@/hooks/useUserData';
 
 interface OnboardingGenderScreenProps {
   onNavigate?: (screen: string, data?: unknown) => void;
@@ -23,10 +24,11 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
   const navigation = useNavigation();
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
   const { privyUser, setNeedsOnboarding, setOnboardingStatus } = useAuthStore();
+  const { userData } = useUserData();
 
   const [selectedGender, setSelectedGender] = useState<
-    'male' | 'female' | 'non_binary' | 'prefer_not_to_say' | null
-  >(currentStepData.gender || null);
+    'Male' | 'Female' | 'Other' | 'Prefer not to say' | null
+  >(null);
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -38,6 +40,7 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
       setLocalErrors({});
       clearErrors();
 
+      // Use gender directly without mapping - same as EditProfileScreen
       const genderData = { gender: selectedGender };
 
       // Validate locally first
@@ -57,13 +60,21 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
         const userId = privyUser?.id;
         if (userId) {
           try {
+            // Map gender to backend format for the complete endpoint
+            const genderMap: Record<string, string> = {
+              'Male': 'male',
+              'Female': 'female',
+              'Other': 'non_binary',
+              'Prefer not to say': 'prefer_not_to_say'
+            };
+            
             // Complete onboarding with the mandatory data via backend API
             const completeData = {
               firstName: currentStepData.firstName || '',
               lastName: currentStepData.lastName || '',
               nickname: currentStepData.nickname || '',
               birthDate: currentStepData.birthDate || new Date().toISOString(),
-              gender: selectedGender, // Don't default to 'prefer_not_to_say'
+              gender: genderMap[selectedGender!] || 'prefer_not_to_say', // Map to backend format for complete endpoint
             };
             
             console.log('📍 [OnboardingGenderScreen] Completing mandatory onboarding');
@@ -78,15 +89,23 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
               await setOnboardingStatus(OnboardingStatus.MANDATORY_COMPLETE);
               setNeedsOnboarding(false);
               
-              console.log('📍 [OnboardingGenderScreen] Navigating to Main screen');
+              // Check if user has access (entered invitation code)
+              const hasAccess = userData?.access_granted === true;
               
-              // Small delay to ensure state is fully updated
-              setTimeout(() => {
+              if (hasAccess) {
+                // User with invitation code - go directly to home screen
+                console.log('📍 [OnboardingGenderScreen] User has invitation - navigating to Main');
                 navigation.reset({
                   index: 0,
                   routes: [{ name: 'Main' as never }],
                 });
-              }, 100);
+              } else {
+                // User without invitation code - continue to optional onboarding
+                console.log('📍 [OnboardingGenderScreen] User without invitation - navigating to optional onboarding');
+                (navigation as any).navigate('OptionalOnboarding', { 
+                  screen: 'Education' 
+                });
+              }
             }
           } catch (error) {
             console.error('Failed to complete mandatory onboarding:', error);
@@ -111,10 +130,10 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
   };
 
   const genderOptions = [
-    { id: 'female', label: 'Female' },
-    { id: 'male', label: 'Male' },
-    { id: 'non_binary', label: 'Non-binary' },
-    { id: 'prefer_not_to_say', label: 'Prefer not to say' },
+    { id: 'Female', label: 'Female' },
+    { id: 'Male', label: 'Male' },
+    { id: 'Other', label: 'Other' },
+    { id: 'Prefer not to say', label: 'Prefer not to say' },
   ];
 
   const hasError = Object.keys(localErrors).length > 0 || Object.keys(stepErrors).length > 0;

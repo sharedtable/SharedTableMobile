@@ -50,7 +50,7 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
   // Add function to clear all OTP
   const clearOtp = () => {
     setOtp(['', '', '', '', '', '']);
-    inputRefs.current[0]?.focus();
+    // Don't auto-focus to prevent unwanted focus jumping
   };
 
   const handleVerifyOtp = React.useCallback(async (otpCode?: string) => {
@@ -96,10 +96,12 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
   // Auto-focus first input and check clipboard
   useEffect(() => {
     const initializeOtpInput = async () => {
-      // Focus first input
-      setTimeout(() => {
-        inputRefs.current[0]?.focus();
-      }, 100);
+      // Focus first input only if all fields are empty
+      if (otp.every(digit => digit === '')) {
+        setTimeout(() => {
+          inputRefs.current[0]?.focus();
+        }, 300);
+      }
 
       // Check if there's a potential OTP in clipboard
       try {
@@ -304,12 +306,19 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
                       value={digit}
                       onChangeText={(text) => handleOtpChange(text, index)}
                       onKeyPress={(e) => handleKeyPress(e, index)}
+                      onFocus={() => {
+                        // Prevent refocusing first input when trying to type in other inputs
+                        if (otp[index]) {
+                          // If this field has a value, select it
+                          inputRefs.current[index]?.setNativeProps({ selection: { start: 0, end: 1 } });
+                        }
+                      }}
                       keyboardType="numeric"
-                      maxLength={6} // Allow pasting multiple digits
+                      maxLength={index === 0 ? 6 : 1} // Only allow pasting full code in first input
                       textAlign="center"
                       selectTextOnFocus
                       autoComplete="one-time-code"
-                      autoFocus={index === 0}
+                      autoFocus={false} // Disable autoFocus to prevent jumping
                       editable={!isVerifying && !isLoading}
                       contextMenuHidden={false} // Allow paste
                     />

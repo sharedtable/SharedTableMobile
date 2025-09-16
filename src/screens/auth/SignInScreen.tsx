@@ -252,13 +252,11 @@ export const SignInScreen = memo<SignInScreenProps>((props) => {
             <View style={styles.content}>
               {/* Title */}
               <View style={styles.titleSection}>
-                <Text style={styles.title}>
-                  {hasInvitation ? 'Complete Sign In' : 'Sign In to Fare'}
-                </Text>
+                <Text style={styles.title}>Sign In</Text>
                 <Text style={styles.subtitle}>
                   {hasInvitation 
                     ? 'Your invitation has been verified. Sign in to continue.'
-                    : 'Sign in or create an account to join the waitlist'}
+                    : 'Sign in or create an account'}
                 </Text>
               </View>
 
@@ -515,10 +513,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   title: {
-    color: theme.colors.text.primary,
+    color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.heading,
     fontSize: scaleFont(32),
-    fontWeight: '700',
+    fontWeight: 'bold',
     marginBottom: scaleHeight(8),
     textAlign: 'center',
   },

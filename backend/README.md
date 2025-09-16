@@ -204,7 +204,7 @@ vercel
 1. Create Heroku app:
 
 ```bash
-heroku create sharedtable-api
+heroku create fare-api
 ```
 
 2. Set environment variables:

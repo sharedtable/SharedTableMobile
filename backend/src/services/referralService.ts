@@ -514,7 +514,7 @@ export class ReferralService {
       
       switch (type) {
         case 'signup':
-          title = '🎉 Your friend joined SharedTable!';
+          title = '🎉 Your friend joined Fare!';
           message = 'Your friend has signed up using your referral. You\'ll earn rewards when they attend their first dinner!';
           break;
         case 'first_dinner':

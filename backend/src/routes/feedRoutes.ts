@@ -17,7 +17,7 @@ const paginationSchema = z.object({
 });
 
 // Create a new post
-router.post('/posts', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
+router.post('/posts', verifyPrivyToken, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     const privyUserId = req.user?.id;
     if (!privyUserId) {
@@ -96,7 +96,7 @@ router.post('/posts', verifyPrivyToken, async (req: AuthRequest, res: Response) 
 });
 
 // Get user timeline (all posts for now)
-router.get('/timeline', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
+router.get('/timeline', verifyPrivyToken, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     const privyUserId = req.user?.id;
     if (!privyUserId) {
@@ -222,7 +222,7 @@ router.get('/timeline', verifyPrivyToken, async (req: AuthRequest, res: Response
 });
 
 // Get global/discover feed
-router.get('/discover', verifyPrivyToken, async (req: AuthRequest, res: Response) => {
+router.get('/discover', verifyPrivyToken, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     const { limit, offset } = paginationSchema.parse(req.query);
     

@@ -10,6 +10,11 @@ import { requestLogger } from './middleware/requestLogger';
 import { logger } from './utils/logger';
 import { BookingCompletionJob } from './services/bookingCompletionJob';
 
+// Log startup
+console.log('Starting Fare Backend...');
+console.log('Node version:', process.version);
+console.log('Environment:', process.env.NODE_ENV);
+
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
 import chatRoutes from './routes/chat';
@@ -112,36 +117,32 @@ app.use('/api/waitlist', require('./routes/waitlist').default);
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
-// Start server - listen on all interfaces for mobile development
-app.listen(PORT, '0.0.0.0', () => {
-  logger.info(`🚀 Server running on http://0.0.0.0:${PORT}`);
+// Start server
+const server = app.listen(PORT, () => {
+  console.log(`Server starting on port ${PORT}`);
+  logger.info(`🚀 Server running on port ${PORT}`);
   logger.info(`📱 Environment: ${process.env.NODE_ENV}`);
-  logger.info(`🔐 Privy App ID: ${process.env.PRIVY_APP_ID}`);
-  logger.info(`💬 Stream API Key: ${process.env.STREAM_API_KEY}`);
-  logger.info(`💬 Stream API Secret: ${process.env.STREAM_API_SECRET ? '[set]' : '[missing]'}`);
   
-  // Get actual IP address for mobile access
-  const os = require('os');
-  const interfaces = os.networkInterfaces();
-  const addresses = [];
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === 'IPv4' && !iface.internal) {
-        addresses.push(iface.address);
-      }
+  // Log configuration status
+  logger.info(`🔐 Privy App ID: ${process.env.PRIVY_APP_ID ? 'configured' : 'missing'}`);
+  logger.info(`💬 Stream API: ${process.env.STREAM_API_KEY ? 'configured' : 'missing'}`);
+  logger.info(`🗄️ Supabase: ${process.env.SUPABASE_URL ? 'configured' : 'missing'}`);
+  
+  // Delay background job initialization
+  setTimeout(() => {
+    try {
+      BookingCompletionJob.initialize();
+      logger.info('🕐 Booking scheduler initialized');
+    } catch (error) {
+      logger.warn('⚠️ Booking scheduler failed to initialize:', error);
     }
-  }
-  
-  if (addresses.length > 0) {
-    addresses.forEach(addr => {
-      logger.info(`📲 Mobile access: http://${addr}:${PORT}`);
-    });
-  }
-  
-  // Initialize the booking completion scheduler
-  BookingCompletionJob.initialize();
-  logger.info('🕐 Booking auto-completion scheduler initialized');
-  
+  }, 5000);
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  console.error('Server error:', error);
+  logger.error('Server failed to start:', error);
 });
 
 // Graceful shutdown

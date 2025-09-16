@@ -39,8 +39,8 @@ const profileSchema = z.object({
     const birthDate = new Date(date);
     const today = new Date();
     const age = today.getFullYear() - birthDate.getFullYear();
-    return age >= 18 && age <= 120;
-  }, 'You must be between 18 and 120 years old'),
+    return age >= 16 && age <= 100;
+  }, 'You must be between 16 and 100 years old'),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
