@@ -448,7 +448,7 @@ class ApiService {
     lastName: string;
     nickname: string;
     birthDate: string;
-    gender: 'male' | 'female' | 'non_binary' | 'prefer_not_to_say';
+    gender: 'Male' | 'Female' | 'Other' | 'Prefer not to say';
   }): Promise<ApiResponse<{ success: boolean; message: string }>> {
     const response = await this.client.post('/onboarding/complete', data);
     return response.data;

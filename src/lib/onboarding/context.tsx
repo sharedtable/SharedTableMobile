@@ -219,14 +219,8 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
               }
 
               if (profile.gender) {
-                // Map from database format to UI format
-                const genderMap: Record<string, 'Male' | 'Female' | 'Other' | 'Prefer not to say'> = {
-                  'male': 'Male',
-                  'female': 'Female',
-                  'non_binary': 'Other',
-                  'prefer_not_to_say': 'Prefer not to say'
-                };
-                stepData.gender = genderMap[profile.gender] || 'Prefer not to say';
+                // Gender is already in the correct format from database
+                stepData.gender = profile.gender as 'Male' | 'Female' | 'Other' | 'Prefer not to say';
               }
 
               if (profile.field_of_study) {

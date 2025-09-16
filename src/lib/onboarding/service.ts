@@ -358,14 +358,9 @@ export class OnboardingService {
       }
 
       if (stepData.gender) {
-        // Map from UI format to database format
-        const genderMap: Record<string, 'male' | 'female' | 'non_binary' | 'prefer_not_to_say'> = {
-          'Male': 'male',
-          'Female': 'female',
-          'Other': 'non_binary',
-          'Prefer not to say': 'prefer_not_to_say'
-        };
-        profileData.gender = genderMap[stepData.gender] || 'prefer_not_to_say';
+        // Gender is already in the correct format (capitalized)
+        // Database expects: 'Male', 'Female', 'Other', 'Prefer not to say'
+        profileData.gender = stepData.gender as any; // Type assertion since the database types need updating
       }
 
       if (stepData.major) {
@@ -595,7 +590,7 @@ export class OnboardingService {
           lastName: validatedData.lastName,
           nickname: validatedData.nickname || validatedData.firstName,
           birthDate: birthDateString,
-          gender: validatedData.gender as 'male' | 'female' | 'non_binary' | 'prefer_not_to_say',
+          gender: validatedData.gender as 'Male' | 'Female' | 'Other' | 'Prefer not to say',
         });
 
         if (apiResponse.success) {

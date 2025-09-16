@@ -24,7 +24,7 @@ const birthdayStepSchema = z.object({
 });
 
 const genderStepSchema = z.object({
-  gender: z.enum(['male', 'female', 'non_binary', 'prefer_not_to_say']),
+  gender: z.enum(['Male', 'Female', 'Other', 'Prefer not to say']),
 });
 
 // Complete onboarding schema (only required fields)
@@ -33,7 +33,7 @@ const completeOnboardingSchema = z.object({
   lastName: z.string().min(1).max(50),
   nickname: z.string().min(1).max(30),
   birthDate: z.string(),
-  gender: z.enum(['male', 'female', 'non_binary', 'prefer_not_to_say']),
+  gender: z.enum(['Male', 'Female', 'Other', 'Prefer not to say']),
 });
 
 /**

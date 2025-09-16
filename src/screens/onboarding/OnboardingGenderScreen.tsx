@@ -60,21 +60,13 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
         const userId = privyUser?.id;
         if (userId) {
           try {
-            // Map gender to backend format for the complete endpoint
-            const genderMap: Record<string, string> = {
-              'Male': 'male',
-              'Female': 'female',
-              'Other': 'non_binary',
-              'Prefer not to say': 'prefer_not_to_say'
-            };
-            
             // Complete onboarding with the mandatory data via backend API
             const completeData = {
               firstName: currentStepData.firstName || '',
               lastName: currentStepData.lastName || '',
               nickname: currentStepData.nickname || '',
               birthDate: currentStepData.birthDate || new Date().toISOString(),
-              gender: genderMap[selectedGender!] || 'prefer_not_to_say', // Map to backend format for complete endpoint
+              gender: selectedGender || 'Prefer not to say', // Use the correct capitalized format
             };
             
             console.log('📍 [OnboardingGenderScreen] Completing mandatory onboarding');
