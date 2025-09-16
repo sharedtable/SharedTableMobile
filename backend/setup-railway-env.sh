@@ -45,8 +45,9 @@ railway variables set STREAM_API_KEY=2eqan9bwcshj
 railway variables set STREAM_API_SECRET=uczhhkbqppdzutm9ac5q5vw329ejhdry9njcc8qt5387jzd736urvbe6fnfzp5ey
 
 # Stripe Configuration
-railway variables set STRIPE_SECRET_KEY=your_stripe_secret_key_here
-railway variables set STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key_here
+# Set your Stripe secret key
+# railway variables set STRIPE_SECRET_KEY=your_stripe_secret_key_here
+# railway variables set STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key_here
 # Note: Add STRIPE_WEBHOOK_SECRET when you configure the webhook endpoint
 
 echo ""

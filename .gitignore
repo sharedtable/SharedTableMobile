@@ -44,6 +44,8 @@ yarn-error.log
 .env.development.local
 .env.test.local
 .env.production.local
+.env.railway
+backend/.env.railway
 
 # BUCK
 buck-out/
