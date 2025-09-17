@@ -39,17 +39,27 @@ const createScreenWrapper = (
       }
 
       switch (screen) {
+        case 'onboarding-name':
+          (navigation as any).navigate('OnboardingName');
+          break;
         case 'onboarding-birthday':
           (navigation as any).navigate('OnboardingBirthday');
           break;
         case 'onboarding-gender':
           (navigation as any).navigate('OnboardingGender');
           break;
+        case 'welcome':
         case 'back':
           if (navigation.canGoBack()) {
             navigation.goBack();
           } else {
-            console.log('Cannot go back');
+            // If can't go back within onboarding, try parent navigator (to go back to Waitlist)
+            const parentNav = navigation.getParent();
+            if (parentNav && parentNav.canGoBack()) {
+              parentNav.goBack();
+            } else {
+              console.log('Cannot go back');
+            }
           }
           break;
         case 'home':

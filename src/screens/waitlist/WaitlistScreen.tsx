@@ -44,47 +44,55 @@ export const WaitlistScreen: React.FC = () => {
     // Use real onboarding status from user data
     const status = userData?.onboarding_status as OnboardingStatus;
     
-    // Calculate progress based on onboarding status
+    // Calculate progress based on individual fields completed
+    // Mandatory: 15% total (3 screens = 5% each)
+    // Optional: 85% total (9 screens approximately = ~9.4% each)
     let progress = 0;
     let isComplete = false;
     
-    switch (status) {
-      case OnboardingStatus.NOT_STARTED:
-      case 'not_started':
-      case null:
-      case undefined:
-        progress = 0;
-        isComplete = false;
-        break;
-      case OnboardingStatus.MANDATORY_COMPLETE:
-      case 'mandatory_complete':
-        progress = 60; // Mandatory fields complete (name, birthday, gender)
-        isComplete = false;
-        break;
-      case OnboardingStatus.OPTIONAL_COMPLETE:
-      case 'optional_complete':
-        progress = 80; // Optional profile complete
-        isComplete = false;
-        break;
-      case OnboardingStatus.FULLY_COMPLETE:
-      case 'fully_complete':
-        progress = 100; // All onboarding complete
+    // Mandatory fields (15% total)
+    const mandatoryFields = {
+      name: (userData?.first_name && userData?.last_name && userData?.display_name) ? 5 : 0,
+      birthday: userData?.birthday ? 5 : 0,
+      gender: userData?.gender ? 5 : 0,
+    };
+    
+    // Calculate mandatory progress
+    const mandatoryProgress = mandatoryFields.name + mandatoryFields.birthday + mandatoryFields.gender;
+    progress += mandatoryProgress;
+    
+    // Handle both enum and string values for onboarding status
+    const statusStr = status?.toString();
+    
+    // Optional fields (85% total, distributed across screens)
+    // Education: 9%, Work: 9%, Background: 9%, Personality: 10%, 
+    // Lifestyle: 10%, Food Preferences (2 screens): 18%, Interests: 10%, Final Touch: 10%
+    if (status === OnboardingStatus.MANDATORY_COMPLETE || 
+        statusStr === 'mandatory_complete' ||
+        status === OnboardingStatus.OPTIONAL_COMPLETE || 
+        statusStr === 'optional_complete' ||
+        status === OnboardingStatus.FULLY_COMPLETE || 
+        statusStr === 'fully_complete') {
+      
+      // Check individual optional fields for more granular progress
+      // Note: These fields would need to be added to userData or fetched separately
+      // For now, we'll use status-based estimates
+      
+      if (status === OnboardingStatus.OPTIONAL_COMPLETE || statusStr === 'optional_complete') {
+        progress = 15 + 85; // All complete
         isComplete = true;
-        break;
-      default: {
-        // Fallback: calculate from individual fields if status is unknown
-        let completedFields = 0;
-        const totalFields = 5;
-        
-        if (userData?.first_name) completedFields++;
-        if (userData?.last_name) completedFields++;
-        if (userData?.display_name) completedFields++;
-        if (userData?.gender) completedFields++;
-        if (userData?.birthday) completedFields++;
-        
-        progress = (completedFields / totalFields) * 100;
-        isComplete = completedFields === totalFields;
+      } else if (status === OnboardingStatus.FULLY_COMPLETE || statusStr === 'fully_complete') {
+        progress = 100;
+        isComplete = true;
+      } else {
+        // Just mandatory complete, no optional progress yet
+        progress = 15;
       }
+    }
+    
+    // Ensure we have at least the mandatory progress calculated
+    if (progress === 0 && mandatoryProgress > 0) {
+      progress = mandatoryProgress;
     }
     
     setProfileProgress(progress);
@@ -203,8 +211,32 @@ export const WaitlistScreen: React.FC = () => {
   };
 
   const handleCompleteProfile = () => {
-    // Navigate to onboarding to complete profile
-    navigation.navigate('Onboarding' as never);
+    // Navigate to onboarding, continuing from where user left off
+    // The OnboardingNavigator will handle showing the right screen based on what's incomplete
+    
+    // Check what's incomplete to provide better navigation
+    const status = userData?.onboarding_status;
+    const statusStr = status?.toString();
+    
+    if (!userData?.first_name || !userData?.last_name || !userData?.display_name) {
+      // Start from name screen
+      navigation.navigate('Onboarding' as never);
+    } else if (!userData?.birthday) {
+      // Navigate directly to birthday screen if name is complete
+      // This would require OnboardingNavigator to support initial route
+      navigation.navigate('Onboarding' as never);
+    } else if (!userData?.gender) {
+      // Navigate directly to gender screen if name and birthday are complete
+      navigation.navigate('Onboarding' as never);
+    } else if (status === OnboardingStatus.MANDATORY_COMPLETE || statusStr === 'mandatory_complete') {
+      // Mandatory complete, continue with optional onboarding
+      (navigation as any).navigate('OptionalOnboarding', { 
+        screen: 'Education' 
+      });
+    } else {
+      // Default to start of onboarding
+      navigation.navigate('Onboarding' as never);
+    }
   };
 
   const handleLogout = async () => {
@@ -313,7 +345,11 @@ export const WaitlistScreen: React.FC = () => {
                     style={styles.profileButton}
                     onPress={handleCompleteProfile}
                   >
-                    <Text style={styles.profileButtonText}>Complete Profile</Text>
+                    <Text style={styles.profileButtonText}>
+                      {profileProgress === 0 ? 'Start Profile' : 
+                       profileProgress < 15 ? 'Continue Profile' :
+                       'Complete Optional Profile'}
+                    </Text>
                     <Ionicons name="arrow-forward" size={16} color={theme.colors.white} style={{ marginLeft: 8 }} />
                   </Pressable>
                   

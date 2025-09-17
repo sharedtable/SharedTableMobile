@@ -7,6 +7,8 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -66,17 +68,25 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
       style={styles.scrollView}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
+      keyboardShouldPersistTaps="handled"
+      bounces={false}
+      onScrollBeginDrag={Keyboard.dismiss}
     >
-      <View style={styles.content}>{content}</View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.content}>{content}</View>
+      </TouchableWithoutFeedback>
     </ScrollView>
   ) : (
-    <View style={styles.content}>{content}</View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={styles.content}>{content}</View>
+    </TouchableWithoutFeedback>
   );
 
   const keyboardWrappedContent = keyboardAvoiding ? (
     <KeyboardAvoidingView
       style={styles.keyboardView}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={0}
     >
       {wrappedContent}
     </KeyboardAvoidingView>
@@ -119,7 +129,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: scaleHeight(100), // Space for bottom button
+    paddingBottom: scaleHeight(20), // Minimal padding
   },
   scrollView: {
     flex: 1,

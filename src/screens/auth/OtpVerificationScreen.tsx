@@ -1,4 +1,3 @@
-import * as Clipboard from 'expo-clipboard';
 import React, { memo, useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -93,50 +92,15 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
     return () => clearInterval(timer);
   }, []);
 
-  // Auto-focus first input and check clipboard
+  // Auto-focus first input
   useEffect(() => {
-    const initializeOtpInput = async () => {
-      // Focus first input only if all fields are empty
-      if (otp.every(digit => digit === '')) {
-        setTimeout(() => {
-          inputRefs.current[0]?.focus();
-        }, 300);
-      }
-
-      // Check if there's a potential OTP in clipboard
-      try {
-        const clipboardText = await Clipboard.getStringAsync();
-        const otpMatch = clipboardText.match(/\b\d{6}\b/);
-
-        if (otpMatch) {
-          // Ask user if they want to use clipboard OTP
-          Alert.alert(
-            'Use Copied Code?',
-            `We found a 6-digit code "${otpMatch[0]}" in your clipboard. Would you like to use it?`,
-            [
-              { text: 'Cancel', style: 'cancel' },
-              {
-                text: 'Use Code',
-                onPress: () => {
-                  const digits = otpMatch[0].split('');
-                  setOtp(digits);
-                  // Auto-verify after a short delay
-                  setTimeout(() => {
-                    handleVerifyOtp(otpMatch[0]);
-                  }, 500);
-                },
-              },
-            ]
-          );
-        }
-      } catch (error) {
-        // Clipboard access failed, continue normally
-        console.log('Clipboard access failed:', error);
-      }
-    };
-
-    initializeOtpInput();
-  }, [handleVerifyOtp]);
+    // Focus first input only if all fields are empty
+    if (otp.every(digit => digit === '')) {
+      setTimeout(() => {
+        inputRefs.current[0]?.focus();
+      }, 300);
+    }
+  }, []); // Run only once on mount
 
   const handleOtpChange = (text: string, index: number) => {
     // Only allow numeric input

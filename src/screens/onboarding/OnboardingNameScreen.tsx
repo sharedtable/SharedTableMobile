@@ -77,6 +77,7 @@ export const OnboardingNameScreen: React.FC<OnboardingNameScreenProps> = ({
       currentStep={currentStep}
       totalSteps={totalSteps}
       keyboardAvoiding
+      scrollable
     >
       <View style={styles.container}>
         <OnboardingTitle>Let&apos;s start with your name</OnboardingTitle>
