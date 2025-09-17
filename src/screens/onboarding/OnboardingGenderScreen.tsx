@@ -28,7 +28,7 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
 
   const [selectedGender, setSelectedGender] = useState<
     'Male' | 'Female' | 'Other' | 'Prefer not to say' | null
-  >(currentStepData.gender as any || null);
+  >(currentStepData.gender || null);
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
       setLocalErrors({});
       clearErrors();
 
-      // Use gender directly - one format everywhere
+      // Use gender directly - no transformation needed
       const genderData = { gender: selectedGender };
 
       // Validate locally first
@@ -50,7 +50,7 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
         return;
       }
 
-      // Save to database
+      // Save to database - use same format everywhere
       const success = await saveStep('gender', genderData);
 
       if (success) {
@@ -65,8 +65,10 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
               lastName: currentStepData.lastName || '',
               nickname: currentStepData.nickname || '',
               birthDate: currentStepData.birthDate || new Date().toISOString(),
-              gender: selectedGender || 'Prefer not to say', // Always capitalized format
+              gender: selectedGender || 'Prefer not to say', // Always use capitalized format
             };
+            
+            console.log('📤 [OnboardingGenderScreen] Sending to backend:', completeData);
             
             // Call backend API to complete mandatory onboarding
             const response = await api.request('POST', '/onboarding/complete', completeData);
