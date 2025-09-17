@@ -54,11 +54,9 @@ const createScreenWrapper = (
           break;
         case 'home':
         case 'main':
-          // After mandatory completion, go to main (where optional prompt will show)
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'Main' as never }],
-          });
+          // Navigation to Main is handled by RootNavigator based on state changes
+          // We don't need to navigate here since the state update will trigger the navigation
+          console.log('[OnboardingNavigator] Skipping navigation - handled by RootNavigator');
           break;
         default:
           if (__DEV__) {

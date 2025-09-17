@@ -28,7 +28,7 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
 
   const [selectedGender, setSelectedGender] = useState<
     'Male' | 'Female' | 'Other' | 'Prefer not to say' | null
-  >(null);
+  >(currentStepData.gender as any || null);
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
       setLocalErrors({});
       clearErrors();
 
-      // Use gender directly without mapping - same as EditProfileScreen
+      // Use gender directly - one format everywhere
       const genderData = { gender: selectedGender };
 
       // Validate locally first
@@ -60,16 +60,13 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
         const userId = privyUser?.id;
         if (userId) {
           try {
-            // Complete onboarding with the mandatory data via backend API
             const completeData = {
               firstName: currentStepData.firstName || '',
               lastName: currentStepData.lastName || '',
               nickname: currentStepData.nickname || '',
               birthDate: currentStepData.birthDate || new Date().toISOString(),
-              gender: selectedGender || 'Prefer not to say', // Use the correct capitalized format
+              gender: selectedGender || 'Prefer not to say', // Always capitalized format
             };
-            
-            console.log('📍 [OnboardingGenderScreen] Completing mandatory onboarding');
             
             // Call backend API to complete mandatory onboarding
             const response = await api.request('POST', '/onboarding/complete', completeData);
@@ -77,26 +74,38 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
             if (response.success) {
               console.log('✅ [OnboardingGenderScreen] Mandatory onboarding complete');
               
-              // Update local state
-              await setOnboardingStatus(OnboardingStatus.MANDATORY_COMPLETE);
-              setNeedsOnboarding(false);
-              
               // Check if user has access (entered invitation code)
               const hasAccess = userData?.access_granted === true;
               
               if (hasAccess) {
-                // User with invitation code - go directly to home screen
-                console.log('📍 [OnboardingGenderScreen] User has invitation - navigating to Main');
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'Main' as never }],
-                });
+                // User with invitation code - just update state
+                console.log('📍 [OnboardingGenderScreen] User has invitation - completing onboarding');
+                
+                // Update state - this will cause RootNavigator to re-render and show Main
+                setOnboardingStatus(OnboardingStatus.MANDATORY_COMPLETE);
+                setNeedsOnboarding(false);
+                
+                // The RootNavigator will automatically switch to Main screen
+                // No manual navigation needed!
               } else {
-                // User without invitation code - continue to optional onboarding
+                // User without invitation code - navigate to optional onboarding
                 console.log('📍 [OnboardingGenderScreen] User without invitation - navigating to optional onboarding');
-                (navigation as any).navigate('OptionalOnboarding', { 
-                  screen: 'Education' 
-                });
+                setOnboardingStatus(OnboardingStatus.MANDATORY_COMPLETE);
+                
+                // For optional onboarding, we need to navigate
+                // Try parent navigation first (to access RootNavigator level)
+                const parentNav = navigation.getParent();
+                if (parentNav) {
+                  // Don't set needsOnboarding to false yet - they're continuing
+                  (parentNav as any).navigate('OptionalOnboarding', { 
+                    screen: 'Education' 
+                  });
+                } else {
+                  // Fallback
+                  (navigation as any).navigate('OptionalOnboarding', { 
+                    screen: 'Education' 
+                  });
+                }
               }
             }
           } catch (error) {

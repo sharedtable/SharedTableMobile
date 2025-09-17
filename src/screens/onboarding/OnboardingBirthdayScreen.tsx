@@ -42,7 +42,7 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
   const currentDay = new Date().getDate();
 
   // Initialize from existing data or defaults
-  const existingDate = currentStepData.birthDate;
+  const existingDate = currentStepData.birthDate ? new Date(currentStepData.birthDate) : null;
   const [selectedMonth, setSelectedMonth] = useState(
     existingDate ? existingDate.getMonth() : currentMonth
   );
@@ -58,9 +58,22 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
   const dayScrollRef = useRef<ScrollView>(null);
   const yearScrollRef = useRef<ScrollView>(null);
 
+  // Helper function to get days in month
+  const getDaysInMonth = (month: number, year: number) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
   // Generate arrays for the pickers
-  const days = Array.from({ length: 31 }, (_, i) => i + 1);
-  const years = Array.from({ length: 120 }, (_, i) => currentYear - i); // 120 years range
+  const daysInSelectedMonth = getDaysInMonth(selectedMonth, selectedYear);
+  const days = Array.from({ length: daysInSelectedMonth }, (_, i) => i + 1);
+  const years = Array.from({ length: 100 }, (_, i) => currentYear - i); // 100 years range (more reasonable)
+  
+  // Ensure selected day is valid for the selected month
+  useEffect(() => {
+    if (selectedDay > daysInSelectedMonth) {
+      setSelectedDay(daysInSelectedMonth);
+    }
+  }, [selectedMonth, selectedYear, selectedDay, daysInSelectedMonth]);
 
   useEffect(() => {
     // Clear errors when component mounts
@@ -108,26 +121,15 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
 
   const handleScroll = (event: any, type: 'month' | 'day' | 'year') => {
     const offset = event.nativeEvent.contentOffset.y;
-
-    // The selected item is at position ITEM_HEIGHT from the top of the visible area
-    // Since we have padding at the top, we need to calculate which item is at that position
-    let index: number;
-
-    if (type === 'year') {
-      // Year has 2 * ITEM_HEIGHT padding at top
-      // Selected position is at offset + ITEM_HEIGHT (since selection highlight is at ITEM_HEIGHT)
-      index = Math.round((offset + ITEM_HEIGHT) / ITEM_HEIGHT) - 2;
-    } else {
-      // Month and day have 1 * ITEM_HEIGHT padding at top
-      // Selected position is at offset + ITEM_HEIGHT
-      index = Math.round((offset + ITEM_HEIGHT) / ITEM_HEIGHT) - 1;
-    }
+    // Direct calculation - offset is from the actual scroll position
+    // We add ITEM_HEIGHT because of the top padding
+    const index = Math.round(offset / ITEM_HEIGHT);
 
     if (type === 'month') {
       const monthIndex = Math.min(Math.max(0, index), 11);
       setSelectedMonth(monthIndex);
     } else if (type === 'day') {
-      const dayValue = Math.min(Math.max(1, index + 1), 31);
+      const dayValue = Math.min(Math.max(1, index + 1), days.length);
       setSelectedDay(dayValue);
     } else if (type === 'year') {
       const yearIndex = Math.min(Math.max(0, index), years.length - 1);
@@ -135,26 +137,20 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
     }
   };
 
-  const scrollToIndex = (
-    scrollRef: React.RefObject<ScrollView | null>,
-    index: number,
-    type: 'month' | 'day' | 'year' = 'month'
-  ) => {
-    // Month and day have 1 ITEM_HEIGHT padding, year has 2 ITEM_HEIGHT padding
-    const paddingHeight = type === 'year' ? ITEM_HEIGHT * 2 : ITEM_HEIGHT;
-    const scrollPosition = index * ITEM_HEIGHT + paddingHeight;
-    scrollRef.current?.scrollTo({ y: scrollPosition, animated: true });
-  };
-
   React.useEffect(() => {
-    // Initial scroll positions
+    // Initial scroll positions - scroll to the correct positions
     setTimeout(() => {
-      scrollToIndex(monthScrollRef, selectedMonth, 'month');
-      scrollToIndex(dayScrollRef, selectedDay - 1, 'day');
+      // Month is 0-indexed, scroll directly to that index
+      monthScrollRef.current?.scrollTo({ y: selectedMonth * ITEM_HEIGHT, animated: false });
+      // Day is 1-indexed, so day 1 is at index 0
+      dayScrollRef.current?.scrollTo({ y: (selectedDay - 1) * ITEM_HEIGHT, animated: false });
+      // Year - find index in array
       const yearIndex = years.indexOf(selectedYear);
-      scrollToIndex(yearScrollRef, yearIndex, 'year');
+      if (yearIndex !== -1) {
+        yearScrollRef.current?.scrollTo({ y: yearIndex * ITEM_HEIGHT, animated: false });
+      }
     }, 100);
-  }, []);
+  }, [selectedMonth, selectedDay, selectedYear, years]);
 
   const renderPickerItem = (item: string | number, index: number, selectedIndex: number) => {
     const isSelected = index === selectedIndex;
@@ -232,11 +228,11 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
               onMomentumScrollEnd={(e) => handleScroll(e, 'year')}
               contentContainerStyle={styles.pickerContent}
             >
-              <View style={{ height: ITEM_HEIGHT * 2 }} />
+              <View style={{ height: ITEM_HEIGHT }} />
               {years.map((year, index) =>
                 renderPickerItem(year, index, years.indexOf(selectedYear))
               )}
-              <View style={{ height: ITEM_HEIGHT * 2 }} />
+              <View style={{ height: ITEM_HEIGHT }} />
             </ScrollView>
           </View>
 
@@ -249,7 +245,7 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
         <View style={styles.bottomContainer}>
           <OnboardingButton
             onPress={handleNext}
-            label={saving ? 'Saving...' : 'Next'}
+            label={saving ? 'Saving...' : 'I confirm that I am 16 years old'}
             disabled={saving}
             loading={saving}
           />

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { DeviceEventEmitter } from 'react-native';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/authStore';
 import { Database } from '@/lib/supabase/types/database';
@@ -173,6 +174,21 @@ export const useUserData = () => {
   useEffect(() => {
     fetchUserData();
   }, [privyUser?.id]);
+
+  // Listen for a custom event to refetch user data
+  useEffect(() => {
+    const handleRefresh = () => {
+      console.log('🔄 Refreshing user data due to event');
+      fetchUserData();
+    };
+
+    // Listen for a custom event (we'll emit this when invitation code is validated)
+    const subscription = DeviceEventEmitter.addListener('USER_DATA_REFRESH', handleRefresh);
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   return {
     userData,

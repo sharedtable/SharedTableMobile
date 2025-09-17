@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  DeviceEventEmitter,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -148,11 +149,15 @@ export const WaitlistScreen: React.FC = () => {
                       }
                       await setNeedsOnboarding(false);
                       
-                      // Navigate to Main screen since they have access now
-                      navigation.reset({
-                        index: 0,
-                        routes: [{ name: 'Main' as never }],
-                      });
+                      // Emit event to trigger user data refresh in RootNavigator
+                      // This ensures the RootNavigator sees access_granted = true
+                      DeviceEventEmitter.emit('USER_DATA_REFRESH');
+                      
+                      // Small delay to ensure the refresh completes before navigation changes
+                      setTimeout(() => {
+                        // The RootNavigator should now show Main instead of Waitlist
+                        setInviteCode('');
+                      }, 500);
                     }
                   } else {
                     // Still no access (shouldn't happen if code was valid, but handle it)
