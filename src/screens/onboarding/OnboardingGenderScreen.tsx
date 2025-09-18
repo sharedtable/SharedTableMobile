@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, StyleSheet, Alert, DeviceEventEmitter } from 'react-native';
 
 import { OnboardingLayout, OnboardingTitle, OnboardingButton, SingleChoiceOption } from '@/components/onboarding';
 import { useOnboarding, validateOnboardingStep } from '@/lib/onboarding';
@@ -8,7 +7,6 @@ import { useAuthStore, OnboardingStatus } from '@/store/authStore';
 import { api } from '@/services/api';
 import { theme } from '@/theme';
 import { scaleHeight, scaleFont, scaleWidth } from '@/utils/responsive';
-import { useUserData } from '@/hooks/useUserData';
 
 interface OnboardingGenderScreenProps {
   onNavigate?: (screen: string, data?: unknown) => void;
@@ -21,10 +19,8 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
   currentStep = 3,
   totalSteps = 3,
 }) => {
-  const navigation = useNavigation();
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
   const { privyUser, setNeedsOnboarding, setOnboardingStatus } = useAuthStore();
-  const { userData } = useUserData();
 
   const [selectedGender, setSelectedGender] = useState<
     'male' | 'female' | 'non_binary' | 'prefer_not_to_say' | null
@@ -76,39 +72,17 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
             if (response.success) {
               console.log('✅ [OnboardingGenderScreen] Mandatory onboarding complete');
               
-              // Check if user has access (entered invitation code)
-              const hasAccess = userData?.access_granted === true;
+              // Update onboarding status
+              await setOnboardingStatus(OnboardingStatus.MANDATORY_COMPLETE);
+              setNeedsOnboarding(false);
               
-              if (hasAccess) {
-                // User with invitation code - just update state
-                console.log('📍 [OnboardingGenderScreen] User has invitation - completing onboarding');
-                
-                // Update state - this will cause RootNavigator to re-render and show Main
-                setOnboardingStatus(OnboardingStatus.MANDATORY_COMPLETE);
-                setNeedsOnboarding(false);
-                
-                // The RootNavigator will automatically switch to Main screen
-                // No manual navigation needed!
-              } else {
-                // User without invitation code - navigate to optional onboarding
-                console.log('📍 [OnboardingGenderScreen] User without invitation - navigating to optional onboarding');
-                setOnboardingStatus(OnboardingStatus.MANDATORY_COMPLETE);
-                
-                // For optional onboarding, we need to navigate
-                // Try parent navigation first (to access RootNavigator level)
-                const parentNav = navigation.getParent();
-                if (parentNav) {
-                  // Don't set needsOnboarding to false yet - they're continuing
-                  (parentNav as any).navigate('OptionalOnboarding', { 
-                    screen: 'Education' 
-                  });
-                } else {
-                  // Fallback
-                  (navigation as any).navigate('OptionalOnboarding', { 
-                    screen: 'Education' 
-                  });
-                }
-              }
+              // Trigger user data refresh to get latest access_granted status
+              DeviceEventEmitter.emit('USER_DATA_REFRESH');
+              
+              // Small delay to ensure data refresh completes
+              setTimeout(() => {
+                console.log('✅ [OnboardingGenderScreen] Navigation should trigger now');
+              }, 100);
             }
           } catch (error) {
             console.error('Failed to complete mandatory onboarding:', error);

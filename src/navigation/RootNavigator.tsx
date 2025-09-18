@@ -46,14 +46,63 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
-  const { isAuthenticated, isLoading, needsOnboarding, onboardingStatus, continueOnboardingScreen } = useAuthStore();
-  const { userData, loading: userDataLoading } = useUserData();
+  const { isAuthenticated, isLoading, needsOnboarding, onboardingStatus, continueOnboardingScreen, setNeedsOnboarding, setOnboardingStatus } = useAuthStore();
+  const { userData, loading: userDataLoading, refetch: refetchUserData } = useUserData();
+  
+  // Force re-render when onboarding completes
+  const [, forceUpdate] = React.useReducer(x => x + 1, 0);
+  
+  // Initialize needsOnboarding based on database data
+  React.useEffect(() => {
+    if (isAuthenticated && userData && !userDataLoading) {
+      // Determine if user needs onboarding based on database onboarding_status
+      const dbStatus = userData.onboarding_status;
+      
+      if (dbStatus === 'not_started' || !dbStatus) {
+        // New user or user hasn't completed mandatory onboarding
+        setNeedsOnboarding(true);
+        setOnboardingStatus(OnboardingStatus.NOT_STARTED);
+      } else if (dbStatus === 'mandatory_complete' || 
+                 dbStatus === 'optional_complete' || 
+                 dbStatus === 'fully_complete') {
+        // User has completed mandatory onboarding
+        setNeedsOnboarding(false);
+        
+        // Set the correct onboarding status enum
+        if (dbStatus === 'mandatory_complete') {
+          setOnboardingStatus(OnboardingStatus.MANDATORY_COMPLETE);
+        } else if (dbStatus === 'fully_complete') {
+          setOnboardingStatus(OnboardingStatus.FULLY_COMPLETE);
+        }
+      }
+    }
+  }, [isAuthenticated, userData, userDataLoading, setNeedsOnboarding, setOnboardingStatus]);
+  
+  // Debug logging and force update on state changes
+  React.useEffect(() => {
+    console.log('🔄 [RootNavigator] State:', {
+      isAuthenticated,
+      needsOnboarding,
+      onboardingStatus,
+      hasAccess: userData?.access_granted,
+      continueOnboardingScreen,
+      dbOnboardingStatus: userData?.onboarding_status
+    });
+    
+    // Force re-render when transitioning from onboarding to main
+    if (!needsOnboarding && onboardingStatus === 'mandatory_complete') {
+      console.log('🔄 [RootNavigator] Forcing re-render for navigation update');
+      forceUpdate();
+      // Also refetch user data to get latest access_granted status
+      refetchUserData();
+    }
+  }, [isAuthenticated, needsOnboarding, onboardingStatus, userData?.access_granted, userData?.onboarding_status, continueOnboardingScreen]);
 
   if (isLoading || userDataLoading) {
     return <LoadingScreen />;
   }
 
-  // Check if user has access to the app
+  // Check if user has access to the app from database
   const hasAccess = userData?.access_granted === true;
 
   return (
@@ -65,25 +114,42 @@ export function RootNavigator() {
     >
       {isAuthenticated ? (
         <>
-          {/* Check if user has access to the app */}
-          {!hasAccess ? (
-            // User is on waitlist - show waitlist but allow onboarding
-            <>
-              <Stack.Screen name="Waitlist" component={WaitlistScreen} />
-              <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
-            </>
-          ) : (
-            // User has access, check onboarding status
-            <>
-              {needsOnboarding || onboardingStatus === OnboardingStatus.NOT_STARTED || continueOnboardingScreen ? (
-                // Not started or continuing optional onboarding - go to onboarding screens
-                <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
-              ) : (
-                // All other statuses go to home (with prompts for incomplete stages)
-                <Stack.Screen name="Main" component={MainTabNavigator} />
-              )}
-            </>
-          )}
+          {(() => {
+            // Simple decision logic:
+            // 1. If needsOnboarding is false -> Show Main (for users with access) or Waitlist (without access)
+            // 2. If needsOnboarding is true -> Show Onboarding or Waitlist based on access
+            
+            console.log('🎯 [RootNavigator] Navigation state:', {
+              needsOnboarding,
+              hasAccess,
+              onboardingStatus
+            });
+            
+            if (!needsOnboarding) {
+              // Onboarding is done
+              if (hasAccess) {
+                // Has access + onboarding done = Main
+                return <Stack.Screen name="Main" component={MainTabNavigator} />;
+              } else {
+                // No access + onboarding done = Waitlist
+                return <Stack.Screen name="Waitlist" component={WaitlistScreen} />;
+              }
+            } else {
+              // Still needs onboarding
+              if (hasAccess) {
+                // Has access + needs onboarding = Onboarding
+                return <Stack.Screen name="Onboarding" component={OnboardingNavigator} />;
+              } else {
+                // No access + needs onboarding = Waitlist (with Onboarding available)
+                return (
+                  <>
+                    <Stack.Screen name="Waitlist" component={WaitlistScreen} />
+                    <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
+                  </>
+                );
+              }
+            }
+          })()}
           <Stack.Screen 
             name="OptionalOnboarding" 
             component={OptionalOnboardingNavigator}

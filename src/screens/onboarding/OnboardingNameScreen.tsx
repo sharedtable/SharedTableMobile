@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Alert, StyleSheet, TextInput } from 'react-native';
+import { View, Alert, StyleSheet, TextInput, Keyboard } from 'react-native';
 
 import {
   OnboardingLayout,
@@ -39,14 +39,6 @@ export const OnboardingNameScreen: React.FC<OnboardingNameScreenProps> = ({
     clearErrors();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Intentionally omit clearErrors to prevent re-renders
-  
-  // Focus on first input after a short delay to prevent keyboard flashing
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      firstNameRef.current?.focus();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleNext = async () => {
     try {
@@ -67,6 +59,8 @@ export const OnboardingNameScreen: React.FC<OnboardingNameScreenProps> = ({
 
       if (success) {
         console.log('✅ [OnboardingNameScreen] Name saved successfully');
+        // Dismiss keyboard before navigating
+        Keyboard.dismiss();
         onNavigate?.('onboarding-birthday', nameData);
       } else {
         // Handle step errors from context

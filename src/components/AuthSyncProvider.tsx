@@ -14,7 +14,7 @@ interface AuthSyncProviderProps {
 export function AuthSyncProvider({ children }: AuthSyncProviderProps) {
   const { user: privyUser, isReady } = usePrivy();
   const { isAuthenticated } = usePrivyAuth();
-  const { setPrivyUser, setNeedsOnboarding } = useAuthStore();
+  const { setPrivyUser } = useAuthStore();
 
   useEffect(() => {
     if (!isReady) {
@@ -44,6 +44,7 @@ export function AuthSyncProvider({ children }: AuthSyncProviderProps) {
       };
 
       setPrivyUser(userData);
+      // Don't set needsOnboarding here - let RootNavigator determine it based on database data
 
       // Delay notification service initialization to ensure token is stored
       // This gives time for the token to be saved in SecureStore
@@ -62,11 +63,11 @@ export function AuthSyncProvider({ children }: AuthSyncProviderProps) {
     } else {
       // User is not authenticated
       setPrivyUser(null);
-      setNeedsOnboarding(false);
+      // Don't change needsOnboarding - preserve its state
 
       logger.debug('User not authenticated, clearing store');
     }
-  }, [privyUser, isReady, isAuthenticated, setPrivyUser, setNeedsOnboarding]);
+  }, [privyUser, isReady, isAuthenticated, setPrivyUser]);
 
   return <>{children}</>;
 }

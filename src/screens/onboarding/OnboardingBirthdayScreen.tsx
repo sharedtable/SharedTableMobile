@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, Keyboard } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { OnboardingLayout, OnboardingTitle, OnboardingButton } from '@/components/onboarding';
 import { useOnboarding, validateOnboardingStep } from '@/lib/onboarding';
@@ -79,6 +80,21 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
     clearErrors();
   }, [clearErrors]);
 
+  // Dismiss keyboard whenever this screen receives focus
+  useFocusEffect(
+    React.useCallback(() => {
+      // Dismiss keyboard immediately when screen focuses
+      Keyboard.dismiss();
+      
+      // Also dismiss after a small delay to handle any delayed focus events
+      const timer = setTimeout(() => {
+        Keyboard.dismiss();
+      }, 50);
+      
+      return () => clearTimeout(timer);
+    }, [])
+  );
+
   const handleNext = async () => {
     try {
       setLocalErrors({});
@@ -134,6 +150,9 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
   };
 
   useEffect(() => {
+    // Ensure keyboard is dismissed when setting up scroll positions
+    Keyboard.dismiss();
+    
     // Initial scroll positions
     setTimeout(() => {
       monthScrollRef.current?.scrollTo({ y: selectedMonth * ITEM_HEIGHT, animated: false });
@@ -186,6 +205,7 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
               onMomentumScrollEnd={(e) => handleScroll(e, 'month')}
               scrollEventThrottle={16}
               nestedScrollEnabled={true}
+              keyboardShouldPersistTaps="handled"
             >
               <View style={{ height: ITEM_HEIGHT }} />
               {MONTHS.map((month, index) => renderPickerItem(month, index, selectedMonth))}
@@ -204,6 +224,7 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
               onMomentumScrollEnd={(e) => handleScroll(e, 'day')}
               scrollEventThrottle={16}
               nestedScrollEnabled={true}
+              keyboardShouldPersistTaps="handled"
             >
               <View style={{ height: ITEM_HEIGHT }} />
               {days.map((day, index) => renderPickerItem(day, index, selectedDay - 1))}
@@ -222,6 +243,7 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
               onMomentumScrollEnd={(e) => handleScroll(e, 'year')}
               scrollEventThrottle={16}
               nestedScrollEnabled={true}
+              keyboardShouldPersistTaps="handled"
             >
               <View style={{ height: ITEM_HEIGHT }} />
               {years.map((year, index) =>

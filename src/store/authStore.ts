@@ -70,6 +70,7 @@ export const useAuthStore = create<AuthState>((set) => ({
               isLoading: false,
               onboardingStatus,
               error: null,
+              // Don't set needsOnboarding here - let RootNavigator determine it based on database
             });
             return;
           } else {
@@ -86,6 +87,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         privyUser: null,
         isAuthenticated: false,
         isLoading: false,
+        needsOnboarding: false,
       });
     } catch (error) {
       console.error('Auth initialization error:', error);
@@ -93,6 +95,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         privyUser: null,
         isAuthenticated: false,
         isLoading: false,
+        needsOnboarding: false,
       });
     }
   },
