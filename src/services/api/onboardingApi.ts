@@ -76,7 +76,7 @@ export interface OnboardingStepData {
     lastName?: string;
     nickname?: string;
     birthDate?: string;
-    gender?: 'Male' | 'Female' | 'Other' | 'Prefer not to say';
+    gender?: 'male' | 'female' | 'non_binary' | 'prefer_not_to_say';
     
     // Optional profile fields
     educationLevel?: string;
@@ -149,7 +149,7 @@ export interface CompleteOnboardingData {
   lastName: string;
   nickname: string;
   birthDate: string;
-  gender: 'Male' | 'Female' | 'Other' | 'Prefer not to say';
+  gender: 'male' | 'female' | 'non_binary' | 'prefer_not_to_say';
 }
 
 interface OnboardingResponse {

@@ -338,7 +338,7 @@ export class OnboardingApiService {
         lastName: '',
         nickname: '',
         birthDate: '',
-        gender: 'Prefer not to say',
+        gender: 'prefer_not_to_say',
       });
 
       // Clear cache after successful completion

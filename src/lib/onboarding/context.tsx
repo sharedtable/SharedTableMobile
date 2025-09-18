@@ -220,7 +220,7 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
 
               if (profile.gender) {
                 // Gender is already in the correct format from database
-                stepData.gender = profile.gender as 'Male' | 'Female' | 'Other' | 'Prefer not to say';
+                stepData.gender = profile.gender as 'male' | 'female' | 'non_binary' | 'prefer_not_to_say';
               }
 
               if (profile.field_of_study) {

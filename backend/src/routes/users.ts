@@ -14,7 +14,7 @@ const updateProfileSchema = z.object({
   lastName: z.string().optional(),
   nickname: z.string().optional(),
   displayName: z.string().optional(),
-  gender: z.enum(['Male', 'Female', 'Other', 'Prefer not to say']).optional(),
+  gender: z.enum(['male', 'female', 'non_binary', 'prefer_not_to_say']).optional(),
   birthday: z.string().optional(), // Date string in ISO format
   bio: z.string().optional(),
   avatarUrl: z.string().url().optional(),

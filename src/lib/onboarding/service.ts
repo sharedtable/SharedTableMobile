@@ -359,7 +359,7 @@ export class OnboardingService {
 
       if (stepData.gender) {
         // Gender is already in the correct format (capitalized)
-        // Database expects: 'Male', 'Female', 'Other', 'Prefer not to say'
+        // Database expects: 'male', 'female', 'non_binary', 'prefer_not_to_say'
         profileData.gender = stepData.gender as any; // Type assertion since the database types need updating
       }
 
@@ -590,7 +590,7 @@ export class OnboardingService {
           lastName: validatedData.lastName,
           nickname: validatedData.nickname || validatedData.firstName,
           birthDate: birthDateString,
-          gender: validatedData.gender as 'Male' | 'Female' | 'Other' | 'Prefer not to say',
+          gender: validatedData.gender as 'male' | 'female' | 'non_binary' | 'prefer_not_to_say',
         });
 
         if (apiResponse.success) {

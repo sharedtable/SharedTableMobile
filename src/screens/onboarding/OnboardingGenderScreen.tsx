@@ -27,8 +27,8 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
   const { userData } = useUserData();
 
   const [selectedGender, setSelectedGender] = useState<
-    'Male' | 'Female' | 'Other' | 'Prefer not to say' | null
-  >(currentStepData.gender || null);
+    'male' | 'female' | 'non_binary' | 'prefer_not_to_say' | null
+  >((currentStepData.gender as 'male' | 'female' | 'non_binary' | 'prefer_not_to_say' | undefined) || null);
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
               lastName: currentStepData.lastName || '',
               nickname: currentStepData.nickname || '',
               birthDate: currentStepData.birthDate || new Date().toISOString(),
-              gender: selectedGender || 'Prefer not to say', // Always use capitalized format
+              gender: selectedGender || 'prefer_not_to_say', // Always use lowercase format
             };
             
             console.log('📤 [OnboardingGenderScreen] Sending to backend:', completeData);
@@ -133,10 +133,10 @@ export const OnboardingGenderScreen: React.FC<OnboardingGenderScreenProps> = ({
   };
 
   const genderOptions = [
-    { id: 'Female', label: 'Female' },
-    { id: 'Male', label: 'Male' },
-    { id: 'Other', label: 'Other' },
-    { id: 'Prefer not to say', label: 'Prefer not to say' },
+    { id: 'female', label: 'Female' },
+    { id: 'male', label: 'Male' },
+    { id: 'non_binary', label: 'Non-binary' },
+    { id: 'prefer_not_to_say', label: 'Prefer not to say' },
   ];
 
   const hasError = Object.keys(localErrors).length > 0 || Object.keys(stepErrors).length > 0;
