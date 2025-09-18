@@ -66,8 +66,8 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
   // Generate arrays for the pickers
   const daysInSelectedMonth = getDaysInMonth(selectedMonth, selectedYear);
   const days = Array.from({ length: daysInSelectedMonth }, (_, i) => i + 1);
-  const years = Array.from({ length: 100 }, (_, i) => currentYear - i); // 100 years range (more reasonable)
-  
+  const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
+
   // Ensure selected day is valid for the selected month
   useEffect(() => {
     if (selectedDay > daysInSelectedMonth) {
@@ -76,7 +76,6 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
   }, [selectedMonth, selectedYear, selectedDay, daysInSelectedMonth]);
 
   useEffect(() => {
-    // Clear errors when component mounts
     clearErrors();
   }, [clearErrors]);
 
@@ -102,7 +101,6 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
         console.log('✅ [OnboardingBirthdayScreen] Birthday saved successfully');
         onNavigate?.('onboarding-gender', birthdayData);
       } else {
-        // Handle step errors from context
         if (Object.keys(stepErrors).length > 0) {
           setLocalErrors(stepErrors);
         } else {
@@ -121,8 +119,6 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
 
   const handleScroll = (event: any, type: 'month' | 'day' | 'year') => {
     const offset = event.nativeEvent.contentOffset.y;
-    // Direct calculation - offset is from the actual scroll position
-    // We add ITEM_HEIGHT because of the top padding
     const index = Math.round(offset / ITEM_HEIGHT);
 
     if (type === 'month') {
@@ -137,20 +133,17 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
     }
   };
 
-  React.useEffect(() => {
-    // Initial scroll positions - scroll to the correct positions
+  useEffect(() => {
+    // Initial scroll positions
     setTimeout(() => {
-      // Month is 0-indexed, scroll directly to that index
       monthScrollRef.current?.scrollTo({ y: selectedMonth * ITEM_HEIGHT, animated: false });
-      // Day is 1-indexed, so day 1 is at index 0
       dayScrollRef.current?.scrollTo({ y: (selectedDay - 1) * ITEM_HEIGHT, animated: false });
-      // Year - find index in array
       const yearIndex = years.indexOf(selectedYear);
       if (yearIndex !== -1) {
         yearScrollRef.current?.scrollTo({ y: yearIndex * ITEM_HEIGHT, animated: false });
       }
     }, 100);
-  }, [selectedMonth, selectedDay, selectedYear, years]);
+  }, []);
 
   const renderPickerItem = (item: string | number, index: number, selectedIndex: number) => {
     const isSelected = index === selectedIndex;
@@ -170,7 +163,6 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
       onBack={handleBack}
       currentStep={currentStep}
       totalSteps={totalSteps}
-      keyboardAvoiding
     >
       <View style={styles.container}>
         <OnboardingTitle>{"What's your birthday?"}</OnboardingTitle>
@@ -181,10 +173,10 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
           </View>
         )}
 
-        {/* Date Pickers */}
-        <View style={styles.pickersContainer}>
+        {/* Date Pickers - wrapped to prevent touch blocking */}
+        <View style={styles.pickersContainer} pointerEvents="box-none">
           {/* Month Picker */}
-          <View style={styles.pickerWrapper}>
+          <View style={styles.pickerWrapper} pointerEvents="box-none">
             <ScrollView
               ref={monthScrollRef}
               style={styles.picker}
@@ -192,7 +184,8 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
               snapToInterval={ITEM_HEIGHT}
               decelerationRate="fast"
               onMomentumScrollEnd={(e) => handleScroll(e, 'month')}
-              contentContainerStyle={styles.pickerContent}
+              scrollEventThrottle={16}
+              nestedScrollEnabled={true}
             >
               <View style={{ height: ITEM_HEIGHT }} />
               {MONTHS.map((month, index) => renderPickerItem(month, index, selectedMonth))}
@@ -201,7 +194,7 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
           </View>
 
           {/* Day Picker */}
-          <View style={styles.pickerWrapper}>
+          <View style={styles.pickerWrapper} pointerEvents="box-none">
             <ScrollView
               ref={dayScrollRef}
               style={styles.picker}
@@ -209,7 +202,8 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
               snapToInterval={ITEM_HEIGHT}
               decelerationRate="fast"
               onMomentumScrollEnd={(e) => handleScroll(e, 'day')}
-              contentContainerStyle={styles.pickerContent}
+              scrollEventThrottle={16}
+              nestedScrollEnabled={true}
             >
               <View style={{ height: ITEM_HEIGHT }} />
               {days.map((day, index) => renderPickerItem(day, index, selectedDay - 1))}
@@ -218,7 +212,7 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
           </View>
 
           {/* Year Picker */}
-          <View style={styles.pickerWrapper}>
+          <View style={styles.pickerWrapper} pointerEvents="box-none">
             <ScrollView
               ref={yearScrollRef}
               style={styles.picker}
@@ -226,7 +220,8 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
               snapToInterval={ITEM_HEIGHT}
               decelerationRate="fast"
               onMomentumScrollEnd={(e) => handleScroll(e, 'year')}
-              contentContainerStyle={styles.pickerContent}
+              scrollEventThrottle={16}
+              nestedScrollEnabled={true}
             >
               <View style={{ height: ITEM_HEIGHT }} />
               {years.map((year, index) =>
@@ -245,7 +240,7 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
         <View style={styles.bottomContainer}>
           <OnboardingButton
             onPress={handleNext}
-            label={saving ? 'Saving...' : 'I confirm that I am 16 years old'}
+            label={saving ? 'Saving...' : 'Next'}
             disabled={saving}
             loading={saving}
           />
@@ -278,9 +273,6 @@ const styles = StyleSheet.create({
   picker: {
     height: PICKER_HEIGHT,
   },
-  pickerContent: {
-    paddingVertical: 0,
-  },
   pickerItem: {
     alignItems: 'center',
     height: ITEM_HEIGHT,
@@ -297,7 +289,7 @@ const styles = StyleSheet.create({
   pickerTextSelected: {
     color: theme.colors.black['1'],
     fontSize: scaleFont(18),
-    fontWeight: '700', // Pure black for selected text
+    fontWeight: '700',
   },
   pickerWrapper: {
     flex: 1,
@@ -311,13 +303,13 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   selectionHighlight: {
-    backgroundColor: theme.colors.overlay.primary10, // 30% opacity of #E24849 (primary color)
+    backgroundColor: theme.colors.overlay.primary10,
     borderRadius: scaleWidth(8),
     height: ITEM_HEIGHT,
     left: 0,
     position: 'absolute',
     right: 0,
-    top: ITEM_HEIGHT, // Center selection for 3 visible items
+    top: ITEM_HEIGHT,
   },
   spacer: {
     flex: 1,

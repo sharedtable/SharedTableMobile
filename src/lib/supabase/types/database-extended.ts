@@ -99,7 +99,7 @@ export interface UserPersonalizationComplete {
   
   // From user_profiles
   bio: string | null;
-  gender: 'male' | 'female' | 'non_binary' | 'prefer_not_to_say' | null;
+  gender: 'Male' | 'Female' | 'Other' | 'Prefer not to say' | null;
   birth_date: string | null;
   languages_spoken: string[] | null;
   hobbies: string[] | null;
@@ -177,7 +177,7 @@ export type ExtendedUserProfileInsert = {
   user_id: string;
   birth_date?: string | null;
   age_years?: number | null;
-  gender?: 'male' | 'female' | 'non_binary' | 'prefer_not_to_say' | null;
+  gender?: 'Male' | 'Female' | 'Other' | 'Prefer not to say' | null;
   nationality?: string | null;
   ethnicities?: string[] | null;
   languages_spoken?: string[] | null;

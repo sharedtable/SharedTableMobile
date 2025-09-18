@@ -367,10 +367,10 @@ export const validateOnboardingStep = <T extends OnboardingStep>(
 // Predefined options for dropdowns/selections
 export const onboardingOptions = {
   genders: [
-    { value: 'male', label: 'Male' },
-    { value: 'female', label: 'Female' },
-    { value: 'non_binary', label: 'Other' },
-    { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+    { value: 'Male', label: 'Male' },
+    { value: 'Female', label: 'Female' },
+    { value: 'Other', label: 'Other' },
+    { value: 'Prefer not to say', label: 'Prefer not to say' },
   ] as const,
 
   universityYears: [

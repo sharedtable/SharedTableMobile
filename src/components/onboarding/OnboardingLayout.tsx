@@ -1,3 +1,13 @@
+/**
+ * OnboardingLayout - A clean, consistent layout wrapper for all onboarding screens
+ * 
+ * Design principles:
+ * - No TouchableWithoutFeedback that blocks scroll events
+ * - Clean separation of concerns (layout vs content)
+ * - Consistent header and progress bar across all screens
+ * - Optional scrolling and keyboard avoiding behavior
+ * - Professional, maintainable code architecture
+ */
 import React from 'react';
 import {
   View,
@@ -7,8 +17,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -29,7 +37,7 @@ interface OnboardingLayoutProps {
   showSkip?: boolean;
 }
 
-export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
+export const OnboardingLayout: React.FC<OnboardingLayoutProps> = React.memo(({
   children,
   onBack,
   onSkip,
@@ -70,16 +78,11 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
       contentContainerStyle={styles.scrollContent}
       keyboardShouldPersistTaps="handled"
       bounces={false}
-      onScrollBeginDrag={Keyboard.dismiss}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.content}>{content}</View>
-      </TouchableWithoutFeedback>
+      <View style={styles.content}>{content}</View>
     </ScrollView>
   ) : (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={styles.content}>{content}</View>
-    </TouchableWithoutFeedback>
+    <View style={styles.content}>{content}</View>
   );
 
   const keyboardWrappedContent = keyboardAvoiding ? (
@@ -95,7 +98,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
   );
 
   return <SafeAreaView style={styles.container}>{keyboardWrappedContent}</SafeAreaView>;
-};
+});
 
 const styles = StyleSheet.create({
   container: {

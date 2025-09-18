@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 
 import { theme } from '@/theme';
@@ -15,9 +15,13 @@ interface OnboardingInputProps {
   autoComplete?: 'off' | 'email' | 'name' | 'password' | 'tel' | 'username' | 'given-name' | 'family-name';
   autoFocus?: boolean;
   error?: string;
+  inputAccessoryViewID?: string;
+  onFocus?: () => void;
+  onSubmitEditing?: () => void;
+  returnKeyType?: 'done' | 'go' | 'next' | 'search' | 'send';
 }
 
-export const OnboardingInput: React.FC<OnboardingInputProps> = ({
+export const OnboardingInput = React.memo(forwardRef<TextInput, OnboardingInputProps>(({
   label,
   value,
   onChangeText,
@@ -28,13 +32,18 @@ export const OnboardingInput: React.FC<OnboardingInputProps> = ({
   autoComplete,
   autoFocus = false,
   error,
-}) => {
+  inputAccessoryViewID,
+  onFocus,
+  onSubmitEditing,
+  returnKeyType,
+}, ref) => {
   return (
     <View style={styles.inputGroup}>
       <Text style={styles.label}>
         {label} {required && <Text style={styles.required}>*</Text>}
       </Text>
       <TextInput
+        ref={ref}
         style={[styles.input, error && styles.inputError]}
         placeholder={placeholder}
         placeholderTextColor={theme.colors.gray['3']}
@@ -44,11 +53,17 @@ export const OnboardingInput: React.FC<OnboardingInputProps> = ({
         autoCapitalize={autoCapitalize}
         autoComplete={autoComplete}
         autoFocus={autoFocus}
+        inputAccessoryViewID={inputAccessoryViewID}
+        onFocus={onFocus}
+        onSubmitEditing={onSubmitEditing}
+        returnKeyType={returnKeyType}
       />
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
-};
+}));
+
+OnboardingInput.displayName = 'OnboardingInput';
 
 const styles = StyleSheet.create({
   errorText: {

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Alert, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Alert, StyleSheet, TextInput } from 'react-native';
 
 import {
   OnboardingLayout,
@@ -23,15 +23,30 @@ export const OnboardingNameScreen: React.FC<OnboardingNameScreenProps> = ({
 }) => {
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
 
-  const [firstName, setFirstName] = useState(currentStepData.firstName || '');
-  const [lastName, setLastName] = useState(currentStepData.lastName || '');
-  const [nickname, setNickname] = useState(currentStepData.nickname || '');
+  // Initialize state only once with lazy initialization
+  const [firstName, setFirstName] = useState(() => currentStepData.firstName || '');
+  const [lastName, setLastName] = useState(() => currentStepData.lastName || '');
+  const [nickname, setNickname] = useState(() => currentStepData.nickname || '');
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+  
+  // Refs for input fields
+  const firstNameRef = useRef<TextInput>(null);
+  const lastNameRef = useRef<TextInput>(null);
+  const nicknameRef = useRef<TextInput>(null);
 
+  // Clear errors only once on mount
   useEffect(() => {
-    // Clear errors when component mounts
     clearErrors();
-  }, [clearErrors]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Intentionally omit clearErrors to prevent re-renders
+  
+  // Focus on first input after a short delay to prevent keyboard flashing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      firstNameRef.current?.focus();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleNext = async () => {
     try {
@@ -80,9 +95,10 @@ export const OnboardingNameScreen: React.FC<OnboardingNameScreenProps> = ({
       scrollable
     >
       <View style={styles.container}>
-        <OnboardingTitle>Let&apos;s start with your name</OnboardingTitle>
+        <OnboardingTitle>{"Let's start with your name"}</OnboardingTitle>
 
         <OnboardingInput
+          ref={firstNameRef}
           label="First Name"
           value={firstName}
           onChangeText={(text) => {
@@ -97,11 +113,13 @@ export const OnboardingNameScreen: React.FC<OnboardingNameScreenProps> = ({
           keyboardType="default"
           autoCapitalize="words"
           autoComplete="given-name"
-          autoFocus
           error={localErrors.firstName || stepErrors.firstName}
+          onSubmitEditing={() => lastNameRef.current?.focus()}
+          returnKeyType="next"
         />
 
         <OnboardingInput
+          ref={lastNameRef}
           label="Last Name"
           value={lastName}
           onChangeText={(text) => {
@@ -117,9 +135,12 @@ export const OnboardingNameScreen: React.FC<OnboardingNameScreenProps> = ({
           autoCapitalize="words"
           autoComplete="family-name"
           error={localErrors.lastName || stepErrors.lastName}
+          onSubmitEditing={() => nicknameRef.current?.focus()}
+          returnKeyType="next"
         />
 
         <OnboardingInput
+          ref={nicknameRef}
           label="Nickname"
           value={nickname}
           onChangeText={(text) => {
@@ -134,6 +155,7 @@ export const OnboardingNameScreen: React.FC<OnboardingNameScreenProps> = ({
           keyboardType="default"
           autoCapitalize="words"
           error={localErrors.nickname || stepErrors.nickname}
+          returnKeyType="done"
         />
 
         <View style={styles.spacer} />

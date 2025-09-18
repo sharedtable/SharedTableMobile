@@ -7,13 +7,13 @@ import { LeaderboardView } from '@/components/dashboard/LeaderboardView';
 import { LoyaltyShopView } from '@/components/dashboard/LoyaltyShopView';
 import { MyQuestView } from '@/components/dashboard/MyQuestView';
 import { StatsCard } from '@/components/dashboard/StatsCard';
-import { StreakTrackerCard } from '@/components/dashboard/StreakTrackerCard';
 import { TierProgressCard } from '@/components/dashboard/TierProgressCard';
+import { ActiveQuestCard } from '@/components/dashboard/ActiveQuestCard';
 // Removed BottomTabBar - now using React Navigation's tab bar
 import { TopBar } from '@/components/navigation/TopBar';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
-import { useGamificationStats, useStreak, useGamificationSync } from '@/hooks/useGamification';
+import { useGamificationStats, useGamificationSync } from '@/hooks/useGamification';
 import { TIER_CONFIG } from '@/types/gamification';
 import { useAuthStore } from '@/store/authStore';
 import { useNotificationStore } from '@/store/notificationStore';
@@ -41,7 +41,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const { userData } = useUserData();
   const { unreadCount, loadNotifications } = useNotificationStore();
   const { stats, isLoading: statsLoading } = useGamificationStats();
-  const { streakInfo } = useStreak();
   const { syncAll } = useGamificationSync();
   
   const currentTier = stats ? TIER_CONFIG.find(t => t.tier === Math.min(stats.currentTier, 5)) : TIER_CONFIG[0];
@@ -133,26 +132,18 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               pointsToNext={stats?.pointsToNextTier || 0}
             />
 
-            {/* Streak Tracker */}
-            <StreakTrackerCard
-              weeksCount={streakInfo?.currentStreak || 0}
-              weeklyPoints={{
-                description: 'Maintain your streak to earn 50 bonus points per week',
-                points: streakInfo?.weeklyPoints || 0,
-              }}
-              nextReward={{
-                description:
-                  streakInfo?.nextMilestone 
-                    ? `${streakInfo.nextMilestone - (streakInfo.currentStreak || 0)} weeks until next milestone reward!`
-                    : "Mystery reward unlocks every 3 weeks! Keep your streak to find out what's waiting for you",
-              }}
-            />
+            {/* Active Quest */}
+            <ActiveQuestCard />
           </>
         );
       case 'leaderboard':
         return <LeaderboardView />;
       case 'quest':
-        return <MyQuestView />;
+        return (
+          <View style={{ marginHorizontal: -scaleWidth(16), marginTop: -scaleHeight(20) }}>
+            <MyQuestView />
+          </View>
+        );
       case 'loyalty':
         return <LoyaltyShopView />;
       default:

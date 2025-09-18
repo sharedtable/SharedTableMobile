@@ -80,7 +80,7 @@ export type Database = {
           user_id: string;
           birth_date: string | null;
           age_years: number | null;
-          gender: 'male' | 'female' | 'non_binary' | 'prefer_not_to_say' | null;
+          gender: 'Male' | 'Female' | 'Other' | 'Prefer not to say' | null;
           nationality: string | null;
           ethnicities: string[] | null;
           languages_spoken: string[] | null;
@@ -134,7 +134,7 @@ export type Database = {
           user_id: string;
           birth_date?: string | null;
           age_years?: number | null;
-          gender?: 'male' | 'female' | 'non_binary' | 'prefer_not_to_say' | null;
+          gender?: 'Male' | 'Female' | 'Other' | 'Prefer not to say' | null;
           nationality?: string | null;
           ethnicities?: string[] | null;
           field_of_study?: string | null;
@@ -156,7 +156,7 @@ export type Database = {
           user_id?: string;
           birth_date?: string | null;
           age_years?: number | null;
-          gender?: 'male' | 'female' | 'non_binary' | 'prefer_not_to_say' | null;
+          gender?: 'Male' | 'Female' | 'Other' | 'Prefer not to say' | null;
           nationality?: string | null;
           ethnicities?: string[] | null;
           field_of_study?: string | null;
@@ -485,7 +485,7 @@ export type Database = {
     };
     Enums: {
       auth_provider: 'credentials' | 'google' | 'apple';
-      gender: 'male' | 'female' | 'non_binary' | 'prefer_not_to_say';
+      gender: 'Male' | 'Female' | 'Other' | 'Prefer not to say';
       university_year: 'freshman' | 'sophomore' | 'junior' | 'senior' | 'graduate' | 'other';
       event_status: 'active' | 'cancelled' | 'completed';
     };

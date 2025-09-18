@@ -1,61 +1,282 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-import { Icon } from '@/components/base/Icon';
-import { Colors } from '@/constants/colors';
 import { theme } from '@/theme';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
-import { useQuests, useStreak } from '@/hooks/useGamification';
 
+type QuestType = 'biweekly' | 'monthly';
+type QuestDifficulty = 1 | 2 | 3 | 4 | 5;
+
+interface ActiveQuestData {
+  id: string;
+  type: QuestType;
+  title: string;
+  description: string;
+  difficulty: QuestDifficulty;
+  progress: {
+    current: number;
+    total: number;
+  };
+  daysRemaining: number;
+}
 
 export const MyQuestView: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedQuestType, setSelectedQuestType] = useState<'biweekly' | 'weekly'>('biweekly');
+  const [showQuestSelection, setShowQuestSelection] = useState(false);
+  const [showDifficultySelection, setShowDifficultySelection] = useState(false);
+  const [selectedQuestType, setSelectedQuestType] = useState<QuestType | null>(null);
+  const [_selectedDifficulty, setSelectedDifficulty] = useState<QuestDifficulty | null>(null);
   
-  const { quests, isLoading, completeTask, isCompletingTask, refetch } = useQuests(selectedQuestType);
-  const { streakInfo, claimBonus, isClaiming, refetch: refetchStreak } = useStreak();
-  
-  // Get current quest (first uncompleted quest)
-  const currentQuest = quests.find(q => !q.completedAt) || quests[0];
-  const tasks = useMemo(() => currentQuest?.tasks || [], [currentQuest]);
-  
-  const toggleTask = useCallback(async (questId: string, taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (task?.completed) return; // Don't toggle completed tasks
-    
-    try {
-      completeTask({ questId, taskId });
-    } catch (_error) {
-      Alert.alert('Error', 'Failed to complete task. Please try again.');
-    }
-  }, [tasks, completeTask]);
-  
-  const handleClaimStreakBonus = useCallback(async () => {
-    if (isClaiming) return;
-    
-    try {
-      claimBonus();
-      Alert.alert('Success', 'Streak bonus claimed!');
-    } catch (_error) {
-      Alert.alert('Error', 'Failed to claim streak bonus.');
-    }
-  }, [claimBonus, isClaiming]);
-  
+  // Mock active quest - replace with real data
+  const [activeQuest, setActiveQuest] = useState<ActiveQuestData | null>({
+    id: '1',
+    type: 'biweekly',
+    title: '1:1 Dining Experience',
+    description: 'Go on intimate one-on-one dinner dates over two weeks',
+    difficulty: 3,
+    progress: {
+      current: 3,
+      total: 5,
+    },
+    daysRemaining: 6,
+  });
+
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    try {
-      await Promise.all([refetch(), refetchStreak()]);
-    } finally {
-      setRefreshing(false);
+    // Refresh logic here
+    setTimeout(() => setRefreshing(false), 1000);
+  }, []);
+
+  const handleChooseQuest = (type: QuestType) => {
+    setSelectedQuestType(type);
+    setShowQuestSelection(false);
+    setShowDifficultySelection(true);
+  };
+
+  const handleChooseDifficulty = (difficulty: QuestDifficulty) => {
+    setSelectedDifficulty(difficulty);
+    setShowDifficultySelection(false);
+    // Here you would create the new quest
+    setActiveQuest({
+      id: '2',
+      type: selectedQuestType!,
+      title: selectedQuestType === 'biweekly' ? '1:1 Dining Experience' : 'Culinary Explorer',
+      description: selectedQuestType === 'biweekly' 
+        ? 'Go on intimate one-on-one dinner dates over two weeks'
+        : 'Try 5 different cuisine types this month',
+      difficulty,
+      progress: { current: 0, total: 5 },
+      daysRemaining: selectedQuestType === 'biweekly' ? 14 : 30,
+    });
+  };
+
+  const getDifficultyColor = (level: QuestDifficulty) => {
+    switch (level) {
+      case 1:
+      case 2:
+        return '#4CAF50'; // Green
+      case 3:
+        return '#FFA726'; // Orange
+      case 4:
+      case 5:
+        return '#EF5350'; // Red
+      default:
+        return theme.colors.text.secondary;
     }
-  }, [refetch, refetchStreak]);
-  
-  const completedPoints = tasks
-    .filter((task) => task.completed)
-    .reduce((sum, task) => sum + task.points, 0);
-  
-  const _totalPossiblePoints = tasks.reduce((sum, task) => sum + task.points, 0);
+  };
+
+  const getDifficultyLabel = (level: QuestDifficulty) => {
+    if (level <= 2) return 'Easy';
+    if (level === 3) return 'Medium';
+    return 'Hard';
+  };
+
+  if (showQuestSelection) {
+    const isMonthly = selectedQuestType === 'monthly';
+    const primaryColor = isMonthly ? '#EF5350' : '#8B7AE8';
+    
+    return (
+      <ScrollView 
+        style={styles.container} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[theme.colors.primary.main]}
+            tintColor={theme.colors.primary.main}
+          />
+        }
+      >
+        <View style={styles.header}>
+          <Pressable onPress={() => setShowQuestSelection(false)}>
+            <Ionicons name="arrow-back" size={24} color={theme.colors.text.primary} />
+          </Pressable>
+          <Text style={styles.headerTitle}>
+            Choose Your {isMonthly ? 'Monthly' : 'Biweekly'} Quest
+          </Text>
+          <View style={{ width: 24 }} />
+        </View>
+
+        <Text style={styles.subtitle}>
+          Pick 1 of 2 available quests to focus on, then select difficulty
+        </Text>
+
+        {/* Quest Options based on type */}
+        {isMonthly ? (
+          <>
+            {/* Monthly Quest Option 1 */}
+            <Pressable 
+              style={styles.questCard}
+              onPress={() => handleChooseQuest('monthly')}
+            >
+              <View style={[styles.questIcon, { backgroundColor: primaryColor }]}>
+                <Ionicons name="flame" size={24} color={theme.colors.white} />
+              </View>
+              <View style={styles.questContent}>
+                <View style={styles.questHeader}>
+                  <Text style={styles.questTitle}>Culinary Explorer</Text>
+                  <Text style={styles.questOption}>Option 1</Text>
+                </View>
+                <Text style={styles.questDescription}>
+                  Try 5 different cuisine types this month
+                </Text>
+                <Pressable style={[styles.chooseButton, { backgroundColor: primaryColor }]}>
+                  <Ionicons name="play" size={16} color={theme.colors.white} />
+                  <Text style={styles.chooseButtonText}>Choose & Set Difficulty</Text>
+                </Pressable>
+              </View>
+            </Pressable>
+
+            {/* Monthly Quest Option 2 */}
+            <Pressable 
+              style={styles.questCard}
+              onPress={() => handleChooseQuest('monthly')}
+            >
+              <View style={[styles.questIcon, { backgroundColor: primaryColor }]}>
+                <Ionicons name="people" size={24} color={theme.colors.white} />
+              </View>
+              <View style={styles.questContent}>
+                <View style={styles.questHeader}>
+                  <Text style={styles.questTitle}>Social Butterfly</Text>
+                  <Text style={styles.questOption}>Option 2</Text>
+                </View>
+                <Text style={styles.questDescription}>
+                  Host or attend 8 dining events this month
+                </Text>
+                <Pressable style={[styles.chooseButton, { backgroundColor: primaryColor }]}>
+                  <Ionicons name="play" size={16} color={theme.colors.white} />
+                  <Text style={styles.chooseButtonText}>Choose & Set Difficulty</Text>
+                </Pressable>
+              </View>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            {/* Biweekly Quest Option 1 */}
+            <Pressable 
+              style={styles.questCard}
+              onPress={() => handleChooseQuest('biweekly')}
+            >
+              <View style={[styles.questIcon, { backgroundColor: primaryColor }]}>
+                <Ionicons name="restaurant" size={24} color={theme.colors.white} />
+              </View>
+              <View style={styles.questContent}>
+                <View style={styles.questHeader}>
+                  <Text style={styles.questTitle}>1:1 Dining Experience</Text>
+                  <Text style={styles.questOption}>Option 1</Text>
+                </View>
+                <Text style={styles.questDescription}>
+                  Go on intimate one-on-one dinner{'\n'}dates over two weeks
+                </Text>
+                <Pressable style={[styles.chooseButton, { backgroundColor: primaryColor }]}>
+                  <Ionicons name="play" size={16} color={theme.colors.white} />
+                  <Text style={styles.chooseButtonText}>Choose & Set Difficulty</Text>
+                </Pressable>
+              </View>
+            </Pressable>
+
+            {/* Biweekly Quest Option 2 */}
+            <Pressable 
+              style={styles.questCard}
+              onPress={() => handleChooseQuest('biweekly')}
+            >
+              <View style={[styles.questIcon, { backgroundColor: primaryColor }]}>
+                <Ionicons name="globe" size={24} color={theme.colors.white} />
+              </View>
+              <View style={styles.questContent}>
+                <View style={styles.questHeader}>
+                  <Text style={styles.questTitle}>Dining Network</Text>
+                  <Text style={styles.questOption}>Option 2</Text>
+                </View>
+                <Text style={styles.questDescription}>
+                  Build your dining network over two{'\n'}weeks
+                </Text>
+                <Pressable style={[styles.chooseButton, { backgroundColor: primaryColor }]}>
+                  <Ionicons name="play" size={16} color={theme.colors.white} />
+                  <Text style={styles.chooseButtonText}>Choose & Set Difficulty</Text>
+                </Pressable>
+              </View>
+            </Pressable>
+          </>
+        )}
+
+        <View style={{ height: scaleHeight(100) }} />
+      </ScrollView>
+    );
+  }
+
+  if (showDifficultySelection) {
+    return (
+      <ScrollView 
+        style={styles.container} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[theme.colors.primary.main]}
+            tintColor={theme.colors.primary.main}
+          />
+        }
+      >
+        <View style={styles.header}>
+          <Pressable onPress={() => setShowDifficultySelection(false)}>
+            <Ionicons name="arrow-back" size={24} color={theme.colors.text.primary} />
+          </Pressable>
+          <Text style={styles.headerTitle}>Choose Difficulty</Text>
+          <View style={{ width: 24 }} />
+        </View>
+
+        <Text style={styles.subtitle}>1:1 Dining Experience</Text>
+
+        {/* Difficulty Options */}
+        {[2, 3, 5].map((level) => (
+          <Pressable 
+            key={level}
+            style={[
+              styles.difficultyCard,
+              { borderColor: getDifficultyColor(level as QuestDifficulty) }
+            ]}
+            onPress={() => handleChooseDifficulty(level as QuestDifficulty)}
+          >
+            <View style={styles.difficultyHeader}>
+              <Text style={[styles.difficultyNumber, { color: getDifficultyColor(level as QuestDifficulty) }]}>
+                {level}
+              </Text>
+              <Text style={styles.difficultyPoints}>⭐ {250 * level}</Text>
+            </View>
+            <Text style={[styles.difficultyLabel, { color: getDifficultyColor(level as QuestDifficulty) }]}>
+              {level} ~ {getDifficultyLabel(level as QuestDifficulty)}
+            </Text>
+          </Pressable>
+        ))}
+
+        <View style={{ height: scaleHeight(100) }} />
+      </ScrollView>
+    );
+  }
 
   return (
     <ScrollView 
@@ -70,121 +291,201 @@ export const MyQuestView: React.FC = () => {
         />
       }
     >
-      {isLoading && !refreshing && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary.main} />
-          <Text style={styles.loadingText}>Loading quests...</Text>
-        </View>
-      )}
-      {/* Monthly Streak Tracker */}
-      <View style={styles.streakCard}>
-        <Text style={styles.cardTitle}>Monthly Streak Tracker</Text>
-
-        <View style={styles.streakDisplay}>
-          <Text style={styles.streakNumber}>{streakInfo?.currentStreak || 0}</Text>
-          <Text style={styles.streakLabel}>Weeks Strong</Text>
-        </View>
-
-        <View style={styles.streakInfo}>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoTitle}>Weekly Points</Text>
-            <Text style={styles.infoPoints}>+{streakInfo?.weeklyPoints || 0} pts this week</Text>
-          </View>
-          <Text style={styles.infoDescription}>
-            Maintain your streak to earn 50 bonus points per week!
-          </Text>
-          {streakInfo && streakInfo.currentStreak > 0 && streakInfo.currentStreak % 3 === 0 && (
-            <Pressable 
-              style={styles.claimButton}
-              onPress={handleClaimStreakBonus}
-              disabled={isClaiming}
-            >
-              <Text style={styles.claimButtonText}>
-                {isClaiming ? 'Claiming...' : 'Claim Milestone Reward!'}
-              </Text>
-            </Pressable>
-          )}
-        </View>
-
-        <View style={styles.streakInfo}>
-          <Text style={styles.infoTitle}>Next Reward</Text>
-          <Text style={styles.infoDescription}>
-            Mystery reward unlocks every 3 weeks! Keep your streak to find out what&apos;s waiting
-            for you.
-          </Text>
-        </View>
+      <View style={styles.welcomeSection}>
+        <Text style={styles.welcomeTitle}>Earn rewards with events!</Text>
+        <Text style={styles.welcomeSubtitle}>
+          Complete quests and tasks to unlock rewards. New ones appear every month and every two weeks!
+        </Text>
       </View>
 
-      {/* Biweekly Tasks */}
-      <View style={styles.tasksCard}>
-        <View style={styles.tasksHeader}>
-          <Text style={styles.cardTitle}>
-            {selectedQuestType === 'biweekly' ? 'Biweekly' : 'Weekly'} Tasks
+      {/* Choose Your Quest Section */}
+      {!activeQuest ? (
+        <>
+          <View style={styles.sectionHeader}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="compass" size={20} color={theme.colors.text.primary} />
+            </View>
+            <Text style={styles.sectionTitle}>Choose Your Biweekly Quest</Text>
+          </View>
+          
+          <Text style={styles.sectionSubtitle}>
+            Pick 1 of 2 available quests to focus on, then select difficulty
           </Text>
-          <View style={styles.questTypeSelector}>
-            <Pressable 
-              style={[styles.questTypeButton, selectedQuestType === 'weekly' && styles.questTypeButtonActive]}
-              onPress={() => setSelectedQuestType('weekly')}
-            >
-              <Text style={[styles.questTypeText, selectedQuestType === 'weekly' && styles.questTypeTextActive]}>Weekly</Text>
-            </Pressable>
-            <Pressable 
-              style={[styles.questTypeButton, selectedQuestType === 'biweekly' && styles.questTypeButtonActive]}
-              onPress={() => setSelectedQuestType('biweekly')}
-            >
-              <Text style={[styles.questTypeText, selectedQuestType === 'biweekly' && styles.questTypeTextActive]}>Biweekly</Text>
+
+          <Pressable 
+            style={styles.primaryButton}
+            onPress={() => {
+              setSelectedQuestType('biweekly');
+              setShowQuestSelection(true);
+            }}
+          >
+            <Ionicons name="play" size={20} color={theme.colors.white} />
+            <Text style={styles.primaryButtonText}>Choose & Set Difficulty</Text>
+          </Pressable>
+
+          {/* Monthly Quest Section */}
+          <View style={styles.sectionHeader}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="calendar" size={20} color={theme.colors.text.primary} />
+            </View>
+            <Text style={styles.sectionTitle}>Choose Your Monthly Quest</Text>
+          </View>
+          
+          <Text style={styles.sectionSubtitle}>
+            Pick 1 of 2 available quests to focus on, then select difficulty
+          </Text>
+
+          <Pressable 
+            style={[styles.primaryButton, styles.redButton]}
+            onPress={() => {
+              setSelectedQuestType('monthly');
+              setShowQuestSelection(true);
+            }}
+          >
+            <Ionicons name="play" size={20} color={theme.colors.white} />
+            <Text style={styles.primaryButtonText}>Choose & Set Difficulty</Text>
+          </Pressable>
+        </>
+      ) : (
+        <>
+          {/* Active Quest */}
+          <View style={styles.sectionHeader}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="checkmark-circle" size={20} color={theme.colors.text.primary} />
+            </View>
+            <Text style={styles.sectionTitle}>Active Quest</Text>
+            <Pressable style={styles.resetButton}>
+              <Text style={styles.resetButtonText}>Reset (5)</Text>
+              <Ionicons name="refresh" size={16} color={theme.colors.text.secondary} />
             </Pressable>
           </View>
+
+          <View style={styles.activeQuestCard}>
+            <View style={[styles.questIcon, { backgroundColor: '#8B7AE8' }]}>
+              <Ionicons name="shield" size={24} color={theme.colors.white} />
+            </View>
+            <View style={styles.questContent}>
+              <View style={styles.questHeader}>
+                <Text style={styles.questTitle}>{activeQuest.title}</Text>
+                <View style={styles.difficultyBadge}>
+                  <Text style={styles.difficultyText}>⭐ {activeQuest.difficulty * 100}</Text>
+                  <Text style={styles.timeRemaining}>{activeQuest.daysRemaining}d</Text>
+                </View>
+              </View>
+              <Text style={styles.questDescription}>{activeQuest.description}</Text>
+              <View style={styles.progressContainer}>
+                <View style={styles.progressBar}>
+                  <View 
+                    style={[
+                      styles.progressFill, 
+                      { width: `${(activeQuest.progress.current / activeQuest.progress.total) * 100}%` }
+                    ]} 
+                  />
+                </View>
+                <View style={styles.progressTextContainer}>
+                  <Text style={styles.progressText}>
+                    {activeQuest.progress.current}/{activeQuest.progress.total}
+                  </Text>
+                  <Text style={styles.progressPercent}>
+                    {Math.round((activeQuest.progress.current / activeQuest.progress.total) * 100)} %
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Monthly Quest Section */}
+          <View style={styles.sectionHeader}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="calendar" size={20} color={theme.colors.text.primary} />
+            </View>
+            <Text style={styles.sectionTitle}>Choose Your Monthly Quest</Text>
+          </View>
+          
+          <Text style={styles.sectionSubtitle}>
+            Pick 1 of 2 available quests to focus on, then select difficulty
+          </Text>
+
+          {/* Quest Cards */}
+          <View style={styles.questOptionsContainer}>
+            <Pressable 
+              style={[styles.questOptionCard, { borderColor: '#EF5350' }]}
+              onPress={() => {
+                setSelectedQuestType('monthly');
+                setShowQuestSelection(true);
+              }}
+            >
+              <View style={[styles.questIcon, { backgroundColor: '#EF5350' }]}>
+                <Ionicons name="flame" size={24} color={theme.colors.white} />
+              </View>
+              <Text style={styles.questOptionTitle}>Culinary Explorer</Text>
+              <Text style={styles.questOptionLabel}>option 1</Text>
+              <Text style={styles.questOptionDesc}>
+                Try 5 different cuisine types this month
+              </Text>
+              <Pressable style={styles.chooseQuestButton}>
+                <Ionicons name="play" size={16} color={theme.colors.white} />
+                <Text style={styles.chooseQuestText}>Choose this quest</Text>
+              </Pressable>
+            </Pressable>
+
+            <Pressable 
+              style={[styles.questOptionCard, { borderColor: '#EF5350' }]}
+              onPress={() => {
+                setSelectedQuestType('monthly');
+                setShowQuestSelection(true);
+              }}
+            >
+              <View style={[styles.questIcon, { backgroundColor: '#EF5350' }]}>
+                <Ionicons name="people" size={24} color={theme.colors.white} />
+              </View>
+              <Text style={styles.questOptionTitle}>Social Butterfly</Text>
+              <Text style={styles.questOptionLabel}>option 2</Text>
+              <Text style={styles.questOptionDesc}>
+                Host or attend 8 dining events this month
+              </Text>
+              <Pressable style={styles.chooseQuestButton}>
+                <Ionicons name="play" size={16} color={theme.colors.white} />
+                <Text style={styles.chooseQuestText}>Choose this quest</Text>
+              </Pressable>
+            </Pressable>
+          </View>
+        </>
+      )}
+
+      {/* Need Quest Resets Section */}
+      <View style={styles.resetSection}>
+        <View style={styles.resetIcon}>
+          <Text style={styles.resetEmoji}>📋</Text>
+        </View>
+        <View style={styles.resetContent}>
+          <Text style={styles.resetTitle}>Need Quest Resets?</Text>
+          <Text style={styles.resetDescription}>Visit the store to buy more resets</Text>
+        </View>
+        <Pressable style={styles.storeButton}>
+          <Text style={styles.storeButtonText}>Store</Text>
+        </Pressable>
+      </View>
+
+      {/* Recently Completed */}
+      <View style={styles.completedSection}>
+        <View style={styles.completedHeader}>
+          <Text style={styles.completedTitle}>Recently Completed</Text>
+          <Pressable>
+            <Text style={styles.seeAllText}>See all</Text>
+          </Pressable>
         </View>
 
-        <Text style={styles.tasksSubtitle}>
-          Complete tasks to maintain your streak and earn points
-        </Text>
-
-        {tasks.length > 0 ? (
-          tasks.map((task) => (
-            <Pressable 
-              key={task.id} 
-              style={styles.taskItem} 
-              onPress={() => currentQuest && toggleTask(currentQuest.id, task.id)}
-              disabled={task.completed || isCompletingTask}
-            >
-              <View style={[styles.checkbox, task.completed && styles.checkboxChecked]}>
-                {task.completed && <Icon name="check" size={14} color={theme.colors.white} />}
-              </View>
-              <Text style={[styles.taskText, task.completed && styles.taskTextCompleted]}>
-                {task.text}
-              </Text>
-              <Text style={[styles.taskPoints, task.completed && styles.taskPointsCompleted]}>
-                {task.points} pts
-              </Text>
-            </Pressable>
-          ))
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>No active quests available</Text>
+        <View style={styles.completedCard}>
+          <View style={[styles.completedIcon, { backgroundColor: '#E8F5E9' }]}>
+            <Text style={styles.completedEmoji}>🎯</Text>
           </View>
-        )}
-
-        {/* Progress Summary */}
-        <LinearGradient
-          colors={['#FFF4E6', '#FFE4CC']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.progressSummary}
-        >
-          <Text style={styles.progressTitle}>Progress Summary</Text>
-          <Text style={styles.progressText}>
-            You&apos;ve earned{' '}
-            <Text style={styles.progressHighlight}>{completedPoints} points</Text> this week
-          </Text>
-          <Text style={styles.progressText}>from completed tasks!</Text>
-          {currentQuest?.expiresAt && (
-            <Text style={styles.expiresText}>
-              Expires: {new Date(currentQuest.expiresAt).toLocaleDateString()}
-            </Text>
-          )}
-        </LinearGradient>
+          <View style={styles.completedContent}>
+            <Text style={styles.completedName}>Master Connector</Text>
+            <Text style={styles.completedDesc}>Made 10 new dining connections this month</Text>
+          </View>
+          <Text style={styles.completedPoints}>⭐ 350</Text>
+        </View>
       </View>
 
       <View style={{ height: scaleHeight(100) }} />
@@ -193,226 +494,398 @@ export const MyQuestView: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  cardTitle: {
+  container: {
+    backgroundColor: theme.colors.background.paper,
+    flex: 1,
+    paddingHorizontal: 0,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: scaleWidth(20),
+    paddingVertical: scaleHeight(16),
+  },
+  headerTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(18),
+    fontWeight: '600',
+  },
+  subtitle: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    paddingHorizontal: scaleWidth(20),
+    marginBottom: scaleHeight(20),
+    textAlign: 'center',
+  },
+  welcomeSection: {
+    paddingHorizontal: scaleWidth(20),
+    paddingTop: scaleHeight(20),
+    marginBottom: scaleHeight(24),
+  },
+  welcomeTitle: {
+    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.heading,
+    fontSize: scaleFont(24),
+    fontWeight: '700',
+    marginBottom: scaleHeight(8),
+  },
+  welcomeSubtitle: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+    lineHeight: scaleFont(20),
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: scaleWidth(20),
+    marginBottom: scaleHeight(8),
+  },
+  iconCircle: {
+    width: scaleWidth(32),
+    height: scaleWidth(32),
+    borderRadius: scaleWidth(16),
+    backgroundColor: theme.colors.ui.lightGray,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: scaleWidth(12),
+  },
+  sectionTitle: {
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(16),
     fontWeight: '600',
-    marginBottom: scaleHeight(20),
-  },
-  checkbox: {
-    alignItems: 'center',
-    borderColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(4),
-    borderWidth: 2,
-    height: scaleWidth(20),
-    justifyContent: 'center',
-    marginRight: scaleWidth(12),
-    width: scaleWidth(20),
-  },
-  claimButton: {
-    backgroundColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(12),
-    marginTop: scaleHeight(12),
-    paddingHorizontal: scaleWidth(20),
-    paddingVertical: scaleHeight(10),
-  },
-  claimButtonText: {
-    color: theme.colors.white,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: theme.colors.primary.main,
-    borderColor: theme.colors.primary.main,
-  },
-  container: {
-    backgroundColor: Colors.backgroundLight,
     flex: 1,
-    paddingTop: scaleHeight(20),
   },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: scaleHeight(20),
-  },
-  emptyStateText: {
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
-  },
-  expiresText: {
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(12),
-    marginTop: scaleHeight(8),
-    textAlign: 'center',
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: scaleHeight(40),
-  },
-  loadingText: {
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
-    marginTop: scaleHeight(12),
-  },
-  questTypeButton: {
-    borderColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(12),
-    borderWidth: 1,
-    paddingHorizontal: scaleWidth(12),
-    paddingVertical: scaleHeight(4),
-  },
-  questTypeButtonActive: {
-    backgroundColor: theme.colors.primary.main,
-  },
-  questTypeSelector: {
-    flexDirection: 'row',
-    gap: scaleWidth(8),
-  },
-  questTypeText: {
-    color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(12),
-  },
-  questTypeTextActive: {
-    color: theme.colors.white,
-  },
-  infoDescription: {
+  sectionSubtitle: {
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(13),
-    lineHeight: scaleFont(18),
+    paddingHorizontal: scaleWidth(20),
+    marginBottom: scaleHeight(16),
   },
-  infoPoints: {
-    color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(12),
-    fontWeight: '600',
-  },
-  infoRow: {
+  primaryButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#8B7AE8',
+    marginHorizontal: scaleWidth(20),
+    paddingVertical: scaleHeight(14),
+    borderRadius: scaleWidth(12),
+    marginBottom: scaleHeight(24),
+  },
+  redButton: {
+    backgroundColor: '#EF5350',
+  },
+  primaryButtonText: {
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(15),
+    fontWeight: '600',
+    marginLeft: scaleWidth(8),
+  },
+  questCard: {
+    flexDirection: 'row',
+    backgroundColor: theme.colors.white,
+    borderRadius: scaleWidth(16),
+    padding: scaleWidth(16),
+    marginHorizontal: scaleWidth(20),
+    marginBottom: scaleHeight(16),
+    borderWidth: 1,
+    borderColor: theme.colors.ui.lightGray,
+  },
+  questIcon: {
+    width: scaleWidth(48),
+    height: scaleWidth(48),
+    borderRadius: scaleWidth(12),
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: scaleWidth(12),
+  },
+  questContent: {
+    flex: 1,
+  },
+  questHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: scaleHeight(4),
   },
-  infoTitle: {
-    color: theme.colors.primary.main,
+  questTitle: {
+    color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
+    fontSize: scaleFont(15),
     fontWeight: '600',
   },
-  progressHighlight: {
-    color: theme.colors.text.primary,
+  questOption: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
+  },
+  questDescription: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
+    marginBottom: scaleHeight(12),
+    lineHeight: scaleFont(18),
+  },
+  chooseButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#8B7AE8',
+    paddingVertical: scaleHeight(8),
+    borderRadius: scaleWidth(8),
+  },
+  chooseButtonText: {
+    color: theme.colors.white,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(13),
+    fontWeight: '500',
+    marginLeft: scaleWidth(6),
+  },
+  difficultyCard: {
+    backgroundColor: theme.colors.white,
+    borderRadius: scaleWidth(16),
+    padding: scaleWidth(20),
+    marginHorizontal: scaleWidth(20),
+    marginBottom: scaleHeight(16),
+    borderWidth: 2,
+  },
+  difficultyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: scaleHeight(8),
+  },
+  difficultyNumber: {
+    fontSize: scaleFont(32),
     fontWeight: '700',
   },
-  progressSummary: {
+  difficultyPoints: {
+    color: theme.colors.text.secondary,
+    fontSize: scaleFont(16),
+  },
+  difficultyLabel: {
+    fontSize: scaleFont(14),
+    fontWeight: '500',
+  },
+  resetButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: scaleWidth(27),
-    marginTop: scaleHeight(8),
+    paddingHorizontal: scaleWidth(12),
+    paddingVertical: scaleHeight(6),
+    borderRadius: scaleWidth(16),
+    backgroundColor: theme.colors.ui.lightGray,
+  },
+  resetButtonText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
+    marginRight: scaleWidth(4),
+  },
+  activeQuestCard: {
+    flexDirection: 'row',
+    backgroundColor: theme.colors.white,
+    borderRadius: scaleWidth(16),
     padding: scaleWidth(16),
+    marginHorizontal: scaleWidth(20),
+    marginBottom: scaleHeight(24),
+    borderWidth: 1,
+    borderColor: theme.colors.ui.lightGray,
+  },
+  difficultyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  difficultyText: {
+    color: theme.colors.text.secondary,
+    fontSize: scaleFont(12),
+    marginRight: scaleWidth(8),
+  },
+  timeRemaining: {
+    color: theme.colors.text.secondary,
+    fontSize: scaleFont(12),
+    backgroundColor: theme.colors.ui.lightGray,
+    paddingHorizontal: scaleWidth(8),
+    paddingVertical: scaleHeight(2),
+    borderRadius: scaleWidth(10),
+  },
+  progressContainer: {
+    marginTop: scaleHeight(8),
+  },
+  progressBar: {
+    height: scaleHeight(6),
+    backgroundColor: theme.colors.ui.lightGray,
+    borderRadius: scaleWidth(3),
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#8B7AE8',
+  },
+  progressTextContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: scaleHeight(4),
   },
   progressText: {
     color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(13),
-    lineHeight: scaleFont(18),
-    textAlign: 'center',
+    fontSize: scaleFont(12),
+    fontWeight: '500',
   },
-  progressTitle: {
+  progressPercent: {
     color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
-    fontWeight: '600',
-    marginBottom: scaleHeight(8),
+    fontSize: scaleFont(12),
+    fontWeight: '700',
   },
-  streakCard: {
-    backgroundColor: theme.colors.white,
-    borderColor: Colors.gray300,
-    borderRadius: scaleWidth(27),
-    borderWidth: 1,
-    marginBottom: scaleHeight(16),
-    marginHorizontal: scaleWidth(16),
-    padding: scaleWidth(20),
-  },
-  streakDisplay: {
-    alignItems: 'center',
+  questOptionsContainer: {
+    paddingHorizontal: scaleWidth(20),
     marginBottom: scaleHeight(24),
   },
-  streakInfo: {
-    backgroundColor: Colors.primaryLight,
-    borderColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(27),
-    borderWidth: 1,
-    marginBottom: scaleHeight(12),
+  questOptionCard: {
+    backgroundColor: theme.colors.white,
+    borderRadius: scaleWidth(16),
     padding: scaleWidth(16),
+    marginBottom: scaleHeight(16),
+    borderWidth: 2,
   },
-  streakLabel: {
-    color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.body,
+  questOptionTitle: {
+    color: theme.colors.text.primary,
     fontSize: scaleFont(16),
-    marginTop: scaleHeight(4),
+    fontWeight: '600',
+    marginTop: scaleHeight(8),
+    marginBottom: scaleHeight(4),
   },
-  streakNumber: {
-    color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.heading,
-    fontSize: scaleFont(48),
-    fontWeight: '700',
-    lineHeight: scaleFont(52),
+  questOptionLabel: {
+    color: theme.colors.text.secondary,
+    fontSize: scaleFont(12),
+    textTransform: 'uppercase',
+    marginBottom: scaleHeight(8),
   },
-  taskItem: {
-    alignItems: 'center',
-    backgroundColor: Colors.gray50,
-    borderColor: theme.colors.primary.main,
-    borderRadius: scaleWidth(27),
-    borderWidth: 1,
-    flexDirection: 'row',
+  questOptionDesc: {
+    color: theme.colors.text.secondary,
+    fontSize: scaleFont(13),
+    lineHeight: scaleFont(18),
     marginBottom: scaleHeight(12),
-    paddingHorizontal: scaleWidth(16),
-    paddingVertical: scaleHeight(12),
   },
-  taskPoints: {
-    color: theme.colors.primary.main,
-    fontFamily: theme.typography.fontFamily.body,
+  chooseQuestButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EF5350',
+    paddingVertical: scaleHeight(10),
+    borderRadius: scaleWidth(8),
+  },
+  chooseQuestText: {
+    color: theme.colors.white,
+    fontSize: scaleFont(14),
+    fontWeight: '500',
+    marginLeft: scaleWidth(6),
+  },
+  resetSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF9E6',
+    borderRadius: scaleWidth(16),
+    padding: scaleWidth(16),
+    marginHorizontal: scaleWidth(20),
+    marginBottom: scaleHeight(24),
+    borderWidth: 1,
+    borderColor: '#FFE082',
+  },
+  resetIcon: {
+    width: scaleWidth(40),
+    height: scaleWidth(40),
+    borderRadius: scaleWidth(20),
+    backgroundColor: theme.colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: scaleWidth(12),
+  },
+  resetEmoji: {
+    fontSize: scaleFont(20),
+  },
+  resetContent: {
+    flex: 1,
+  },
+  resetTitle: {
+    color: theme.colors.text.primary,
+    fontSize: scaleFont(14),
+    fontWeight: '600',
+    marginBottom: scaleHeight(2),
+  },
+  resetDescription: {
+    color: theme.colors.text.secondary,
+    fontSize: scaleFont(12),
+  },
+  storeButton: {
+    backgroundColor: '#FFA726',
+    paddingHorizontal: scaleWidth(20),
+    paddingVertical: scaleHeight(8),
+    borderRadius: scaleWidth(8),
+  },
+  storeButtonText: {
+    color: theme.colors.white,
     fontSize: scaleFont(13),
     fontWeight: '600',
   },
-  taskPointsCompleted: {
-    color: theme.colors.text.secondary,
+  completedSection: {
+    paddingHorizontal: scaleWidth(20),
   },
-  taskText: {
-    color: theme.colors.text.primary,
-    flex: 1,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
-  },
-  taskTextCompleted: {
-    color: theme.colors.text.secondary,
-    textDecorationLine: 'line-through',
-  },
-  tasksCard: {
-    backgroundColor: theme.colors.white,
-    borderColor: Colors.gray300,
-    borderRadius: scaleWidth(27),
-    borderWidth: 1,
-    marginBottom: scaleHeight(16),
-    marginHorizontal: scaleWidth(16),
-    padding: scaleWidth(20),
-  },
-  tasksHeader: {
-    alignItems: 'center',
+  completedHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: scaleHeight(8),
+    alignItems: 'center',
+    marginBottom: scaleHeight(16),
   },
-  tasksSubtitle: {
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
+  completedTitle: {
+    color: theme.colors.text.primary,
+    fontSize: scaleFont(16),
+    fontWeight: '600',
+  },
+  seeAllText: {
+    color: theme.colors.primary.main,
     fontSize: scaleFont(13),
-    marginBottom: scaleHeight(20),
+  },
+  completedCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E9',
+    borderRadius: scaleWidth(16),
+    padding: scaleWidth(16),
+    marginBottom: scaleHeight(12),
+  },
+  completedIcon: {
+    width: scaleWidth(40),
+    height: scaleWidth(40),
+    borderRadius: scaleWidth(20),
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: scaleWidth(12),
+  },
+  completedEmoji: {
+    fontSize: scaleFont(20),
+  },
+  completedContent: {
+    flex: 1,
+  },
+  completedName: {
+    color: theme.colors.text.primary,
+    fontSize: scaleFont(14),
+    fontWeight: '600',
+    marginBottom: scaleHeight(2),
+  },
+  completedDesc: {
+    color: theme.colors.text.secondary,
+    fontSize: scaleFont(12),
+  },
+  completedPoints: {
+    color: '#4CAF50',
+    fontSize: scaleFont(14),
+    fontWeight: '600',
   },
 });

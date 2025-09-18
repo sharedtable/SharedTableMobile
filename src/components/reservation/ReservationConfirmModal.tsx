@@ -195,7 +195,7 @@ export const ReservationConfirmModal: React.FC<ReservationConfirmModalProps> = (
               <Text style={styles.subtitle}>
                 {isReservationConfirmed 
                   ? "Your reservation has been confirmed. You'll receive details 24 hours before the event."
-                  : "Your seat will be held for 15 minutes while you confirm."}
+                  : ""}
               </Text>
             </View>
 
@@ -240,16 +240,15 @@ export const ReservationConfirmModal: React.FC<ReservationConfirmModalProps> = (
               </View>
             </View>
 
-            {/* Add to Calendar Button */}
-            <Pressable 
-              style={styles.calendarButton}
-              onPress={handleAddToCalendar}
-            >
-              <View style={styles.calendarIconContainer}>
-                <Ionicons name="calendar" size={18} color={theme.colors.ui.googleBlue} />
-              </View>
-              <Text style={styles.calendarButtonText}>Add to Calendar</Text>
-            </Pressable>
+            {/* Add to Calendar Button - Small Icon */}
+            <View style={styles.calendarButtonContainer}>
+              <Pressable 
+                style={styles.calendarIconButton}
+                onPress={handleAddToCalendar}
+              >
+                <Ionicons name="calendar" size={20} color={theme.colors.ui.googleBlue} />
+              </Pressable>
+            </View>
 
             {/* Action Buttons */}
             {isReservationConfirmed ? (
@@ -480,27 +479,26 @@ const getStyles = () => StyleSheet.create({
     color: theme.colors.white,
     fontFamily: theme.typography.fontFamily.body,
   },
-  calendarButton: {
-    flexDirection: 'row',
-    backgroundColor: theme.colors.white,
+  calendarButtonContainer: {
+    alignItems: 'flex-end',
     marginHorizontal: scaleWidth(20),
     marginBottom: scaleHeight(16),
-    paddingVertical: scaleHeight(12),
-    paddingHorizontal: scaleWidth(16),
-    borderRadius: scaleWidth(8),
+    marginTop: scaleHeight(-8),
+  },
+  calendarIconButton: {
+    width: scaleWidth(36),
+    height: scaleWidth(36),
+    borderRadius: scaleWidth(18),
+    backgroundColor: theme.colors.white,
     borderWidth: 1,
     borderColor: theme.colors.ui.googleBlue,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  calendarIconContainer: {
-    marginRight: scaleWidth(8),
-  },
-  calendarButtonText: {
-    fontSize: scaleFont(14),
-    fontWeight: '500',
-    color: theme.colors.ui.googleBlue,
-    fontFamily: theme.typography.fontFamily.body,
+    shadowColor: theme.colors.black?.['1'] || '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   confirmedIcon: {
     backgroundColor: theme.colors.success?.main || '#4CAF50',
