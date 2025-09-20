@@ -193,9 +193,9 @@ export const OnboardingWorkScreen: React.FC<OnboardingWorkScreenProps> = ({
                     nestedScrollEnabled={true}
                     showsVerticalScrollIndicator={false}
                   >
-                    {jobSuggestions.map((job) => (
+                    {jobSuggestions.map((job, index) => (
                       <TouchableOpacity
-                        key={job}
+                        key={`${job}-${index}`}
                         style={styles.suggestionItem}
                         onPress={() => handleSelectJob(job)}
                         activeOpacity={0.7}
@@ -213,52 +213,54 @@ export const OnboardingWorkScreen: React.FC<OnboardingWorkScreenProps> = ({
           </View>
 
           {/* Industry Selection */}
-          <View style={styles.inputSection}>
+          <View style={[styles.inputSection, { zIndex: 2 }]}>
             <Text style={styles.inputLabel}>Industry *</Text>
-            <TouchableOpacity
-              style={styles.selectButton}
-              onPress={() => setShowIndustryOptions(!showIndustryOptions)}
-              activeOpacity={0.7}
-            >
-              <Text style={[
-                styles.selectButtonText,
-                !industry && styles.placeholderText
-              ]}>
-                {industry || 'Select your industry'}
-              </Text>
-              <Text style={styles.selectButtonArrow}>
-                {showIndustryOptions ? '▲' : '▼'}
-              </Text>
-            </TouchableOpacity>
-            
-            {showIndustryOptions && (
-              <View style={styles.optionsContainer}>
-                <ScrollView 
-                  style={styles.optionsScrollView}
-                  showsVerticalScrollIndicator={true}
-                  nestedScrollEnabled={true}
-                >
-                  {industryCategories.map((ind) => (
-                    <TouchableOpacity
-                      key={ind}
-                      style={[
-                        styles.optionItem,
-                        industry === ind && styles.optionItemSelected
-                      ]}
-                      onPress={() => handleSelectIndustry(ind)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[
-                        styles.optionText,
-                        industry === ind && styles.optionTextSelected
-                      ]}>
-                        {ind}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
+            <View style={styles.dropdownWrapper}>
+              <TouchableOpacity
+                style={styles.selectButton}
+                onPress={() => setShowIndustryOptions(!showIndustryOptions)}
+                activeOpacity={0.7}
+              >
+                <Text style={[
+                  styles.selectButtonText,
+                  !industry && styles.placeholderText
+                ]}>
+                  {industry || 'Select your industry'}
+                </Text>
+                <Text style={styles.selectButtonArrow}>
+                  {showIndustryOptions ? '▲' : '▼'}
+                </Text>
+              </TouchableOpacity>
+              
+              {showIndustryOptions && (
+                <View style={styles.optionsContainer}>
+                  <ScrollView 
+                    style={styles.optionsScrollView}
+                    showsVerticalScrollIndicator={true}
+                    nestedScrollEnabled={true}
+                  >
+                    {industryCategories.map((ind) => (
+                      <TouchableOpacity
+                        key={ind}
+                        style={[
+                          styles.optionItem,
+                          industry === ind && styles.optionItemSelected
+                        ]}
+                        onPress={() => handleSelectIndustry(ind)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[
+                          styles.optionText,
+                          industry === ind && styles.optionTextSelected
+                        ]}>
+                          {ind}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
           </View>
 
           {/* Company Input (Optional) */}
@@ -405,7 +407,14 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(14),
     marginLeft: scaleWidth(8),
   },
+  dropdownWrapper: {
+    position: 'relative',
+  },
   optionsContainer: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
     marginTop: scaleHeight(8),
     backgroundColor: Colors.white,
     borderRadius: scaleWidth(12),
@@ -413,6 +422,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
     maxHeight: scaleHeight(200),
     overflow: 'hidden',
+    zIndex: 1000,
     ...Platform.select({
       ios: {
         shadowColor: Colors.shadowColor,

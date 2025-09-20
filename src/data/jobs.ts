@@ -205,7 +205,6 @@ export const popularJobs = [
   'Art Director',
   'Copywriter',
   'Content Writer',
-  'Technical Writer',
   'Journalist',
   'Reporter',
   'Editor',
