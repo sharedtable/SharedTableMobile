@@ -189,17 +189,20 @@ export const OnboardingEducationScreen: React.FC<OnboardingEducationScreenProps>
               }}
             />
             {showSuggestions && (
-              <View style={styles.suggestionsContainer} pointerEvents="box-none">
+              <View style={styles.suggestionsContainer}>
                 <ScrollView 
                   keyboardShouldPersistTaps="always"
-                  nestedScrollEnabled={true}
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={{ flexGrow: 1 }}
+                  nestedScrollEnabled={false}
+                  showsVerticalScrollIndicator={true}
+                  bounces={false}
                 >
-                  {schoolSuggestions.map((schoolName) => (
+                  {schoolSuggestions.map((schoolName, index) => (
                     <TouchableOpacity
                       key={schoolName}
-                      style={styles.suggestionItem}
+                      style={[
+                        styles.suggestionItem,
+                        index === schoolSuggestions.length - 1 && styles.suggestionItemLast
+                      ]}
                       activeOpacity={0.7}
                       onPress={() => {
                         handleSelectSchool(schoolName);
@@ -279,33 +282,38 @@ const styles = StyleSheet.create({
   },
   suggestionsContainer: {
     position: 'absolute',
-    bottom: scaleHeight(52), // Position above the input instead of below
+    top: '100%',
+    marginTop: scaleHeight(4),
     left: 0,
     right: 0,
-    backgroundColor: theme.colors.ui.offWhite, // Light gray background for distinction
-    borderRadius: scaleWidth(12),
-    borderWidth: 1.5,
-    borderColor: theme.colors.primary.main, // Primary color border for visibility
-    maxHeight: scaleHeight(200), // Slightly reduced height
+    backgroundColor: theme.colors.white,
+    borderRadius: scaleWidth(8),
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    maxHeight: scaleHeight(200),
     overflow: 'hidden',
+    zIndex: 1000,
     ...Platform.select({
       ios: {
         shadowColor: theme.colors.black['1'],
-        shadowOffset: { width: 0, height: -4 }, // Stronger shadow
-        shadowOpacity: 0.25,
-        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
       },
       android: {
-        elevation: 12,
+        elevation: 4,
       },
     }),
   },
   suggestionItem: {
     paddingHorizontal: scaleWidth(16),
-    paddingVertical: scaleHeight(14),
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border, // Lighter border for items
-    backgroundColor: theme.colors.transparent,
+    paddingVertical: scaleHeight(12),
+    borderBottomWidth: 0.5,
+    borderBottomColor: Colors.backgroundGrayLighter,
+    backgroundColor: theme.colors.white,
+  },
+  suggestionItemLast: {
+    borderBottomWidth: 0,
   },
   // suggestionPressed: { // Removed unused style
   //   backgroundColor: Colors.backgroundGrayLight,
@@ -314,6 +322,5 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(15),
-    fontWeight: '500', // Slightly bolder for better readability
   },
 });

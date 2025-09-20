@@ -7,10 +7,9 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Animated
+  Animated,
+  DeviceEventEmitter
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { NavigationProp } from '@react-navigation/native';
 
 import { OnboardingLayout, OnboardingButton } from '@/components/onboarding';
 import { useOnboarding, validateOnboardingStep } from '@/lib/onboarding';
@@ -19,6 +18,7 @@ import { api } from '@/services/api';
 import { theme } from '@/theme';
 import { scaleHeight, scaleWidth, scaleFont } from '@/utils/responsive';
 import { Colors } from '@/constants/colors';
+import { useUserData } from '@/hooks/useUserData';
 
 interface OnboardingInterestingFactScreenProps {
   onNavigate?: (screen: string, data?: unknown) => void;
@@ -166,8 +166,8 @@ export const OnboardingInterestingFactScreen: React.FC<OnboardingInterestingFact
   totalSteps = 12,
 }) => {
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
-  const navigation = useNavigation<NavigationProp<Record<string, unknown>>>();
   const { setNeedsOnboarding } = useAuthStore();
+  const { userData } = useUserData();
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedPrompt, setSelectedPrompt] = useState<string>('');
@@ -262,16 +262,32 @@ export const OnboardingInterestingFactScreen: React.FC<OnboardingInterestingFact
           await api.request('POST', '/onboarding-simple/complete', {});
           
           const { setOnboardingStatus } = useAuthStore.getState();
-          await setOnboardingStatus(OnboardingStatus.FULLY_COMPLETE);
-          await setNeedsOnboarding(false);
+          setOnboardingStatus(OnboardingStatus.FULLY_COMPLETE);
+          setNeedsOnboarding(false);
           
           console.log('✅ Onboarding completed successfully!');
           
-          // Navigate to main
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'Main' }],
-          });
+          // Trigger user data refresh to get latest access_granted status
+          DeviceEventEmitter.emit('USER_DATA_REFRESH');
+          
+          // Small delay to ensure data refresh completes
+          setTimeout(() => {
+            // Check if user has access (invitation code accepted)
+            const hasAccess = userData?.access_granted === true;
+            
+            if (hasAccess) {
+              // User has access - navigate to Main
+              console.log('✅ [OnboardingInterestingFactScreen] User has access, navigating to Main');
+              // The OptionalOnboardingNavigator wrapper will handle this navigation
+              // when we call onNavigate with 'complete'
+              onNavigate?.('complete');
+            } else {
+              // User doesn't have access - navigate to Waitlist
+              console.log('✅ [OnboardingInterestingFactScreen] User on waitlist, navigating to Waitlist');
+              // The OptionalOnboardingNavigator wrapper will handle this navigation
+              onNavigate?.('complete');
+            }
+          }, 100);
         } catch (error) {
           console.error('Error completing onboarding, trying fallback:', error);
           
@@ -282,17 +298,21 @@ export const OnboardingInterestingFactScreen: React.FC<OnboardingInterestingFact
             });
             
             const { setOnboardingStatus } = useAuthStore.getState();
-            await setOnboardingStatus(OnboardingStatus.FULLY_COMPLETE);
-            await setNeedsOnboarding(false);
+            setOnboardingStatus(OnboardingStatus.FULLY_COMPLETE);
+            setNeedsOnboarding(false);
+            
+            // Trigger user data refresh
+            DeviceEventEmitter.emit('USER_DATA_REFRESH');
+            
+            setTimeout(() => {
+              // Let the OptionalOnboardingNavigator wrapper handle navigation
+              onNavigate?.('complete');
+            }, 100);
           } catch (fallbackError) {
             console.error('Fallback also failed:', fallbackError);
+            // Still try to navigate even if status update fails
+            onNavigate?.('complete');
           }
-          
-          // Still navigate even if status update fails
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'Main' }],
-          });
         }
       } else {
         if (Object.keys(stepErrors).length > 0) {

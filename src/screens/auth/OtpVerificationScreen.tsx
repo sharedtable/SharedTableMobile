@@ -42,6 +42,7 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
   const [resendTimer, setResendTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const inputRefs = useRef<(TextInput | null)[]>([]);
@@ -49,6 +50,7 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
   // Add function to clear all OTP
   const clearOtp = () => {
     setOtp(['', '', '', '', '', '']);
+    setHasError(false);
     // Don't auto-focus to prevent unwanted focus jumping
   };
 
@@ -64,11 +66,13 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
 
     try {
       setIsLoading(true);
+      setHasError(false);
       // Use Privy verification passed from parent
       await privyVerifyCode(code);
       // Navigation will be handled by parent component via Privy auth state changes
     } catch (error) {
       console.error('OTP verification error:', error);
+      setHasError(true);
       clearOtp();
       Alert.alert('Verification Failed', 'The code you entered is incorrect. Please try again.');
     } finally {
@@ -103,6 +107,11 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
   }, []); // Run only once on mount
 
   const handleOtpChange = (text: string, index: number) => {
+    // Clear error when user starts typing again
+    if (hasError) {
+      setHasError(false);
+    }
+
     // Only allow numeric input
     const numericText = text.replace(/[^0-9]/g, '');
 
@@ -264,7 +273,8 @@ export const OtpVerificationScreen = memo<OtpVerificationScreenProps>((props) =>
                       }}
                       style={[
                         styles.otpInput,
-                        digit && styles.otpInputFilled,
+                        digit && !hasError && styles.otpInputFilled,
+                        hasError && styles.otpInputError,
                         (isVerifying || isLoading) && styles.otpInputDisabled,
                       ]}
                       value={digit}
@@ -379,7 +389,7 @@ const styles = StyleSheet.create({
   },
   otpInput: {
     backgroundColor: theme.colors.white,
-    borderColor: theme.colors.gray['1'],
+    borderColor: theme.colors.gray['200'],
     borderRadius: scaleWidth(12),
     borderWidth: 2,
     color: theme.colors.text.primary,
@@ -393,8 +403,12 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   otpInputFilled: {
-    backgroundColor: `${theme.colors.primary.main}0D`, // 0D is 5% opacity in hex
-    borderColor: theme.colors.primary.main,
+    backgroundColor: theme.colors.gray['50'],
+    borderColor: theme.colors.gray['300'],
+  },
+  otpInputError: {
+    borderColor: theme.colors.error.main,
+    backgroundColor: theme.colors.error['50'],
   },
   otpSection: {
     alignItems: 'center',

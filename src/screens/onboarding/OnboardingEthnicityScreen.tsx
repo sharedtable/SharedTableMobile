@@ -360,7 +360,7 @@ export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps>
         )}
 
         {/* Nationality */}
-        <View style={styles.fieldContainer}>
+        <View style={[styles.fieldContainer, showNationalityDropdown && styles.fieldContainerActive]}>
           <Text style={styles.label}>What is your nationality?</Text>
           <TouchableOpacity
             style={[styles.selectButton, showNationalityDropdown && styles.selectButtonActive]}
@@ -409,7 +409,7 @@ export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps>
         </View>
 
         {/* Ethnicity */}
-        <View style={styles.fieldContainer}>
+        <View style={[styles.fieldContainer, showEthnicityDropdown && styles.fieldContainerActive]}>
           <Text style={styles.label}>What is your ethnicity?</Text>
           <TouchableOpacity
             style={[styles.selectButton, showEthnicityDropdown && styles.selectButtonActive]}
@@ -458,7 +458,7 @@ export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps>
         </View>
 
         {/* Religion */}
-        <View style={styles.fieldContainer}>
+        <View style={[styles.fieldContainer, showReligionDropdown && styles.fieldContainerActive]}>
           <Text style={styles.label}>Religion</Text>
           <TouchableOpacity
             style={[styles.selectButton, showReligionDropdown && styles.selectButtonActive]}
@@ -507,7 +507,7 @@ export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps>
         </View>
 
         {/* Relationship Status */}
-        <View style={styles.fieldContainer}>
+        <View style={[styles.fieldContainer, showRelationshipDropdown && styles.fieldContainerActive]}>
           <Text style={styles.label}>Relationship Status</Text>
           <TouchableOpacity
             style={[styles.selectButton, showRelationshipDropdown && styles.selectButtonActive]}
@@ -743,7 +743,10 @@ const styles = StyleSheet.create({
   },
   fieldContainer: {
     marginBottom: scaleHeight(20),
-    zIndex: 1,
+    position: 'relative',
+  },
+  fieldContainerActive: {
+    zIndex: 10,
   },
   label: {
     color: theme.colors.text.primary,
@@ -782,22 +785,27 @@ const styles = StyleSheet.create({
     marginLeft: scaleWidth(8),
   },
   dropdown: {
-    marginTop: scaleHeight(8),
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    marginTop: scaleHeight(4),
     backgroundColor: Colors.white,
     borderRadius: scaleWidth(8),
     borderWidth: 1,
     borderColor: Colors.borderLight,
     maxHeight: scaleHeight(200),
     overflow: 'hidden',
+    zIndex: 1000,
     ...Platform.select({
       ios: {
         shadowColor: Colors.shadowColor,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 4,
+        elevation: 8,
       },
     }),
   },
