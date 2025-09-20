@@ -8,7 +8,9 @@ import {
   Keyboard,
   Platform,
   ScrollView,
-  TouchableOpacity
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Animated
 } from 'react-native';
 
 import { 
@@ -45,11 +47,59 @@ export const OnboardingEducationScreen: React.FC<OnboardingEducationScreenProps>
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
   const [schoolSuggestions, setSchoolSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [keyboardHeight] = useState(new Animated.Value(0));
   const inputRef = useRef<TextInput>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const inputContainerRef = useRef<View>(null);
 
   useEffect(() => {
     clearErrors();
   }, [clearErrors]);
+
+  // Handle keyboard show/hide animations
+  useEffect(() => {
+    const keyboardWillShow = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        Animated.timing(keyboardHeight, {
+          toValue: e.endCoordinates.height,
+          duration: e.duration || 250,
+          useNativeDriver: false,
+        }).start();
+
+        // Scroll to show input when keyboard appears
+        setTimeout(() => {
+          if (inputContainerRef.current && scrollViewRef.current) {
+            inputContainerRef.current.measureLayout(
+              scrollViewRef.current as any,
+              (_x, y) => {
+                // Minimal scroll - just enough to see the input
+                const scrollToY = Math.max(0, y - 150); // Larger offset to keep more content visible
+                scrollViewRef.current?.scrollTo({ y: scrollToY, animated: true });
+              },
+              () => {}
+            );
+          }
+        }, 100);
+      }
+    );
+
+    const keyboardWillHide = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      (e) => {
+        Animated.timing(keyboardHeight, {
+          toValue: 0,
+          duration: e.duration || 250,
+          useNativeDriver: false,
+        }).start();
+      }
+    );
+
+    return () => {
+      keyboardWillShow.remove();
+      keyboardWillHide.remove();
+    };
+  }, [keyboardHeight]);
 
   const handleSchoolChange = (text: string) => {
     setSchool(text);
@@ -132,10 +182,23 @@ export const OnboardingEducationScreen: React.FC<OnboardingEducationScreenProps>
       onBack={handleBack}
       currentStep={currentStep}
       totalSteps={totalSteps}
-      scrollable
-      keyboardAvoiding
+      scrollable={false}
+      keyboardAvoiding={false}
     >
-      <View style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={true}
+        >
+          <View style={styles.container}>
         <OnboardingTitle>Your Education</OnboardingTitle>
 
         {hasError && errorMessage && (
@@ -161,7 +224,7 @@ export const OnboardingEducationScreen: React.FC<OnboardingEducationScreenProps>
           ))}
         </View>
 
-        <View style={styles.inputSection}>
+        <View ref={inputContainerRef} style={styles.inputSection}>
           <Text style={styles.inputLabel}>Where did you go to school?</Text>
           <View style={styles.inputContainer}>
             <TextInput
@@ -177,6 +240,19 @@ export const OnboardingEducationScreen: React.FC<OnboardingEducationScreenProps>
                   setSchoolSuggestions(suggestions);
                   setShowSuggestions(suggestions.length > 0);
                 }
+                // Scroll to input after a delay to ensure keyboard is shown
+                setTimeout(() => {
+                  if (inputContainerRef.current && scrollViewRef.current) {
+                    inputContainerRef.current.measureLayout(
+                      scrollViewRef.current as any,
+                      (_x, y) => {
+                        const scrollToY = Math.max(0, y - 150); // Larger offset to keep more content visible
+                        scrollViewRef.current?.scrollTo({ y: scrollToY, animated: true });
+                      },
+                      () => {}
+                    );
+                  }
+                }, 300);
               }}
               autoCapitalize="words"
               autoCorrect={false}  // Disable auto-correction
@@ -225,12 +301,27 @@ export const OnboardingEducationScreen: React.FC<OnboardingEducationScreenProps>
             loading={saving}
           />
         </View>
-      </View>
+        
+        {/* Extra padding for keyboard */}
+        <Animated.View style={{ height: keyboardHeight }} />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </OnboardingLayout>
   );
 };
 
 const styles = StyleSheet.create({
+  keyboardAvoidingContainer: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: scaleHeight(10),
+  },
   container: {
     flex: 1,
   },
@@ -272,9 +363,9 @@ const styles = StyleSheet.create({
     paddingVertical: scaleHeight(12),
   },
   bottomContainer: {
-    marginTop: 'auto',
-    paddingBottom: scaleHeight(20),
-    paddingTop: scaleHeight(16),
+    marginTop: scaleHeight(20),
+    paddingBottom: scaleHeight(10),
+    paddingTop: scaleHeight(10),
   },
   inputContainer: {
     position: 'relative',

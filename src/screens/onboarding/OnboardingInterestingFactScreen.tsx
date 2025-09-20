@@ -18,7 +18,6 @@ import { api } from '@/services/api';
 import { theme } from '@/theme';
 import { scaleHeight, scaleWidth, scaleFont } from '@/utils/responsive';
 import { Colors } from '@/constants/colors';
-import { useUserData } from '@/hooks/useUserData';
 
 interface OnboardingInterestingFactScreenProps {
   onNavigate?: (screen: string, data?: unknown) => void;
@@ -167,7 +166,6 @@ export const OnboardingInterestingFactScreen: React.FC<OnboardingInterestingFact
 }) => {
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
   const { setNeedsOnboarding } = useAuthStore();
-  const { userData } = useUserData();
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedPrompt, setSelectedPrompt] = useState<string>('');
@@ -270,24 +268,15 @@ export const OnboardingInterestingFactScreen: React.FC<OnboardingInterestingFact
           // Trigger user data refresh to get latest access_granted status
           DeviceEventEmitter.emit('USER_DATA_REFRESH');
           
-          // Small delay to ensure data refresh completes
+          // Navigate to complete - the OptionalOnboardingNavigator will handle
+          // the correct navigation based on access_granted status
+          console.log('✅ [OnboardingInterestingFactScreen] Navigating to completion');
+          
+          // Give time for the user data to refresh (the hook listens to USER_DATA_REFRESH event)
+          // This ensures the OptionalOnboardingNavigator has the latest access_granted status
           setTimeout(() => {
-            // Check if user has access (invitation code accepted)
-            const hasAccess = userData?.access_granted === true;
-            
-            if (hasAccess) {
-              // User has access - navigate to Main
-              console.log('✅ [OnboardingInterestingFactScreen] User has access, navigating to Main');
-              // The OptionalOnboardingNavigator wrapper will handle this navigation
-              // when we call onNavigate with 'complete'
-              onNavigate?.('complete');
-            } else {
-              // User doesn't have access - navigate to Waitlist
-              console.log('✅ [OnboardingInterestingFactScreen] User on waitlist, navigating to Waitlist');
-              // The OptionalOnboardingNavigator wrapper will handle this navigation
-              onNavigate?.('complete');
-            }
-          }, 100);
+            onNavigate?.('complete');
+          }, 500); // Increased delay to ensure data refresh completes
         } catch (error) {
           console.error('Error completing onboarding, trying fallback:', error);
           
@@ -304,10 +293,12 @@ export const OnboardingInterestingFactScreen: React.FC<OnboardingInterestingFact
             // Trigger user data refresh
             DeviceEventEmitter.emit('USER_DATA_REFRESH');
             
+            // Navigate to complete - the OptionalOnboardingNavigator will handle
+            // the correct navigation based on access_granted status
+            // Give time for the user data to refresh
             setTimeout(() => {
-              // Let the OptionalOnboardingNavigator wrapper handle navigation
               onNavigate?.('complete');
-            }, 100);
+            }, 500); // Increased delay to ensure data refresh completes
           } catch (fallbackError) {
             console.error('Fallback also failed:', fallbackError);
             // Still try to navigate even if status update fails

@@ -39,9 +39,18 @@ export const birthdaySchema = z.object({
     .date()
     .max(new Date(), 'Birth date cannot be in the future')
     .refine((date) => {
-      const age = new Date().getFullYear() - date.getFullYear();
+      const today = new Date();
+      let age = today.getFullYear() - date.getFullYear();
+      const monthDiff = today.getMonth() - date.getMonth();
+      const dayDiff = today.getDate() - date.getDate();
+      
+      // Adjust age if birthday hasn't occurred this year
+      if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+        age--;
+      }
+      
       return age >= 16 && age <= 100;
-    }, 'Age must be between 16 and 100 years'),
+    }, 'You must be at least 16 years old to use this app'),
 });
 
 export const genderSchema = z.object({

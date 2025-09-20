@@ -176,6 +176,22 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
   const hasError = Object.keys(localErrors).length > 0 || Object.keys(stepErrors).length > 0;
   const errorMessage =
     localErrors.birthDate || stepErrors.birthDate || localErrors.general || stepErrors.general;
+  
+  // Calculate current age for display
+  const calculateAge = () => {
+    const birthDate = new Date(selectedYear, selectedMonth, selectedDay);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    const dayDiff = today.getDate() - birthDate.getDate();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+      age--;
+    }
+    return age;
+  };
+  
+  const currentAge = calculateAge();
 
   return (
     <OnboardingLayout
@@ -191,6 +207,14 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
             <Text style={styles.errorText}>{errorMessage}</Text>
           </View>
         )}
+        
+        {/* Age indicator */}
+        <View style={styles.ageIndicator}>
+          <Text style={[styles.ageText, currentAge < 16 && styles.ageTextError]}>
+            Age: {currentAge} years old
+            {currentAge < 16 && ' (Must be 16+)'}
+          </Text>
+        </View>
 
         {/* Date Pickers - wrapped to prevent touch blocking */}
         <View style={styles.pickersContainer} pointerEvents="box-none">
@@ -273,6 +297,20 @@ export const OnboardingBirthdayScreen: React.FC<OnboardingBirthdayScreenProps> =
 };
 
 const styles = StyleSheet.create({
+  ageIndicator: {
+    alignItems: 'center',
+    marginTop: scaleHeight(8),
+    marginBottom: scaleHeight(8),
+  },
+  ageText: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(14),
+  },
+  ageTextError: {
+    color: theme.colors.error.main,
+    fontWeight: '600',
+  },
   bottomContainer: {
     paddingBottom: scaleHeight(40),
   },
