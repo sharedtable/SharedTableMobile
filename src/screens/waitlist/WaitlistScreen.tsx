@@ -17,6 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { theme } from '@/theme';
+import { LogoutIcon } from '@/components/icons/LogoutIcon';
 import { scaleWidth, scaleHeight, scaleFont } from '@/utils/responsive';
 import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { useUserData } from '@/hooks/useUserData';
@@ -254,10 +255,18 @@ export const WaitlistScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Logout Button */}
-          <Pressable onPress={handleLogout} style={styles.logoutButton}>
-            <Ionicons name="exit-outline" size={24} color={theme.colors.text.secondary} />
-          </Pressable>
+          {/* Top Buttons */}
+          <View style={styles.topButtonsContainer}>
+            {/* How it works Button */}
+            <Pressable onPress={() => {}} style={styles.howItWorksButton}>
+              <Text style={styles.howItWorksText}>How it works</Text>
+            </Pressable>
+            
+            {/* Logout Button */}
+            <Pressable onPress={handleLogout} style={styles.logoutButton}>
+              <LogoutIcon size={32} />
+            </Pressable>
+          </View>
 
           {/* Main Content */}
           <View style={styles.mainContent}>
@@ -406,11 +415,24 @@ const styles = StyleSheet.create({
     paddingTop: scaleHeight(20),
     paddingBottom: scaleHeight(10),
   },
-  logoutButton: {
+  topButtonsContainer: {
     position: 'absolute',
     top: scaleHeight(20),
     right: scaleWidth(24),
+    flexDirection: 'row',
+    alignItems: 'center',
     zIndex: 10,
+  },
+  howItWorksButton: {
+    padding: scaleWidth(8),
+    marginRight: scaleWidth(12),
+  },
+  howItWorksText: {
+    fontSize: scaleFont(14),
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+  },
+  logoutButton: {
     padding: scaleWidth(8),
   },
   logo: {

@@ -186,7 +186,7 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
         return prev.filter(r => r !== role);
       }
       if (prev.length >= 3) {
-        Alert.alert('Maximum Selection', 'You can select up to 3 roles');
+        // Don't show alert, just prevent selection
         return prev;
       }
       return [...prev, role];
@@ -261,10 +261,8 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
     >
       <View style={styles.container}>
         <OnboardingTitle>Your Personality</OnboardingTitle>
-        
-        <Text style={styles.subtitle}>
-          Tell us how you connect with others, what drives you, and how you spend your time.
-        </Text>
+
+        <View style={{ marginBottom: scaleHeight(20) }} />
 
         {hasError && errorMessage && (
           <View style={styles.errorContainer}>
@@ -303,8 +301,8 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
 
         {/* Role Selection */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Which role(s) best describes you?</Text>
-          <Text style={styles.sectionSubtitle}>Multi-select allowed</Text>
+          <Text style={styles.sectionTitle}>In a group setting, I'm typically the... *</Text>
+          <Text style={styles.sectionSubtitle}>Select up to 3</Text>
           
           <View style={styles.rolesGrid}>
             {roleOptions.map((role) => (
@@ -312,14 +310,17 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
                 key={role}
                 style={[
                   styles.roleButton,
-                  selectedRoles.includes(role) && styles.roleButtonSelected
+                  selectedRoles.includes(role) && styles.roleButtonSelected,
+                  selectedRoles.length >= 3 && !selectedRoles.includes(role) && styles.roleButtonDisabled
                 ]}
                 onPress={() => toggleRole(role)}
                 activeOpacity={0.7}
+                disabled={selectedRoles.length >= 3 && !selectedRoles.includes(role)}
               >
                 <Text style={[
                   styles.roleButtonText,
-                  selectedRoles.includes(role) && styles.roleButtonTextSelected
+                  selectedRoles.includes(role) && styles.roleButtonTextSelected,
+                  selectedRoles.length >= 3 && !selectedRoles.includes(role) && styles.roleButtonTextDisabled
                 ]}>
                   {role}
                 </Text>
@@ -330,7 +331,7 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
 
         {/* MBTI Selection */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>What is your MBTI personality type?</Text>
+          <Text style={styles.sectionTitle}>What is your MBTI personality type? (Optional)</Text>
           <Text style={styles.sectionSubtitle}>Tap to select/unselect. Leave empty if unsure</Text>
           
           <View style={styles.mbtiGrid}>
@@ -392,14 +393,6 @@ export const OnboardingPersonalityScreen: React.FC<OnboardingPersonalityScreenPr
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  subtitle: {
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
-    lineHeight: scaleFont(20),
-    marginTop: scaleHeight(8),
-    marginBottom: scaleHeight(20),
   },
   errorContainer: {
     backgroundColor: Colors.errorLighter,
@@ -467,11 +460,11 @@ const styles = StyleSheet.create({
   rolesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: scaleWidth(10),
+    gap: scaleWidth(8),
   },
   roleButton: {
-    paddingHorizontal: scaleWidth(16),
-    paddingVertical: scaleHeight(10),
+    paddingHorizontal: scaleWidth(14),
+    paddingVertical: scaleHeight(9),
     borderRadius: scaleWidth(20),
     borderWidth: 1,
     borderColor: Colors.borderLight,
@@ -484,11 +477,18 @@ const styles = StyleSheet.create({
   roleButtonText: {
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(14),
+    fontSize: scaleFont(13),
   },
   roleButtonTextSelected: {
     color: Colors.white,
     fontWeight: '500',
+  },
+  roleButtonDisabled: {
+    opacity: 0.4,
+    borderColor: Colors.backgroundGrayLighter,
+  },
+  roleButtonTextDisabled: {
+    color: theme.colors.text.tertiary,
   },
   mbtiGrid: {
     backgroundColor: Colors.backgroundGrayLighter,
