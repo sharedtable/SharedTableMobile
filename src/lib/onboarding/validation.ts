@@ -323,6 +323,8 @@ export type ExtendedOnboardingData = CompleteOnboardingData & {
   universityYear?: string;
   // Food preferences
   dietaryRestrictions?: string | string[] | null;
+  customDietaryRestrictions?: string;
+  dietaryConfirmed?: boolean;
   budget?: number;
   spicyLevel?: number;
   drinkingLevel?: number;

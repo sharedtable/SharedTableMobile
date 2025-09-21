@@ -4,7 +4,8 @@ import {
   Text, 
   StyleSheet, 
   Alert,
-  TouchableOpacity
+  TouchableOpacity,
+  TextInput
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 
@@ -52,7 +53,12 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
       ? currentStepData.dietaryRestrictions
       : ['No restrictions'] // Default to "No restrictions"
   );
-  const [budget, setBudget] = useState<number>(currentStepData.budget || 50);
+  const [customDietaryRestrictions, setCustomDietaryRestrictions] = useState<string>(
+    currentStepData.customDietaryRestrictions || ''
+  );
+  const [dietaryConfirmed, setDietaryConfirmed] = useState<boolean>(
+    currentStepData.dietaryConfirmed || false
+  );
   const [spicyLevel, setSpicyLevel] = useState<number>(currentStepData.spicyLevel || 3);
   const [drinkingLevel, setDrinkingLevel] = useState<number>(currentStepData.drinkingLevel || 3);
   const [adventurousLevel, setAdventurousLevel] = useState<number>(currentStepData.adventurousLevel || 3);
@@ -76,7 +82,9 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
       const filtered = prev.filter(r => r !== 'No restrictions');
       
       if (prev.includes(restriction)) {
-        return filtered.filter(r => r !== restriction);
+        const newSelection = filtered.filter(r => r !== restriction);
+        // If all options are deselected, auto-select "No restrictions"
+        return newSelection.length === 0 ? ['No restrictions'] : newSelection;
       }
       
       return [...filtered, restriction];
@@ -91,14 +99,6 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
     );
   };
 
-  const getBudgetLabel = (value: number): string => {
-    if (value <= 20) return 'Under $20';
-    if (value <= 40) return '$20-$40';
-    if (value <= 60) return '$40-$60';
-    if (value <= 80) return '$60-$80';
-    return '$80+';
-  };
-
   const handleNext = async () => {
     try {
       setLocalErrors({});
@@ -106,7 +106,8 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
 
       const foodData = {
         dietaryRestrictions: selectedDietaryRestrictions,
-        budget,
+        customDietaryRestrictions,
+        dietaryConfirmed,
         spicyLevel,
         drinkingLevel,
         adventurousLevel,
@@ -165,7 +166,7 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
 
               {/* Dietary Restrictions */}
               <View style={styles.section}>
-                <Text style={styles.questionText}>Dietary Restrictions</Text>
+                <Text style={styles.questionText}>Dietary Restrictions *</Text>
                 <Text style={styles.helperText}>(Multi-select allowed)</Text>
                 <View style={styles.optionsContainer}>
                   {dietaryRestrictionsOptions.map((restriction) => (
@@ -187,29 +188,31 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
                     </TouchableOpacity>
                   ))}
                 </View>
-              </View>
-
-              {/* Budget Slider */}
-              <View style={styles.section}>
-                <Text style={styles.questionText}>What&apos;s your budget for a typical social dinner?</Text>
-                <View style={styles.sliderWrapper}>
-                  <Slider
-                    style={styles.slider}
-                    value={budget}
-                    onValueChange={setBudget}
-                    minimumValue={10}
-                    maximumValue={100}
-                    step={5}
-                    minimumTrackTintColor={theme.colors.primary.main}
-                    maximumTrackTintColor={Colors.borderLight}
-                    thumbTintColor={theme.colors.primary.main}
-                  />
-                  <View style={styles.sliderLabels}>
-                    <Text style={styles.sliderLabel}>Under $20</Text>
-                    <Text style={styles.sliderValue}>{getBudgetLabel(budget)}</Text>
-                    <Text style={styles.sliderLabel}>$80+</Text>
+                
+                {/* Custom dietary restrictions input */}
+                <TextInput
+                  style={styles.customInput}
+                  placeholder="Other dietary restrictions (if any)"
+                  placeholderTextColor={theme.colors.text.secondary}
+                  value={customDietaryRestrictions}
+                  onChangeText={setCustomDietaryRestrictions}
+                />
+                
+                {/* Confirmation checkbox */}
+                <TouchableOpacity
+                  style={styles.checkboxContainer}
+                  onPress={() => setDietaryConfirmed(!dietaryConfirmed)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.checkbox, dietaryConfirmed && styles.checkboxChecked]}>
+                    {dietaryConfirmed && (
+                      <Text style={styles.checkmark}>✓</Text>
+                    )}
                   </View>
-                </View>
+                  <Text style={styles.checkboxLabel}>
+                    I confirm I've disclosed my dietary restrictions so my match + restaurant are a good fit
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               {/* Spicy Food Slider */}
@@ -233,7 +236,6 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
                     <Text style={styles.sliderLabel}>Always</Text>
                   </View>
                 </View>
-                <Text style={styles.helperText}>As long as the food and company are good, I don&apos;t mind</Text>
               </View>
 
               {/* Drinking Slider */}
@@ -417,6 +419,50 @@ const styles = StyleSheet.create({
   optionButtonTextSelected: {
     color: Colors.white,
     fontWeight: '500',
+  },
+  customInput: {
+    marginTop: scaleHeight(16),
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: scaleWidth(12),
+    paddingHorizontal: scaleWidth(16),
+    paddingVertical: scaleHeight(12),
+    fontSize: scaleFont(14),
+    fontFamily: theme.typography.fontFamily.body,
+    color: theme.colors.text.primary,
+    height: scaleHeight(48),
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginTop: scaleHeight(16),
+  },
+  checkbox: {
+    width: scaleWidth(20),
+    height: scaleWidth(20),
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: scaleWidth(4),
+    marginRight: scaleWidth(12),
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.white,
+  },
+  checkboxChecked: {
+    backgroundColor: theme.colors.primary.main,
+    borderColor: theme.colors.primary.main,
+  },
+  checkmark: {
+    color: Colors.white,
+    fontSize: scaleFont(14),
+    fontWeight: 'bold',
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontSize: scaleFont(13),
+    fontFamily: theme.typography.fontFamily.body,
+    color: theme.colors.text.secondary,
+    lineHeight: scaleFont(18),
   },
   spacer: {
     flex: 1,

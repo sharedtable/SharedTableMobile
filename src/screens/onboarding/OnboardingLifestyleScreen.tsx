@@ -70,7 +70,7 @@ export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps>
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
 
   const [selectedSubstances, setSelectedSubstances] = useState<string[]>(
-    currentStepData.substances || []
+    currentStepData.substances || ['None']
   );
   
   const [traits, setTraits] = useState<LifestyleTraits>(() => {
@@ -104,7 +104,9 @@ export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps>
       const filtered = prev.filter(s => s !== 'None');
       
       if (prev.includes(substance)) {
-        return filtered.filter(s => s !== substance);
+        const newSelection = filtered.filter(s => s !== substance);
+        // If all options are deselected, auto-select "None"
+        return newSelection.length === 0 ? ['None'] : newSelection;
       }
       
       return [...filtered, substance];
@@ -214,7 +216,7 @@ export const OnboardingLifestyleScreen: React.FC<OnboardingLifestyleScreenProps>
 
         {/* Substance Use Selection */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>I use the following</Text>
+          <Text style={styles.sectionTitle}>I use the following *</Text>
           <Text style={styles.sectionSubtitle}>Multi-select allowed</Text>
           
           <View style={styles.substancesGrid}>

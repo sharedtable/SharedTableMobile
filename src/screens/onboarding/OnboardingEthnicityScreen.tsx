@@ -100,11 +100,44 @@ export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps>
   const [religion, setReligion] = useState<string>(currentStepData.religion || '');
   const [relationshipStatus, setRelationshipStatus] = useState<string>(currentStepData.relationshipStatus || '');
   
-  // Height state
-  const [heightUnit, setHeightUnit] = useState<'imperial' | 'metric'>('imperial');
-  const [feet, setFeet] = useState<number>(5);
-  const [inches, setInches] = useState<number>(8);
-  const [centimeters, setCentimeters] = useState<number>(173);
+  // Height state - Initialize from saved data
+  // Calculate initial values based on what's saved
+  const getInitialHeightValues = () => {
+    if (currentStepData.heightFeet && currentStepData.heightInches !== undefined) {
+      // User has saved imperial values
+      const totalInches = currentStepData.heightFeet * 12 + currentStepData.heightInches;
+      return {
+        unit: 'imperial' as const,
+        feet: currentStepData.heightFeet,
+        inches: currentStepData.heightInches,
+        cm: Math.round(totalInches * 2.54)
+      };
+    } else if (currentStepData.heightCm) {
+      // User has saved metric value
+      const totalInches = currentStepData.heightCm / 2.54;
+      const ft = Math.floor(totalInches / 12);
+      const inch = Math.round(totalInches % 12);
+      return {
+        unit: 'metric' as const,
+        feet: ft,
+        inches: inch,
+        cm: currentStepData.heightCm
+      };
+    }
+    // Default values
+    return {
+      unit: 'imperial' as const,
+      feet: 5,
+      inches: 8,
+      cm: 173
+    };
+  };
+
+  const initialHeight = getInitialHeightValues();
+  const [heightUnit, setHeightUnit] = useState<'imperial' | 'metric'>(initialHeight.unit);
+  const [feet, setFeet] = useState<number>(initialHeight.feet);
+  const [inches, setInches] = useState<number>(initialHeight.inches);
+  const [centimeters, setCentimeters] = useState<number>(initialHeight.cm);
   
   // Scroll refs for height pickers
   const feetScrollRef = useRef<FlatList>(null);
@@ -125,25 +158,7 @@ export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps>
 
   useEffect(() => {
     clearErrors();
-    // Initialize height if exists
-    if (currentStepData.heightFeet && currentStepData.heightInches) {
-      setFeet(currentStepData.heightFeet);
-      setInches(currentStepData.heightInches);
-      setHeightUnit('imperial');
-      // Calculate cm for display
-      const totalInches = currentStepData.heightFeet * 12 + currentStepData.heightInches;
-      setCentimeters(Math.round(totalInches * 2.54));
-    } else if (currentStepData.heightCm) {
-      setCentimeters(currentStepData.heightCm);
-      setHeightUnit('metric');
-      // Calculate feet/inches for display
-      const totalInches = currentStepData.heightCm / 2.54;
-      const ft = Math.floor(totalInches / 12);
-      const inch = Math.round(totalInches % 12);
-      setFeet(ft);
-      setInches(inch);
-    }
-  }, [clearErrors, currentStepData]);
+  }, [clearErrors]);
 
   // Helper function for FlatList getItemLayout
   const getItemLayout = (_: any, index: number) => ({
@@ -361,7 +376,7 @@ export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps>
 
         {/* Nationality */}
         <View style={[styles.fieldContainer, showNationalityDropdown && styles.fieldContainerActive]}>
-          <Text style={styles.label}>What is your nationality?</Text>
+          <Text style={styles.label}>What is your nationality? *</Text>
           <TouchableOpacity
             style={[styles.selectButton, showNationalityDropdown && styles.selectButtonActive]}
             onPress={() => {
@@ -410,7 +425,7 @@ export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps>
 
         {/* Ethnicity */}
         <View style={[styles.fieldContainer, showEthnicityDropdown && styles.fieldContainerActive]}>
-          <Text style={styles.label}>What is your ethnicity?</Text>
+          <Text style={styles.label}>What is your ethnicity? *</Text>
           <TouchableOpacity
             style={[styles.selectButton, showEthnicityDropdown && styles.selectButtonActive]}
             onPress={() => {
@@ -558,7 +573,7 @@ export const OnboardingEthnicityScreen: React.FC<OnboardingEthnicityScreenProps>
         {/* Height */}
         <View style={styles.fieldContainer}>
           <View style={styles.labelRow}>
-            <Text style={styles.label}>Height</Text>
+            <Text style={styles.label}>Height *</Text>
             <TouchableOpacity
               style={styles.unitToggle}
               onPress={handleUnitToggle}
