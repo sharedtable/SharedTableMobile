@@ -33,11 +33,6 @@ const dietaryRestrictionsOptions = [
   'No restrictions',
 ];
 
-const diningAtmosphereOptions = [
-  'Casual & relaxed',
-  'Lively & Trendy',
-  'Fine dining',
-];
 
 export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreferences1ScreenProps> = ({
   onNavigate,
@@ -62,9 +57,6 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
   const [spicyLevel, setSpicyLevel] = useState<number>(currentStepData.spicyLevel || 3);
   const [drinkingLevel, setDrinkingLevel] = useState<number>(currentStepData.drinkingLevel || 3);
   const [adventurousLevel, setAdventurousLevel] = useState<number>(currentStepData.adventurousLevel || 3);
-  const [selectedAtmospheres, setSelectedAtmospheres] = useState<string[]>(
-    currentStepData.diningAtmospheres || []
-  );
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -91,13 +83,6 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
     });
   };
 
-  const toggleAtmosphere = (atmosphere: string) => {
-    setSelectedAtmospheres(prev => 
-      prev.includes(atmosphere) 
-        ? prev.filter(a => a !== atmosphere)
-        : [...prev, atmosphere]
-    );
-  };
 
   const handleNext = async () => {
     try {
@@ -111,7 +96,6 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
         spicyLevel,
         drinkingLevel,
         adventurousLevel,
-        diningAtmospheres: selectedAtmospheres,
       };
 
       const validation = validateOnboardingStep('foodPreferences', foodData);
@@ -284,31 +268,6 @@ export const OnboardingFoodPreferences1Screen: React.FC<OnboardingFoodPreference
                 </View>
               </View>
 
-              {/* Dining Atmospheres */}
-              <View style={styles.section}>
-                <Text style={styles.questionText}>What kind of dining atmospheres do you enjoy?</Text>
-                <Text style={styles.helperText}>(Multi-select allowed)</Text>
-                <View style={styles.optionsContainer}>
-                  {diningAtmosphereOptions.map((atmosphere) => (
-                    <TouchableOpacity
-                      key={atmosphere}
-                      style={[
-                        styles.optionButton,
-                        selectedAtmospheres.includes(atmosphere) && styles.optionButtonSelected
-                      ]}
-                      onPress={() => toggleAtmosphere(atmosphere)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[
-                        styles.optionButtonText,
-                        selectedAtmospheres.includes(atmosphere) && styles.optionButtonTextSelected
-                      ]}>
-                        {atmosphere}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
 
               <View style={styles.spacer} />
 

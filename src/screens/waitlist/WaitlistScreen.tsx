@@ -8,8 +8,6 @@ import {
   ActivityIndicator,
   TextInput,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   SafeAreaView,
   DeviceEventEmitter,
 } from 'react-native';
@@ -162,11 +160,13 @@ export const WaitlistScreen: React.FC = () => {
                       // This ensures the RootNavigator sees access_granted = true
                       DeviceEventEmitter.emit('USER_DATA_REFRESH');
                       
-                      // Small delay to ensure the refresh completes before navigation changes
-                      setTimeout(() => {
-                        // The RootNavigator should now show Main instead of Waitlist
-                        setInviteCode('');
-                      }, 500);
+                      // Navigate to Main directly since user has access and completed onboarding
+                      // Reset the navigation stack to Main as the root
+                      navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'Main' as never }],
+                      });
+                      setInviteCode('');
                     }
                   } else {
                     // Still no access (shouldn't happen if code was valid, but handle it)
@@ -246,10 +246,7 @@ export const WaitlistScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        style={styles.content}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <View style={styles.content}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -258,7 +255,10 @@ export const WaitlistScreen: React.FC = () => {
           {/* Top Buttons */}
           <View style={styles.topButtonsContainer}>
             {/* How it works Button */}
-            <Pressable onPress={() => {}} style={styles.howItWorksButton}>
+            <Pressable 
+              onPress={() => navigation.navigate('HowItWorks' as never)} 
+              style={styles.howItWorksButton}
+            >
               <Text style={styles.howItWorksText}>How it works</Text>
             </Pressable>
             
@@ -396,7 +396,7 @@ export const WaitlistScreen: React.FC = () => {
             </View>
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 };

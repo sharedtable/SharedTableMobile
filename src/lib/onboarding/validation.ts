@@ -326,6 +326,8 @@ export type ExtendedOnboardingData = CompleteOnboardingData & {
   customDietaryRestrictions?: string;
   dietaryConfirmed?: boolean;
   budget?: number;
+  budgetFlexible?: boolean;
+  budgetBelowHappy?: boolean;
   spicyLevel?: number;
   drinkingLevel?: number;
   adventurousLevel?: number;

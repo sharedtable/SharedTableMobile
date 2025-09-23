@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
   Alert,
-  TouchableOpacity,
-  Animated
+  TouchableOpacity
 } from 'react-native';
+import Slider from '@react-native-community/slider';
 
 import { OnboardingLayout, OnboardingButton } from '@/components/onboarding';
 import { useOnboarding, validateOnboardingStep } from '@/lib/onboarding';
@@ -27,27 +27,10 @@ const dinnerDurationOptions = [
   'It depends',
 ];
 
-const foodCravingOptions = [
-  'Pizza',
-  'Burgers',
-  'Sushi',
-  'Ramen',
-  'Tacos',
-  'Pasta',
-  'Steak',
-  'Salad',
-  'Sandwich',
-  'Fried Chicken',
-  'Seafood',
-  'BBQ Ribs',
-  'Pho',
-  'Dim Sum',
-  'Curry',
-  'Burritos',
-  'Wings',
-  'Poke Bowl',
-  'Hot Pot',
-  'Dumplings',
+const diningAtmosphereOptions = [
+  'Casual & relaxed',
+  'Lively & Trendy',
+  'Fine dining',
 ];
 
 export const OnboardingFoodPreferences2Screen: React.FC<OnboardingFoodPreferences2ScreenProps> = ({
@@ -57,82 +40,41 @@ export const OnboardingFoodPreferences2Screen: React.FC<OnboardingFoodPreference
 }) => {
   const { currentStepData, saveStep, saving, stepErrors, clearErrors } = useOnboarding();
   
-  console.log('🍕 OnboardingFoodPreferences2Screen: currentStepData:', currentStepData);
-  console.log('🍕 dinnerDuration:', currentStepData.dinnerDuration);
-  console.log('🍕 foodCraving:', currentStepData.foodCraving);
-
   const [dinnerDuration, setDinnerDuration] = useState<string>(
     currentStepData.dinnerDuration || ''
   );
-  const [selectedCravings, setSelectedCravings] = useState<string[]>(
-    Array.isArray(currentStepData.foodCraving)
-      ? currentStepData.foodCraving
-      : []
+  const [budget, setBudget] = useState<number>(
+    currentStepData.budget || 50
+  );
+  const [budgetFlexible, setBudgetFlexible] = useState<boolean>(
+    currentStepData.budgetFlexible || false
+  );
+  const [budgetBelowHappy, setBudgetBelowHappy] = useState<boolean>(
+    currentStepData.budgetBelowHappy || false
+  );
+  const [selectedAtmospheres, setSelectedAtmospheres] = useState<string[]>(
+    currentStepData.diningAtmospheres || []
   );
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
-  const [isRolling, setIsRolling] = useState(false);
-  const animatedValues = useRef(
-    foodCravingOptions.map(() => new Animated.Value(1))
-  ).current;
 
   useEffect(() => {
     clearErrors();
   }, [clearErrors]);
 
-  const toggleCraving = (craving: string) => {
-    setSelectedCravings(prev =>
-      prev.includes(craving)
-        ? prev.filter(c => c !== craving)
-        : [...prev, craving]
+  const toggleAtmosphere = (atmosphere: string) => {
+    setSelectedAtmospheres(prev => 
+      prev.includes(atmosphere) 
+        ? prev.filter(a => a !== atmosphere)
+        : [...prev, atmosphere]
     );
   };
 
-  const randomizeCravings = () => {
-    if (isRolling) return;
-    
-    setIsRolling(true);
-    setSelectedCravings([]); // Clear current selections
-    
-    // Create staggered animations for each button
-    const animations = animatedValues.map((anim, index) => {
-      return Animated.sequence([
-        Animated.timing(anim, {
-          toValue: 0.3,
-          duration: 100,
-          delay: index * 30, // Stagger the start
-          useNativeDriver: true,
-        }),
-        Animated.loop(
-          Animated.sequence([
-            Animated.timing(anim, {
-              toValue: 1.2,
-              duration: 150,
-              useNativeDriver: true,
-            }),
-            Animated.timing(anim, {
-              toValue: 0.8,
-              duration: 150,
-              useNativeDriver: true,
-            }),
-          ]),
-          { iterations: 3 }
-        ),
-        Animated.timing(anim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]);
-    });
-    
-    // Run all animations in parallel
-    Animated.parallel(animations).start(() => {
-      // After animation, select random items
-      const shuffled = [...foodCravingOptions].sort(() => 0.5 - Math.random());
-      const numToSelect = Math.floor(Math.random() * 3) + 3; // Random between 3-5
-      setSelectedCravings(shuffled.slice(0, numToSelect));
-      setIsRolling(false);
-    });
+  const getBudgetLabel = (value: number): string => {
+    if (value < 20) return 'Under $20';
+    if (value < 40) return '$20-$40';
+    if (value < 60) return '$40-$60';
+    if (value < 80) return '$60-$80';
+    return '$80+';
   };
 
   const handleNext = async () => {
@@ -147,7 +89,10 @@ export const OnboardingFoodPreferences2Screen: React.FC<OnboardingFoodPreference
 
       const foodData = {
         dinnerDuration,
-        foodCraving: selectedCravings,
+        budget,
+        budgetFlexible,
+        budgetBelowHappy,
+        diningAtmospheres: selectedAtmospheres,
       };
 
       const validation = validateOnboardingStep('foodPreferences', foodData);
@@ -223,60 +168,84 @@ export const OnboardingFoodPreferences2Screen: React.FC<OnboardingFoodPreference
               </View>
 
 
-              {/* Food Craving */}
+              {/* Budget */}
               <View style={styles.section}>
-                <Text style={styles.questionText}>What kind of food are you craving right now?</Text>
-                <View style={styles.helperRow}>
-                  <Text style={styles.helperText}>(Multi-select allowed)</Text>
+                <Text style={styles.questionText}>What's your budget for a typical social dinner?</Text>
+                <View style={styles.sliderWrapper}>
+                  <Slider
+                    style={styles.slider}
+                    value={budget}
+                    onValueChange={setBudget}
+                    minimumValue={10}
+                    maximumValue={100}
+                    step={10}
+                    minimumTrackTintColor={theme.colors.primary.main}
+                    maximumTrackTintColor={Colors.borderLight}
+                    thumbTintColor={theme.colors.primary.main}
+                  />
+                  <View style={styles.sliderLabels}>
+                    <Text style={styles.sliderLabel}>Under $20</Text>
+                    <Text style={styles.sliderValue}>{getBudgetLabel(budget)}</Text>
+                    <Text style={styles.sliderLabel}>$80+</Text>
+                  </View>
+                </View>
+                
+                {/* Budget Checkboxes */}
+                <View style={styles.checkboxSection}>
                   <TouchableOpacity
-                    style={[styles.rouletteButton, isRolling && styles.rouletteButtonActive]}
-                    onPress={randomizeCravings}
+                    style={styles.checkboxContainer}
+                    onPress={() => setBudgetFlexible(!budgetFlexible)}
                     activeOpacity={0.7}
-                    disabled={isRolling}
                   >
-                    <Animated.Text style={[
-                      styles.rouletteIcon,
-                      isRolling && {
-                        transform: [{
-                          rotate: animatedValues[0].interpolate({
-                            inputRange: [0, 1],
-                            outputRange: ['0deg', '360deg']
-                          })
-                        }]
-                      }
-                    ]}>🎰</Animated.Text>
-                    <Text style={[styles.rouletteText, isRolling && styles.rouletteTextActive]}>
-                      {isRolling ? 'Rolling...' : 'Surprise me!'}
+                    <View style={[styles.checkbox, budgetFlexible && styles.checkboxChecked]}>
+                      {budgetFlexible && (
+                        <Text style={styles.checkmark}>✓</Text>
+                      )}
+                    </View>
+                    <Text style={styles.checkboxLabel}>
+                      As long as the food and company are good, I don't mind
+                    </Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={styles.checkboxContainer}
+                    onPress={() => setBudgetBelowHappy(!budgetBelowHappy)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.checkbox, budgetBelowHappy && styles.checkboxChecked]}>
+                      {budgetBelowHappy && (
+                        <Text style={styles.checkmark}>✓</Text>
+                      )}
+                    </View>
+                    <Text style={styles.checkboxLabel}>
+                      I am happy to go to dinners materially below my budget
                     </Text>
                   </TouchableOpacity>
                 </View>
+              </View>
+
+              {/* Dining Atmospheres */}
+              <View style={styles.section}>
+                <Text style={styles.questionText}>What kind of dining atmospheres do you enjoy?</Text>
+                <Text style={styles.helperText}>(Multi-select allowed)</Text>
                 <View style={styles.optionsContainer}>
-                  {foodCravingOptions.map((craving, index) => (
-                    <Animated.View
-                      key={craving}
-                      style={{
-                        transform: [{ scale: animatedValues[index] }],
-                        opacity: isRolling ? animatedValues[index] : 1,
-                      }}
+                  {diningAtmosphereOptions.map((atmosphere) => (
+                    <TouchableOpacity
+                      key={atmosphere}
+                      style={[
+                        styles.optionButton,
+                        selectedAtmospheres.includes(atmosphere) && styles.optionButtonSelected
+                      ]}
+                      onPress={() => toggleAtmosphere(atmosphere)}
+                      activeOpacity={0.7}
                     >
-                      <TouchableOpacity
-                        style={[
-                          styles.optionButton,
-                          selectedCravings.includes(craving) && styles.optionButtonSelected,
-                          isRolling && styles.optionButtonRolling
-                        ]}
-                        onPress={() => !isRolling && toggleCraving(craving)}
-                        activeOpacity={0.7}
-                        disabled={isRolling}
-                      >
-                        <Text style={[
-                          styles.optionButtonText,
-                          selectedCravings.includes(craving) && styles.optionButtonTextSelected
-                        ]}>
-                          {craving}
-                        </Text>
-                      </TouchableOpacity>
-                    </Animated.View>
+                      <Text style={[
+                        styles.optionButtonText,
+                        selectedAtmospheres.includes(atmosphere) && styles.optionButtonTextSelected
+                      ]}>
+                        {atmosphere}
+                      </Text>
+                    </TouchableOpacity>
                   ))}
                 </View>
               </View>
@@ -365,40 +334,71 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(14),
   },
-  helperRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: scaleHeight(12),
-  },
   helperText: {
     color: theme.colors.text.secondary,
     fontFamily: theme.typography.fontFamily.body,
     fontSize: scaleFont(13),
+    marginBottom: scaleHeight(12),
   },
-  rouletteButton: {
+  sliderWrapper: {
+    paddingHorizontal: scaleWidth(8),
+  },
+  slider: {
+    width: '100%',
+    height: scaleHeight(40),
+  },
+  sliderLabels: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: Colors.primaryLight,
-    paddingHorizontal: scaleWidth(12),
-    paddingVertical: scaleHeight(6),
-    borderRadius: scaleWidth(16),
-    gap: scaleWidth(4),
+    marginTop: scaleHeight(-8),
   },
-  rouletteButtonActive: {
-    backgroundColor: theme.colors.primary.main,
+  sliderLabel: {
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: scaleFont(12),
   },
-  rouletteIcon: {
-    fontSize: scaleFont(16),
-  },
-  rouletteText: {
+  sliderValue: {
     color: theme.colors.primary.main,
     fontFamily: theme.typography.fontFamily.body,
-    fontSize: scaleFont(13),
+    fontSize: scaleFont(16),
     fontWeight: '600',
   },
-  rouletteTextActive: {
+  checkboxSection: {
+    marginTop: scaleHeight(16),
+    gap: scaleHeight(12),
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: scaleHeight(8),
+  },
+  checkbox: {
+    width: scaleWidth(20),
+    height: scaleWidth(20),
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: scaleWidth(4),
+    marginRight: scaleWidth(12),
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.white,
+  },
+  checkboxChecked: {
+    backgroundColor: theme.colors.primary.main,
+    borderColor: theme.colors.primary.main,
+  },
+  checkmark: {
     color: Colors.white,
+    fontSize: scaleFont(14),
+    fontWeight: 'bold',
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontSize: scaleFont(13),
+    fontFamily: theme.typography.fontFamily.body,
+    color: theme.colors.text.secondary,
+    lineHeight: scaleFont(18),
   },
   optionsContainer: {
     flexDirection: 'row',
@@ -416,10 +416,6 @@ const styles = StyleSheet.create({
   optionButtonSelected: {
     backgroundColor: theme.colors.primary.main,
     borderColor: theme.colors.primary.main,
-  },
-  optionButtonRolling: {
-    borderColor: theme.colors.primary.light,
-    backgroundColor: Colors.backgroundGrayLighter,
   },
   optionButtonText: {
     color: theme.colors.text.primary,
